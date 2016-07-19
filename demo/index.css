@@ -1,0 +1,26 @@
+#chatbox-container {
+    display: none;
+    width: 800px;
+}
+
+#call-container {
+    display: none;
+    width: 800px;
+}
+
+.chatbox-textarea {
+    -moz-appearance: textfield-multiline;
+    -webkit-appearance: textarea;
+    appearence: textarea;
+    border: 1px solid gray;
+    font: medium -moz-fixed;
+    font: -webkit-small-control;
+    overflow: auto;
+    padding: 2px;
+    width: 100%;
+    height: 300px;
+}
+
+.video-stream {
+    width: 49%;
+}
