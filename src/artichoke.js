@@ -2,7 +2,7 @@ function artichoke(config) {
     logDebug("config: " + JSON.stringify(config));
 
     // Cross-browser support:
-    var RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+    let RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 
     // Messages:
     function Call(from, to, signal, payload) {
@@ -75,14 +75,14 @@ function artichoke(config) {
     };
 
     // Connection state:
-    var userId = config.apiKey; // FIXME Actually get it.
-    var pc = undefined;
-    var s = undefined;
+    let userId = config.apiKey; // FIXME Actually get it.
+    let pc = undefined;
+    let s = undefined;
 
-    var messageCallbacks = {};
+    let messageCallbacks = {};
 
     // API:
-    var self = {
+    let self = {
         connect: connect,
 
         call: {
@@ -120,7 +120,7 @@ function artichoke(config) {
     };
 
     function connect() {
-        var url = "ws://" + pathcat(config.url, "ws", config.apiKey);
+        let url = "ws://" + pathcat(config.url, "ws", config.apiKey);
 
         console.log("Connecting to " + url);
         s = new WebSocket(url);
@@ -133,11 +133,11 @@ function artichoke(config) {
 
         s.onmessage = function(event) {
             logDebug("Received: " + event.data);
-            var m = JSON.parse(event.data);
+            let m = JSON.parse(event.data);
 
             switch(m.type) {
             case "call":
-                var peer = m.sender;
+                let peer = m.sender;
                 switch(m.signal) {
                 case "answer":
                     pc.setRemoteDescription(new RTCSessionDescription({"type": "answer", "sdp": m.body}));
@@ -199,9 +199,9 @@ function artichoke(config) {
     function reconnectRTC(old_pc) {
         if(old_pc) old_pc.close();
 
-        var pc = new RTCPeerConnection(config.rtc);
+        let pc = new RTCPeerConnection(config.rtc);
 
-        var onstream = function(event) {
+        let onstream = function(event) {
             self.onRemoteStream(event.stream || event.streams[0]);
         };
 
@@ -239,20 +239,20 @@ function artichoke(config) {
     }
 
     function pathcat() {
-        var output = [];
-        for(var i in arguments) output.push(arguments[i]);
+        let output = [];
+        for(let i in arguments) output.push(arguments[i]);
         return output.join("/");
     }
 
     function send(obj) {
-        var json = JSON.stringify(obj);
+        let json = JSON.stringify(obj);
         s.send(json);
         logDebug("Sent: " + json);
     }
 
     function post(url, obj) {
-        var json = JSON.stringify(obj);
-        var xhttp = new XMLHttpRequest();
+        let json = JSON.stringify(obj);
+        let xhttp = new XMLHttpRequest();
         xhttp.open("POST", url, false);
         xhttp.setRequestHeader("Content-Type", "application/json");
         xhttp.setRequestHeader("X-Api-Key", config.apiKey);
