@@ -88,30 +88,30 @@ function artichoke(config) {
         call: {
             offer: offer,
             answer: answer,
-            reject: function(peer) { send(Call(userId, peer, "hangup", "rejected")); },
-            hangup: function(peer, reason) {
+            reject: (peer) => send(Call(userId, peer, "hangup", "rejected")),
+            hangup: (peer, reason) => {
                 pc = reconnectRTC(pc);
                 send(Call(userId, peer, "hangup", reason));
             }
         },
 
-        chat: function(peer, body) { send(ChatRequest(peer, body)); },
+        chat: (peer, body) => send(ChatRequest(peer, body)),
 
         room: {
-            create: function(name) { return post("http://" + pathcat(config.url, "api", "room", "create"), RoomCreate(name)); },
-            join: function(room) { send(RoomJoin(room)); },
-            leave: function(room) { send(RoomLeave(room)); },
-            invite: function(room, who) { send(RoomInvite(room, who)); }
+            create: (name) => post("http://" + pathcat(config.url, "api", "room", "create"), RoomCreate(name)),
+            join: (room) => send(RoomJoin(room)),
+            leave: (room) => send(RoomLeave(room)),
+            invite: (room, who) => send(RoomInvite(room, who))
         },
 
         roster: {
-            add: function(who) { send(RosterAdd(who)); },
-            remove: function(who) { send(RosterRemove(who)); }
+            add: (who) => send(RosterAdd(who)),
+            remove: (who) => send(RosterRemove(who))
         },
 
         onConnect: function() {}, // NOTE By default do nothing.
-        onError: function (e) { console.log(e); },
-        onMessage: function(type, callback) {
+        onError: (e) => console.log(e),
+        onMessage: (type, callback) => {
             logDebug("Registered callback for message type: " + type);
             messageCallbacks[type] = callback;
         },
@@ -126,7 +126,7 @@ function artichoke(config) {
         s = new WebSocket(url);
         s.binaryType = "arraybuffer";
 
-        s.onopen = function() {
+        s.onopen = () => {
             logDebug("Connected to " + url);
             self.onConnect();
         };
@@ -177,7 +177,7 @@ function artichoke(config) {
     function offer(peer, stream) {
         pc.addStream(stream);
 
-        pc.createOffer(function(offer) {
+        pc.createOffer((offer) => {
             pc.setLocalDescription(offer);
             send(Call(userId, peer, "offer", offer.sdp));
         }, logError);
@@ -189,7 +189,7 @@ function artichoke(config) {
 
         pc.addStream(stream);
 
-        pc.createAnswer(function(answer) {
+        pc.createAnswer((answer) => {
             pc.setLocalDescription(answer);
             send(Call(userId, peer, "answer", answer.sdp));
         }, logError);
@@ -201,9 +201,7 @@ function artichoke(config) {
 
         let pc = new RTCPeerConnection(config.rtc);
 
-        let onstream = function(event) {
-            self.onRemoteStream(event.stream || event.streams[0]);
-        };
+        let onstream = (event) => self.onRemoteStream(event.stream || event.streams[0]);
 
         if(pc.ontrack === null) pc.ontrack = onstream;
         else pc.onaddstream = onstream;
@@ -231,7 +229,7 @@ function artichoke(config) {
     }
 
     function onICE(sender, recipient) {
-        return function(event) {
+        return (event) => {
             if (event.candidate) {
                 send(Call(sender, recipient, "candidate", event.candidate.candidate));
             }
