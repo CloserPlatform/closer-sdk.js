@@ -2,10 +2,12 @@ var path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
-    entry: './src/artichoke.js',
+    entry: './src/main.js',
     output: {
         path: path.resolve(__dirname, '.'),
-        filename: 'ratel-sdk.js'
+        filename: 'ratel-sdk.js',
+        libraryTarget: 'var',
+        library: 'RatelSDK'
     },
     module: {
         loaders: [

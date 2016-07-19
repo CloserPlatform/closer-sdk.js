@@ -1,78 +1,10 @@
-function artichoke(config) {
+import * as proto from './protocol';
+
+export function artichoke(config) {
     logDebug("config: " + JSON.stringify(config));
 
     // Cross-browser support:
     let RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-
-    // Messages:
-    function Call(from, to, signal, payload) {
-        return {
-            "type": "call",
-            "sender": from,
-            "recipient": to,
-            "signal": signal.toLowerCase(),
-            "body": payload
-        };
-    };
-
-    function ChatRequest(room, body) {
-        return {
-            "type": "msg_request",
-            "room": room,
-            "body": body
-        };
-    };
-
-    function ChatDelivered(id, timestamp) {
-        return {
-            "type": "msg_delivered",
-            "id": id,
-            "timestamp": timestamp
-        };
-    };
-
-    function RoomCreate(name) {
-        return {
-            "type": "room_create",
-            "name": name
-        };
-    }
-
-    function RoomJoin(room) {
-        return {
-            "type": "room_join",
-            "room": room
-        };
-    };
-
-    function RoomLeave(room) {
-        return {
-            "type": "room_leave",
-            "room": room
-        };
-    };
-
-    function RoomInvite(room, user) {
-        return {
-            "type": "room_invite",
-            "room": room,
-            "user": user
-        };
-    };
-
-    function RosterAdd(user) {
-        return {
-            "type": "roster_add",
-            "user": user
-        };
-    };
-
-    function RosterRemove(user) {
-        return {
-            "type": "roster_remove",
-            "user": user
-        };
-    };
 
     // Connection state:
     let userId = config.apiKey; // FIXME Actually get it.
@@ -88,25 +20,25 @@ function artichoke(config) {
         call: {
             offer: offer,
             answer: answer,
-            reject: (peer) => send(Call(userId, peer, "hangup", "rejected")),
+            reject: (peer) => send(proto.Call(userId, peer, "hangup", "rejected")),
             hangup: (peer, reason) => {
                 pc = reconnectRTC(pc);
-                send(Call(userId, peer, "hangup", reason));
+                send(proto.Call(userId, peer, "hangup", reason));
             }
         },
 
-        chat: (peer, body) => send(ChatRequest(peer, body)),
+        chat: (peer, body) => send(proto.ChatRequest(peer, body)),
 
         room: {
-            create: (name) => post("http://" + pathcat(config.url, "api", "room", "create"), RoomCreate(name)),
-            join: (room) => send(RoomJoin(room)),
-            leave: (room) => send(RoomLeave(room)),
-            invite: (room, who) => send(RoomInvite(room, who))
+            create: (name) => post("http://" + pathcat(config.url, "api", "room", "create"), proto.RoomCreate(name)),
+            join: (room) => send(proto.RoomJoin(room)),
+            leave: (room) => send(proto.RoomLeave(room)),
+            invite: (room, who) => send(proto.RoomInvite(room, who))
         },
 
         roster: {
-            add: (who) => send(RosterAdd(who)),
-            remove: (who) => send(RosterRemove(who))
+            add: (who) => send(proto.RosterAdd(who)),
+            remove: (who) => send(proto.RosterRemove(who))
         },
 
         onConnect: function() {}, // NOTE By default do nothing.
@@ -158,7 +90,7 @@ function artichoke(config) {
                 break;
 
             case "message":
-                if(!m.delivered) send(ChatDelivered(m.id, Date.now()));
+                if(!m.delivered) send(proto.ChatDelivered(m.id, Date.now()));
                 runCallback(m);
                 break;
 
@@ -179,7 +111,7 @@ function artichoke(config) {
 
         pc.createOffer((offer) => {
             pc.setLocalDescription(offer);
-            send(Call(userId, peer, "offer", offer.sdp));
+            send(proto.Call(userId, peer, "offer", offer.sdp));
         }, logError);
     }
 
@@ -191,7 +123,7 @@ function artichoke(config) {
 
         pc.createAnswer((answer) => {
             pc.setLocalDescription(answer);
-            send(Call(userId, peer, "answer", answer.sdp));
+            send(proto.Call(userId, peer, "answer", answer.sdp));
         }, logError);
     }
 
@@ -231,7 +163,7 @@ function artichoke(config) {
     function onICE(sender, recipient) {
         return (event) => {
             if (event.candidate) {
-                send(Call(sender, recipient, "candidate", event.candidate.candidate));
+                send(proto.Call(sender, recipient, "candidate", event.candidate.candidate));
             }
         };
     }

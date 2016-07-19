@@ -18,13 +18,13 @@ function onLoad() {
     var calls = {};
 
     function login() {
-        a = artichoke({"rtc": {"iceServers": [{"urls": ["stun:46.101.163.186:3478", "turn:46.101.163.186:3478"],
-                                               "username": "test123",
-                                               "credential":"test456"}]},
-                       "url": f.elements[0].value,
-                       "apiKey": f.elements[1].value,
-                       "debug": true
-                      });
+        a = RatelSDK.artichoke({"rtc": {"iceServers": [{"urls": ["stun:46.101.163.186:3478", "turn:46.101.163.186:3478"],
+                                                        "username": "test123",
+                                                        "credential":"test456"}]},
+                                "url": f.elements[0].value,
+                                "apiKey": f.elements[1].value,
+                                "debug": true
+                               });
 
         document.getElementById("login-box").style = "display: none;";
         document.getElementById("call-container").style = "display: block";
