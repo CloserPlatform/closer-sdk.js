@@ -1,6 +1,9 @@
 import * as proto from './protocol';
+import { nop, pathcat } from './utils';
 
 export function artichoke(config) {
+    let logDebug = config.debug ? (line) => console.log("[DEBUG] " + line)  : nop;
+
     logDebug("config: " + JSON.stringify(config));
 
     // Cross-browser support:
@@ -41,14 +44,14 @@ export function artichoke(config) {
             remove: (who) => send(proto.RosterRemove(who))
         },
 
-        onConnect: function() {}, // NOTE By default do nothing.
+        onConnect: nop, // NOTE By default do nothing.
         onError: (e) => console.log(e),
         onMessage: (type, callback) => {
             logDebug("Registered callback for message type: " + type);
             messageCallbacks[type] = callback;
         },
 
-        onRemoteStream: function() {} // NOTE By default do nothing.
+        onRemoteStream: nop // NOTE By default do nothing.
     };
 
     function connect() {
@@ -112,7 +115,7 @@ export function artichoke(config) {
         pc.createOffer((offer) => {
             pc.setLocalDescription(offer);
             send(proto.Call(userId, peer, "offer", offer.sdp));
-        }, logError);
+        }, logDebug);
     }
 
     function answer(peer, offer, stream) {
@@ -124,7 +127,7 @@ export function artichoke(config) {
         pc.createAnswer((answer) => {
             pc.setLocalDescription(answer);
             send(proto.Call(userId, peer, "answer", answer.sdp));
-        }, logError);
+        }, logDebug);
     }
 
     // Utils:
@@ -152,26 +155,12 @@ export function artichoke(config) {
         }
     }
 
-    function logError(error) {
-        console.log(error);
-    }
-
-    function logDebug(log) {
-        if(config.debug) console.log("DEBUG: " + log);
-    }
-
     function onICE(sender, recipient) {
         return (event) => {
             if (event.candidate) {
                 send(proto.Call(sender, recipient, "candidate", event.candidate.candidate));
             }
         };
-    }
-
-    function pathcat() {
-        let output = [];
-        for(let i in arguments) output.push(arguments[i]);
-        return output.join("/");
     }
 
     function send(obj) {
