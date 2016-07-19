@@ -30,7 +30,7 @@ function onLoad() {
         document.getElementById("call-container").style = "display: block";
         document.getElementById("chatbox-container").style = "display: block";
 
-        a.onConnect = function() {
+        a.onConnect(function() {
             log("Connected to artichoke!");
 
             a.onMessage("hello", function(m) {
@@ -44,12 +44,12 @@ function onLoad() {
                         log(peer + " is calling...");
                         if(confirm(peer + " is calling, answer?")) {
                             makeCall(peer).createLocalStream(function(stream) {
-                                a.call.answer(peer, m, stream);
+                                a.answerCall(peer, m, stream);
                             });
                         }
                         else {
                             log("Rejecting call...");
-                            a.call.reject(peer);
+                            a.rejectCall(peer);
                         }
                         break;
 
@@ -100,7 +100,7 @@ function onLoad() {
                     b.onclick = function() {
                         if(handle != username) {
                             log("Adding user " + handle + " to the roster.");
-                            a.roster.add(handle);
+                            a.addToRoster(handle);
                         }
                     }
                     return b;
@@ -130,7 +130,7 @@ function onLoad() {
                 makeChatboxControls("chatbox-controls");
                 roster = makeRoster("chatbox-roster");
             });
-        }
+        });
         a.connect();
     }
 
@@ -157,7 +157,7 @@ function onLoad() {
         end.innerHTML = "Hangup call";
         end.onclick = function() {
             log( "Ending call with " + peer + "...");
-            a.call.hangup(peer, "hangup");
+            a.hangupCall(peer, "hangup");
             removeCall(peer);
         };
         box.appendChild(end);
@@ -199,10 +199,10 @@ function onLoad() {
                 });
         };
 
-        a.onRemoteStream = function(stream) {
+        a.onRemoteStream(function(stream) {
             log("Remote stream started!");
             showRemoteStream(stream);
-        };
+        });
 
         calls[peer] = {
             box: box,
@@ -243,8 +243,8 @@ function onLoad() {
 
                     var name = "dm-" + [username, u].sort().join("-");
                     var room = createRoom(name);
-                    a.room.join(room.id);
-                    a.room.invite(room.id, u);
+                    a.joinRoom(room.id);
+                    a.inviteToRoom(room.id, u);
 
                     makePrivateChatbox(room.id);
                 }
@@ -261,16 +261,16 @@ function onLoad() {
 
                         if(keys.length == 0) {
                             makeCall(u).createLocalStream(function(stream) {
-                                a.call.offer(u, stream);
+                                a.offerCall(u, stream);
                             });
                         }
                         else if(confirm("You are arleady calling someone. Hang up that call?")) {
                             keys.forEach(function(k) {
-                                a.call.hangup(k, "hangup");
+                                a.hangupCall(k, "hangup");
                                 removeCall(k);
                             });
                             makeCall(u).createLocalStream(function(stream) {
-                                a.call.offer(u, stream);
+                                a.offerCall(u, stream);
                             });
                         }
                     };
@@ -281,7 +281,7 @@ function onLoad() {
                 var remove = document.createElement("button");
                 remove.onclick = function() {
                     log("Removing user " + u + " from roster.");
-                    a.roster.remove(u);
+                    a.removeFromRoster(u);
                     delete roster[u];
                     regenRoster()
                 }
@@ -321,7 +321,7 @@ function onLoad() {
         log("Creating a chatbox object: " + room);
         var chat = makeGenericChatbox(room);
         chat.teardown = function() {
-            a.room.leave(room);
+            a.leaveRoom(room);
         }
         return chat;
     }
@@ -362,7 +362,7 @@ function onLoad() {
 
         controls.onsubmit = function() {
             receive("[" + username + "] " + input.value);
-            a.chat(room, input.value);
+            a.sendMessage(room, input.value);
             input.value = "";
             return false;
         };
@@ -438,7 +438,7 @@ function onLoad() {
         box.onsubmit = function() {
             try {
                 var r = createRoom(room.value);
-                a.room.join(r.id);
+                a.joinRoom(r.id);
             } catch(e) {
                 log("Error while creating a room: " + e);
             }
@@ -450,7 +450,7 @@ function onLoad() {
 
     function createRoom(name) {
         log("Creating a chat room: " + name);
-        return a.room.create(name);
+        return a.createRoom(name);
     }
 
     function log(str) {
