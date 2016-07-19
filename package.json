@@ -1,0 +1,22 @@
+{
+    "name": "ratel-sdk-js",
+    "version": "0.0.1",
+    "description": "Ratel JavaScript SDK",
+
+    "main": "src/artichoke.js",
+
+    "scripts": {
+        "babel": "babel --presets es2015 src/*.js -o ratel-sdk.js",
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "python -m http.server"
+    },
+
+    "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
+    "license": "MIT",
+
+    "devDependencies": {
+        "babel-cli": "^6.10.1",
+        "babel-core": "^6.10.4",
+        "babel-preset-es2015": "^6.9.0"
+    }
+}
