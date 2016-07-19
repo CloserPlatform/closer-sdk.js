@@ -1,70 +1,52 @@
 // Artichoke protocol messages:
 
-export function Call(from, to, signal, payload) {
-    return {
-        "type": "call",
-        "sender": from,
-        "recipient": to,
-        "signal": signal.toLowerCase(),
-        "body": payload
-    };
-};
+export const Call = (sender, recipient, signal, body) => ({
+    type: "call",
+    sender,
+    recipient,
+    signal,
+    body
+});
 
-export function ChatRequest(room, body) {
-    return {
-        "type": "msg_request",
-        "room": room,
-        "body": body
-    };
-};
+export const ChatRequest = (room, body) => ({
+    type: "msg_request",
+    room,
+    body
+});
 
-export function ChatDelivered(id, timestamp) {
-    return {
-        "type": "msg_delivered",
-        "id": id,
-        "timestamp": timestamp
-    };
-};
+export const ChatDelivered = (id, timestamp) => ({
+    type: "msg_delivered",
+    id,
+    timestamp
+});
 
-export function RoomCreate(name) {
-    return {
-        "type": "room_create",
-        "name": name
-    };
-}
+export const RoomCreate = (name) => ({
+    type: "room_create",
+    name
+})
 
-export function RoomJoin(room) {
-    return {
-        "type": "room_join",
-        "room": room
-    };
-};
+export const RoomJoin = (room) => ({
+    type: "room_join",
+    room
+});
 
-export function RoomLeave(room) {
-    return {
-        "type": "room_leave",
-        "room": room
-    };
-};
+export const RoomLeave = (room) => ({
+    type: "room_leave",
+    room
+});
 
-export function RoomInvite(room, user) {
-    return {
-        "type": "room_invite",
-        "room": room,
-        "user": user
-    };
-};
+export const RoomInvite = (room, user) => ({
+    type: "room_invite",
+    room,
+    user
+});
 
-export function RosterAdd(user) {
-    return {
-        "type": "roster_add",
-        "user": user
-    };
-};
+export const RosterAdd = (user) => ({
+    type: "roster_add",
+    user
+});
 
-export function RosterRemove(user) {
-    return {
-        "type": "roster_remove",
-        "user": user
-    };
-};
+export const RosterRemove = (user) => ({
+    type: "roster_remove",
+    user
+});
