@@ -155,11 +155,11 @@ class Artichoke {
 
     // Roster API:
     addToRoster(who) {
-        this._send(proto.RosterAdd(who));
+        this._post("http://" + pathcat(this.config.url, "api", "roster", "add"), proto.RosterAdd(who));
     }
 
     removeFromRoster(who) {
-        this._send(proto.RosterRemove(who));
+        this._post("http://" + pathcat(this.config.url, "api", "roster", "remove"), proto.RosterRemove(who));
     }
 
     // Utils:
@@ -209,7 +209,9 @@ class Artichoke {
         xhttp.setRequestHeader("X-Api-Key", this.config.apiKey);
         xhttp.send(json);
         this.log("POST: " + json);
-        return JSON.parse(xhttp.responseText);
+        if (xhttp.responseText) {
+            return JSON.parse(xhttp.responseText);
+        };
     }
 
 }

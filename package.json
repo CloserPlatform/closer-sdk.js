@@ -6,7 +6,7 @@
   "scripts": {
     "webpack": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "python -m http.server"
+    "start": "python3 -m http.server"
   },
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
   "license": "MIT",
