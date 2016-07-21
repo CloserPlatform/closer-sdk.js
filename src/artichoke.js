@@ -1,73 +1,63 @@
 import * as proto from './protocol';
 import { nop, pathcat } from './utils';
 
-export function artichoke(config) {
-    let logDebug = config.debug ? (line) => console.log("[DEBUG] " + line)  : nop;
+// Cross-browser support:
+const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 
-    logDebug("config: " + JSON.stringify(config));
+class Artichoke {
+    constructor(config) {
+        this.config = config;
+        this.log = config.debug ? (line) => console.log("[DEBUG] " + line) : nop;
 
-    // Cross-browser support:
-    let RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+        this.log("this.config: " + JSON.stringify(this.config));
 
-    // Connection state:
-    let userId = config.apiKey; // FIXME Actually get it.
-    let pc = undefined;
-    let s = undefined;
+        // Connection state:
+        this.userId = config.apiKey; // FIXME Actually get it.
+        this.pc = undefined;
+        this.socket = undefined;
 
-    let messageCallbacks = {};
+        this.callbacks = {};
+
+        // NOTE By default do nothing.
+        this.onConnectCallback = nop;
+        this.onRemoteStreamCallback = nop;
+        this.onErrorCallback = this.log;
+    }
+
+    // Callbacks:
+    onConnect(callback) {
+        this.onConnectCallback = callback;
+    }
+
+    onMessage(type, callback) {
+        this.log("Registered callback for message type: " + type);
+        this.callbacks[type] = callback;
+    }
+
+    onError(callback) {
+        this.onErrorCallback = callback;
+    }
+
+    onRemoteStream(callback) {
+        this.onRemoteStreamCallback = callback;
+    }
 
     // API:
-    let self = {
-        connect: connect,
+    connect() {
+        let url = "ws://" + pathcat(this.config.url, "ws", this.config.apiKey);
 
-        call: {
-            offer: offer,
-            answer: answer,
-            reject: (peer) => send(proto.Call(userId, peer, "hangup", "rejected")),
-            hangup: (peer, reason) => {
-                pc = reconnectRTC(pc);
-                send(proto.Call(userId, peer, "hangup", reason));
-            }
-        },
+        this.log("Connecting to " + url);
+        this.socket = new WebSocket(url);
+        this.socket.binaryType = "arraybuffer";
 
-        chat: (peer, body) => send(proto.ChatRequest(peer, body)),
-
-        room: {
-            create: (name) => post("http://" + pathcat(config.url, "api", "room", "create"), proto.RoomCreate(name)),
-            join: (room) => send(proto.RoomJoin(room)),
-            leave: (room) => send(proto.RoomLeave(room)),
-            invite: (room, who) => send(proto.RoomInvite(room, who))
-        },
-
-        roster: {
-            add: (who) => send(proto.RosterAdd(who)),
-            remove: (who) => send(proto.RosterRemove(who))
-        },
-
-        onConnect: nop, // NOTE By default do nothing.
-        onError: (e) => console.log(e),
-        onMessage: (type, callback) => {
-            logDebug("Registered callback for message type: " + type);
-            messageCallbacks[type] = callback;
-        },
-
-        onRemoteStream: nop // NOTE By default do nothing.
-    };
-
-    function connect() {
-        let url = "ws://" + pathcat(config.url, "ws", config.apiKey);
-
-        console.log("Connecting to " + url);
-        s = new WebSocket(url);
-        s.binaryType = "arraybuffer";
-
-        s.onopen = () => {
-            logDebug("Connected to " + url);
-            self.onConnect();
+        let _this = this;
+        this.socket.onopen = () => {
+            _this.log("Connected to " + url);
+            _this.onConnectCallback();
         };
 
-        s.onmessage = function(event) {
-            logDebug("Received: " + event.data);
+        this.socket.onmessage = function(event) {
+            _this.log("Received: " + event.data);
             let m = JSON.parse(event.data);
 
             switch(m.type) {
@@ -75,110 +65,155 @@ export function artichoke(config) {
                 let peer = m.sender;
                 switch(m.signal) {
                 case "answer":
-                    pc.setRemoteDescription(new RTCSessionDescription({"type": "answer", "sdp": m.body}));
-                    pc.onicecandidate = onICE(userId, peer);
+                    _this.pc.setRemoteDescription(new RTCSessionDescription({"type": "answer", "sdp": m.body}));
+                    _this.pc.onicecandidate = _this._onICE(_this.userId, peer);
                     break;
 
                 case "hangup":
-                    pc = reconnectRTC(pc);
+                    _this._reconnectRTC();
                     break;
 
                 case "candidate":
-                    pc.addIceCandidate(new RTCIceCandidate({"candidate": m.body, "sdpMid": "", "sdpMLineIndex": 0}));
+                    _this.pc.addIceCandidate(new RTCIceCandidate({"candidate": m.body, "sdpMid": "", "sdpMLineIndex": 0}));
                     break;
 
                 default: break;
                 }
-                runCallback(m);
+                _this._runCallback(m);
                 break;
 
             case "message":
-                if(!m.delivered) send(proto.ChatDelivered(m.id, Date.now()));
-                runCallback(m);
+                if(!m.delivered) _this._send(proto.ChatDelivered(m.id, Date.now()));
+                _this._runCallback(m);
                 break;
 
             case "hello":
-                runCallback(m);
+                _this._runCallback(m);
                 break;
 
             default:
-                runCallback(m);
+                _this._runCallback(m);
             }
         };
 
-        pc = reconnectRTC();
+        this._reconnectRTC();
     }
 
-    function offer(peer, stream) {
-        pc.addStream(stream);
+    // Call API:
+    offerCall(peer, stream) {
+        this.pc.addStream(stream);
 
-        pc.createOffer((offer) => {
-            pc.setLocalDescription(offer);
-            send(proto.Call(userId, peer, "offer", offer.sdp));
-        }, logDebug);
+        let _this = this;
+        this.pc.createOffer((offer) => {
+            _this.pc.setLocalDescription(offer);
+            _this._send(proto.Call(_this.userId, peer, "offer", offer.sdp));
+        }, this.log);
     }
 
-    function answer(peer, offer, stream) {
-        pc.setRemoteDescription(new RTCSessionDescription({"type": "offer", "sdp": offer.body}));
-        pc.onicecandidate = onICE(userId, peer);
+    answerCall(peer, offer, stream) {
+        this.pc.setRemoteDescription(new RTCSessionDescription({"type": "offer", "sdp": offer.body}));
+        this.pc.onicecandidate = this._onICE(this.userId, peer);
 
-        pc.addStream(stream);
+        this.pc.addStream(stream);
 
-        pc.createAnswer((answer) => {
-            pc.setLocalDescription(answer);
-            send(proto.Call(userId, peer, "answer", answer.sdp));
-        }, logDebug);
+        let _this = this;
+        this.pc.createAnswer((answer) => {
+            _this.pc.setLocalDescription(answer);
+            _this._send(proto.Call(_this.userId, peer, "answer", answer.sdp));
+        }, this.log);
+    }
+
+    rejectCall(peer) {
+        this._send(proto.Call(this.userId, peer, "hangup", "rejected"));
+    }
+
+    hangupCall(peer, reason) {
+        this._reconnectRTC();
+        this._send(proto.Call(this.userId, peer, "hangup", reason));
+    }
+
+    // Chat room API:
+    createRoom(name) {
+        return this._post("http://" + pathcat(this.config.url, "api", "room", "create"), proto.RoomCreate(name));
+    }
+
+    joinRoom(room) {
+        this._send(proto.RoomJoin(room));
+    }
+
+    leaveRoom(room) {
+        this._send(proto.RoomLeave(room));
+    }
+
+    inviteToRoom(room, who) {
+        this._send(proto.RoomInvite(room, who));
+    }
+
+    sendMessage(room, body) {
+        this._send(proto.ChatRequest(room, body));
+    }
+
+    // Roster API:
+    addToRoster(who) {
+        this._send(proto.RosterAdd(who));
+    }
+
+    removeFromRoster(who) {
+        this._send(proto.RosterRemove(who));
     }
 
     // Utils:
-    function reconnectRTC(old_pc) {
-        if(old_pc) old_pc.close();
+    _reconnectRTC() {
+        if(this.pc) this.pc.close();
 
-        let pc = new RTCPeerConnection(config.rtc);
+        this.pc = new RTCPeerConnection(this.config.rtc);
 
-        let onstream = (event) => self.onRemoteStream(event.stream || event.streams[0]);
+        let _this = this;
+        let onstream = (event) => _this.onRemoteStreamCallback(event.stream || event.streams[0]);
 
-        if(pc.ontrack === null) pc.ontrack = onstream;
-        else pc.onaddstream = onstream;
-
-        return pc;
+        if(this.pc.ontrack === null) this.pc.ontrack = onstream;
+        else this.pc.onaddstream = onstream;
     }
 
-    function runCallback(m) {
-        if(m.type in messageCallbacks) {
-            logDebug("Runnig callback for message type: " + m.type);
-            return messageCallbacks[m.type](m)
+    _runCallback(m) {
+        if(m.type in this.callbacks) {
+            this.log("Runnig callback for message type: " + m.type);
+            return this.callbacks[m.type](m)
         }
         else {
-            logDebug("Unhandled message: " + JSON.stringify(m));
-            self.onError({"type": "unhandled_message", "message": m});
+            this.log("Unhandled message: " + JSON.stringify(m));
+            this.onErrorCallback({"type": "unhandled_message", "message": m});
         }
     }
 
-    function onICE(sender, recipient) {
+    _onICE(sender, recipient) {
+        let _this = this;
         return (event) => {
             if (event.candidate) {
-                send(proto.Call(sender, recipient, "candidate", event.candidate.candidate));
+                _this._send(proto.Call(sender, recipient, "candidate", event.candidate.candidate));
             }
         };
     }
 
-    function send(obj) {
+    _send(obj) {
         let json = JSON.stringify(obj);
-        s.send(json);
-        logDebug("Sent: " + json);
+        this.socket.send(json);
+        this.log("Sent: " + json);
     }
 
-    function post(url, obj) {
+    _post(url, obj) {
         let json = JSON.stringify(obj);
         let xhttp = new XMLHttpRequest();
         xhttp.open("POST", url, false);
         xhttp.setRequestHeader("Content-Type", "application/json");
-        xhttp.setRequestHeader("X-Api-Key", config.apiKey);
+        xhttp.setRequestHeader("X-Api-Key", this.config.apiKey);
         xhttp.send(json);
-        logDebug("POST: " + json);
+        this.log("POST: " + json);
         return JSON.parse(xhttp.responseText);
     }
 
-    return self;
-};
+}
+
+export function artichoke(config) {
+    return new Artichoke(config);
+}
