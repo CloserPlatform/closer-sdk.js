@@ -14,7 +14,7 @@ function onLoad() {
     var a = undefined;
     var username = undefined;
     var roster = undefined;
-    var chatboxes = {}
+    var chatboxes = {};
     var calls = {};
 
     function login() {
@@ -25,6 +25,19 @@ function onLoad() {
                                 "apiKey": f.elements[1].value,
                                 "debug": true
                                });
+
+        makeChatboxControls("chatbox-controls");
+        roster = makeRoster("chatbox-roster");
+
+        a.getRoster(function(res) {
+            var rooms = {};
+            res.forEach(function(room) {
+                rooms[room.name] = room;
+                rooms[room.name].status = "available";
+            });
+            roster.set(rooms);
+            log("Roster: " + res);
+        });
 
         document.getElementById("login-box").style = "display: none;";
         document.getElementById("call-container").style = "display: block";
@@ -85,15 +98,6 @@ function onLoad() {
                     log("User " + m.user + " removed from roster.");
                 });
 
-                a.onMessage("roster", function(m) {
-                    var users = {}
-                    m.users.forEach(function (u) {
-                        users[u] = "available"; // FIXME Actually implement proper status handling.
-                    })
-                    roster.set(users);
-                    log("Roster: " + m.users);
-                });
-
                 function makeAddable(handle) {
                     var b = document.createElement("button");
                     b.innerHTML = handle;
@@ -101,6 +105,7 @@ function onLoad() {
                         if(handle != username) {
                             log("Adding user " + handle + " to the roster.");
                             a.addToRoster(handle);
+                            roster.add(handle, "available");
                         }
                     }
                     return b;
@@ -126,11 +131,9 @@ function onLoad() {
                 a.onMessage("msg_delivered", function(m) {
                     log("Message delivery ack for id: " + m.id);
                 });
-
-                makeChatboxControls("chatbox-controls");
-                roster = makeRoster("chatbox-roster");
             });
         });
+
         a.connect();
     }
 
@@ -251,7 +254,7 @@ function onLoad() {
                 chat.innerHTML = "Chat with " + u;
                 r.appendChild(chat);
 
-                if(roster[u] == "available") {
+                if(roster[u].status == "available") {
                     var call = document.createElement("button");
                     call.onclick = function() {
                         log("Calling " + u + "...");
@@ -298,9 +301,13 @@ function onLoad() {
 
             add: function(user, status) {
                 if(!roster[user]) {
-                    roster[user] = status;
+                    roster[user] = {
+                        name: user,
+                        unread: 0,
+                        status: status
+                    };
                     regenRoster();
-                }
+                };
             },
 
             remove: function(user) {
@@ -310,7 +317,7 @@ function onLoad() {
 
             update: function(user, status) {
                 if(roster[user]) {
-                    roster[user] = status;
+                    roster[user].status = status;
                     regenRoster();
                 }
             }
