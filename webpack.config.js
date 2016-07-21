@@ -4,7 +4,7 @@ var webpack = require('webpack');
 module.exports = {
     entry: './src/main.js',
     output: {
-        path: path.resolve(__dirname, '.'),
+        path: path.resolve(__dirname, 'dist'),
         filename: 'ratel-sdk.js',
         libraryTarget: 'var',
         library: 'RatelSDK'

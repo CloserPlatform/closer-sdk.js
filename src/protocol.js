@@ -23,7 +23,7 @@ export const ChatDelivered = (id, timestamp) => ({
 export const RoomCreate = (name) => ({
     type: "room_create",
     name
-})
+});
 
 export const RoomJoin = (room) => ({
     type: "room_join",
