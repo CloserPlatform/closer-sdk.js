@@ -1,0 +1,65 @@
+// 0 - off
+// 1 - warning
+// 2 - on
+
+{
+  "parser": "babel-eslint",
+  "rules": {
+    // Possible errors
+    "valid-jsdoc": [1, { requireReturn: false, prefer: { return: "returns" }}],
+
+    "no-invalid-regexp": 1,
+    "comma-dangle": [1, "never"],
+    "no-undef": 0, // we use angular modules so must be disabled
+    "no-debugger": 1,
+    "no-extra-semi": 1,
+    "semi": [1, "always"],
+    "no-unreachable": 1,
+
+    // Stylistic Issues
+    "block-spacing": [1, "always"],
+    "indent": [1, 4],
+    "brace-style": [1, "1tbs", { "allowSingleLine": true }],
+    "camelcase": 1,
+    "comma-spacing": [1, {"before": false, "after": true}],
+    "comma-style": [1, "last"],
+    "eol-last": 0,
+    "func-style": 0,
+    "no-nested-ternary": 1,
+    "new-cap": 0,
+    "no-multiple-empty-lines": [1, {max: 4, maxEOF: 10}],
+    "no-redeclare": [1, {"builtinGlobals": true}],
+    "no-underscore-dangle": 0,
+    "no-trailing-spaces": 0,
+    "keyword-spacing": [1, { "before": true }],
+    "space-before-function-paren": [1, "never"],
+    "space-before-blocks": 1,
+    "spaced-comment": [1, "always", { exceptions: ["-", "+"]}],
+    "quotes": [1, "double", "avoid-escape"],
+
+
+    // Best practices
+    "eqeqeq": [1, "allow-null"],
+    "default-case": 1,
+    "no-empty": 1,
+    "guard-for-in": 1,
+    "no-alert": 1,
+    "curly": [1, "all"],
+    "no-new": 2,
+    "no-caller": 1,
+    "no-floating-decimal": 1,
+    "radix": 1,
+    "wrap-iife": 1,
+
+
+    // Strict
+    "strict": 0, // in ES6 is allways in strict mode
+
+
+    // Variables
+    "no-undefined": 0,
+    "no-use-before-define": 1,
+    "no-unused-vars": [0, {"vars": "local", "args": "after-used"}],
+    "no-shadow": [1, {"builtinGlobals": false, "hoist": "functions", "allow": []}]
+  }
+}

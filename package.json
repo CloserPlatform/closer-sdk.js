@@ -2,11 +2,12 @@
   "name": "ratel-sdk-js",
   "version": "0.0.1",
   "description": "Ratel JavaScript SDK",
-  "main": "src/artichoke.js",
+  "main": "dist/ratel-sdk.js",
   "scripts": {
     "webpack": "webpack",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "python3 -m http.server"
+    "start": "python3 -m http.server",
+    "prepublish": "npm run webpack"
   },
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
   "license": "MIT",
@@ -16,5 +17,8 @@
     "babel-loader": "^6.2.4",
     "babel-preset-es2015": "^6.9.0",
     "webpack": "^1.13.1"
+  },
+  "publishConfig": {
+    "registry": "https://nexus.contactis.pl/content/repositories/npm-internal"
   }
 }
