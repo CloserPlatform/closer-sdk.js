@@ -33,7 +33,6 @@ function onLoad() {
             var rooms = {};
             res.forEach(function(room) {
                 rooms[room.name] = room;
-                rooms[room.name].status = "available";
             });
             roster.set(rooms);
             log("Roster: " + res);
@@ -80,16 +79,16 @@ function onLoad() {
                 });
 
                 a.onMessage("presence", function(m) {
+                    // FIXME Actually implement proper status handling.
                     var status = m.status;
                     var user = m.sender;
                     var line = "User " + user + " is " + status + "!";
                     if(user in chatboxes) chatboxes[user].receive(line);
                     else log(line);
-                    roster.update(user, status);
                 });
 
                 a.onMessage("roster_add", function(m) {
-                    roster.add(m.user, "available"); // FIXME Actually implement proper status handling.
+                    roster.add(m.user);
                     log("User " + m.user + " added to roster.");
                 });
 
@@ -105,7 +104,7 @@ function onLoad() {
                         if(handle != username) {
                             log("Adding user " + handle + " to the roster.");
                             a.addToRoster(handle);
-                            roster.add(handle, "available");
+                            roster.add(handle);
                         }
                     }
                     return b;
@@ -254,32 +253,30 @@ function onLoad() {
                 chat.innerHTML = "Chat with " + u;
                 r.appendChild(chat);
 
-                if(roster[u].status == "available") {
-                    var call = document.createElement("button");
-                    call.onclick = function() {
-                        log("Calling " + u + "...");
-                        var keys = [];
-                        for(var k in calls) { keys.push(k); }
-                        log(keys);
+                var call = document.createElement("button");
+                call.onclick = function() {
+                    log("Calling " + u + "...");
+                    var keys = [];
+                    for(var k in calls) { keys.push(k); }
+                    log(keys);
 
-                        if(keys.length == 0) {
-                            makeCall(u).createLocalStream(function(stream) {
-                                a.offerCall(u, stream);
-                            });
-                        }
-                        else if(confirm("You are arleady calling someone. Hang up that call?")) {
-                            keys.forEach(function(k) {
-                                a.hangupCall(k, "hangup");
-                                removeCall(k);
-                            });
-                            makeCall(u).createLocalStream(function(stream) {
-                                a.offerCall(u, stream);
-                            });
-                        }
-                    };
-                    call.innerHTML = "Call " + u;
-                    r.appendChild(call);
-                }
+                    if(keys.length == 0) {
+                        makeCall(u).createLocalStream(function(stream) {
+                            a.offerCall(u, stream);
+                        });
+                    }
+                    else if(confirm("You are arleady calling someone. Hang up that call?")) {
+                        keys.forEach(function(k) {
+                            a.hangupCall(k, "hangup");
+                            removeCall(k);
+                        });
+                        makeCall(u).createLocalStream(function(stream) {
+                            a.offerCall(u, stream);
+                        });
+                    }
+                };
+                call.innerHTML = "Call " + u;
+                r.appendChild(call);
 
                 var remove = document.createElement("button");
                 remove.onclick = function() {
@@ -291,7 +288,7 @@ function onLoad() {
                 remove.innerHTML = "Remove " + u;
                 r.appendChild(remove);
             });
-        }
+        };
 
         return {
             set: function(users) {
@@ -299,12 +296,11 @@ function onLoad() {
                 regenRoster();
             },
 
-            add: function(user, status) {
+            add: function(user) {
                 if(!roster[user]) {
                     roster[user] = {
                         name: user,
-                        unread: 0,
-                        status: status
+                        unread: 0
                     };
                     regenRoster();
                 };
@@ -315,9 +311,9 @@ function onLoad() {
                 regenRoster();
             },
 
-            update: function(user, status) {
+            update: function(user) {
                 if(roster[user]) {
-                    roster[user].status = status;
+                    // TODO Bump unread count and mark
                     regenRoster();
                 }
             }
