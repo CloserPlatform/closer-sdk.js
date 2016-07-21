@@ -6,50 +6,50 @@
   "parser": "babel-eslint",
   "rules": {
     // Possible errors
-    "valid-jsdoc": [1, { requireReturn: false, prefer: { return: "returns" }}],
+    "valid-jsdoc": [2, { requireReturn: false, prefer: { return: "returns" }}],
 
-    "no-invalid-regexp": 1,
-    "comma-dangle": [1, "never"],
+    "no-invalid-regexp": 2,
+    "comma-dangle": [2, "never"],
     "no-undef": 0, // we use angular modules so must be disabled
-    "no-debugger": 1,
-    "no-extra-semi": 1,
-    "semi": [1, "always"],
-    "no-unreachable": 1,
+    "no-debugger": 2,
+    "no-extra-semi": 2,
+    "semi": [2, "always"],
+    "no-unreachable": 2,
 
     // Stylistic Issues
-    "block-spacing": [1, "always"],
-    "indent": [1, 4],
-    "brace-style": [1, "1tbs", { "allowSingleLine": true }],
-    "camelcase": 1,
-    "comma-spacing": [1, {"before": false, "after": true}],
-    "comma-style": [1, "last"],
+    "block-spacing": [2, "always"],
+    "indent": [2, 4],
+    "brace-style": [2, "1tbs", { "allowSingleLine": true }],
+    "camelcase": 2,
+    "comma-spacing": [2, {"before": false, "after": true}],
+    "comma-style": [2, "last"],
     "eol-last": 0,
     "func-style": 0,
-    "no-nested-ternary": 1,
+    "no-nested-ternary": 2,
     "new-cap": 0,
-    "no-multiple-empty-lines": [1, {max: 4, maxEOF: 10}],
-    "no-redeclare": [1, {"builtinGlobals": true}],
+    "no-multiple-empty-lines": [2, {max: 4, maxEOF: 20}],
+    "no-redeclare": [2, {"builtinGlobals": true}],
     "no-underscore-dangle": 0,
     "no-trailing-spaces": 0,
-    "keyword-spacing": [1, { "before": true }],
-    "space-before-function-paren": [1, "never"],
-    "space-before-blocks": 1,
-    "spaced-comment": [1, "always", { exceptions: ["-", "+"]}],
-    "quotes": [1, "double", "avoid-escape"],
+    "keyword-spacing": [2, { "before": true }],
+    "space-before-function-paren": [2, "never"],
+    "space-before-blocks": 2,
+    "spaced-comment": [2, "always", { exceptions: ["-", "+"]}],
+    "quotes": [2, "double", "avoid-escape"],
 
 
     // Best practices
-    "eqeqeq": [1, "allow-null"],
-    "default-case": 1,
-    "no-empty": 1,
-    "guard-for-in": 1,
-    "no-alert": 1,
-    "curly": [1, "all"],
+    "eqeqeq": [2, "allow-null"],
+    "default-case": 2,
+    "no-empty": 2,
+    "guard-for-in": 2,
+    "no-alert": 2,
+    "curly": [2, "all"],
     "no-new": 2,
-    "no-caller": 1,
-    "no-floating-decimal": 1,
-    "radix": 1,
-    "wrap-iife": 1,
+    "no-caller": 2,
+    "no-floating-decimal": 2,
+    "radix": 2,
+    "wrap-iife": 2,
 
 
     // Strict
@@ -58,8 +58,8 @@
 
     // Variables
     "no-undefined": 0,
-    "no-use-before-define": 1,
+    "no-use-before-define": 2,
     "no-unused-vars": [0, {"vars": "local", "args": "after-used"}],
-    "no-shadow": [1, {"builtinGlobals": false, "hoist": "functions", "allow": []}]
+    "no-shadow": [2, {"builtinGlobals": false, "hoist": "functions", "allow": []}]
   }
 }

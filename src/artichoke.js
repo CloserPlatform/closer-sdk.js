@@ -1,5 +1,5 @@
-import * as proto from './protocol';
-import { nop, pathcat } from './utils';
+import * as proto from "./protocol";
+import { nop, pathcat } from "./utils";
 
 // Cross-browser support:
 const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
@@ -60,10 +60,10 @@ class Artichoke {
             _this.log("Received: " + event.data);
             let m = JSON.parse(event.data);
 
-            switch(m.type) {
+            switch (m.type) {
             case "call":
                 let peer = m.sender;
-                switch(m.signal) {
+                switch (m.signal) {
                 case "answer":
                     _this.pc.setRemoteDescription(new RTCSessionDescription({"type": "answer", "sdp": m.body}));
                     _this.pc.onicecandidate = _this._onICE(_this.userId, peer);
@@ -83,7 +83,9 @@ class Artichoke {
                 break;
 
             case "message":
-                if(!m.delivered) _this._send(proto.ChatDelivered(m.id, Date.now()));
+                if (!m.delivered) {
+                    _this._send(proto.ChatDelivered(m.id, Date.now()));
+                }
                 _this._runCallback(m);
                 break;
 
@@ -164,23 +166,27 @@ class Artichoke {
 
     // Utils:
     _reconnectRTC() {
-        if(this.pc) this.pc.close();
+        if (this.pc) {
+            this.pc.close();
+        }
 
         this.pc = new RTCPeerConnection(this.config.rtc);
 
         let _this = this;
         let onstream = (event) => _this.onRemoteStreamCallback(event.stream || event.streams[0]);
 
-        if(this.pc.ontrack === null) this.pc.ontrack = onstream;
-        else this.pc.onaddstream = onstream;
+        if (this.pc.ontrack === null) {
+            this.pc.ontrack = onstream;
+        } else {
+            this.pc.onaddstream = onstream;
+        }
     }
 
     _runCallback(m) {
-        if(m.type in this.callbacks) {
+        if (m.type in this.callbacks) {
             this.log("Runnig callback for message type: " + m.type);
-            return this.callbacks[m.type](m)
-        }
-        else {
+            return this.callbacks[m.type](m);
+        } else {
             this.log("Unhandled message: " + JSON.stringify(m));
             this.onErrorCallback({"type": "unhandled_message", "message": m});
         }
@@ -211,7 +217,7 @@ class Artichoke {
         this.log("POST: " + json);
         if (xhttp.responseText) {
             return JSON.parse(xhttp.responseText);
-        };
+        }
     }
 
 }
