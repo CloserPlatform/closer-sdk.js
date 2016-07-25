@@ -25,22 +25,6 @@ export const RoomCreate = (name) => ({
     name
 });
 
-export const RoomJoin = (room) => ({
-    type: "room_join",
-    room
-});
-
-export const RoomLeave = (room) => ({
-    type: "room_leave",
-    room
-});
-
-export const RoomInvite = (room, user) => ({
-    type: "room_invite",
-    room,
-    user
-});
-
 export const RosterAdd = (user) => ({
     type: "roster_add",
     user

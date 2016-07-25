@@ -140,15 +140,15 @@ class Artichoke {
     }
 
     joinRoom(room) {
-        this._send(proto.RoomJoin(room));
+        this._post("http://" + pathcat(this.config.url, "api", "room", room, "join"), "");
     }
 
     leaveRoom(room) {
-        this._send(proto.RoomLeave(room));
+        this._post("http://" + pathcat(this.config.url, "api", "room", room, "leave"), "");
     }
 
     inviteToRoom(room, who) {
-        this._send(proto.RoomInvite(room, who));
+        this._post("http://" + pathcat(this.config.url, "api", "room", room, "invite", who), "");
     }
 
     sendMessage(room, body) {
