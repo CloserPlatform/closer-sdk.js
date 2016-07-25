@@ -139,6 +139,10 @@ class Artichoke {
         this._post("http://" + pathcat(this.config.url, "api", "room", "create"), proto.RoomCreate(name), callback);
     }
 
+    getUsers(room, callback) {
+        this._get("http://" + pathcat(this.config.url, "api", "room", room, "users"), callback);
+    }
+
     joinRoom(room) {
         this._post("http://" + pathcat(this.config.url, "api", "room", room, "join"), "", nop);
     }
