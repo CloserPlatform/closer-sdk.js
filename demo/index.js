@@ -97,23 +97,6 @@ function onLoad() {
                     log("User " + m.user + " removed from roster.");
                 });
 
-                function makeAddable(handle) {
-                    var b = document.createElement("button");
-                    b.innerHTML = handle;
-                    b.onclick = function() {
-                        if(handle != username) {
-                            log("Adding user " + handle + " to the roster.");
-                            a.addToRoster(handle);
-                            roster.add(handle);
-                        }
-                    }
-                    return b;
-                }
-
-                a.onMessage("room", function(m) {
-                    makeChatbox(m.room).receive("Users currently in ", makeAddable(m.room), ": ", m.users.map(makeAddable));
-                });
-
                 a.onMessage("room_action", function(m) {
                     var s = m.subject ? makeAddable(m.subject) : "the room";
                     makeChatbox(m.room).receive("User ", makeAddable(m.originator), " ", m.action, " ", s, ".");
@@ -454,11 +437,29 @@ function onLoad() {
 
     function createRoom(name, onresponse) {
         log("Creating a chat room: " + name);
-        a.createRoom(name, onresponse);
+        a.createRoom(name, function(room) {
+            a.getUsers(room.id, function(list) {
+                makeChatbox(room.id).receive("Users currently in ", makeAddable(room.id), ": ", list.users.map(makeAddable));
+            });
+            return onresponse(room);
+        });
     }
 
     function log(str) {
         console.log(str);
+    }
+
+    function makeAddable(handle) {
+        var b = document.createElement("button");
+        b.innerHTML = handle;
+        b.onclick = function() {
+            if(handle != username) {
+                log("Adding user " + handle + " to the roster.");
+                a.addToRoster(handle);
+                roster.add(handle);
+            }
+        }
+        return b;
     }
 
     // Enable login button:
