@@ -156,6 +156,10 @@ class Artichoke {
     }
 
     // Roster API:
+    getRoster(callback) {
+        this._get("http://" + pathcat(this.config.url, "api", "roster", "unread"), callback);
+    }
+
     addToRoster(who) {
         this._post("http://" + pathcat(this.config.url, "api", "roster", "add"), proto.RosterAdd(who));
     }
@@ -205,6 +209,20 @@ class Artichoke {
         let json = JSON.stringify(obj);
         this.socket.send(json);
         this.log("Sent: " + json);
+    }
+
+    _get(url, onresponse) {
+        let xhttp = new XMLHttpRequest();
+        let _this = this;
+        xhttp.onreadystatechange = function() {
+            if (xhttp.readyState === 4 && xhttp.status === 200) {
+                _this.log(xhttp.responseText);
+                onresponse(JSON.parse(xhttp.responseText));
+            }
+        };
+        xhttp.open("GET", url, false);
+        xhttp.setRequestHeader("X-Api-Key", this.config.apiKey);
+        xhttp.send();
     }
 
     _post(url, obj) {

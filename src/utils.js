@@ -9,4 +9,3 @@ export function pathcat() {
     }
     return output.join("/");
 }
-
