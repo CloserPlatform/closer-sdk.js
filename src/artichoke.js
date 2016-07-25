@@ -4,7 +4,7 @@ import { nop, pathcat } from "./utils";
 // Cross-browser support:
 const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 
-class Artichoke {
+export class Artichoke {
     constructor(config) {
         this.config = config;
         this.log = config.debug ? (line) => console.log("[DEBUG] " + line) : nop;
@@ -246,8 +246,4 @@ class Artichoke {
         this.log("POST: " + json);
     }
 
-}
-
-export function artichoke(config) {
-    return new Artichoke(config);
 }
