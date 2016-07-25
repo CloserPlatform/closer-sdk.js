@@ -244,11 +244,11 @@ function onLoad() {
                     log("Opening chat with " + u + "...");
 
                     var name = "dm-" + [username, u].sort().join("-");
-                    var room = createRoom(name);
-                    a.joinRoom(room.id);
-                    a.inviteToRoom(room.id, u);
-
-                    makePrivateChatbox(room.id);
+                    createRoom(name, function(room) {
+                        a.joinRoom(room.id);
+                        a.inviteToRoom(room.id, u);
+                        makePrivateChatbox(room.id);
+                    });
                 }
                 chat.innerHTML = "Chat with " + u;
                 r.appendChild(chat);
@@ -440,8 +440,9 @@ function onLoad() {
 
         box.onsubmit = function() {
             try {
-                var r = createRoom(room.value);
-                a.joinRoom(r.id);
+                createRoom(room.value, function(r) {
+                    a.joinRoom(r.id);
+                });
             } catch(e) {
                 log("Error while creating a room: " + e);
             }
@@ -451,9 +452,9 @@ function onLoad() {
         document.getElementById(id).appendChild(box);
     }
 
-    function createRoom(name) {
+    function createRoom(name, onresponse) {
         log("Creating a chat room: " + name);
-        return a.createRoom(name);
+        a.createRoom(name, onresponse);
     }
 
     function log(str) {
