@@ -14,7 +14,7 @@ function onLoad() {
     document.getElementById("login").onclick = function() {
         var f = document.getElementById("login-form");
 
-        RatelSDK.init({
+        RatelSDK.withSignedAuth({
             "organizationId": f.elements[1].value,
             "sessionId": f.elements[1].value,
             "timestamp": Date.now(),

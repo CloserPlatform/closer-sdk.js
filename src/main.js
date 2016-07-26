@@ -9,16 +9,17 @@ const defaultConfig = {
     "debug": false
 };
 
-export function init(sessionData, conf) {
+export function withApiKey(sessionId, apiKey, conf) {
     return new Promise(function(resolve, reject) {
-        let config = merge(sessionData, merge(conf, defaultConfig));
-
-        // TODO Check if session data is valid.
-
-        // TODO Obtain an API Key from Ratel backend.
-        config.apiKey = sessionData.sessionId;
-
-
-        resolve(new Session(config));
+        resolve(new Session(merge({
+            sessionId,
+            apiKey
+        }, merge(conf, defaultConfig))));
     });
+}
+
+export function withSignedAuth(sessionData, conf) {
+    // TODO Check if session data is valid.
+    // TODO Obtain an API Key from Ratel backend.
+    return withApiKey(sessionData.sessionId, sessionData.sessionId, conf);
 }
