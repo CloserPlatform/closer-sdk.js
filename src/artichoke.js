@@ -138,28 +138,28 @@ export class Artichoke {
     }
 
     // Chat room API:
-    createRoom(name, callback) {
-        this._post("http://" + pathcat(this.config.url, "api", "room", "create"), proto.RoomCreate(name), callback);
+    createRoom(name) {
+        return this._post("http://" + pathcat(this.config.url, "api", "room", "create"), proto.RoomCreate(name));
     }
 
-    createDirectRoom(peer, callback) {
-        this._post("http://" + pathcat(this.config.url, "api", "room", "create-direct"), proto.RoomCreateDirect(peer), callback);
+    createDirectRoom(peer) {
+        return this._post("http://" + pathcat(this.config.url, "api", "room", "create-direct"), proto.RoomCreateDirect(peer));
     }
 
-    getUsers(room, callback) {
-        this._get("http://" + pathcat(this.config.url, "api", "room", room, "users"), callback);
+    getUsers(room) {
+        return this._get("http://" + pathcat(this.config.url, "api", "room", room, "users"));
     }
 
     joinRoom(room) {
-        this._post("http://" + pathcat(this.config.url, "api", "room", room, "join"), "", nop);
+        return this._post("http://" + pathcat(this.config.url, "api", "room", room, "join"), "");
     }
 
     leaveRoom(room) {
-        this._post("http://" + pathcat(this.config.url, "api", "room", room, "leave"), "", nop);
+        return this._post("http://" + pathcat(this.config.url, "api", "room", room, "leave"), "");
     }
 
     inviteToRoom(room, who) {
-        this._post("http://" + pathcat(this.config.url, "api", "room", room, "invite", who), "", nop);
+        return this._post("http://" + pathcat(this.config.url, "api", "room", room, "invite", who), "");
     }
 
     sendMessage(room, body) {
@@ -167,16 +167,16 @@ export class Artichoke {
     }
 
     // Roster API:
-    getRoster(callback) {
-        this._get("http://" + pathcat(this.config.url, "api", "roster", "unread"), callback);
+    getRoster() {
+        return this._get("http://" + pathcat(this.config.url, "api", "roster", "unread"));
     }
 
     addToRoster(who) {
-        this._post("http://" + pathcat(this.config.url, "api", "roster", "add"), proto.RosterAdd(who), nop);
+        return this._post("http://" + pathcat(this.config.url, "api", "roster", "add"), proto.RosterAdd(who));
     }
 
     removeFromRoster(who) {
-        this._post("http://" + pathcat(this.config.url, "api", "roster", "remove"), proto.RosterRemove(who), nop);
+        return this._post("http://" + pathcat(this.config.url, "api", "roster", "remove"), proto.RosterRemove(who));
     }
 
     // Utils:
@@ -219,38 +219,62 @@ export class Artichoke {
     _send(obj) {
         let json = JSON.stringify(obj);
         this.socket.send(json);
-        this.log("Sent: " + json);
+        this.log("WS: " + json);
     }
 
-    _get(url, onresponse) {
-        let xhttp = new XMLHttpRequest();
+    _get(url) {
         let _this = this;
-        xhttp.onreadystatechange = function() {
-            if (xhttp.readyState === 4 && xhttp.status === 200) {
-                _this.log("response: " + xhttp.responseText);
-                onresponse(JSON.parse(xhttp.responseText));
-            }
-        };
-        xhttp.open("GET", url, true);
-        xhttp.setRequestHeader("X-Api-Key", this.apiKey);
-        xhttp.send();
+        return new Promise(function(resolve, reject) {
+            let xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (xhttp.readyState === 4 && xhttp.status === 200) {
+                    _this.log("OK response: " + xhttp.responseText);
+                    resolve(JSON.parse(xhttp.responseText));
+                } else if (xhttp.readyState === 4 && xhttp.status === 204) {
+                    _this.log("NoContent response.");
+                    resolve(null);
+                } else if (xhttp.readyState === 4) {
+                    _this.log("Error response: " + xhttp.responseText);
+                    reject(parse(xhttp.responseText, null));
+                }
+            };
+            _this.log("GET " + url);
+            xhttp.open("GET", url, true);
+            xhttp.setRequestHeader("X-Api-Key", _this.apiKey);
+            xhttp.send();
+        });
     }
 
-    _post(url, obj, onresponse) {
-        let json = JSON.stringify(obj);
-        let xhttp = new XMLHttpRequest();
+    _post(url, obj) {
         let _this = this;
-        xhttp.onreadystatechange = function() {
-            if (xhttp.readyState === 4 && xhttp.status === 200) {
-                _this.log("response: " + xhttp.responseText);
-                onresponse(JSON.parse(xhttp.responseText));
-            }
-        };
-        xhttp.open("POST", url, true);
-        xhttp.setRequestHeader("Content-Type", "application/json");
-        xhttp.setRequestHeader("X-Api-Key", this.apiKey);
-        xhttp.send(json);
-        this.log("POST: " + json);
+        return new Promise(function(resolve, reject) {
+            let json = JSON.stringify(obj);
+            let xhttp = new XMLHttpRequest();
+            xhttp.onreadystatechange = function() {
+                if (xhttp.readyState === 4 && xhttp.status === 200) {
+                    _this.log("OK response: " + xhttp.responseText);
+                    resolve(JSON.parse(xhttp.responseText));
+                } else if (xhttp.readyState === 4 && xhttp.status === 204) {
+                    _this.log("NoContent response.");
+                    resolve(null);
+                } else if (xhttp.readyState === 4) {
+                    _this.log("Error response: " + xhttp.responseText);
+                    reject(parseOrElse(xhttp.responseText, null));
+                }
+            };
+            _this.log("POST " + url + " " + json);
+            xhttp.open("POST", url, true);
+            xhttp.setRequestHeader("Content-Type", "application/json");
+            xhttp.setRequestHeader("X-Api-Key", _this.apiKey);
+            xhttp.send(json);
+        });
     }
+}
 
+function parseOrElse(json, els) {
+    try {
+        return JSON.parse(json);
+    } catch (error) {
+        return els;
+    }
 }
