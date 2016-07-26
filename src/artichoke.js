@@ -4,15 +4,18 @@ import { nop, pathcat } from "./utils";
 // Cross-browser support:
 const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 
-class Artichoke {
+export class Artichoke {
     constructor(config) {
         this.config = config;
         this.log = config.debug ? (line) => console.log("[DEBUG] " + line) : nop;
 
         this.log("this.config: " + JSON.stringify(this.config));
 
+        // User config:
+        this.sessionId = config.sessionId;
+        this.apiKey = config.apiKey;
+
         // Connection state:
-        this.userId = config.apiKey; // FIXME Actually get it.
         this.pc = undefined;
         this.socket = undefined;
 
@@ -44,7 +47,7 @@ class Artichoke {
 
     // API:
     connect() {
-        let url = "ws://" + pathcat(this.config.url, "ws", this.config.apiKey);
+        let url = "ws://" + pathcat(this.config.url, "ws", this.apiKey);
 
         this.log("Connecting to " + url);
         this.socket = new WebSocket(url);
@@ -66,7 +69,7 @@ class Artichoke {
                 switch (m.signal) {
                 case "answer":
                     _this.pc.setRemoteDescription(new RTCSessionDescription({"type": "answer", "sdp": m.body}));
-                    _this.pc.onicecandidate = _this._onICE(_this.userId, peer);
+                    _this.pc.onicecandidate = _this._onICE(_this.sessionId, peer);
                     break;
 
                 case "hangup":
@@ -108,30 +111,30 @@ class Artichoke {
         let _this = this;
         this.pc.createOffer((offer) => {
             _this.pc.setLocalDescription(offer);
-            _this._send(proto.Call(_this.userId, peer, "offer", offer.sdp));
+            _this._send(proto.Call(_this.sessionId, peer, "offer", offer.sdp));
         }, this.log);
     }
 
     answerCall(peer, offer, stream) {
         this.pc.setRemoteDescription(new RTCSessionDescription({"type": "offer", "sdp": offer.body}));
-        this.pc.onicecandidate = this._onICE(this.userId, peer);
+        this.pc.onicecandidate = this._onICE(this.sessionId, peer);
 
         this.pc.addStream(stream);
 
         let _this = this;
         this.pc.createAnswer((answer) => {
             _this.pc.setLocalDescription(answer);
-            _this._send(proto.Call(_this.userId, peer, "answer", answer.sdp));
+            _this._send(proto.Call(_this.sessionId, peer, "answer", answer.sdp));
         }, this.log);
     }
 
     rejectCall(peer) {
-        this._send(proto.Call(this.userId, peer, "hangup", "rejected"));
+        this._send(proto.Call(this.sessionId, peer, "hangup", "rejected"));
     }
 
     hangupCall(peer, reason) {
         this._reconnectRTC();
-        this._send(proto.Call(this.userId, peer, "hangup", reason));
+        this._send(proto.Call(this.sessionId, peer, "hangup", reason));
     }
 
     // Chat room API:
@@ -225,7 +228,7 @@ class Artichoke {
             }
         };
         xhttp.open("GET", url, true);
-        xhttp.setRequestHeader("X-Api-Key", this.config.apiKey);
+        xhttp.setRequestHeader("X-Api-Key", this.apiKey);
         xhttp.send();
     }
 
@@ -241,13 +244,9 @@ class Artichoke {
         };
         xhttp.open("POST", url, true);
         xhttp.setRequestHeader("Content-Type", "application/json");
-        xhttp.setRequestHeader("X-Api-Key", this.config.apiKey);
+        xhttp.setRequestHeader("X-Api-Key", this.apiKey);
         xhttp.send(json);
         this.log("POST: " + json);
     }
 
-}
-
-export function artichoke(config) {
-    return new Artichoke(config);
 }
