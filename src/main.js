@@ -1,4 +1,4 @@
-import { Artichoke } from "./artichoke";
+import { Session } from "./session";
 import { merge } from "./utils";
 
 const defaultConfig = {
@@ -9,23 +9,16 @@ const defaultConfig = {
     "debug": false
 };
 
-let config = undefined;
-
 export function init(sessionData, conf) {
     return new Promise(function(resolve, reject) {
-        config = merge(sessionData, merge(conf, defaultConfig));
+        let config = merge(sessionData, merge(conf, defaultConfig));
 
         // TODO Check if session data is valid.
 
         // TODO Obtain an API Key from Ratel backend.
         config.apiKey = sessionData.sessionId;
 
-        // TODO Initialize the SDK.
 
-        resolve();
+        resolve(new Session(config));
     });
-}
-
-export function chat() {
-    return new Artichoke(config);
 }
