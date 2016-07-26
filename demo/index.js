@@ -31,34 +31,34 @@ function onLoad() {
             roster = makeRoster("chatbox-roster");
 
             session.chat.onConnect(function() {
-                log("Connected to artichoke!");
+                console.log("Connected to artichoke!");
             });
 
             session.chat.onMessage("hello", function(m) {
-                log("Connection ready for " + username + "!");
+                console.log("Connection ready for " + username + "!");
             });
 
             session.chat.onMessage("call", function(m) {
                 var peer = m.sender;
                 switch(m.signal) {
                 case "offer":
-                    log(peer + " is calling...");
+                    console.log(peer + " is calling...");
                     if(confirm(peer + " is calling, answer?")) {
                         makeCall(peer).createLocalStream(function(stream) {
                             session.chat.answerCall(peer, m, stream);
                         });
                     } else {
-                        log("Rejecting call...");
+                        console.log("Rejecting call...");
                         session.chat.rejectCall(peer);
                     }
                     break;
 
                 case "answer":
-                    log(peer + " answered the call!");
+                    console.log(peer + " answered the call!");
                     break;
 
                 case "hangup":
-                    log(peer + " hang up, reason: " + m.body);
+                    console.log(peer + " hang up, reason: " + m.body);
                     removeCall(peer);
                     break;
 
@@ -72,17 +72,17 @@ function onLoad() {
                 var user = m.sender;
                 var line = "User " + user + " is " + status + "!";
                 if(user in chatboxes) chatboxes[user].receive(line);
-                else log(line);
+                else console.log(line);
             });
 
             session.chat.onMessage("roster_add", function(m) {
                 roster.add(m.user);
-                log("User " + m.user + " added to roster.");
+                console.log("User " + m.user + " added to roster.");
             });
 
             session.chat.onMessage("roster_remove", function(m) {
                 roster.remove(m.user);
-                log("User " + m.user + " removed from roster.");
+                console.log("User " + m.user + " removed from roster.");
             });
 
             session.chat.onMessage("room_action", function(m) {
@@ -95,20 +95,22 @@ function onLoad() {
             });
 
             session.chat.onMessage("msg_received", function(m) {
-                log("Received ack for message id: " + m.id);
+                console.log("Received ack for message id: " + m.id);
             });
 
             session.chat.onMessage("msg_delivered", function(m) {
-                log("Message delivery ack for id: " + m.id);
+                console.log("Message delivery ack for id: " + m.id);
             });
 
-            session.chat.getRoster(function(res) {
+            session.chat.getRoster().then(function(res) {
                 var rooms = {};
                 res.forEach(function(room) {
                     rooms[room.name] = room;
                 });
                 roster.set(rooms);
-                log("Roster: " + res);
+                console.log("Roster: " + res);
+            }).catch(function(error) {
+                console.log("Fetching roster failed:" + error);
             });
 
             document.getElementById("login-box").style = "display: none;";
@@ -119,7 +121,7 @@ function onLoad() {
 
             // Utils:
             function makeCall(peer) {
-                log("Creating a call object.");
+                console.log("Creating a call object.");
                 var call = calls[peer];
                 if(call) return call;
 
@@ -140,7 +142,7 @@ function onLoad() {
                 var end = document.createElement("button");
                 end.innerHTML = "Hangup call";
                 end.onclick = function() {
-                    log( "Ending call with " + peer + "...");
+                    console.log( "Ending call with " + peer + "...");
                     session.chat.hangupCall(peer, "hangup");
                     removeCall(peer);
                 };
@@ -175,16 +177,16 @@ function onLoad() {
                         {"video": f.elements[3].checked,
                          "audio": f.elements[2].checked},
                         function(stream) {
-                            log("Local stream started!");
+                            console.log("Local stream started!");
                             showLocalStream(stream);
                             onLocalStream(stream);
                         }, function(error) {
-                            log("Could not start stream: " + error);
+                            console.log("Could not start stream: " + error);
                         });
                 };
 
                 session.chat.onRemoteStream(function(stream) {
-                    log("Remote stream started!");
+                    console.log("Remote stream started!");
                     showRemoteStream(stream);
                 });
 
@@ -200,7 +202,7 @@ function onLoad() {
             }
 
             function removeCall(peer) {
-                log("Removing a call object.");
+                console.log("Removing a call object.");
                 var call = calls[peer];
                 if(call) {
                     call.stopStreams();
@@ -210,7 +212,7 @@ function onLoad() {
             }
 
             function makeRoster(id) {
-                log("Building the roster.");
+                console.log("Building the roster.");
                 var roster = {};
 
                 function regenRoster() {
@@ -223,7 +225,7 @@ function onLoad() {
                     users.forEach(function(u) {
                         var chat = document.createElement("button");
                         chat.onclick = function() {
-                            log("Opening chat with " + u + "...");
+                            console.log("Opening chat with " + u + "...");
 
                             var name = "dm-" + [username, u].sort().join("-");
                             createDirectRoom(u, function(room) {
@@ -235,10 +237,9 @@ function onLoad() {
 
                         var call = document.createElement("button");
                         call.onclick = function() {
-                            log("Calling " + u + "...");
+                            console.log("Calling " + u + "...");
                             var keys = [];
                             for(var k in calls) { keys.push(k); }
-                            log(keys);
 
                             if(keys.length == 0) {
                                 makeCall(u).createLocalStream(function(stream) {
@@ -260,7 +261,7 @@ function onLoad() {
 
                         var remove = document.createElement("button");
                         remove.onclick = function() {
-                            log("Removing user " + u + " from roster.");
+                            console.log("Removing user " + u + " from roster.");
                             session.chat.removeFromRoster(u);
                             delete roster[u];
                             regenRoster()
@@ -301,7 +302,7 @@ function onLoad() {
             }
 
             function makeChatbox(room) {
-                log("Creating a chatbox object: " + room);
+                console.log("Creating a chatbox object: " + room);
                 var chat = makeGenericChatbox(room);
                 chat.teardown = function() {
                     session.chat.leaveRoom(room);
@@ -310,7 +311,7 @@ function onLoad() {
             }
 
             function makePrivateChatbox(room) {
-                log("Creating a private chatbox object: " + room);
+                console.log("Creating a private chatbox object: " + room);
                 return makeGenericChatbox(room);
             }
 
@@ -379,7 +380,7 @@ function onLoad() {
                         append(arguments[a]);
                     }
 
-                    log("[" + room + "] " + p.innerHTML);
+                    console.log("[" + room + "] " + p.innerHTML);
                     text.appendChild(p);
                     text.scrollTop = text.scrollHeight - text.clientHeight;
                 }
@@ -394,7 +395,7 @@ function onLoad() {
             }
 
             function removeChatbox(room) {
-                log("Removing a chatbox object: " + room);
+                console.log("Removing a chatbox object: " + room);
                 var chat = chatboxes[room];
                 document.getElementById("chatbox-container").removeChild(chat.box);
                 if(chat.teardown) chat.teardown();
@@ -402,7 +403,7 @@ function onLoad() {
             }
 
             function makeChatboxControls(id) {
-                log("Creating a chatbox controls: " + id);
+                console.log("Creating a chatbox controls: " + id);
                 var box = document.createElement("form");
                 var room = document.createElement("input");
                 room.type = "text";
@@ -420,7 +421,7 @@ function onLoad() {
                             session.chat.joinRoom(r.id);
                         });
                     } catch(e) {
-                        log("Error while creating a room: " + e);
+                        console.log("Error while creating a room: " + e);
                     }
                     return false;
                 };
@@ -429,20 +430,26 @@ function onLoad() {
             }
 
             function createRoom(name, onresponse) {
-                log("Creating a chat room: " + name);
-                session.chat.createRoom(name, function(room) {
-                    session.chat.getUsers(room.id, function(list) {
+                console.log("Creating a chat room: " + name);
+                session.chat.createRoom(name).then(function(room) {
+                    session.chat.getUsers(room.id).then(function(list) {
                         makeChatbox(room.id).receive("Users currently in ", makeAddable(room.id), ": ", list.users.map(makeAddable));
+                    }).catch(function(error) {
+                        console.log("Error while retrieving room user list: " + error);
                     });
                     return onresponse(room);
+                }).catch(function(error) {
+                    console.log("Error while creating a room: " + error);
                 });
             }
 
             function createDirectRoom(peer, onresponse) {
-                log("Creating a direct chat room with: " + peer);
-                session.chat.createDirectRoom(peer, function(room) {
+                console.log("Creating a direct chat room with: " + peer);
+                session.chat.createDirectRoom(peer).then(function(room) {
                     makeChatbox(room.id).receive("Chatting with ", makeAddable(peer))
                     return onresponse(room);
+                }).catch(function(error) {
+                    console.log("Error while creating a direct room: " + e);
                 });
             }
 
@@ -451,17 +458,15 @@ function onLoad() {
                 b.innerHTML = handle;
                 b.onclick = function() {
                     if(handle != username) {
-                        log("Adding user " + handle + " to the roster.");
+                        console.log("Adding user " + handle + " to the roster.");
                         session.chat.addToRoster(handle);
                         roster.add(handle);
                     }
                 }
                 return b;
             }
-        }).catch(log);
+        }).catch(function(error) {
+            console.log(error);
+        });
     };
-
-    function log(str) {
-        console.log(str);
-    }
 }
