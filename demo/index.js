@@ -226,9 +226,7 @@ function onLoad() {
                             log("Opening chat with " + u + "...");
 
                             var name = "dm-" + [username, u].sort().join("-");
-                            createRoom(name, function(room) {
-                                session.chat.joinRoom(room.id);
-                                session.chat.inviteToRoom(room.id, u);
+                            createDirectRoom(u, function(room) {
                                 makePrivateChatbox(room.id);
                             });
                         }
@@ -330,10 +328,6 @@ function onLoad() {
                 var text = document.createElement("div");
                 text.className = "chatbox-textarea";
                 box.appendChild(text);
-
-                var p = document.createElement("p");
-                p.innerHTML = "Chatting with " + room + "..."
-                text.appendChild(p);
 
                 var controls = document.createElement("form");
                 var input = document.createElement("input");
@@ -440,6 +434,14 @@ function onLoad() {
                     session.chat.getUsers(room.id, function(list) {
                         makeChatbox(room.id).receive("Users currently in ", makeAddable(room.id), ": ", list.users.map(makeAddable));
                     });
+                    return onresponse(room);
+                });
+            }
+
+            function createDirectRoom(peer, onresponse) {
+                log("Creating a direct chat room with: " + peer);
+                session.chat.createDirectRoom(peer, function(room) {
+                    makeChatbox(room.id).receive("Chatting with ", makeAddable(peer))
                     return onresponse(room);
                 });
             }
