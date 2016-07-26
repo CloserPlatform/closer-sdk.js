@@ -1,26 +1,26 @@
 import { Artichoke } from "./artichoke";
-import { uuid4 } from "./utils";
+import { merge } from "./utils";
 
-let config = {
+const defaultConfig = {
     "rtc": {"iceServers": [{"urls": ["stun:46.101.163.186:3478", "turn:46.101.163.186:3478"],
                             "username": "test123",
                             "credential":"test456"}]},
     "url": "localhost:5431",
-    "apiKey": undefined,
     "debug": false
 };
 
-function merge(cfg) {
-    Object.getOwnPropertyNames(config).forEach((p) => {
-        config[p] = cfg[p] || config[p];
-    });
-}
+let config = undefined;
 
-export function init(conf) {
+export function init(sessionData, conf) {
     return new Promise(function(resolve, reject) {
-        merge(conf);
+        config = merge(sessionData, merge(conf, defaultConfig));
 
-        // FIXME Actually connect to Ratel & authorize the user.
+        // TODO Check if session data is valid.
+
+        // TODO Obtain an API Key from Ratel backend.
+        config.apiKey = sessionData.sessionId;
+
+        // TODO Initialize the SDK.
 
         resolve();
     });

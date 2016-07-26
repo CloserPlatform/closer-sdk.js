@@ -18,8 +18,12 @@ function onLoad() {
     // Connection:
     document.getElementById("login").onclick = function() {
         RatelSDK.init({
+            "organizationId": f.elements[1].value,
+            "sessionId": f.elements[1].value,
+            "timestamp": Date.now(),
+            "signature": "FIXME"
+        },{
             "url": f.elements[0].value,
-            "apiKey": f.elements[1].value,
             "debug": true
         }).then(function() {
             a = RatelSDK.chat();

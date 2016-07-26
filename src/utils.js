@@ -9,3 +9,11 @@ export function pathcat() {
     }
     return output.join("/");
 }
+
+export function merge(cfg, defaultCfg) {
+    let config = cfg;
+    Object.getOwnPropertyNames(defaultCfg).forEach((p) => {
+        config[p] = cfg[p] || defaultCfg[p];
+    });
+    return config;
+}
