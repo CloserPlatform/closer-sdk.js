@@ -25,6 +25,11 @@ export const RoomCreate = (name) => ({
     name
 });
 
+export const RoomCreateDirect = (peer) => ({
+    type: "room_create_direct",
+    peer
+});
+
 export const RosterAdd = (user) => ({
     type: "roster_add",
     user
