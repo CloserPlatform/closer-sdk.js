@@ -139,8 +139,8 @@ export class Artichoke {
         });
     }
 
-    rejectCall(peer) {
-        this._send(proto.Call(this.sessionId, peer, "hangup", "rejected"));
+    rejectCall(offer) {
+        this._send(proto.Call(this.sessionId, offer.sender, "hangup", "rejected"));
     }
 
     hangupCall(peer, reason) {

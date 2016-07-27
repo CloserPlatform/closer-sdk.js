@@ -46,7 +46,7 @@ function onLoad() {
                     });
                 } else {
                     console.log("Rejecting call...");
-                    session.chat.rejectCall(m.sender);
+                    session.chat.rejectCall(m);
                 }
             });
 
