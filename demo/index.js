@@ -45,7 +45,7 @@ function onLoad() {
                     console.log(peer + " is calling...");
                     if(confirm(peer + " is calling, answer?")) {
                         makeCall(peer).createLocalStream(function(stream) {
-                            session.chat.answerCall(peer, m, stream);
+                            session.chat.answerCall(m, stream);
                         });
                     } else {
                         console.log("Rejecting call...");

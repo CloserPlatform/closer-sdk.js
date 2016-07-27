@@ -115,16 +115,16 @@ export class Artichoke {
         }, this.log);
     }
 
-    answerCall(peer, offer, stream) {
+    answerCall(offer, stream) {
         this.pc.setRemoteDescription(new RTCSessionDescription({"type": "offer", "sdp": offer.body}));
-        this.pc.onicecandidate = this._onICE(this.sessionId, peer);
+        this.pc.onicecandidate = this._onICE(this.sessionId, m.sender);
 
         this.pc.addStream(stream);
 
         let _this = this;
         this.pc.createAnswer((answer) => {
             _this.pc.setLocalDescription(answer);
-            _this._send(proto.Call(_this.sessionId, peer, "answer", answer.sdp));
+            _this._send(proto.Call(_this.sessionId, m.sender, "answer", answer.sdp));
         }, this.log);
     }
 
