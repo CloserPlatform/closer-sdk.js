@@ -4,6 +4,26 @@ import { nop, pathcat } from "./utils";
 // Cross-browser support:
 const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 
+function fixCall(m) {
+    // FIXME Do this on the backend
+    if (m.type === "call") {
+        let fixed = {
+            "type": "call_" + m.signal,
+            "sender": m.sender
+        };
+        switch (m.signal) {
+        case "answer": fixed.sdp = m.body; break;
+        case "offer": fixed.sdp = m.body; break;
+        case "candidate": fixed.candidate = m.body; break;
+        case "hangup": fixed.reason = m.body; break;
+        default: break;
+        }
+        return fixed;
+    } else {
+        return m;
+    }
+}
+
 export class Artichoke {
     constructor(config) {
         this.config = config;
@@ -61,44 +81,31 @@ export class Artichoke {
 
         this.socket.onmessage = function(event) {
             _this.log("Received: " + event.data);
-            let m = JSON.parse(event.data);
+            let m = fixCall(JSON.parse(event.data)); // FIXME Don't fix anything.
 
             switch (m.type) {
-            case "call":
-                let peer = m.sender;
-                switch (m.signal) {
-                case "answer":
-                    _this.pc.setRemoteDescription(new RTCSessionDescription({"type": "answer", "sdp": m.body}));
-                    _this.pc.onicecandidate = _this._onICE(_this.sessionId, peer);
-                    break;
+            case "call_answer":
+                _this.pc.setRemoteDescription(new RTCSessionDescription({"type": "answer", "sdp": m.sdp}));
+                _this.pc.onicecandidate = _this._onICE(_this.sessionId, m.sender);
+                break;
 
-                case "hangup":
-                    _this._reconnectRTC();
-                    break;
+            case "call_hangup":
+                _this._reconnectRTC();
+                break;
 
-                case "candidate":
-                    _this.pc.addIceCandidate(new RTCIceCandidate({"candidate": m.body, "sdpMid": "", "sdpMLineIndex": 0}));
-                    break;
-
-                default: break;
-                }
-                _this._runCallback(m);
+            case "call_candidate":
+                _this.pc.addIceCandidate(new RTCIceCandidate({"candidate": m.candidate, "sdpMid": "", "sdpMLineIndex": 0}));
                 break;
 
             case "message":
                 if (!m.delivered) {
                     _this._send(proto.ChatDelivered(m.id, Date.now()));
                 }
-                _this._runCallback(m);
                 break;
 
-            case "hello":
-                _this._runCallback(m);
-                break;
-
-            default:
-                _this._runCallback(m);
+            default: break;
             }
+            _this._runCallback(m);
         };
 
         this._reconnectRTC();
@@ -118,15 +125,15 @@ export class Artichoke {
     }
 
     answerCall(offer, stream) {
-        this.pc.setRemoteDescription(new RTCSessionDescription({"type": "offer", "sdp": offer.body}));
-        this.pc.onicecandidate = this._onICE(this.sessionId, m.sender);
+        this.pc.setRemoteDescription(new RTCSessionDescription({"type": "offer", "sdp": offer.sdp}));
+        this.pc.onicecandidate = this._onICE(this.sessionId, offer.sender);
 
         this.pc.addStream(stream);
 
         let _this = this;
         this.pc.createAnswer((answer) => {
             _this.pc.setLocalDescription(answer);
-            _this._send(proto.Call(_this.sessionId, m.sender, "answer", answer.sdp));
+            _this._send(proto.Call(_this.sessionId, offer.sender, "answer", answer.sdp));
         }, (error) => {
             _this.onErrorCallback({"reason": "Answer creation failed.", "error": error});
         });
