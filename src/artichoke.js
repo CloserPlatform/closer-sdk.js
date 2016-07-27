@@ -203,7 +203,7 @@ export class Artichoke {
             return this.callbacks[m.type](m);
         } else {
             this.log("Unhandled message: " + JSON.stringify(m));
-            this.onErrorCallback({"type": "unhandled_message", "message": m});
+            this.onErrorCallback({"reason": "Unhandled message.", "message": m});
         }
     }
 
