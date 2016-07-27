@@ -11,6 +11,7 @@ const defaultConfig = {
 
 export function withApiKey(sessionId, apiKey, conf) {
     return new Promise(function(resolve, reject) {
+        // TODO Check supplied apiKey.
         resolve(new Session(merge({
             sessionId,
             apiKey
