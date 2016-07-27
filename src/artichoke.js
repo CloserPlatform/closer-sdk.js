@@ -24,7 +24,7 @@ export class Artichoke {
         // NOTE By default do nothing.
         this.onConnectCallback = nop;
         this.onRemoteStreamCallback = nop;
-        this.onErrorCallback = this.log;
+        this.onErrorCallback = nop;
     }
 
     // Callbacks:
@@ -112,7 +112,9 @@ export class Artichoke {
         this.pc.createOffer((offer) => {
             _this.pc.setLocalDescription(offer);
             _this._send(proto.Call(_this.sessionId, peer, "offer", offer.sdp));
-        }, this.log);
+        }, (error) => {
+            _this.onErrorCallback({"reason": "Offer creation failed.", "error": error});
+        });
     }
 
     answerCall(offer, stream) {
@@ -125,7 +127,9 @@ export class Artichoke {
         this.pc.createAnswer((answer) => {
             _this.pc.setLocalDescription(answer);
             _this._send(proto.Call(_this.sessionId, m.sender, "answer", answer.sdp));
-        }, this.log);
+        }, (error) => {
+            _this.onErrorCallback({"reason": "Answer creation failed.", "error": error});
+        });
     }
 
     rejectCall(peer) {
