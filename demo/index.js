@@ -38,32 +38,25 @@ function onLoad() {
                 console.log("Connection ready for " + username + "!");
             });
 
-            session.chat.onMessage("call", function(m) {
-                var peer = m.sender;
-                switch(m.signal) {
-                case "offer":
-                    console.log(peer + " is calling...");
-                    if(confirm(peer + " is calling, answer?")) {
-                        makeCall(peer).createLocalStream(function(stream) {
-                            session.chat.answerCall(peer, m, stream);
-                        });
-                    } else {
-                        console.log("Rejecting call...");
-                        session.chat.rejectCall(peer);
-                    }
-                    break;
-
-                case "answer":
-                    console.log(peer + " answered the call!");
-                    break;
-
-                case "hangup":
-                    console.log(peer + " hang up, reason: " + m.body);
-                    removeCall(peer);
-                    break;
-
-                default: break;
+            session.chat.onMessage("call_offer", function(m) {
+                console.log(m.sender + " is calling...");
+                if(confirm(m.sender + " is calling, answer?")) {
+                    makeCall(m.sender).createLocalStream(function(stream) {
+                        session.chat.answerCall(m, stream);
+                    });
+                } else {
+                    console.log("Rejecting call...");
+                    session.chat.rejectCall(m);
                 }
+            });
+
+            session.chat.onMessage("call_answer", function(m) {
+                console.log(m.sender + " answered the call!");
+            });
+
+            session.chat.onMessage("call_hangup", function(m) {
+                console.log(m.sender + " hang up, reason: " + m.reason);
+                removeCall(m.sender);
             });
 
             session.chat.onMessage("presence", function(m) {
