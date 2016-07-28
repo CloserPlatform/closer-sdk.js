@@ -108,19 +108,19 @@ class ArtichokeWS extends JSONWebSocket {
 
     // Call API:
     offerCall(sessionId, sdp) {
-        this.send(proto.Call(this.sessionId, sessionId, "offer", sdp));
+        this.send(proto.CallOffer(this.sessionId, sessionId, sdp));
     }
 
     answerCall(sessionId, sdp) {
-        this.send(proto.Call(this.sessionId, sessionId, "answer", sdp));
+        this.send(proto.CallAnswer(this.sessionId, sessionId, sdp));
     }
 
     hangupCall(sessionId, reason) {
-        this.send(proto.Call(this.sessionId, sessionId, "hangup", reason));
+        this.send(proto.CallHangup(this.sessionId, sessionId, reason));
     }
 
     sendCandidate(sessionId, candidate) {
-        this.send(proto.Call(this.sessionId, sessionId, "candidate", candidate));
+        this.send(proto.CallCandidate(this.sessionId, sessionId, candidate));
     }
 
     // Chat API:

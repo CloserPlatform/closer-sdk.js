@@ -1,11 +1,35 @@
 // Artichoke protocol messages:
 
-export const Call = (sender, recipient, signal, body) => ({
+export const CallAnswer = (sender, recipient, sdp) => ({
     type: "call",
     sender,
     recipient,
-    signal,
-    body
+    signal: "answer",
+    body: sdp
+});
+
+export const CallCandidate = (sender, recipient, candidate) => ({
+    type: "call",
+    sender,
+    recipient,
+    signal: "candidate",
+    body: candidate
+});
+
+export const CallHangup = (sender, recipient, reason) => ({
+    type: "call",
+    sender,
+    recipient,
+    signal: "hangup",
+    body: reason
+});
+
+export const CallOffer = (sender, recipient, sdp) => ({
+    type: "call",
+    sender,
+    recipient,
+    signal: "offer",
+    body: sdp
 });
 
 export const ChatRequest = (room, body) => ({
