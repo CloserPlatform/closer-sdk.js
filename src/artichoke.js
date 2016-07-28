@@ -161,6 +161,10 @@ export class Artichoke {
         return this._get("http://" + pathcat(this.config.url, "api", "room", room, "users"));
     }
 
+    getChatHistory(room) {
+        return this._get("http://" + pathcat(this.config.url, "api", "chat", room));
+    }
+
     joinRoom(room) {
         return this._post("http://" + pathcat(this.config.url, "api", "room", room, "join"), "");
     }
