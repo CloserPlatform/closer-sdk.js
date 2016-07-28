@@ -1,9 +1,7 @@
 import * as proto from "./protocol";
 import { nop, pathcat } from "./utils";
 import { JSONWebSocket } from "./jsonws";
-
-// Cross-browser support:
-const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+import { RTCConnection } from "./rtc";
 
 class ArtichokeREST {
     constructor(config) {
@@ -150,14 +148,13 @@ export class Artichoke {
         this.apiKey = config.apiKey;
 
         // Connection state:
-        this.pc = undefined;
+        this.rtc = undefined;
         this.socket = undefined;
 
         this.callbacks = {};
 
         // NOTE By default do nothing.
         this.onConnectCallback = nop;
-        this.onRemoteStreamCallback = nop;
         this.onErrorCallback = nop;
     }
 
@@ -176,11 +173,12 @@ export class Artichoke {
     }
 
     onRemoteStream(callback) {
-        this.onRemoteStreamCallback = callback;
+        this.rtc.onRemoteStream(callback);
     }
 
     // API:
     connect() {
+        this.rtc = new RTCConnection(this.config);
         this.socket = new ArtichokeWS(this.config);
         this.socket.onConnect(this.onConnectCallback);
 
@@ -188,16 +186,17 @@ export class Artichoke {
         this.socket.onMessage(function(m) {
             switch (m.type) {
             case "call_answer":
-                _this.pc.setRemoteDescription(new RTCSessionDescription({"type": "answer", "sdp": m.sdp}));
-                _this.pc.onicecandidate = _this._onICE(m.sender);
+                _this.rtc.setRemoteDescription("answer", m.sdp, function(candidate) {
+                    _this.socket.sendCandidate(m.sender, candidate);
+                });
                 break;
 
             case "call_hangup":
-                _this._reconnectRTC();
+                _this.rtc.reconnect();
                 break;
 
             case "call_candidate":
-                _this.pc.addIceCandidate(new RTCIceCandidate({"candidate": m.candidate, "sdpMid": "", "sdpMLineIndex": 0}));
+                _this.rtc.addICECandidate(m.candidate);
                 break;
 
             case "error":
@@ -214,36 +213,29 @@ export class Artichoke {
             }
             _this._runCallback(m);
         });
-
-        this._reconnectRTC();
     }
 
     // Call API:
     offerCall(peer, stream) {
-        this.pc.addStream(stream);
+        this.rtc.addStream(stream);
 
         let _this = this;
-        this.pc.createOffer((offer) => {
-            _this.pc.setLocalDescription(offer);
-            _this.socket.offerCall(peer, offer.sdp);
-        }, (error) => {
-            _this.onErrorCallback({"reason": "Offer creation failed.", "error": error});
-        });
+        this.rtc.createOffer()
+            .then((offer) => _this.socket.offerCall(peer, offer))
+            .catch((error) => _this.onErrorCallback({"reason": "Offer creation failed.", "error": error}));
     }
 
     answerCall(offer, stream) {
-        this.pc.setRemoteDescription(new RTCSessionDescription({"type": "offer", "sdp": offer.sdp}));
-        this.pc.onicecandidate = this._onICE(offer.sender);
-
-        this.pc.addStream(stream);
+        this.rtc.addStream(stream);
 
         let _this = this;
-        this.pc.createAnswer((answer) => {
-            _this.pc.setLocalDescription(answer);
-            _this.socket.answerCall(offer.sender, answer.sdp);
-        }, (error) => {
-            _this.onErrorCallback({"reason": "Answer creation failed.", "error": error});
+        this.rtc.setRemoteDescription("offer", offer.sdp, function(candidate) {
+            _this.socket.sendCandidate(offer.sender, candidate);
         });
+
+        this.rtc.createAnswer()
+            .then((answer) => _this.socket.answerCall(offer.sender, answer))
+            .catch((error) => _this.onErrorCallback({"reason": "Answer creation failed.", "error": error}));
     }
 
     rejectCall(offer) {
@@ -251,7 +243,7 @@ export class Artichoke {
     }
 
     hangupCall(peer, reason) {
-        this._reconnectRTC();
+        this.rtc.reconnect();
         this.socket.hangupCall(peer, reason);
     }
 
@@ -302,23 +294,6 @@ export class Artichoke {
     }
 
     // Utils:
-    _reconnectRTC() {
-        if (this.pc) {
-            this.pc.close();
-        }
-
-        this.pc = new RTCPeerConnection(this.config.rtc);
-
-        let _this = this;
-        let onstream = (event) => _this.onRemoteStreamCallback(event.stream || event.streams[0]);
-
-        if (this.pc.ontrack === null) {
-            this.pc.ontrack = onstream;
-        } else {
-            this.pc.onaddstream = onstream;
-        }
-    }
-
     _runCallback(m) {
         if (m.type in this.callbacks) {
             this.log("Runnig callback for message type: " + m.type);
@@ -327,14 +302,5 @@ export class Artichoke {
             this.log("Unhandled message: " + JSON.stringify(m));
             this.onErrorCallback({"reason": "Unhandled message.", "message": m});
         }
-    }
-
-    _onICE(recipient) {
-        let _this = this;
-        return (event) => {
-            if (event.candidate) {
-                _this.socket.sendCandidate(recipient, event.candidate.candidate);
-            }
-        };
     }
 }
