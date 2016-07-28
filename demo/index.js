@@ -430,6 +430,14 @@ function onLoad() {
                     }).catch(function(error) {
                         console.log("Error while retrieving room user list: " + error);
                     });
+                    session.chat.getChatHistory(room.id).then(function(history) {
+                        var r = makeChatbox(room.id);
+                        history.forEach(function(m) {
+                            r.receive("[" + m.sender + "] " + m.body);
+                        });
+                    }).catch(function(error) {
+                        console.log("Error while retrieving chat history: " + error);
+                    });
                     return onresponse(room);
                 }).catch(function(error) {
                     console.log("Error while creating a room: " + error);
