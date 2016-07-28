@@ -451,7 +451,15 @@ function onLoad() {
             function createDirectRoom(peer, onresponse) {
                 console.log("Creating a direct chat room with: " + peer);
                 session.chat.createDirectRoom(peer).then(function(room) {
-                    makeChatbox(room.id).receive("Chatting with ", makeAddable(peer))
+                    session.chat.getChatHistory(room.id).then(function(history) {
+                        var r = makeChatbox(room.id);
+                        r.receive("Chatting with ", makeAddable(peer))
+                        history.forEach(function(m) {
+                            r.receive("[" + m.sender + "] " + m.body);
+                        });
+                    }).catch(function(error) {
+                        console.log("Error while retrieving chat history: " + error);
+                    });
                     return onresponse(room);
                 }).catch(function(error) {
                     console.log("Error while creating a direct room: " + e);
