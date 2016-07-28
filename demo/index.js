@@ -34,6 +34,10 @@ function onLoad() {
                 console.log("Connected to artichoke!");
             });
 
+            session.chat.onError(function(error) {
+                console.log("An error has occured: ", error);
+            });
+
             session.chat.onMessage("hello", function(m) {
                 console.log("Connection ready for " + username + "!");
             });

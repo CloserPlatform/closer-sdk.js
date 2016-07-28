@@ -97,6 +97,10 @@ export class Artichoke {
                 _this.pc.addIceCandidate(new RTCIceCandidate({"candidate": m.candidate, "sdpMid": "", "sdpMLineIndex": 0}));
                 break;
 
+            case "error":
+                _this.onErrorCallback(m);
+                return;
+
             case "message":
                 if (!m.delivered) {
                     _this._send(proto.ChatDelivered(m.id, Date.now()));
