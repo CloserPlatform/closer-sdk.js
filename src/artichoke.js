@@ -103,24 +103,23 @@ class ArtichokeREST {
 class ArtichokeWS extends JSONWebSocket {
     constructor(config) {
         super("ws://" + pathcat(config.url, "ws", config.apiKey), config);
-        this.sessionId = config.sessionId;
     }
 
     // Call API:
     offerCall(sessionId, sdp) {
-        this.send(proto.CallOffer(this.sessionId, sessionId, sdp));
+        this.send(proto.CallOffer(sessionId, sdp));
     }
 
     answerCall(sessionId, sdp) {
-        this.send(proto.CallAnswer(this.sessionId, sessionId, sdp));
+        this.send(proto.CallAnswer(sessionId, sdp));
     }
 
     hangupCall(sessionId, reason) {
-        this.send(proto.CallHangup(this.sessionId, sessionId, reason));
+        this.send(proto.CallHangup(sessionId, reason));
     }
 
     sendCandidate(sessionId, candidate) {
-        this.send(proto.CallCandidate(this.sessionId, sessionId, candidate));
+        this.send(proto.CallCandidate(sessionId, candidate));
     }
 
     // Chat API:
@@ -187,7 +186,7 @@ export class Artichoke {
             switch (m.type) {
             case "call_answer":
                 _this.rtc.setRemoteDescription("answer", m.sdp, function(candidate) {
-                    _this.socket.sendCandidate(m.sender, candidate);
+                    _this.socket.sendCandidate(m.user, candidate);
                 });
                 break;
 
@@ -230,16 +229,16 @@ export class Artichoke {
 
         let _this = this;
         this.rtc.setRemoteDescription("offer", offer.sdp, function(candidate) {
-            _this.socket.sendCandidate(offer.sender, candidate);
+            _this.socket.sendCandidate(offer.user, candidate);
         });
 
         this.rtc.createAnswer()
-            .then((answer) => _this.socket.answerCall(offer.sender, answer))
+            .then((answer) => _this.socket.answerCall(offer.user, answer))
             .catch((error) => _this.onErrorCallback({"reason": "Answer creation failed.", "error": error}));
     }
 
     rejectCall(offer) {
-        this.socket.hangupCall(offer.sender, "rejected");
+        this.socket.hangupCall(offer.user, "rejected");
     }
 
     hangupCall(peer, reason) {
