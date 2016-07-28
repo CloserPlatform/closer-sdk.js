@@ -1,28 +1,9 @@
 import * as proto from "./protocol";
 import { nop, pathcat } from "./utils";
+import { JSONWebSocket } from "./jsonws";
 
 // Cross-browser support:
 const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-
-function fixCall(m) {
-    // FIXME Do this on the backend
-    if (m.type === "call") {
-        let fixed = {
-            "type": "call_" + m.signal,
-            "sender": m.sender
-        };
-        switch (m.signal) {
-        case "answer": fixed.sdp = m.body; break;
-        case "offer": fixed.sdp = m.body; break;
-        case "candidate": fixed.candidate = m.body; break;
-        case "hangup": fixed.reason = m.body; break;
-        default: break;
-        }
-        return fixed;
-    } else {
-        return m;
-    }
-}
 
 class ArtichokeREST {
     constructor(config) {
@@ -121,6 +102,40 @@ class ArtichokeREST {
     }
 }
 
+class ArtichokeWS extends JSONWebSocket {
+    constructor(config) {
+        super("ws://" + pathcat(config.url, "ws", config.apiKey), config);
+        this.sessionId = config.sessionId;
+    }
+
+    // Call API:
+    offerCall(sessionId, sdp) {
+        this.send(proto.Call(this.sessionId, sessionId, "offer", sdp));
+    }
+
+    answerCall(sessionId, sdp) {
+        this.send(proto.Call(this.sessionId, sessionId, "answer", sdp));
+    }
+
+    hangupCall(sessionId, reason) {
+        this.send(proto.Call(this.sessionId, sessionId, "hangup", reason));
+    }
+
+    sendCandidate(sessionId, candidate) {
+        this.send(proto.Call(this.sessionId, sessionId, "candidate", candidate));
+    }
+
+    // Chat API:
+    setDelivered(messageId) {
+        this.send(proto.ChatDelivered(messageId, Date.now()));
+    }
+
+    // Room API:
+    sendMessage(roomId, body) {
+        this.send(proto.ChatRequest(roomId, body));
+    }
+}
+
 export class Artichoke {
     constructor(config) {
         this.config = config;
@@ -166,26 +181,15 @@ export class Artichoke {
 
     // API:
     connect() {
-        let url = "ws://" + pathcat(this.config.url, "ws", this.apiKey);
-
-        this.log("Connecting to " + url);
-        this.socket = new WebSocket(url);
-        this.socket.binaryType = "arraybuffer";
+        this.socket = new ArtichokeWS(this.config);
+        this.socket.onConnect(this.onConnectCallback);
 
         let _this = this;
-        this.socket.onopen = () => {
-            _this.log("Connected to " + url);
-            _this.onConnectCallback();
-        };
-
-        this.socket.onmessage = function(event) {
-            _this.log("Received: " + event.data);
-            let m = fixCall(JSON.parse(event.data)); // FIXME Don't fix anything.
-
+        this.socket.onMessage(function(m) {
             switch (m.type) {
             case "call_answer":
                 _this.pc.setRemoteDescription(new RTCSessionDescription({"type": "answer", "sdp": m.sdp}));
-                _this.pc.onicecandidate = _this._onICE(_this.sessionId, m.sender);
+                _this.pc.onicecandidate = _this._onICE(m.sender);
                 break;
 
             case "call_hangup":
@@ -202,14 +206,14 @@ export class Artichoke {
 
             case "message":
                 if (!m.delivered) {
-                    _this._send(proto.ChatDelivered(m.id, Date.now()));
+                    _this.socket.setDelivered(m.id);
                 }
                 break;
 
             default: break;
             }
             _this._runCallback(m);
-        };
+        });
 
         this._reconnectRTC();
     }
@@ -221,7 +225,7 @@ export class Artichoke {
         let _this = this;
         this.pc.createOffer((offer) => {
             _this.pc.setLocalDescription(offer);
-            _this._send(proto.Call(_this.sessionId, peer, "offer", offer.sdp));
+            _this.socket.offerCall(peer, offer.sdp);
         }, (error) => {
             _this.onErrorCallback({"reason": "Offer creation failed.", "error": error});
         });
@@ -229,26 +233,26 @@ export class Artichoke {
 
     answerCall(offer, stream) {
         this.pc.setRemoteDescription(new RTCSessionDescription({"type": "offer", "sdp": offer.sdp}));
-        this.pc.onicecandidate = this._onICE(this.sessionId, offer.sender);
+        this.pc.onicecandidate = this._onICE(offer.sender);
 
         this.pc.addStream(stream);
 
         let _this = this;
         this.pc.createAnswer((answer) => {
             _this.pc.setLocalDescription(answer);
-            _this._send(proto.Call(_this.sessionId, offer.sender, "answer", answer.sdp));
+            _this.socket.answerCall(offer.sender, answer.sdp);
         }, (error) => {
             _this.onErrorCallback({"reason": "Answer creation failed.", "error": error});
         });
     }
 
     rejectCall(offer) {
-        this._send(proto.Call(this.sessionId, offer.sender, "hangup", "rejected"));
+        this.socket.hangupCall(offer.sender, "rejected");
     }
 
     hangupCall(peer, reason) {
         this._reconnectRTC();
-        this._send(proto.Call(this.sessionId, peer, "hangup", reason));
+        this.socket.hangupCall(peer, reason);
     }
 
     // Chat room API:
@@ -281,7 +285,7 @@ export class Artichoke {
     }
 
     sendMessage(room, body) {
-        this._send(proto.ChatRequest(room, body));
+        this.socket.sendMessage(room, body);
     }
 
     // Roster API:
@@ -325,18 +329,12 @@ export class Artichoke {
         }
     }
 
-    _onICE(sender, recipient) {
+    _onICE(recipient) {
         let _this = this;
         return (event) => {
             if (event.candidate) {
-                _this._send(proto.Call(sender, recipient, "candidate", event.candidate.candidate));
+                _this.socket.sendCandidate(recipient, event.candidate.candidate);
             }
         };
-    }
-
-    _send(obj) {
-        let json = JSON.stringify(obj);
-        this.socket.send(json);
-        this.log("WS: " + json);
     }
 }
