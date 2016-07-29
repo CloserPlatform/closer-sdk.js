@@ -34,14 +34,18 @@ function onLoad() {
                 console.log("Connected to artichoke!");
             });
 
+            session.chat.onError(function(error) {
+                console.log("An error has occured: ", error);
+            });
+
             session.chat.onMessage("hello", function(m) {
                 console.log("Connection ready for " + username + "!");
             });
 
             session.chat.onMessage("call_offer", function(m) {
-                console.log(m.sender + " is calling...");
-                if(confirm(m.sender + " is calling, answer?")) {
-                    makeCall(m.sender).createLocalStream(function(stream) {
+                console.log(m.user + " is calling...");
+                if(confirm(m.user + " is calling, answer?")) {
+                    makeCall(m.user).createLocalStream(function(stream) {
                         session.chat.answerCall(m, stream);
                     });
                 } else {
@@ -51,12 +55,12 @@ function onLoad() {
             });
 
             session.chat.onMessage("call_answer", function(m) {
-                console.log(m.sender + " answered the call!");
+                console.log(m.user + " answered the call!");
             });
 
             session.chat.onMessage("call_hangup", function(m) {
-                console.log(m.sender + " hang up, reason: " + m.reason);
-                removeCall(m.sender);
+                console.log(m.user + " hang up, reason: " + m.reason);
+                removeCall(m.user);
             });
 
             session.chat.onMessage("presence", function(m) {
@@ -447,7 +451,15 @@ function onLoad() {
             function createDirectRoom(peer, onresponse) {
                 console.log("Creating a direct chat room with: " + peer);
                 session.chat.createDirectRoom(peer).then(function(room) {
-                    makeChatbox(room.id).receive("Chatting with ", makeAddable(peer))
+                    session.chat.getChatHistory(room.id).then(function(history) {
+                        var r = makeChatbox(room.id);
+                        r.receive("Chatting with ", makeAddable(peer))
+                        history.forEach(function(m) {
+                            r.receive("[" + m.sender + "] " + m.body);
+                        });
+                    }).catch(function(error) {
+                        console.log("Error while retrieving chat history: " + error);
+                    });
                     return onresponse(room);
                 }).catch(function(error) {
                     console.log("Error while creating a direct room: " + e);
