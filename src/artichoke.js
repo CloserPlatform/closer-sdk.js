@@ -24,6 +24,10 @@ class ArtichokeREST {
         return this._post(pathcat(this.url, "room", "create-direct"), proto.RoomCreateDirect(sessionId));
     }
 
+    getRooms() {
+        return this._get(pathcat(this.url, "room", "unread"));
+    }
+
     getUsers(roomId) {
         return this._get(pathcat(this.url, "room", roomId, "users"));
     }
@@ -38,19 +42,6 @@ class ArtichokeREST {
 
     inviteToRoom(roomId, sessionId) {
         return this._post(pathcat(this.url, "room", roomId, "invite", sessionId), "");
-    }
-
-    // Roster API:
-    getRoster() {
-        return this._get(pathcat(this.url, "roster", "unread"));
-    }
-
-    addToRoster(who) {
-        return this._post(pathcat(this.url, "roster", "add"), proto.RosterAdd(who));
-    }
-
-    removeFromRoster(who) {
-        return this._post(pathcat(this.url, "roster", "remove"), proto.RosterRemove(who));
     }
 
     _responseCallback(xhttp, resolve, reject) {
@@ -255,6 +246,10 @@ export class Artichoke {
         return this.rest.createDirectRoom(peer);
     }
 
+    getRooms() {
+        return this.rest.getRooms();
+    }
+
     getUsers(room) {
         return this.rest.getUsers(room);
     }
@@ -277,19 +272,6 @@ export class Artichoke {
 
     sendMessage(room, body) {
         this.socket.sendMessage(room, body);
-    }
-
-    // Roster API:
-    getRoster() {
-        return this.rest.getRoster();
-    }
-
-    addToRoster(who) {
-        return this.rest.addToRoster(who);
-    }
-
-    removeFromRoster(who) {
-        return this.rest.removeFromRoster(who);
     }
 
     // Utils:
