@@ -99,7 +99,7 @@ function onLoad() {
                 console.log("Message delivery ack for id: " + m.id);
             });
 
-            session.chat.getRoster().then(function(res) {
+            session.chat.getRooms().then(function(res) {
                 var rooms = {};
                 res.forEach(function(room) {
                     rooms[room.name] = room;
@@ -224,7 +224,6 @@ function onLoad() {
                         chat.onclick = function() {
                             console.log("Opening chat with " + u + "...");
 
-                            var name = "dm-" + [username, u].sort().join("-");
                             createDirectRoom(u, function(room) {
                                 makePrivateChatbox(room.id);
                             });
@@ -255,16 +254,6 @@ function onLoad() {
                         };
                         call.innerHTML = "Call " + u;
                         r.appendChild(call);
-
-                        var remove = document.createElement("button");
-                        remove.onclick = function() {
-                            console.log("Removing user " + u + " from roster.");
-                            session.chat.removeFromRoster(u);
-                            delete roster[u];
-                            regenRoster()
-                        }
-                        remove.innerHTML = "Remove " + u;
-                        r.appendChild(remove);
                     });
                 };
 
@@ -471,9 +460,12 @@ function onLoad() {
                 b.innerHTML = handle;
                 b.onclick = function() {
                     if(handle != username) {
-                        console.log("Adding user " + handle + " to the roster.");
-                        session.chat.addToRoster(handle);
-                        roster.add(handle);
+                        console.log("Opening chat with " + handle + "...");
+
+                        createDirectRoom(handle, function(room) {
+                            makePrivateChatbox(room.id);
+                            roster.add(handle);
+                        });
                     }
                 }
                 return b;
