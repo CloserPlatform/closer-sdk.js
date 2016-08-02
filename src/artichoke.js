@@ -93,7 +93,7 @@ class ArtichokeREST {
 
 class ArtichokeWS extends JSONWebSocket {
     constructor(config) {
-        super("ws://" + pathcat(config.url, "ws", config.apiKey), config);
+        super("wss://" + pathcat(config.url, "ws", config.apiKey), config);
     }
 
     // Call API:
