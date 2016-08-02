@@ -7,7 +7,7 @@ class ArtichokeREST {
     constructor(config) {
         this.log = config.log;
         this.apiKey = config.apiKey;
-        this.url = "http://" + pathcat(config.url, "api");
+        this.url = "//" + pathcat(config.url, "api");
     }
 
     // Chat API:
