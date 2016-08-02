@@ -1,6 +1,6 @@
 {
   "name": "ratel-sdk-js",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "Ratel JavaScript SDK",
   "main": "dist/ratel-sdk.js",
   "scripts": {
