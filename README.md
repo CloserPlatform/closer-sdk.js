@@ -4,7 +4,7 @@ Building:
 
 ```
 npm install
-npm run webpack
+npm run build
 ```
 
 Running:
