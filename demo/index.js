@@ -102,7 +102,7 @@ function onLoad() {
             session.chat.getRooms().then(function(res) {
                 var rooms = {};
                 res.forEach(function(room) {
-                    rooms[room.name] = room;
+                    rooms[room.id] = room;
                 });
                 roster.set(rooms);
                 console.log("Roster: " + res);
