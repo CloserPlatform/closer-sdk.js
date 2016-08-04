@@ -46,13 +46,3 @@ export const RoomCreateDirect = (peer) => ({
     type: "room_create_direct",
     peer
 });
-
-export const RosterAdd = (user) => ({
-    type: "roster_add",
-    user
-});
-
-export const RosterRemove = (user) => ({
-    type: "roster_remove",
-    user
-});
