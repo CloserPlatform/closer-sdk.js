@@ -2,6 +2,7 @@ import * as proto from "./protocol";
 import { nop, pathcat } from "./utils";
 import { JSONWebSocket } from "./jsonws";
 import { RTCConnection } from "./rtc";
+import { createRoom, DirectRoom, Room } from "./room";
 
 class ArtichokeREST {
     constructor(config) {
@@ -279,42 +280,42 @@ export class Artichoke {
 
     // Chat room API:
     createRoom(name) {
-        return this.rest.createRoom(name);
+        return this._wrapRoom(this.rest.createRoom(name));
     }
 
     createDirectRoom(peer) {
-        return this.rest.createDirectRoom(peer);
+        return this._wrapRoom(this.rest.createDirectRoom(peer));
+    }
+
+    getRoom(room) {
+        // TODO
+        let _this = this;
+        return new Promise(function(resolve, reject) {
+            resolve(new Room({
+                id: room,
+                name: "unknown"
+            }, _this.rest, _this.socket));
+        });
     }
 
     getRooms() {
-        return this.rest.getRooms();
-    }
-
-    getUsers(room) {
-        return this.rest.getUsers(room);
-    }
-
-    getChatHistory(room) {
-        return this.rest.getChatHistory(room);
-    }
-
-    joinRoom(room) {
-        return this.rest.joinRoom(room);
-    }
-
-    leaveRoom(room) {
-        return this.rest.leaveRoom(room);
-    }
-
-    inviteToRoom(room, who) {
-        return this.rest.inviteToRoom(room, who);
-    }
-
-    sendMessage(room, body) {
-        return this.socket.sendMessage(room, body);
+        return this._wrapRoom(this.rest.getRooms());
     }
 
     // Utils:
+    _wrapRoom(promise) {
+        let _this = this;
+        return new Promise(function(resolve, reject) {
+            promise.then(function(r) {
+                if (Array.isArray(r)) {
+                    resolve(r.map((room) => createRoom(room, _this.rest, _this.socket)));
+                } else {
+                    resolve(createRoom(r, _this.rest, _this.socket));
+                }
+            }).catch(reject);
+        });
+    }
+
     _runCallbacks(m) {
         if (m.type in this.callbacks) {
             this.log("Runnig callbacks for message type: " + m.type);
