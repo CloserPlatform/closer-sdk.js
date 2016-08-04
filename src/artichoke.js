@@ -155,7 +155,10 @@ export class Artichoke {
 
     onMessage(type, callback) {
         this.log("Registered callback for message type: " + type);
-        this.callbacks[type] = callback;
+        if (!(type in this.callbacks)) {
+            this.callbacks[type] = [];
+        }
+        this.callbacks[type].push(callback);
     }
 
     onError(callback) {
@@ -201,7 +204,7 @@ export class Artichoke {
 
             default: break;
             }
-            _this._runCallback(m);
+            _this._runCallbacks(m);
         });
     }
 
@@ -275,10 +278,10 @@ export class Artichoke {
     }
 
     // Utils:
-    _runCallback(m) {
+    _runCallbacks(m) {
         if (m.type in this.callbacks) {
-            this.log("Runnig callback for message type: " + m.type);
-            return this.callbacks[m.type](m);
+            this.log("Runnig callbacks for message type: " + m.type);
+            return this.callbacks[m.type].forEach((cb) => cb(m));
         } else {
             this.log("Unhandled message: " + JSON.stringify(m));
             this.onErrorCallback({"reason": "Unhandled message.", "message": m});
