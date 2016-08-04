@@ -324,8 +324,8 @@ function onLoad() {
 
                 controls.onsubmit = function() {
                     session.chat.sendMessage(room, input.value).then(function(ack) {
-                        console.log("Received ack for message id " + ack.id + " on " + ack.timestamp);
-                        receive("[" + username + "] " + input.value);
+                        console.log("Received ack for message id " + ack.message.id + " on " + ack.message.timestamp);
+                        receive("[" + ack.message.sender + "] " + ack.message.body);
                         input.value = "";
                     }).catch(function(error) {
                         console.log("Sending a message failed: ", error);
