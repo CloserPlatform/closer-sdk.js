@@ -91,10 +91,6 @@ function onLoad() {
                 makeChatbox(m.room).receive("[" + m.sender + "] " + m.body)
             });
 
-            session.chat.onMessage("msg_received", function(m) {
-                console.log("Received ack for message id: " + m.id);
-            });
-
             session.chat.onMessage("msg_delivered", function(m) {
                 console.log("Message delivery ack for id: " + m.id);
             });
@@ -327,9 +323,13 @@ function onLoad() {
                 controls.appendChild(send);
 
                 controls.onsubmit = function() {
-                    receive("[" + username + "] " + input.value);
-                    session.chat.sendMessage(room, input.value);
-                    input.value = "";
+                    session.chat.sendMessage(room, input.value).then(function(ack) {
+                        console.log("Received ack for message id " + ack.id + " on " + ack.timestamp);
+                        receive("[" + username + "] " + input.value);
+                        input.value = "";
+                    }).catch(function(error) {
+                        console.log("Sending a message failed: ", error);
+                    });
                     return false;
                 };
 

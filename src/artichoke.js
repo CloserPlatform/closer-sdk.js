@@ -94,6 +94,7 @@ class ArtichokeREST {
 class ArtichokeWS extends JSONWebSocket {
     constructor(config) {
         super("wss://" + pathcat(config.url, "ws", config.apiKey), config);
+        this.promises = {};
     }
 
     // Call API:
@@ -120,7 +121,41 @@ class ArtichokeWS extends JSONWebSocket {
 
     // Room API:
     sendMessage(roomId, body) {
-        this.send(proto.ChatRequest(roomId, body));
+        let _this = this;
+        return new Promise(function(resolve, reject) {
+            let ref = "ref" + Date.now(); // FIXME Use UUID instead.
+            _this.promises[ref] = {
+                resolve,
+                reject
+            };
+            _this.send(proto.ChatRequest(roomId, body, ref));
+        });
+    }
+
+    onMessage(callback) {
+        let _this = this;
+        super.onMessage(function(msg) {
+            if (msg.type === "error" && msg.ref) {
+                _this._reject(msg.ref, msg);
+            } else if (msg.ref) {
+                _this._resolve(msg.ref, msg);
+            }
+            callback(msg);
+        });
+    }
+
+    _resolve(ref, value) {
+        if (ref in this.promises) {
+            this.promises[ref].resolve(value);
+            delete this.promises[ref];
+        }
+    }
+
+    _reject(ref, error) {
+        if (ref in this.promises) {
+            this.promises[ref].reject(error);
+            delete this.promises[ref];
+        }
     }
 }
 
@@ -146,6 +181,8 @@ export class Artichoke {
         // NOTE By default do nothing.
         this.onConnectCallback = nop;
         this.onErrorCallback = nop;
+        this.onMessage("msg_received", nop);
+        this.onMessage("msg_delivered", nop);
     }
 
     // Callbacks:
@@ -274,7 +311,7 @@ export class Artichoke {
     }
 
     sendMessage(room, body) {
-        this.socket.sendMessage(room, body);
+        return this.socket.sendMessage(room, body);
     }
 
     // Utils:

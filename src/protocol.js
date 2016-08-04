@@ -24,10 +24,11 @@ export const CallOffer = (user, sdp) => ({
     sdp
 });
 
-export const ChatRequest = (room, body) => ({
+export const ChatRequest = (room, body, ref) => ({
     type: "msg_request",
     room,
-    body
+    body,
+    ref
 });
 
 export const ChatDelivered = (id, timestamp) => ({
