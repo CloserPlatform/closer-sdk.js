@@ -25,7 +25,15 @@ class ArtichokeREST {
         return this._post(pathcat(this.url, "room", "create-direct"), proto.RoomCreateDirect(sessionId));
     }
 
+    getRoom(roomId) {
+        return this._get(pathcat(this.url, "room", roomId));
+    }
+
     getRooms() {
+        return this._get(pathcat(this.url, "room"));
+    }
+
+    getRoster() {
         return this._get(pathcat(this.url, "room", "unread"));
     }
 
@@ -288,18 +296,15 @@ export class Artichoke {
     }
 
     getRoom(room) {
-        // TODO
-        let _this = this;
-        return new Promise(function(resolve, reject) {
-            resolve(new Room({
-                id: room,
-                name: "unknown"
-            }, _this.rest, _this.socket));
-        });
+        return this._wrapRoom(this.rest.getRoom(room));
     }
 
     getRooms() {
         return this._wrapRoom(this.rest.getRooms());
+    }
+
+    getRoster() {
+        return this._wrapRoom(this.rest.getRoster());
     }
 
     // Utils:

@@ -93,7 +93,7 @@ function onLoad() {
                 console.log("Message delivery ack for id: " + m.id);
             });
 
-            session.chat.getRooms().then(function(res) {
+            session.chat.getRoster().then(function(res) {
                 var rooms = {};
                 res.forEach(function(room) {
                     rooms[room.id] = room;
