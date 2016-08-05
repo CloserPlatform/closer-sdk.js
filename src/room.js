@@ -19,6 +19,10 @@ class BaseRoom {
     send(message) {
         return this.socket.sendMessage(this.id, message);
     }
+
+    mark(timestamp) {
+        return this.socket.setMark(this.id, timestamp);
+    }
 }
 
 export class DirectRoom extends BaseRoom {}

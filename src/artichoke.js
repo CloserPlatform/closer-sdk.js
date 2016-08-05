@@ -166,6 +166,10 @@ class ArtichokeWS extends JSONWebSocket {
             delete this.promises[ref];
         }
     }
+
+    setMark(roomId, timestamp) {
+        this.send(proto.Mark(roomId, timestamp));
+    }
 }
 
 export class Artichoke {

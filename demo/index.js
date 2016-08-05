@@ -83,6 +83,7 @@ function onLoad() {
 
             session.chat.onMessage("message", function(m) {
                 session.chat.getRoom(m.room).then(function(room) {
+                    room.mark(m.timestamp);
                     makeChatbox(room).receive("[" + m.sender + "] " + m.body)
                 }).catch(function(error) {
                     console.log("Could not retrieve a room: ", error);

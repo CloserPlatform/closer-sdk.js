@@ -46,3 +46,10 @@ export const RoomCreateDirect = (peer) => ({
     type: "room_create_direct",
     peer
 });
+
+
+export const Mark = (room, timestamp) => ({
+    type: "mark",
+    room,
+    timestamp
+});
