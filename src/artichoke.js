@@ -9,48 +9,51 @@ class ArtichokeREST {
         this.log = config.log;
         this.apiKey = config.apiKey;
         this.url = "//" + pathcat(config.url, "api");
+
+        this.roomPath = "rooms";
+        this.chatPath = "chat";
     }
 
     // Chat API:
     getChatHistory(roomId) {
-        return this._get(pathcat(this.url, "chat", roomId));
+        return this._get(pathcat(this.url, this.chatPath, roomId));
     }
 
     // Chat room API:
     createRoom(name) {
-        return this._post(pathcat(this.url, "room", "create"), proto.RoomCreate(name));
+        return this._post(pathcat(this.url, this.roomPath), proto.RoomCreate(name));
     }
 
     createDirectRoom(sessionId) {
-        return this._post(pathcat(this.url, "room", "create-direct"), proto.RoomCreateDirect(sessionId));
+        return this._post(pathcat(this.url, this.roomPath), proto.RoomCreateDirect(sessionId));
     }
 
     getRoom(roomId) {
-        return this._get(pathcat(this.url, "room", roomId));
+        return this._get(pathcat(this.url, this.roomPath, roomId));
     }
 
     getRooms() {
-        return this._get(pathcat(this.url, "room"));
+        return this._get(pathcat(this.url, this.roomPath));
     }
 
     getRoster() {
-        return this._get(pathcat(this.url, "room", "unread"));
+        return this._get(pathcat(this.url, this.roomPath, "unread"));
     }
 
     getUsers(roomId) {
-        return this._get(pathcat(this.url, "room", roomId, "users"));
+        return this._get(pathcat(this.url, this.roomPath, roomId, "users"));
     }
 
     joinRoom(roomId) {
-        return this._post(pathcat(this.url, "room", roomId, "join"), "");
+        return this._post(pathcat(this.url, this.roomPath, roomId, "join"), "");
     }
 
     leaveRoom(roomId) {
-        return this._post(pathcat(this.url, "room", roomId, "leave"), "");
+        return this._post(pathcat(this.url, this.roomPath, roomId, "leave"), "");
     }
 
     inviteToRoom(roomId, sessionId) {
-        return this._post(pathcat(this.url, "room", roomId, "invite", sessionId), "");
+        return this._post(pathcat(this.url, this.roomPath, roomId, "invite", sessionId), "");
     }
 
     _responseCallback(xhttp, resolve, reject) {
