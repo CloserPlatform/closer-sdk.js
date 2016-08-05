@@ -128,6 +128,7 @@ function onLoad() {
                 local_video.className = "video-stream";
                 local_video.id = "local-video";
                 local_video.autoplay = true;
+                local_video.muted = true;
                 box.appendChild(local_video);
 
                 var remote_video = document.createElement("video")
