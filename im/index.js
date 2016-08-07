@@ -77,6 +77,64 @@ $(document).ready(function() {
             .append(name);
     }
 
+    function makeChatbox(room) {
+        console.log("Building chatbox for room: ", room);
+
+        var users = $('<ul class="nav nav-pills">');
+        var text = $('<div class="chatbox-textarea">');
+
+        function time(timestamp) {
+            var date = new Date(timestamp);
+            var minutes = "0" + date.getMinutes();
+            var seconds = "0" + date.getSeconds();
+            return date.getHours() + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+        }
+
+        function receive(msg) {
+            var line = $('<p id="' + msg.id + '">')
+                .append(time(msg.timestamp))
+                .append(" " + msg.sender + ": ")
+                .append(msg.body);
+
+            text.append(line);
+        }
+
+        function receiveAction(action) {
+            var s = action.subject || "the room";
+            var line = $('<p class="info">')
+                .append(time(action.timestamp))
+                .append(" User " + action.originator + " " + action.action + " " + s + ".");
+
+            text.append(line);
+        }
+
+        room.onMessage(receive);
+        room.onAction(receiveAction);
+
+        var field = $('<input type="text">');
+        var send = $('<button>')
+            .html("Send!")
+            .click(function() {
+                room.send(field.val()).then(function (ack) {
+                    console.log("Received ack for message: ", ack);
+                    receive(ack.message);
+                    field.val("");
+                }).catch(function(error) {
+                    console.log("Sending message failed: ", error);
+                });
+            });
+
+        var input = $('<div>')
+            .append(field)
+            .append(send);
+
+        return $('<div class="chatbox" id="' + room.id + '">')
+            .append(users)
+            .append(text)
+            .append(input)
+            .hide();
+    }
+
     function run(server, sessionId) {
         console.log("Connecting to " + server + " as: " + sessionId);
 
@@ -104,6 +162,7 @@ $(document).ready(function() {
                     console.log("Roster: ", rooms);
                     rooms.forEach(function(room) {
                         $("#room-list").append(makeRoomSwitcher(room));
+                        $("#chatbox-container").append(makeChatbox(room));
                     });
                 }).catch(function(error) {
                     console.log("Fetching roster failed:" + error);
