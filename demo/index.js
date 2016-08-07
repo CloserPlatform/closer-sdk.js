@@ -327,13 +327,11 @@ function onLoad() {
                     function append(element) {
                         if(element.appendChild != undefined) {
                             p.appendChild(element);
-                        }
-                        else if(typeof element === "object") {
+                        } else if(typeof element === "object") {
                             element.forEach(function(e) {
                                 append(e);
                             });
-                        }
-                        else {
+                        } else {
                             var c = document.createElement("span");
                             c.innerHTML = element;
                             p.appendChild(c);
