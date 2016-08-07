@@ -98,7 +98,10 @@ $(document).ready(function() {
             .append(" " + msg.sender + ": ")
             .append(msg.body);
 
-        $('#chatbox-container #' + room.id + ' .chatbox-textarea').append(line);
+        var text = $('#chatbox-container #' + room.id + ' .chatbox-textarea');
+        text.append(line);
+        var area = text.get()[0];
+        text.scrollTop(area.scrollHeight - area.clientHeight);
     }
 
     function time(timestamp) {
@@ -121,6 +124,8 @@ $(document).ready(function() {
                 .append(" User " + action.originator + " " + action.action + " " + s + ".");
 
             text.append(line);
+            var area = text.get()[0];
+            text.scrollTop(area.scrollHeight - area.clientHeight);
         }
 
         room.onAction(receiveAction);
@@ -185,6 +190,14 @@ $(document).ready(function() {
 
                     $("#room-list").append(makeRoomSwitcher(room));
                     $("#chatbox-container").append(makeChatbox(room));
+
+                    room.getHistory().then(function(msgs) {
+                        msgs.forEach(function(msg) {
+                            receive(room, msg);
+                        });
+                    }).catch(function(error) {
+                        console.log("Fetching room history failed: ", error);
+                    });
                 }
 
                 session.chat.getRoster().then(function(rooms) {
