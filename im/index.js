@@ -190,6 +190,15 @@ $(document).ready(function() {
                 session.chat.getRoster().then(function(rooms) {
                     console.log("Roster: ", rooms);
                     rooms.forEach(addRoom);
+
+                    session.chat.createRoom("#artichoke").then(function(room) {
+                        room.join();
+                        if(!(room.id in roster)) {
+                            addRoom(room);
+                        }
+                    }).catch(function(error) {
+                        console.log("Joining #artichoke failed: ", error);
+                    });
                 }).catch(function(error) {
                     console.log("Fetching roster failed:", error);
                 });
