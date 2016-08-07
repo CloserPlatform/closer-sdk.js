@@ -78,15 +78,29 @@ $(document).ready(function() {
             .append(name);
     }
 
-    function isActive(room) {
-        return $('#room-list #' + room.id).hasClass("active");
+    function receive(room, msg) {
+        if(msg.timestamp > room.currMark) {
+            if(!$('#room-list #' + room.id).hasClass("active")) {
+                var unread = $('#room-list #' + room.id + " .badge");
+                unread.html(1 + parseInt(unread.html() || "0"));
+            } else {
+                room.mark(msg.timestamp);
+            }
+        }
+
+        var line = $('<p id="' + msg.id + '">')
+            .append(time(msg.timestamp))
+            .append(" " + msg.sender + ": ")
+            .append(msg.body);
+
+        $('#chatbox-container #' + room.id + ' .chatbox-textarea').append(line);
     }
 
-    function bumpUnreadCount(room) {
-        var unread = $('#room-list #' + room.id + " .badge");
-        unread.html(1 + parseInt(unread.html() || "0"));
-
-        console.log(unread.val());
+    function time(timestamp) {
+        var date = new Date(timestamp);
+        var minutes = "0" + date.getMinutes();
+        var seconds = "0" + date.getSeconds();
+        return date.getHours() + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
     }
 
     function makeChatbox(room) {
@@ -94,22 +108,6 @@ $(document).ready(function() {
 
         var users = $('<ul class="nav nav-pills">');
         var text = $('<div class="chatbox-textarea">');
-
-        function time(timestamp) {
-            var date = new Date(timestamp);
-            var minutes = "0" + date.getMinutes();
-            var seconds = "0" + date.getSeconds();
-            return date.getHours() + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
-        }
-
-        function receive(msg) {
-            var line = $('<p id="' + msg.id + '">')
-                .append(time(msg.timestamp))
-                .append(" " + msg.sender + ": ")
-                .append(msg.body);
-
-            text.append(line);
-        }
 
         function receiveAction(action) {
             var s = action.subject || "the room";
@@ -122,14 +120,7 @@ $(document).ready(function() {
 
         room.onAction(receiveAction);
         room.onMessage(function(msg) {
-            if(msg.timestamp > room.currMark) {
-                if(!isActive(room)) {
-                    bumpUnreadCount(room)
-                } else {
-                    room.mark(msg.timestamp);
-                }
-            }
-            receive(msg);
+            receive(room, msg);
         });
 
         var field = $('<input type="text">');
@@ -138,7 +129,7 @@ $(document).ready(function() {
             .click(function() {
                 room.send(field.val()).then(function (ack) {
                     console.log("Received ack for message: ", ack);
-                    receive(ack.message);
+                    receive(room, ack.message);
                     field.val("");
                 }).catch(function(error) {
                     console.log("Sending message failed: ", error);
@@ -179,14 +170,34 @@ $(document).ready(function() {
             session.chat.onEvent("hello", function(m) {
                 console.log("Connection ready for " + sessionId + "!");
 
+                var roster = {};
+
+                function addRoom(room) {
+                    console.log("Adding room to the roster: ", room);
+
+                    roster[room.id] = room;
+                    room.currMark = 0; // FIXME Move this to the Room class.
+
+                    $("#room-list").append(makeRoomSwitcher(room));
+                    $("#chatbox-container").append(makeChatbox(room));
+                }
+
                 session.chat.getRoster().then(function(rooms) {
                     console.log("Roster: ", rooms);
-                    rooms.forEach(function(room) {
-                        $("#room-list").append(makeRoomSwitcher(room));
-                        $("#chatbox-container").append(makeChatbox(room));
-                    });
+                    rooms.forEach(addRoom);
                 }).catch(function(error) {
-                    console.log("Fetching roster failed:" + error);
+                    console.log("Fetching roster failed:", error);
+                });
+
+                session.chat.onEvent("message", function (msg) {
+                    if(!(msg.room in roster)) {
+                        session.chat.getRoom(msg.room).then(function(room) {
+                            addRoom(room);
+                            receive(room, msg);
+                        }).catch(function(error) {
+                            console.log("Fetching room failed: ", error);
+                        });
+                    }
                 });
             });
 
