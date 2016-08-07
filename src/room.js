@@ -1,27 +1,26 @@
 // Chat room stuff.
 
 class BaseRoom {
-    constructor(room, rest, ws) {
+    constructor(room, artichoke) {
         this.id = room.id;
         this.name = room.name;
-        this.rest = rest;
-        this.socket = ws;
+        this.artichoke = artichoke;
     }
 
     getHistory() {
-        return this.rest.getChatHistory(this.id);
+        return this.artichoke.rest.getChatHistory(this.id);
     }
 
     getUsers() {
-        return this.rest.getUsers(this.id);
+        return this.artichoke.rest.getUsers(this.id);
     }
 
     send(message) {
-        return this.socket.sendMessage(this.id, message);
+        return this.artichoke.socket.sendMessage(this.id, message);
     }
 
     mark(timestamp) {
-        return this.socket.setMark(this.id, timestamp);
+        return this.artichoke.socket.setMark(this.id, timestamp);
     }
 }
 
@@ -29,15 +28,15 @@ export class DirectRoom extends BaseRoom {}
 
 export class Room extends BaseRoom {
     join() {
-        return this.rest.joinRoom(this.id);
+        return this.artichoke.rest.joinRoom(this.id);
     }
 
     leave() {
-        return this.rest.leaveRoom(this.id);
+        return this.artichoke.rest.leaveRoom(this.id);
     }
 
     invite(user) {
-        return this.rest.inviteToRoom(this.id, user);
+        return this.artichoke.rest.inviteToRoom(this.id, user);
     }
 }
 

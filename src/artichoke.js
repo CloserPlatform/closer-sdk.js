@@ -320,9 +320,9 @@ export class Artichoke {
         return new Promise(function(resolve, reject) {
             promise.then(function(r) {
                 if (Array.isArray(r)) {
-                    resolve(r.map((room) => createRoom(room, _this.rest, _this.socket)));
+                    resolve(r.map((room) => createRoom(room, _this)));
                 } else {
-                    resolve(createRoom(r, _this.rest, _this.socket));
+                    resolve(createRoom(r, _this));
                 }
             }).catch(reject);
         });
