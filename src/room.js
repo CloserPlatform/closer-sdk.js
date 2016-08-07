@@ -4,6 +4,7 @@ class BaseRoom {
     constructor(room, artichoke) {
         this.id = room.id;
         this.name = room.name;
+        this.currMark = room.mark;
         this.log = artichoke.log;
         this.artichoke = artichoke;
     }
@@ -21,6 +22,7 @@ class BaseRoom {
     }
 
     mark(timestamp) {
+        this.currMark = timestamp;
         return this.artichoke.socket.setMark(this.id, timestamp);
     }
 

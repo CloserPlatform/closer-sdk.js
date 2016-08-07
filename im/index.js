@@ -41,8 +41,9 @@ $(document).ready(function() {
         console.log("Building the chat!");
 
         var list = $('<ul id="room-list" class="nav nav-pills nav-stacked">');
-        var rooms = $('<div class="col-lg-2">').append(list);
-        var chatbox = $('<div id="chatbox-container" class="col-lg-8">');
+        var rooms = $('<div class="col-lg-3">').append(list);
+        var container = $('<div class="container-fluid" id="chatbox-container">');
+        var chatbox = $('<div class="col-lg-9">').append(container);
         var row = $('<div class="row">')
             .append(rooms)
             .append(chatbox);
@@ -55,7 +56,7 @@ $(document).ready(function() {
     function makeRoomSwitcher(room) {
         console.log("Building room switcher for room: ", room);
 
-        var unread = $('<span class="badge">').html(room.unread);
+        var unread = $('<span class="badge">');
         var name = $('<a href="#">')
             .append(room.name)
             .append(" ")
@@ -67,8 +68,7 @@ $(document).ready(function() {
                 $('#room-list #' + room.id).addClass("active");
 
                 unread.html("");
-                room.currMark = Date.now(); // FIXME Move this to the Room class.
-                room.mark(room.currMark);
+                room.mark(Date.now());
 
                 $('#chatbox-container .chatbox').hide();
                 $('#chatbox-container #' + room.id).show();
@@ -79,15 +79,15 @@ $(document).ready(function() {
                 $('#room-list #' + room.id).remove();
             });
 
-        return $('<li class="switcher" id="' + room.id + '"><br>')
+        return $('<li class="switcher" id="' + room.id + '">')
             .append(name);
     }
 
     function receive(room, msg) {
-        if(msg.timestamp > room.currMark) {
+        if(msg.timestamp > (room.currMark || 0)) {
             if(!$('#room-list #' + room.id).hasClass("active")) {
                 var unread = $('#room-list #' + room.id + " .badge");
-                unread.html(1 + parseInt(unread.html() || "0"));
+                unread.html(1 + (parseInt(unread.html() || "0")));
             } else {
                 room.mark(msg.timestamp);
             }
@@ -186,7 +186,6 @@ $(document).ready(function() {
                     console.log("Adding room to the roster: ", room);
 
                     roster[room.id] = room;
-                    room.currMark = 0; // FIXME Move this to the Room class.
 
                     $("#room-list").append(makeRoomSwitcher(room));
                     $("#chatbox-container").append(makeChatbox(room));
@@ -204,6 +203,7 @@ $(document).ready(function() {
                     console.log("Roster: ", rooms);
                     rooms.forEach(addRoom);
 
+                    // FIXME Add room management buttons instead of this.
                     session.chat.createRoom("#artichoke").then(function(room) {
                         room.join();
                         if(!(room.id in roster)) {
@@ -218,10 +218,7 @@ $(document).ready(function() {
 
                 session.chat.onEvent("message", function (msg) {
                     if(!(msg.room in roster)) {
-                        session.chat.getRoom(msg.room).then(function(room) {
-                            addRoom(room);
-                            receive(room, msg);
-                        }).catch(function(error) {
+                        session.chat.getRoom(msg.room).then(addRoom).catch(function(error) {
                             console.log("Fetching room failed: ", error);
                         });
                     }
