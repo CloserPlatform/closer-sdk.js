@@ -4,6 +4,7 @@ class BaseRoom {
     constructor(room, artichoke) {
         this.id = room.id;
         this.name = room.name;
+        this.log = artichoke.log;
         this.artichoke = artichoke;
     }
 
@@ -21,6 +22,25 @@ class BaseRoom {
 
     mark(timestamp) {
         return this.artichoke.socket.setMark(this.id, timestamp);
+    }
+
+    onMessage(callback) {
+        this._defineCallback("message", callback);
+    }
+
+    onAction(callback) {
+        this._defineCallback("room_action", callback);
+    }
+
+    _defineCallback(type, callback) {
+        // FIXME It would be way better to store a hash of rooms and pick the relevant callback directly.
+        let _this = this;
+        this.artichoke.onMessage(type, function(msg) {
+            if (msg.room === _this.id) {
+                _this.log("Running callback " + type + " for room: " + _this.id);
+                callback(msg);
+            }
+        });
     }
 }
 

@@ -72,24 +72,6 @@ function onLoad() {
                 else console.log(line);
             });
 
-            session.chat.onMessage("room_action", function(m) {
-                var s = m.subject ? makeAddable(m.subject) : "the room";
-                session.chat.getRoom(m.room).then(function(room) {
-                    makeChatbox(room).receive("User ", makeAddable(m.originator), " ", m.action, " ", s, ".");
-                }).catch(function(error) {
-                    console.log("Could not retrieve a room: ", error);
-                });
-            });
-
-            session.chat.onMessage("message", function(m) {
-                session.chat.getRoom(m.room).then(function(room) {
-                    room.mark(m.timestamp);
-                    makeChatbox(room).receive("[" + m.sender + "] " + m.body)
-                }).catch(function(error) {
-                    console.log("Could not retrieve a room: ", error);
-                });
-            });
-
             session.chat.onMessage("msg_delivered", function(m) {
                 console.log("Message delivery ack for id: " + m.id);
             });
@@ -366,6 +348,15 @@ function onLoad() {
                     text.appendChild(p);
                     text.scrollTop = text.scrollHeight - text.clientHeight;
                 }
+
+                room.onMessage(function(m) {
+                    receive("[" + m.sender + "] " + m.body);
+                });
+
+                room.onAction(function(m) {
+                    var s = m.subject ? makeAddable(m.subject) : "the room";
+                    receive("User ", makeAddable(m.originator), " ", m.action, " ", s, ".");
+                });
 
                 chatboxes[room.id] = {
                     id: id,
