@@ -72,6 +72,11 @@ $(document).ready(function() {
 
                 $('#chatbox-container .chatbox').hide();
                 $('#chatbox-container #' + room.id).show();
+            })
+            .dblclick(function() {
+                room.leave();
+                $('#chatbox-container #' + room.id).remove();
+                $('#room-list #' + room.id).remove();
             });
 
         return $('<li class="switcher" id="' + room.id + '"><br>')
