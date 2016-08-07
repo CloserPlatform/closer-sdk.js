@@ -67,7 +67,8 @@ $(document).ready(function() {
                 $('#room-list #' + room.id).addClass("active");
 
                 unread.html("");
-                room.mark(Date.now());
+                room.currMark = Date.now(); // FIXME Move this to the Room class.
+                room.mark(room.currMark);
 
                 $('#chatbox-container .chatbox').hide();
                 $('#chatbox-container #' + room.id).show();
@@ -75,6 +76,17 @@ $(document).ready(function() {
 
         return $('<li class="switcher" id="' + room.id + '"><br>')
             .append(name);
+    }
+
+    function isActive(room) {
+        return $('#room-list #' + room.id).hasClass("active");
+    }
+
+    function bumpUnreadCount(room) {
+        var unread = $('#room-list #' + room.id + " .badge");
+        unread.html(1 + parseInt(unread.html() || "0"));
+
+        console.log(unread.val());
     }
 
     function makeChatbox(room) {
@@ -108,8 +120,17 @@ $(document).ready(function() {
             text.append(line);
         }
 
-        room.onMessage(receive);
         room.onAction(receiveAction);
+        room.onMessage(function(msg) {
+            if(msg.timestamp > room.currMark) {
+                if(!isActive(room)) {
+                    bumpUnreadCount(room)
+                } else {
+                    room.mark(msg.timestamp);
+                }
+            }
+            receive(msg);
+        });
 
         var field = $('<input type="text">');
         var send = $('<button>')
