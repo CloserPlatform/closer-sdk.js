@@ -197,8 +197,8 @@ export class Artichoke {
         // NOTE By default do nothing.
         this.onConnectCallback = nop;
         this.onErrorCallback = nop;
-        this.onMessage("msg_received", nop);
-        this.onMessage("msg_delivered", nop);
+        this.onEvent("msg_received", nop);
+        this.onEvent("msg_delivered", nop);
     }
 
     // Callbacks:
@@ -206,7 +206,7 @@ export class Artichoke {
         this.onConnectCallback = callback;
     }
 
-    onMessage(type, callback) {
+    onEvent(type, callback) {
         this.log("Registered callback for message type: " + type);
         if (!(type in this.callbacks)) {
             this.callbacks[type] = [];

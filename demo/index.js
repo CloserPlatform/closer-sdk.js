@@ -38,11 +38,11 @@ function onLoad() {
                 console.log("An error has occured: ", error);
             });
 
-            session.chat.onMessage("hello", function(m) {
+            session.chat.onEvent("hello", function(m) {
                 console.log("Connection ready for " + username + "!");
             });
 
-            session.chat.onMessage("call_offer", function(m) {
+            session.chat.onEvent("call_offer", function(m) {
                 console.log(m.user + " is calling...");
                 if(confirm(m.user + " is calling, answer?")) {
                     makeCall(m.user).createLocalStream(function(stream) {
@@ -54,16 +54,16 @@ function onLoad() {
                 }
             });
 
-            session.chat.onMessage("call_answer", function(m) {
+            session.chat.onEvent("call_answer", function(m) {
                 console.log(m.user + " answered the call!");
             });
 
-            session.chat.onMessage("call_hangup", function(m) {
+            session.chat.onEvent("call_hangup", function(m) {
                 console.log(m.user + " hang up, reason: " + m.reason);
                 removeCall(m.user);
             });
 
-            session.chat.onMessage("presence", function(m) {
+            session.chat.onEvent("presence", function(m) {
                 // FIXME Actually implement proper status handling.
                 var status = m.status;
                 var user = m.sender;
@@ -72,7 +72,7 @@ function onLoad() {
                 else console.log(line);
             });
 
-            session.chat.onMessage("msg_delivered", function(m) {
+            session.chat.onEvent("msg_delivered", function(m) {
                 console.log("Message delivery ack for id: " + m.id);
             });
 
