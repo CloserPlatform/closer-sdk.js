@@ -3,11 +3,11 @@ body {
 }
 
 .login-form {
-    padding: 40px 15px;
     text-align: center;
 }
 
 #page-contents {
+    padding: 40px 15px;
     height: 100%;
     width: 100%;
 }

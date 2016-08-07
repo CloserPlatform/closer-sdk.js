@@ -40,7 +40,8 @@ $(document).ready(function() {
     function makeChat() {
         console.log("Building the chat!");
 
-        var rooms = $('<div id="room-list" class="col-lg-2">');
+        var list = $('<ul id="room-list" class="nav nav-pills nav-stacked">');
+        var rooms = $('<div class="col-lg-2">').append(list);
         var chatbox = $('<div id="chatbox-container" class="col-lg-8">');
         var row = $('<div class="row">')
             .append(rooms)
@@ -49,6 +50,31 @@ $(document).ready(function() {
         return $('<div id="chat">')
             .append(row)
             .hide();
+    }
+
+    function makeRoomSwitcher(room) {
+        console.log("Building room switcher for room: ", room);
+
+        var unread = $('<span class="badge">').html(room.unread);
+        var name = $('<a href="#">')
+            .append(room.name)
+            .append(" ")
+            .append(unread)
+            .click(function() {
+                console.log("Switching to room: " + room.name);
+
+                $('#room-list .switcher').removeClass("active");
+                $('#room-list #' + room.id).addClass("active");
+
+                unread.html("");
+                room.mark(Date.now());
+
+                $('#chatbox-container .chatbox').hide();
+                $('#chatbox-container #' + room.id).show();
+            });
+
+        return $('<li class="switcher" id="' + room.id + '"><br>')
+            .append(name);
     }
 
     function run(server, sessionId) {
@@ -76,6 +102,9 @@ $(document).ready(function() {
 
                 session.chat.getRoster().then(function(rooms) {
                     console.log("Roster: ", rooms);
+                    rooms.forEach(function(room) {
+                        $("#room-list").append(makeRoomSwitcher(room));
+                    });
                 }).catch(function(error) {
                     console.log("Fetching roster failed:" + error);
                 });
