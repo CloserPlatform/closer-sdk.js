@@ -49,6 +49,13 @@ $(document).ready(function() {
                 $("#room-list").append(switcher.element);
                 chatboxes[room.id] = chatbox;
                 $("#chatbox-container").append(chatbox.element);
+            },
+            remove: function(room) {
+                room.leave();
+                switchers[room.id].remove();
+                delete switchers[room.id];
+                chatboxes[room.id].remove();
+                delete chatboxes[room.id];
             }
         };
     }
@@ -59,8 +66,7 @@ $(document).ready(function() {
         var unread = makeBadge();
 
         var switcher = makeSwitcher(room.id, [room.name, " ", unread], switchTo, function() {
-            switchers[room.id].remove();
-            chatboxes[room.id].remove();
+            chat.remove(room);
         });
 
         function switchTo() {
@@ -98,7 +104,6 @@ $(document).ready(function() {
                 unread.html(1 + (parseInt(unread.html() || "0")));
             },
             remove: function() {
-                room.leave();
                 switcher.remove();
             },
             switchTo: switchTo
@@ -174,10 +179,10 @@ $(document).ready(function() {
                 }
             });
 
-            var row = makeRow()
+            var row = makeButtonGroup()
                 .append(call)
-                .append(" ")
                 .append(hangup);
+
             panel.append(row);
         }).catch(function(error) {
             console.log("Fetching user list failed: ", error);
@@ -238,7 +243,9 @@ $(document).ready(function() {
         }
 
         room.getUsers().then(function(list) {
-            list.users.forEach(addUser);
+            list.users.filter(function(u) {
+                return u != sessionId; // FIXME Don't use sessionId.
+            }).forEach(addUser);
             renderUsers(userList);
         }).catch(function(error) {
             console.log("Fetching user list failed: ", error);
@@ -255,7 +262,11 @@ $(document).ready(function() {
 
         room.onAction(function(action) {
             switch(action.action) {
-            case "joined": addUser(action.originator); break;
+            case "joined":
+                if(action.originator != sessionId) { // FIXME Don't use sessionId.
+                    addUser(action.originator);
+                }
+                break;
             case "left": removeUser(action.originator); break;
             }
             renderUsers(userList);
@@ -440,29 +451,29 @@ $(document).ready(function() {
                         });
                     }
                 });
-            });
 
-            session.chat.onEvent("call_offer", function(m) {
-                console.log(m.user + " is calling...");
-                if(confirm(m.user + " is calling, answer?")) {
-                    session.chat.createDirectRoom(m.user).then(function(room) {
-                        addRoom(room, session).withCall(m);
-                    }).catch(function(error) {
-                        console.log("Creating direct room failed: ", error);
-                    });
-                } else {
-                    console.log("Rejecting call...");
-                    session.chat.rejectCall(m);
-                }
-            });
+                session.chat.onEvent("call_offer", function(m) {
+                    console.log(m.user + " is calling...");
+                    if(confirm(m.user + " is calling, answer?")) {
+                        session.chat.createDirectRoom(m.user).then(function(room) {
+                            addRoom(room, session).withCall(m);
+                        }).catch(function(error) {
+                            console.log("Creating direct room failed: ", error);
+                        });
+                    } else {
+                        console.log("Rejecting call...");
+                        session.chat.rejectCall(m);
+                    }
+                });
 
-            session.chat.onEvent("call_answer", function(m) {
-                console.log(m.user + " answered the call!");
-            });
+                session.chat.onEvent("call_answer", function(m) {
+                    console.log(m.user + " answered the call!");
+                });
 
-            session.chat.onEvent("call_hangup", function(m) {
-                console.log(m.user + " hang up, reason: " + m.reason);
-                calls[m.user].end();
+                session.chat.onEvent("call_hangup", function(m) {
+                    console.log(m.user + " hang up, reason: " + m.reason);
+                    calls[m.user].end();
+                });
             });
 
             session.chat.connect();

@@ -111,8 +111,8 @@ function makeButton(className, contents, onClick) {
         .click(onClick);
 }
 
-function makeRow() {
-    return $('<div class="row">');
+function makeButtonGroup() {
+    return $('<div class="btn-group">');
 }
 
 function makeStreamBox(className) {
@@ -120,7 +120,7 @@ function makeStreamBox(className) {
 }
 
 function makeSplitGrid(contents) {
-    var row = makeRow();
+    var row = $('<div class="row">');
     contents.forEach(function(content) {
         var col = $('<div class="col-lg-' + Math.floor(12 / contents.length) + '">')
             .append(content);
