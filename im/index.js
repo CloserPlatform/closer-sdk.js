@@ -102,6 +102,66 @@ $(document).ready(function() {
         };
     }
 
+    function makeReceiver(room, text) {
+        return function(msg) {
+            if(msg.timestamp > (room.currMark || 0)) {
+                if(!switchers[room.id].isActive()) {
+                    switchers[room.id].bumpUnread();
+                } else {
+                    room.mark(msg.timestamp);
+                }
+            }
+
+            var line = makeTextLine(msg.id, "", msg.timestamp, " " + msg.sender + ": " + msg.body);
+            text.append(line);
+            text.trigger('scroll-to-bottom');
+        }
+    }
+
+    function makeDirectChatbox(room) {
+        console.log("Building direct chatbox: ", room);
+
+        var call = makeButton("btn-success", "Call!", function() {
+            // TODO Offer a call.
+            call.addClass("disabled");
+            hangup.removeClass("disabled");
+        });
+
+        var hangup = makeButton("btn-danger disabled", "Hangup!", function() {
+            // TODO Hangup a call.
+            call.removeClass("disabled");
+            hangup.addClass("disabled");
+        });
+
+        var panel = makePanel()
+            .append(call)
+            .append(" ")
+            .append(hangup);
+
+        var text = makeTextArea("chatbox-textarea");
+        var receive = makeReceiver(room, text);
+        room.onMessage(receive);
+
+        var input = makeInputField("Send!", function(input) {
+            room.send(input).then(function (ack) {
+                console.log("Received ack for message: ", ack);
+                receive(ack.message);
+            }).catch(function(error) {
+                console.log("Sending message failed: ", error);
+            });
+        });
+
+        var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
+
+        return {
+            element: chatbox,
+            receive: receive,
+            remove: function() {
+                chatbox.remove();
+            }
+        }
+    }
+
     function makeRoomChatbox(room, directRoomBuilder) {
         console.log("Building chatbox for room: ", room);
 
@@ -143,20 +203,6 @@ $(document).ready(function() {
             text.trigger('scroll-to-bottom');
         }
 
-        function receive(msg) {
-            if(msg.timestamp > (room.currMark || 0)) {
-                if(!switchers[room.id].isActive()) {
-                    switchers[room.id].bumpUnread();
-                } else {
-                    room.mark(msg.timestamp);
-                }
-            }
-
-            var line = makeTextLine(msg.id, "", msg.timestamp, " " + msg.sender + ": " + msg.body);
-            text.append(line);
-            text.trigger('scroll-to-bottom');
-        }
-
         room.onAction(function(action) {
             switch(action.action) {
             case "joined": addUser(action.originator); break;
@@ -165,6 +211,8 @@ $(document).ready(function() {
             renderUsers(userList);
             receiveAction(action);
         });
+
+        var receive = makeReceiver(room, text);
         room.onMessage(receive);
 
         var input = makeInputField("Send!", function(input) {
@@ -190,7 +238,7 @@ $(document).ready(function() {
     function addRoom(room, session) {
         console.log("Adding room to the chat: ", room);
 
-        var chatbox = makeRoomChatbox(room, directRoomBuilder(session));
+        var chatbox = room.direct ? makeDirectChatbox(room) : makeRoomChatbox(room, directRoomBuilder(session));
         chat.add(room, makeRoomSwitcher(room), chatbox);
 
         room.getHistory().then(function(msgs) {

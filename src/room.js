@@ -5,6 +5,7 @@ class BaseRoom {
         this.id = room.id;
         this.name = room.name;
         this.currMark = room.mark;
+        this.direct = room.direct;
         this.log = artichoke.log;
         this.artichoke = artichoke;
     }

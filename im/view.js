@@ -104,3 +104,9 @@ function makeChatbox(id, className, controls, text, input) {
         .append(text)
         .append(input);
 }
+
+function makeButton(className, contents, onClick) {
+    return $('<button type="button" class="btn ' + className + '">')
+        .html(contents)
+        .click(onClick);
+}
