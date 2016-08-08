@@ -42,3 +42,60 @@ function makeSwitcher(id, contents, onClick, onDblClick) {
 function makeBadge() {
     return $('<span class="badge">');
 }
+
+function makePill(className, contents) {
+    return $('<li class="' + className +'">').append($('<a href="#">').html(contents));
+}
+
+function makePanel() {
+    return $('<div class="panel">');
+}
+
+function makePills(className) {
+    return $('<ul class="nav nav-pills ' + className + '">');
+}
+
+function makeTextLine(id, className, timestamp, string) {
+    function time(timestamp) {
+        var date = new Date(timestamp);
+        var minutes = "0" + date.getMinutes();
+        var seconds = "0" + date.getSeconds();
+        return date.getHours() + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+    }
+
+    return $('<p id="' + id + '" class="' + className + '">')
+        .append(time(timestamp))
+        .append(string);
+}
+
+function makeTextArea(className) {
+    var text = $('<div class="' + className + '">');
+
+    text.bind('scroll-to-bottom', function(event) {
+        var area = text.get()[0];
+        text.scrollTop(area.scrollHeight - area.clientHeight)
+    });
+
+    return text;
+}
+
+function makeInputField(name, onClick) {
+    var field = $('<input type="text">');
+    var send = $('<button>')
+        .html("Send!")
+        .click(function() {
+            onClick(field.val());
+            field.val("");
+        });
+
+    return $('<div>')
+        .append(field)
+        .append(send);
+}
+
+function makeChatbox(id, className, controls, text, input) {
+    return $('<div class="' + className + '" id="' + id + '">')
+        .append(controls)
+        .append(text)
+        .append(input);
+}

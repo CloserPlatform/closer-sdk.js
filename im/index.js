@@ -11,6 +11,7 @@ $(document).ready(function() {
     var loginBox = makeLoginBox();
     var chat = makeChat();
     var switchers = {};
+    var chatboxes = {};
 
     $('#page-contents')
         .append(loginBox.element)
@@ -53,15 +54,20 @@ $(document).ready(function() {
             switcher.activate();
             switcher.markRoom();
 
-            $('#chatbox-container .chatbox').hide();
-            $('#chatbox-container #' + room.id).show();
+            Object.keys(chatboxes).forEach(function(id) {
+                chatboxes[id].element.hide();
+            });
+            chatboxes[room.id].element.show();
         }, function() {
-            $('#chatbox-container #' + room.id).remove();
+            chatboxes[room.id].remove();
             switchers[room.id].remove();
         });
 
         return {
             element: switcher,
+            isActive: function() {
+                return switcher.hasClass("active");
+            },
             activate: function() {
                 switcher.addClass("active");
             },
@@ -72,6 +78,9 @@ $(document).ready(function() {
                 room.mark(Date.now());
                 unread.html("");
             },
+            bumpUnread: function() {
+                unread.html(1 + (parseInt(unread.html() || "0")));
+            },
             remove: function() {
                 switcher.remove();
                 room.leave();
@@ -79,45 +88,17 @@ $(document).ready(function() {
         };
     }
 
-    function receive(room, msg) {
-        if(msg.timestamp > (room.currMark || 0)) {
-            if(!$('#room-list #' + room.id).hasClass("active")) {
-                var unread = $('#room-list #' + room.id + " .badge");
-                unread.html(1 + (parseInt(unread.html() || "0")));
-            } else {
-                room.mark(msg.timestamp);
-            }
-        }
-
-        var line = $('<p id="' + msg.id + '">')
-            .append(time(msg.timestamp))
-            .append(" " + msg.sender + ": ")
-            .append(msg.body);
-
-        var text = $('#chatbox-container #' + room.id + ' .chatbox-textarea');
-        text.append(line);
-        var area = text.get()[0];
-        text.scrollTop(area.scrollHeight - area.clientHeight);
-    }
-
-    function time(timestamp) {
-        var date = new Date(timestamp);
-        var minutes = "0" + date.getMinutes();
-        var seconds = "0" + date.getSeconds();
-        return date.getHours() + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
-    }
-
-    function makeChatbox(room) {
+    function makeRoomChatbox(room) {
         console.log("Building chatbox for room: ", room);
 
         var userList = {};
-        var users = $('<ul class="nav nav-pills chatbox-users">');
-        var panel = $('<div class="panel">').append(users);
+        var users = makePills("chatbox-users");
+        var panel = makePanel().append(users);
 
         function renderUsers(list) {
             users.html("");
             Object.keys(list).forEach(function(user) {
-                var pill = $('<li class="' + user +'">').append($('<a href="#">').html(user));
+                var pill = makePill(user, user);
                 users.append(pill);
             });
         }
@@ -137,17 +118,27 @@ $(document).ready(function() {
             console.log("Fetching user list failed: ", error);
         });
 
-        var text = $('<div class="chatbox-textarea">');
+        var text = makeTextArea("chatbox-textarea");
 
         function receiveAction(action) {
             var s = action.subject || "the room";
-            var line = $('<p class="info">')
-                .append(time(action.timestamp))
-                .append(" User " + action.originator + " " + action.action + " " + s + ".");
+            var line = " User " + action.originator + " " + action.action + " " + s + ".";
+            text.append(makeTextLine("", "info", action.timestamp, line));
+            text.trigger('scroll-to-bottom');
+        }
 
+        function receive(msg) {
+            if(msg.timestamp > (room.currMark || 0)) {
+                if(!switchers[room.id].isActive()) {
+                    switchers[room.id].bumpUnread();
+                } else {
+                    room.mark(msg.timestamp);
+                }
+            }
+
+            var line = makeTextLine(msg.id, "", msg.timestamp, " " + msg.sender + ": " + msg.body);
             text.append(line);
-            var area = text.get()[0];
-            text.scrollTop(area.scrollHeight - area.clientHeight);
+            text.trigger('scroll-to-bottom');
         }
 
         room.onAction(function(action) {
@@ -158,32 +149,26 @@ $(document).ready(function() {
             renderUsers(userList);
             receiveAction(action);
         });
-        room.onMessage(function(msg) {
-            receive(room, msg);
+        room.onMessage(receive);
+
+        var input = makeInputField("Send!", function(input) {
+            room.send(input).then(function (ack) {
+                console.log("Received ack for message: ", ack);
+                receive(ack.message);
+            }).catch(function(error) {
+                console.log("Sending message failed: ", error);
+            });
         });
 
-        var field = $('<input type="text">');
-        var send = $('<button>')
-            .html("Send!")
-            .click(function() {
-                room.send(field.val()).then(function (ack) {
-                    console.log("Received ack for message: ", ack);
-                    receive(room, ack.message);
-                    field.val("");
-                }).catch(function(error) {
-                    console.log("Sending message failed: ", error);
-                });
-            });
+        var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
 
-        var input = $('<div>')
-            .append(field)
-            .append(send);
-
-        return $('<div class="chatbox" id="' + room.id + '">')
-            .append(panel)
-            .append(text)
-            .append(input)
-            .hide();
+        return {
+            element: chatbox,
+            receive: receive,
+            remove: function() {
+                chatbox.remove();
+            }
+        }
     }
 
     function run(server, sessionId) {
@@ -219,11 +204,14 @@ $(document).ready(function() {
                     var switcher = makeRoomSwitcher(room);
                     switchers[room.id] = switcher;
                     $("#room-list").append(switcher.element);
-                    $("#chatbox-container").append(makeChatbox(room));
+
+                    var chatbox = makeRoomChatbox(room);
+                    chatboxes[room.id] = chatbox;
+                    $("#chatbox-container").append(chatbox.element);
 
                     room.getHistory().then(function(msgs) {
                         msgs.forEach(function(msg) {
-                            receive(room, msg);
+                            chatbox.receive(msg);
                         });
                     }).catch(function(error) {
                         console.log("Fetching room history failed: ", error);
