@@ -120,7 +120,8 @@ $(document).ready(function() {
                 }
             }
 
-            var line = makeTextLine(msg.id, "", msg.timestamp, " " + msg.sender + ": " + msg.body);
+            var className = msg.delivered ? "delivered" : "";
+            var line = makeTextLine(msg.id, className, msg.timestamp, " " + msg.sender + ": " + msg.body);
             text.append(line);
             text.trigger('scroll-to-bottom');
         }
@@ -190,7 +191,10 @@ $(document).ready(function() {
 
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
-        room.onMessage(receive);
+        room.onMessage(function(msg) {
+            msg["delivered"] = Date.now(); // FIXME Do it properly...
+            receive(msg);
+        });
 
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (ack) {
@@ -274,7 +278,10 @@ $(document).ready(function() {
         });
 
         var receive = makeReceiver(room, text);
-        room.onMessage(receive);
+        room.onMessage(function(msg) {
+            msg["delivered"] = Date.now(); // FIXME Do it properly...
+            receive(msg);
+        });
 
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (ack) {
@@ -450,6 +457,10 @@ $(document).ready(function() {
                             console.log("Fetching room failed: ", error);
                         });
                     }
+                });
+
+                session.chat.onEvent("msg_delivered", function(m) {
+                    $('#' + m.id).addClass("delivered"); // FIXME Do it properly.
                 });
 
                 session.chat.onEvent("call_offer", function(m) {

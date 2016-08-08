@@ -16,6 +16,10 @@ body {
     color: gray;
 }
 
+.delivered::after {
+    content: " ✓";
+}
+
 .chatbox-textarea {
     -moz-appearance: textfield-multiline;
     -webkit-appearance: textarea;
