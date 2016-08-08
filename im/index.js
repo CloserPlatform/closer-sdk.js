@@ -114,7 +114,33 @@ $(document).ready(function() {
     function makeChatbox(room) {
         console.log("Building chatbox for room: ", room);
 
-        var users = $('<ul class="nav nav-pills">');
+        var userList = {};
+        var users = $('<ul class="nav nav-pills chatbox-users">');
+        var panel = $('<div class="panel">').append(users);
+
+        function renderUsers(list) {
+            users.html("");
+            Object.keys(list).forEach(function(user) {
+                var pill = $('<li class="' + user +'">').append($('<a href="#">').html(user));
+                users.append(pill);
+            });
+        }
+
+        function addUser(user) {
+            userList[user] = user;
+        }
+
+        function removeUser(user) {
+            delete userList[user];
+        }
+
+        room.getUsers().then(function(list) {
+            list.users.forEach(addUser);
+            renderUsers(userList);
+        }).catch(function(error) {
+            console.log("Fetching user list failed: ", error);
+        });
+
         var text = $('<div class="chatbox-textarea">');
 
         function receiveAction(action) {
@@ -128,7 +154,14 @@ $(document).ready(function() {
             text.scrollTop(area.scrollHeight - area.clientHeight);
         }
 
-        room.onAction(receiveAction);
+        room.onAction(function(action) {
+            switch(action.action) {
+            case "joined": addUser(action.originator); break;
+            case "left": removeUser(action.originator); break;
+            }
+            renderUsers(userList);
+            receiveAction(action);
+        });
         room.onMessage(function(msg) {
             receive(room, msg);
         });
@@ -151,7 +184,7 @@ $(document).ready(function() {
             .append(send);
 
         return $('<div class="chatbox" id="' + room.id + '">')
-            .append(users)
+            .append(panel)
             .append(text)
             .append(input)
             .hide();
