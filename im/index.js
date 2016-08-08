@@ -52,7 +52,12 @@ $(document).ready(function() {
 
         var unread = makeBadge();
 
-        var switcher = makeSwitcher(room.id, [room.name, " ", unread], function() {
+        var switcher = makeSwitcher(room.id, [room.name, " ", unread], switchTo, function() {
+            switchers[room.id].remove();
+            chatboxes[room.id].remove();
+        });
+
+        function switchTo() {
             console.log("Switching to room: " + room.name);
 
             Object.keys(switchers).forEach(function(id) {
@@ -66,10 +71,7 @@ $(document).ready(function() {
                 chatboxes[id].element.hide();
             });
             chatboxes[room.id].element.show();
-        }, function() {
-            chatboxes[room.id].remove();
-            switchers[room.id].remove();
-        });
+        }
 
         return {
             element: switcher,
@@ -90,13 +92,14 @@ $(document).ready(function() {
                 unread.html(1 + (parseInt(unread.html() || "0")));
             },
             remove: function() {
-                switcher.remove();
                 room.leave();
-            }
+                switcher.remove();
+            },
+            switchTo: switchTo
         };
     }
 
-    function makeRoomChatbox(room) {
+    function makeRoomChatbox(room, directRoomBuilder) {
         console.log("Building chatbox for room: ", room);
 
         var userList = {};
@@ -106,7 +109,9 @@ $(document).ready(function() {
         function renderUsers(list) {
             users.html("");
             Object.keys(list).forEach(function(user) {
-                var pill = makePill(user, user);
+                var pill = makePill(user, user, function() {
+                    directRoomBuilder(user);
+                });
                 users.append(pill);
             });
         }
@@ -179,6 +184,48 @@ $(document).ready(function() {
         }
     }
 
+    function addRoom(room, session) {
+        console.log("Adding room to the chat: ", room);
+
+        var chatbox = makeRoomChatbox(room, directRoomBuilder(session));
+        chat.add(room, makeRoomSwitcher(room), chatbox);
+
+        room.getHistory().then(function(msgs) {
+            msgs.forEach(function(msg) {
+                chatbox.receive(msg);
+            });
+        }).catch(function(error) {
+            console.log("Fetching room history failed: ", error);
+        });
+    }
+
+    function directRoomBuilder(session) {
+        return function(user) {
+            session.chat.createDirectRoom(user).then(function(room) {
+                if(!(room.id in roster)) {
+                    addRoom(room);
+                }
+                switchers[room.id].switchTo();
+            }).catch(function(error) {
+                console.log("Creating a direct room failed: ", error);
+            });
+        }
+    }
+
+    function roomBuilder(session) {
+        return function(name) {
+            session.chat.createRoom(name).then(function(room) {
+                if(!(room.id in roster)) {
+                    addRoom(room, session);
+                }
+                room.join();
+                switchers[room.id].switchTo();
+            }).catch(function(error) {
+                console.log("Joining #artichoke failed: ", error);
+            });
+        }
+    }
+
     function run(server, sessionId) {
         console.log("Connecting to " + server + " as: " + sessionId);
 
@@ -202,41 +249,23 @@ $(document).ready(function() {
             session.chat.onEvent("hello", function(m) {
                 console.log("Connection ready for " + sessionId + "!");
 
-                function addRoom(room) {
-                    console.log("Adding room to the roster: ", room);
-
-                    var chatbox = makeRoomChatbox(room);
-                    chat.add(room, makeRoomSwitcher(room), chatbox);
-
-                    room.getHistory().then(function(msgs) {
-                        msgs.forEach(function(msg) {
-                            chatbox.receive(msg);
-                        });
-                    }).catch(function(error) {
-                        console.log("Fetching room history failed: ", error);
-                    });
-                }
-
                 session.chat.getRoster().then(function(rooms) {
                     console.log("Roster: ", rooms);
-                    rooms.forEach(addRoom);
+                    rooms.forEach(function(room) {
+                        addRoom(room, session);
+                    });
 
                     // FIXME Add room management buttons instead of this.
-                    session.chat.createRoom("#artichoke").then(function(room) {
-                        room.join();
-                        if(!(room.id in roster)) {
-                            addRoom(room);
-                        }
-                    }).catch(function(error) {
-                        console.log("Joining #artichoke failed: ", error);
-                    });
+                    roomBuilder(session)("#artichoke");
                 }).catch(function(error) {
                     console.log("Fetching roster failed:", error);
                 });
 
                 session.chat.onEvent("message", function (msg) {
                     if(!(msg.room in roster)) {
-                        session.chat.getRoom(msg.room).then(addRoom).catch(function(error) {
+                        session.chat.getRoom(msg.room).then(function(room) {
+                            addRoom(room, session);
+                        }).catch(function(error) {
                             console.log("Fetching room failed: ", error);
                         });
                     }

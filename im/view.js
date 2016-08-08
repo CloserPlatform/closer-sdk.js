@@ -43,8 +43,10 @@ function makeBadge() {
     return $('<span class="badge">');
 }
 
-function makePill(className, contents) {
-    return $('<li class="' + className +'">').append($('<a href="#">').html(contents));
+function makePill(className, contents, onClick) {
+    return $('<li class="' + className +'">').append($('<a href="#">')
+                                                     .html(contents)
+                                                     .click(onClick));
 }
 
 function makePanel() {
