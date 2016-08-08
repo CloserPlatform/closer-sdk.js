@@ -8,79 +8,58 @@ $(document).ready(function() {
         };
     };
 
-    $('#page-contents')
-        .append(makeLoginBox())
-        .append(makeChat());
+    var loginBox = makeLoginBox();
+    var chat = makeChat();
 
-    $('#login-box').show();
+    $('#page-contents')
+        .append(loginBox.element)
+        .append(chat.element);
+
+    loginBox.element.show();
 
     function makeLoginBox() {
         console.log("Building the login box!");
-
-        var form = $('<form>')
-            .append('<input id="server" type="text" value="localhost:5431">')
-            .append('<br>')
-            .append('<input id="session-id" type="text" value="Alice">')
-            .append('<br>');
-
-        var button = $('<button>')
-            .html("Login!")
-            .click(function() {
-                $('#login-box').hide();
-                $('#chat').show();
-                run($('#server').val(), $('#session-id').val());
-            });
-
-        return $('<div id="login-box" class="login-form">')
-            .append(form)
-            .append(button)
-            .hide();
+        var form = makeLoginForm("login-box", function() {
+            loginBox.element.hide();
+            chat.element.show();
+            run($('#server').val(), $('#session-id').val());
+        });
+        return {
+            element: form
+        };
     }
 
     function makeChat() {
         console.log("Building the chat!");
-
-        var list = $('<ul id="room-list" class="nav nav-pills nav-stacked">');
-        var rooms = $('<div class="col-lg-3">').append(list);
-        var container = $('<div class="container-fluid" id="chatbox-container">');
-        var chatbox = $('<div class="col-lg-9">').append(container);
-        var row = $('<div class="row">')
-            .append(rooms)
-            .append(chatbox);
-
-        return $('<div id="chat">')
-            .append(row)
-            .hide();
+        var chat = makeChatContainer("chat");
+        return {
+            element: chat
+        };
     }
 
     function makeRoomSwitcher(room) {
         console.log("Building room switcher for room: ", room);
 
         var unread = $('<span class="badge">');
-        var name = $('<a href="#">')
-            .append(room.name)
-            .append(" ")
-            .append(unread)
-            .click(function() {
-                console.log("Switching to room: " + room.name);
 
-                $('#room-list .switcher').removeClass("active");
-                $('#room-list #' + room.id).addClass("active");
+        var switcher = makeSwitcher(room.id, [room.name, " ", unread], function() {
+            console.log("Switching to room: " + room.name);
 
-                unread.html("");
-                room.mark(Date.now());
+            $('#room-list .switcher').removeClass("active");
+            $('#room-list #' + room.id).addClass("active");
 
-                $('#chatbox-container .chatbox').hide();
-                $('#chatbox-container #' + room.id).show();
-            })
-            .dblclick(function() {
-                room.leave();
-                $('#chatbox-container #' + room.id).remove();
-                $('#room-list #' + room.id).remove();
-            });
+            unread.html("");
+            room.mark(Date.now());
 
-        return $('<li class="switcher" id="' + room.id + '">')
-            .append(name);
+            $('#chatbox-container .chatbox').hide();
+            $('#chatbox-container #' + room.id).show();
+        }, function() {
+            room.leave();
+            $('#chatbox-container #' + room.id).remove();
+            $('#room-list #' + room.id).remove();
+        });
+
+        return switcher;
     }
 
     function receive(room, msg) {
