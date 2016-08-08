@@ -110,3 +110,21 @@ function makeButton(className, contents, onClick) {
         .html(contents)
         .click(onClick);
 }
+
+function makeRow() {
+    return $('<div class="row">');
+}
+
+function makeStreamBox(className) {
+    return $('<video class="video-stream ' + className + '" autoplay>');
+}
+
+function makeSplitGrid(contents) {
+    var row = makeRow();
+    contents.forEach(function(content) {
+        var col = $('<div class="col-lg-' + Math.floor(12 / contents.length) + '">')
+            .append(content);
+        row.append(col);
+    });
+    return row;
+}

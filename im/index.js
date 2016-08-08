@@ -10,9 +10,11 @@ $(document).ready(function() {
 
     var loginBox = makeLoginBox();
     var chat = makeChat();
+    var sessionId = undefined; // FIXME Get rid of it.
     var roster = {};
     var switchers = {};
     var chatboxes = {};
+    var calls = {};
     var newRoom = function() {};
 
     $('#page-contents')
@@ -26,7 +28,8 @@ $(document).ready(function() {
         var form = makeLoginForm("login-box", function() {
             loginBox.element.hide();
             chat.element.show();
-            run($('#server').val(), $('#session-id').val());
+            sessionId = $('#session-id').val();
+            run($('#server').val(), sessionId);
         });
         return {
             element: form
@@ -118,25 +121,67 @@ $(document).ready(function() {
         }
     }
 
-    function makeDirectChatbox(room) {
+    function makeDirectChatbox(room, callBuilder) {
         console.log("Building direct chatbox: ", room);
 
-        var call = makeButton("btn-success", "Call!", function() {
-            // TODO Offer a call.
-            call.addClass("disabled");
-            hangup.removeClass("disabled");
-        });
+        var peer = undefined;
+        var call = undefined;
+        var hangup = undefined;
 
-        var hangup = makeButton("btn-danger disabled", "Hangup!", function() {
-            // TODO Hangup a call.
-            call.removeClass("disabled");
-            hangup.addClass("disabled");
-        });
+        var local = makeStreamBox("local-stream").attr("muted", true);
+        var remote = makeStreamBox("remote-stream");
+        var streams = makeSplitGrid([local, remote]).hide();
 
-        var panel = makePanel()
-            .append(call)
-            .append(" ")
-            .append(hangup);
+        var panel = makePanel().append(streams);
+
+        function newCall(user) {
+            var c = callBuilder(user, function(stream) {
+                // On local stream.
+                streams.show();
+                local.attr('src', window.URL.createObjectURL(stream));
+            }, function(stream) {
+                // On remote stream.
+                streams.show();
+                remote.attr('src', window.URL.createObjectURL(stream));
+            }, function() {
+                // On teardown.
+                streams.hide();
+                call.removeClass("disabled");
+                hangup.addClass("disabled");
+                delete calls[user];
+            });
+            calls[user] = c;
+            return c;
+        }
+
+        room.getUsers().then(function(list) {
+            peer = list.users.filter(function(u) {
+                return u != sessionId;
+            })[0];
+
+            call = makeButton("btn-success", "Call!", function() {
+                if(!call.hasClass("disabled")) {
+                    call.addClass("disabled");
+                    hangup.removeClass("disabled");
+                    newCall(peer).offer();
+                }
+            });
+
+            hangup = makeButton("btn-danger disabled", "Hangup!", function() {
+                if(!hangup.hasClass("disabled")) {
+                    calls[peer].hangup("hangup");
+                    calls[peer].end();
+                }
+            });
+
+            var row = makeRow()
+                .append(call)
+                .append(" ")
+                .append(hangup);
+            panel.append(row);
+        }).catch(function(error) {
+            console.log("Fetching user list failed: ", error);
+        });
 
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
@@ -156,6 +201,11 @@ $(document).ready(function() {
         return {
             element: chatbox,
             receive: receive,
+            withCall: function(offer) {
+                call.addClass("disabled");
+                hangup.removeClass("disabled");
+                newCall(peer).answer(offer);
+            },
             remove: function() {
                 chatbox.remove();
             }
@@ -238,24 +288,33 @@ $(document).ready(function() {
     function addRoom(room, session) {
         console.log("Adding room to the chat: ", room);
 
-        var chatbox = room.direct ? makeDirectChatbox(room) : makeRoomChatbox(room, directRoomBuilder(session));
-        chat.add(room, makeRoomSwitcher(room), chatbox);
+        if(room.id in chatboxes) {
+            return chatboxes[room.id];
+        } else {
+            var chatbox = undefined;
+            if(room.direct) {
+                chatbox = makeDirectChatbox(room, callBuilder(session));
+            } else {
+                chatbox = makeRoomChatbox(room, directRoomBuilder(session));
+            }
+            chat.add(room, makeRoomSwitcher(room), chatbox);
 
-        room.getHistory().then(function(msgs) {
-            msgs.forEach(function(msg) {
-                chatbox.receive(msg);
+            room.getHistory().then(function(msgs) {
+                msgs.forEach(function(msg) {
+                    chatbox.receive(msg);
+                });
+            }).catch(function(error) {
+                console.log("Fetching room history failed: ", error);
             });
-        }).catch(function(error) {
-            console.log("Fetching room history failed: ", error);
-        });
+
+            return chatbox;
+        }
     }
 
     function directRoomBuilder(session) {
         return function(user) {
             session.chat.createDirectRoom(user).then(function(room) {
-                if(!(room.id in roster)) {
-                    addRoom(room);
-                }
+                addRoom(room, session);
                 switchers[room.id].switchTo();
             }).catch(function(error) {
                 console.log("Creating a direct room failed: ", error);
@@ -266,14 +325,72 @@ $(document).ready(function() {
     function roomBuilder(session) {
         return function(name) {
             session.chat.createRoom(name).then(function(room) {
-                if(!(room.id in roster)) {
-                    addRoom(room, session);
-                }
+                addRoom(room, session);
                 room.join();
                 switchers[room.id].switchTo();
             }).catch(function(error) {
-                console.log("Joining #artichoke failed: ", error);
+                console.log("Joining " + name + " failed: ", error);
             });
+        }
+    }
+
+    function callBuilder(session) {
+        return function(user, onLocal, onRemote, onTeardown) {
+            return makeCall(user, onLocal, onRemote, onTeardown, session);
+        }
+    }
+
+    function makeCall(user, onLocal, onRemote, onTeardown, session) {
+        console.log("Building a call object for: ", user);
+
+        var localStream = undefined;
+        var remoteStream = undefined;
+
+        function createLocalStream(callback) {
+            navigator.getUserMedia({
+                "video": true,
+                "audio": true
+            }, function(stream) {
+                console.log("Local stream started!");
+                localStream = stream;
+                callback(stream);
+                onLocal(stream);
+            }, function(error) {
+                console.log("Could not start stream: " + error);
+            });
+        }
+
+        session.chat.onRemoteStream(function(stream) {
+            console.log("Remote stream started!");
+            remoteStream = stream;
+            onRemote(stream);
+        });
+
+        function stopStreams() {
+            if(localStream) {
+                if(localStream.stop) localStream.stop();
+                else localStream.getTracks().map(function(t) { t.stop(); });
+                localStream = undefined;
+                remoteStream = undefined;
+                onTeardown();
+            };
+        }
+
+        return {
+            offer: function() {
+                createLocalStream(function(stream) {
+                    session.chat.offerCall(user, stream);
+                });
+            },
+            answer: function(offer) {
+                createLocalStream(function(stream) {
+                    session.chat.answerCall(offer, stream);
+                });
+            },
+            hangup: function(reason) {
+                session.chat.hangupCall(user, reason);
+            },
+            end: stopStreams
         }
     }
 
@@ -323,6 +440,29 @@ $(document).ready(function() {
                         });
                     }
                 });
+            });
+
+            session.chat.onEvent("call_offer", function(m) {
+                console.log(m.user + " is calling...");
+                if(confirm(m.user + " is calling, answer?")) {
+                    session.chat.createDirectRoom(m.user).then(function(room) {
+                        addRoom(room, session).withCall(m);
+                    }).catch(function(error) {
+                        console.log("Creating direct room failed: ", error);
+                    });
+                } else {
+                    console.log("Rejecting call...");
+                    session.chat.rejectCall(m);
+                }
+            });
+
+            session.chat.onEvent("call_answer", function(m) {
+                console.log(m.user + " answered the call!");
+            });
+
+            session.chat.onEvent("call_hangup", function(m) {
+                console.log(m.user + " hang up, reason: " + m.reason);
+                calls[m.user].end();
             });
 
             session.chat.connect();
