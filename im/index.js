@@ -307,15 +307,16 @@ $(document).ready(function() {
         console.log("Adding room to the chat: ", room);
 
         if(room.id in chatboxes) {
-            return chatboxes[room.id];
+            return [switchers[room.id], chatboxes[room.id]];
         } else {
             var chatbox = undefined;
+            var switcher = makeRoomSwitcher(room);
             if(room.direct) {
                 chatbox = makeDirectChatbox(room, callBuilder(session));
             } else {
                 chatbox = makeRoomChatbox(room, directRoomBuilder(session));
             }
-            chat.add(room, makeRoomSwitcher(room), chatbox);
+            chat.add(room, switcher, chatbox);
 
             room.getHistory().then(function(msgs) {
                 msgs.forEach(function(msg) {
@@ -325,7 +326,7 @@ $(document).ready(function() {
                 console.log("Fetching room history failed: ", error);
             });
 
-            return chatbox;
+            return [switcher, chatbox];
         }
     }
 
@@ -467,7 +468,9 @@ $(document).ready(function() {
                     console.log(m.user + " is calling...");
                     if(confirm(m.user + " is calling, answer?")) {
                         session.chat.createDirectRoom(m.user).then(function(room) {
-                            addRoom(room, session).withCall(m);
+                            var r = addRoom(room, session);  // FIXME Fix this fugliness.
+                            r[1].withCall(m);
+                            r[0].switchTo();
                         }).catch(function(error) {
                             console.log("Creating direct room failed: ", error);
                         });
