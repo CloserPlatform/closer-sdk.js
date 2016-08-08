@@ -166,10 +166,14 @@ $(document).ready(function() {
             })[0];
 
             call = makeButton("btn-success", "Call!", function() {
-                if(!call.hasClass("disabled")) {
-                    call.addClass("disabled");
-                    hangup.removeClass("disabled");
-                    newCall(peer).offer();
+                if(Object.keys(calls).length > 0) {
+                    alert("You are already calling someone!");
+                } else {
+                    if(!call.hasClass("disabled")) {
+                        call.addClass("disabled");
+                        hangup.removeClass("disabled");
+                        newCall(peer).offer();
+                    }
                 }
             });
 
