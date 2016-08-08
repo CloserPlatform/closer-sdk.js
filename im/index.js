@@ -134,7 +134,7 @@ $(document).ready(function() {
         var call = undefined;
         var hangup = undefined;
 
-        var local = makeStreamBox("local-stream").attr("muted", true);
+        var local = makeStreamBox("local-stream").prop("muted", true);
         var remote = makeStreamBox("remote-stream");
         var streams = makeSplitGrid([local, remote]).hide();
 
@@ -144,11 +144,11 @@ $(document).ready(function() {
             var c = callBuilder(user, function(stream) {
                 // On local stream.
                 streams.show();
-                local.attr('src', window.URL.createObjectURL(stream));
+                local.prop('src', window.URL.createObjectURL(stream));
             }, function(stream) {
                 // On remote stream.
                 streams.show();
-                remote.attr('src', window.URL.createObjectURL(stream));
+                remote.prop('src', window.URL.createObjectURL(stream));
             }, function() {
                 // On teardown.
                 streams.hide();
