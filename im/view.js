@@ -15,10 +15,10 @@ function makeLoginForm(id, onClick) {
         .hide();
 }
 
-function makeChatContainer(id) {
-    var list = $('<ul id="room-list" class="nav nav-pills nav-stacked">');
+function makeChatContainer(id, listId, chatsId) {
+    var list = $('<ul id="' + listId + '" class="nav nav-pills nav-stacked">');
     var rooms = $('<div class="col-lg-3">').append(list);
-    var container = $('<div class="container-fluid" id="chatbox-container">');
+    var container = $('<div class="container-fluid" id="' + chatsId + '">');
     var chatbox = $('<div class="col-lg-9">').append(container);
     var row = $('<div class="row">')
         .append(rooms)

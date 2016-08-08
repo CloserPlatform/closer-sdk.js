@@ -10,6 +10,7 @@ $(document).ready(function() {
 
     var loginBox = makeLoginBox();
     var chat = makeChat();
+    var roster = {};
     var switchers = {};
     var chatboxes = {};
 
@@ -33,9 +34,16 @@ $(document).ready(function() {
 
     function makeChat() {
         console.log("Building the chat!");
-        var chat = makeChatContainer("chat");
+        var chat = makeChatContainer("chat", "room-list", "chatbox-container");
         return {
-            element: chat
+            element: chat,
+            add: function(room, switcher, chatbox) {
+                roster[room.id] = room;
+                switchers[room.id] = switcher;
+                $("#room-list").append(switcher.element);
+                chatboxes[room.id] = chatbox;
+                $("#chatbox-container").append(chatbox.element);
+            }
         };
     }
 
@@ -194,20 +202,11 @@ $(document).ready(function() {
             session.chat.onEvent("hello", function(m) {
                 console.log("Connection ready for " + sessionId + "!");
 
-                var roster = {};
-
                 function addRoom(room) {
                     console.log("Adding room to the roster: ", room);
 
-                    roster[room.id] = room;
-
-                    var switcher = makeRoomSwitcher(room);
-                    switchers[room.id] = switcher;
-                    $("#room-list").append(switcher.element);
-
                     var chatbox = makeRoomChatbox(room);
-                    chatboxes[room.id] = chatbox;
-                    $("#chatbox-container").append(chatbox.element);
+                    chat.add(room, makeRoomSwitcher(room), chatbox);
 
                     room.getHistory().then(function(msgs) {
                         msgs.forEach(function(msg) {
