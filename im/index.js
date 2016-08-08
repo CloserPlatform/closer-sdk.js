@@ -10,6 +10,7 @@ $(document).ready(function() {
 
     var loginBox = makeLoginBox();
     var chat = makeChat();
+    var switchers = {};
 
     $('#page-contents')
         .append(loginBox.element)
@@ -40,26 +41,42 @@ $(document).ready(function() {
     function makeRoomSwitcher(room) {
         console.log("Building room switcher for room: ", room);
 
-        var unread = $('<span class="badge">');
+        var unread = makeBadge();
 
         var switcher = makeSwitcher(room.id, [room.name, " ", unread], function() {
             console.log("Switching to room: " + room.name);
 
-            $('#room-list .switcher').removeClass("active");
-            $('#room-list #' + room.id).addClass("active");
-
-            unread.html("");
-            room.mark(Date.now());
+            Object.keys(switchers).forEach(function(id) {
+                switchers[id].deactivate();
+            });
+            var switcher = switchers[room.id];
+            switcher.activate();
+            switcher.markRoom();
 
             $('#chatbox-container .chatbox').hide();
             $('#chatbox-container #' + room.id).show();
         }, function() {
-            room.leave();
             $('#chatbox-container #' + room.id).remove();
-            $('#room-list #' + room.id).remove();
+            switchers[room.id].remove();
         });
 
-        return switcher;
+        return {
+            element: switcher,
+            activate: function() {
+                switcher.addClass("active");
+            },
+            deactivate: function() {
+                switcher.removeClass("active");
+            },
+            markRoom: function() {
+                room.mark(Date.now());
+                unread.html("");
+            },
+            remove: function() {
+                switcher.remove();
+                room.leave();
+            }
+        };
     }
 
     function receive(room, msg) {
@@ -199,7 +216,9 @@ $(document).ready(function() {
 
                     roster[room.id] = room;
 
-                    $("#room-list").append(makeRoomSwitcher(room));
+                    var switcher = makeRoomSwitcher(room);
+                    switchers[room.id] = switcher;
+                    $("#room-list").append(switcher.element);
                     $("#chatbox-container").append(makeChatbox(room));
 
                     room.getHistory().then(function(msgs) {

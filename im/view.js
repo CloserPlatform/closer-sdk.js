@@ -38,3 +38,7 @@ function makeSwitcher(id, contents, onClick, onDblClick) {
     return $('<li class="switcher" id="' + id + '">')
         .append(name);
 }
+
+function makeBadge() {
+    return $('<span class="badge">');
+}
