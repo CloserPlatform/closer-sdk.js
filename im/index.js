@@ -13,6 +13,7 @@ $(document).ready(function() {
     var roster = {};
     var switchers = {};
     var chatboxes = {};
+    var newRoom = function() {};
 
     $('#page-contents')
         .append(loginBox.element)
@@ -34,7 +35,9 @@ $(document).ready(function() {
 
     function makeChat() {
         console.log("Building the chat!");
-        var chat = makeChatContainer("chat", "room-list", "chatbox-container");
+        var chat = makeChatContainer("chat", "room-list", "chatbox-container", function(room) {
+            newRoom(room);
+        });
         return {
             element: chat,
             add: function(room, switcher, chatbox) {
@@ -238,6 +241,8 @@ $(document).ready(function() {
             "url": server,
             "debug": true
         }).then(function(session) {
+            newRoom = roomBuilder(session);
+
             session.chat.onConnect(function() {
                 console.log("Connected to artichoke!");
             });
@@ -256,7 +261,7 @@ $(document).ready(function() {
                     });
 
                     // FIXME Add room management buttons instead of this.
-                    roomBuilder(session)("#artichoke");
+                    newRoom("#artichoke");
                 }).catch(function(error) {
                     console.log("Fetching roster failed:", error);
                 });

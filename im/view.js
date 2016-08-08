@@ -15,9 +15,12 @@ function makeLoginForm(id, onClick) {
         .hide();
 }
 
-function makeChatContainer(id, listId, chatsId) {
+function makeChatContainer(id, listId, chatsId, onJoin) {
+    var controls = makeInputField("Join!", onJoin);
     var list = $('<ul id="' + listId + '" class="nav nav-pills nav-stacked">');
-    var rooms = $('<div class="col-lg-3">').append(list);
+    var rooms = $('<div class="col-lg-3">')
+        .append(list)
+        .append(controls);
     var container = $('<div class="container-fluid" id="' + chatsId + '">');
     var chatbox = $('<div class="col-lg-9">').append(container);
     var row = $('<div class="row">')
@@ -83,16 +86,16 @@ function makeTextArea(className) {
 
 function makeInputField(name, onClick) {
     var field = $('<input type="text">');
-    var send = $('<button>')
-        .html("Send!")
+    var button = $('<button>')
+        .html(name)
         .click(function() {
             onClick(field.val());
             field.val("");
         });
 
-    return $('<div>')
+    return $('<div class="input-field">')
         .append(field)
-        .append(send);
+        .append(button);
 }
 
 function makeChatbox(id, className, controls, text, input) {
