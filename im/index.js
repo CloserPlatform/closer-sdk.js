@@ -324,6 +324,11 @@ $(document).ready(function() {
 
             room.getHistory().then(function(msgs) {
                 msgs.forEach(function(msg) {
+                    // FIXME Do this in the SDK.
+                    if(msg.sender != sessionId && !msg.delivered) {
+                        room.artichoke.socket.setDelivered(msg.id);
+                        msg.delivered = Date.now();
+                    }
                     chatbox.receive(msg);
                 });
             }).catch(function(error) {
