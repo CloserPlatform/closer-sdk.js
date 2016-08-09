@@ -17,6 +17,12 @@ $(document).ready(function() {
     var calls = {};
     var newRoom = function() {};
 
+    var killSwitch = $("#kill-switch");
+    killSwitch.submit(function() { return false; }).hide();
+    $('#demo-name').click(function() {
+        killSwitch.show();
+    });
+
     $('#page-contents')
         .append(loginBox.element)
         .append(chat.element);
@@ -445,6 +451,11 @@ $(document).ready(function() {
             });
 
             session.chat.onEvent("hello", function(m) {
+                killSwitch.click(function() {
+                    // NOTE Kills the client session.
+                    session.chat.hangupCall(null, null);
+                });
+
                 console.log("Connection ready for " + sessionId + "!");
 
                 session.chat.getRoster().then(function(rooms) {
