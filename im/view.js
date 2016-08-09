@@ -85,7 +85,13 @@ function makeTextArea(className) {
 }
 
 function makeInputField(name, onClick) {
-    var field = $('<input type="text">');
+    var field = $('<input type="text">')
+        .keyup(function(e) {
+            if (e.keyCode == 13) {
+                onClick(field.val());
+                field.val("");
+            }
+        });
     var button = $('<button>')
         .html(name)
         .click(function() {
