@@ -451,6 +451,8 @@ $(document).ready(function() {
             "url": server,
             "debug": true
         }).then(function(session) {
+            $('#demo-name').html(sessionId);
+
             newRoom = roomBuilder(session);
 
             session.chat.onConnect(function() {
@@ -476,7 +478,7 @@ $(document).ready(function() {
                     });
 
                     // FIXME Add room management buttons instead of this.
-                    newRoom("artichoke");
+                    newRoom("general");
                 }).catch(function(error) {
                     console.log("Fetching roster failed:", error);
                 });
