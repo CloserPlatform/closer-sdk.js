@@ -509,6 +509,7 @@ $(document).ready(function() {
                 session.chat.onEvent("call_hangup", function(m) {
                     console.log(m.user + " hang up, reason: " + m.reason);
                     calls[m.user].end();
+                    alert(m.user + " hang up, reason: " + m.reason);
                 });
             });
 
