@@ -32,14 +32,31 @@ function makeChatContainer(id, listId, chatsId, onJoin) {
         .hide();
 }
 
-function makeSwitcher(id, contents, onClick, onDblClick) {
+function makeSwitcher(id, contents, onClick, onClose) {
+    var close = undefined;
+
+    if(onClose) {
+        close = $('<a href="#" class="out-of-way pull-right">')
+            .append("✖")
+            .click(onClose)
+            .hide();
+    } else {
+        close = $('<span>').hide();
+    }
+
     var name = $('<a href="#">')
         .append(contents)
-        .click(onClick)
-        .dblclick(onDblClick);
+        .append(close)
+        .click(onClick);
 
     return $('<li class="switcher" id="' + id + '">')
-        .append(name);
+        .append(name)
+        .mouseenter(function() {
+            close.show();
+        })
+        .mouseleave(function() {
+            close.hide();
+        });
 }
 
 function makeBadge() {

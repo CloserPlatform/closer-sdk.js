@@ -70,17 +70,19 @@ $(document).ready(function() {
         console.log("Building room switcher for room: ", room);
 
         var unread = makeBadge();
-
         var name = undefined;
+        var onClose = undefined;
+
         if (room.direct) {
             name = room.name.slice(3).split("-").filter(function(e) { return e !== sessionId; })[0];
         } else {
             name = room.name;
+            onClose = function() {
+                chat.remove(room);
+            }
         }
 
-        var switcher = makeSwitcher(room.id, [name, " ", unread], switchTo, function() {
-            chat.remove(room);
-        });
+        var switcher = makeSwitcher(room.id, [name, " ", unread], switchTo, onClose);
 
         function switchTo() {
             console.log("Switching to room: " + room.name);

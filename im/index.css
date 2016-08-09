@@ -16,6 +16,10 @@ body {
     color: gray;
 }
 
+.out-of-way {
+    color: orange;
+}
+
 .delivered::after {
     content: " ✓";
 }
