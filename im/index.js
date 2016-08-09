@@ -71,7 +71,14 @@ $(document).ready(function() {
 
         var unread = makeBadge();
 
-        var switcher = makeSwitcher(room.id, [room.name, " ", unread], switchTo, function() {
+        var name = undefined;
+        if (room.direct) {
+            name = room.name.slice(3).split("-").filter(function(e) { return e !== sessionId; })[0];
+        } else {
+            name = room.name;
+        }
+
+        var switcher = makeSwitcher(room.id, [name, " ", unread], switchTo, function() {
             chat.remove(room);
         });
 
@@ -360,7 +367,7 @@ $(document).ready(function() {
 
     function roomBuilder(session) {
         return function(name) {
-            session.chat.createRoom(name).then(function(room) {
+            session.chat.createRoom("#" + name).then(function(room) {
                 addRoom(room, session);
                 room.join();
                 switchers[room.id].switchTo();
@@ -467,7 +474,7 @@ $(document).ready(function() {
                     });
 
                     // FIXME Add room management buttons instead of this.
-                    newRoom("#artichoke");
+                    newRoom("artichoke");
                 }).catch(function(error) {
                     console.log("Fetching roster failed:", error);
                 });
