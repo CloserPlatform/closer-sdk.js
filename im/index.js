@@ -158,6 +158,8 @@ $(document).ready(function() {
             }, function() {
                 // On teardown.
                 streams.hide();
+                local.prop('src', null);
+                remote.prop('src', null);
                 call.removeClass("disabled");
                 hangup.addClass("disabled");
                 delete calls[user];
