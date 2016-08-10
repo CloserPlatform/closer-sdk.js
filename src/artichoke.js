@@ -317,7 +317,7 @@ export class Artichoke {
     // Utils:
     _runCallbacks(m) {
         if (m.type in this.callbacks) {
-            this.log("Runnig callbacks for message type: " + m.type);
+            this.log("Running callbacks for message type: " + m.type);
             return this.callbacks[m.type].forEach((cb) => cb(m));
         } else {
             this.log("Unhandled message: " + JSON.stringify(m));
