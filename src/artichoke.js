@@ -2,46 +2,58 @@ import * as proto from "./protocol";
 import { nop, pathcat } from "./utils";
 import { JSONWebSocket } from "./jsonws";
 import { RTCConnection } from "./rtc";
+import { createRoom, DirectRoom, Room } from "./room";
 
 class ArtichokeREST {
     constructor(config) {
         this.log = config.log;
         this.apiKey = config.apiKey;
         this.url = "//" + pathcat(config.url, "api");
+
+        this.roomPath = "rooms";
+        this.chatPath = "chat";
     }
 
     // Chat API:
     getChatHistory(roomId) {
-        return this._get(pathcat(this.url, "chat", roomId));
+        return this._get(pathcat(this.url, this.chatPath, roomId));
     }
 
     // Chat room API:
     createRoom(name) {
-        return this._post(pathcat(this.url, "room", "create"), proto.RoomCreate(name));
+        return this._post(pathcat(this.url, this.roomPath), proto.RoomCreate(name));
     }
 
     createDirectRoom(sessionId) {
-        return this._post(pathcat(this.url, "room", "create-direct"), proto.RoomCreateDirect(sessionId));
+        return this._post(pathcat(this.url, this.roomPath), proto.RoomCreateDirect(sessionId));
+    }
+
+    getRoom(roomId) {
+        return this._get(pathcat(this.url, this.roomPath, roomId));
     }
 
     getRooms() {
-        return this._get(pathcat(this.url, "room", "unread"));
+        return this._get(pathcat(this.url, this.roomPath));
+    }
+
+    getRoster() {
+        return this._get(pathcat(this.url, this.roomPath, "unread"));
     }
 
     getUsers(roomId) {
-        return this._get(pathcat(this.url, "room", roomId, "users"));
+        return this._get(pathcat(this.url, this.roomPath, roomId, "users"));
     }
 
     joinRoom(roomId) {
-        return this._post(pathcat(this.url, "room", roomId, "join"), "");
+        return this._post(pathcat(this.url, this.roomPath, roomId, "join"), "");
     }
 
     leaveRoom(roomId) {
-        return this._post(pathcat(this.url, "room", roomId, "leave"), "");
+        return this._post(pathcat(this.url, this.roomPath, roomId, "leave"), "");
     }
 
     inviteToRoom(roomId, sessionId) {
-        return this._post(pathcat(this.url, "room", roomId, "invite", sessionId), "");
+        return this._post(pathcat(this.url, this.roomPath, roomId, "invite", sessionId), "");
     }
 
     _responseCallback(xhttp, resolve, reject) {
@@ -157,6 +169,10 @@ class ArtichokeWS extends JSONWebSocket {
             delete this.promises[ref];
         }
     }
+
+    setMark(roomId, timestamp) {
+        this.send(proto.Mark(roomId, timestamp));
+    }
 }
 
 export class Artichoke {
@@ -181,8 +197,8 @@ export class Artichoke {
         // NOTE By default do nothing.
         this.onConnectCallback = nop;
         this.onErrorCallback = nop;
-        this.onMessage("msg_received", nop);
-        this.onMessage("msg_delivered", nop);
+        this.onEvent("msg_received", nop);
+        this.onEvent("msg_delivered", nop);
     }
 
     // Callbacks:
@@ -190,7 +206,7 @@ export class Artichoke {
         this.onConnectCallback = callback;
     }
 
-    onMessage(type, callback) {
+    onEvent(type, callback) {
         this.log("Registered callback for message type: " + type);
         if (!(type in this.callbacks)) {
             this.callbacks[type] = [];
@@ -279,42 +295,39 @@ export class Artichoke {
 
     // Chat room API:
     createRoom(name) {
-        return this.rest.createRoom(name);
+        return this._wrapRoom(this.rest.createRoom(name));
     }
 
     createDirectRoom(peer) {
-        return this.rest.createDirectRoom(peer);
+        return this._wrapRoom(this.rest.createDirectRoom(peer));
+    }
+
+    getRoom(room) {
+        return this._wrapRoom(this.rest.getRoom(room));
     }
 
     getRooms() {
-        return this.rest.getRooms();
+        return this._wrapRoom(this.rest.getRooms());
     }
 
-    getUsers(room) {
-        return this.rest.getUsers(room);
-    }
-
-    getChatHistory(room) {
-        return this.rest.getChatHistory(room);
-    }
-
-    joinRoom(room) {
-        return this.rest.joinRoom(room);
-    }
-
-    leaveRoom(room) {
-        return this.rest.leaveRoom(room);
-    }
-
-    inviteToRoom(room, who) {
-        return this.rest.inviteToRoom(room, who);
-    }
-
-    sendMessage(room, body) {
-        return this.socket.sendMessage(room, body);
+    getRoster() {
+        return this._wrapRoom(this.rest.getRoster());
     }
 
     // Utils:
+    _wrapRoom(promise) {
+        let _this = this;
+        return new Promise(function(resolve, reject) {
+            promise.then(function(r) {
+                if (Array.isArray(r)) {
+                    resolve(r.map((room) => createRoom(room, _this)));
+                } else {
+                    resolve(createRoom(r, _this));
+                }
+            }).catch(reject);
+        });
+    }
+
     _runCallbacks(m) {
         if (m.type in this.callbacks) {
             this.log("Running callbacks for message type: " + m.type);
