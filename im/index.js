@@ -145,6 +145,7 @@ $(document).ready(function() {
     function makeDirectChatbox(room, callBuilder) {
         console.log("Building direct chatbox: ", room);
 
+        var callBox = undefined;
         var peer = undefined;
         var call = undefined;
         var hangup = undefined;
@@ -182,16 +183,19 @@ $(document).ready(function() {
                 return u != sessionId;
             })[0];
 
+            callBox = newCall(peer);
+
             call = makeButton("btn-success", "Call!", function() {
-                if(Object.keys(calls).length > 0) {
-                    alert("You are already calling someone!");
-                } else {
-                    if(!call.hasClass("disabled")) {
-                        call.addClass("disabled");
-                        hangup.removeClass("disabled");
-                        newCall(peer).offer();
-                    }
+                // FIXME Actually check this.
+                // if(Object.keys(calls).length > 0) {
+                //     alert("You are already calling someone!");
+                // } else {
+                if(!call.hasClass("disabled")) {
+                    call.addClass("disabled");
+                    hangup.removeClass("disabled");
+                    callBox.offer();
                 }
+                // }
             });
 
             hangup = makeButton("btn-danger disabled", "Hangup!", function() {
@@ -234,7 +238,8 @@ $(document).ready(function() {
             withCall: function(offer) {
                 call.addClass("disabled");
                 hangup.removeClass("disabled");
-                newCall(peer).answer(offer);
+                // FIXME Make sure callBox is not undefined.
+                callBox.answer(offer);
             },
             remove: function() {
                 chatbox.remove();
@@ -388,6 +393,7 @@ $(document).ready(function() {
     function makeCall(user, onLocal, onRemote, onTeardown, session) {
         console.log("Building a call object for: ", user);
 
+        var call = undefined;
         var localStream = undefined;
         var remoteStream = undefined;
 
@@ -405,10 +411,16 @@ $(document).ready(function() {
             });
         }
 
-        session.chat.onRemoteStream(function(stream) {
-            console.log("Remote stream started!");
-            remoteStream = stream;
-            onRemote(stream);
+        session.chat.createCall(user).then(function(c) {
+            c.onRemoteStream(function(stream) {
+                console.log("Remote stream started!");
+                remoteStream = stream;
+                onRemote(stream);
+            });
+
+            call = c;
+        }).catch(function(error) {
+            console.log("Creating a call failed: ", error);
         });
 
         function stopStreams() {
@@ -421,19 +433,20 @@ $(document).ready(function() {
             };
         }
 
+        // FIXME Ensure that call is not undefined.
         return {
             offer: function() {
                 createLocalStream(function(stream) {
-                    session.chat.offerCall(user, stream);
+                    call.offer(stream);
                 });
             },
             answer: function(offer) {
                 createLocalStream(function(stream) {
-                    session.chat.answerCall(offer, stream);
+                    call.answer(offer, stream);
                 });
             },
             hangup: function(reason) {
-                session.chat.hangupCall(user, reason);
+                call.hangup(reason);
             },
             end: stopStreams
         }
@@ -498,6 +511,7 @@ $(document).ready(function() {
                 });
 
                 session.chat.onEvent("call_offer", function(m) {
+                    // FIXME Handle call_created instead.
                     console.log(m.user + " is calling...");
                     if(confirm(m.user + " is calling, answer?")) {
                         session.chat.createDirectRoom(m.user).then(function(room) {

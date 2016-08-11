@@ -2,6 +2,7 @@ import * as proto from "./protocol";
 import { nop, pathcat } from "./utils";
 import { JSONWebSocket } from "./jsonws";
 import { RTCConnection } from "./rtc";
+import { createCall, Call } from "./call";
 import { createRoom, DirectRoom, Room } from "./room";
 
 class ArtichokeREST {
@@ -10,8 +11,15 @@ class ArtichokeREST {
         this.apiKey = config.apiKey;
         this.url = "//" + pathcat(config.url, "api");
 
-        this.roomPath = "rooms";
+        this.callPath = "call";
         this.chatPath = "chat";
+        this.roomPath = "rooms";
+
+    }
+
+    // Call API:
+    createCall(user) {
+        return this._post(pathcat(this.url, this.callPath), proto.CallCreate(user));
     }
 
     // Chat API:
@@ -110,20 +118,20 @@ class ArtichokeWS extends JSONWebSocket {
     }
 
     // Call API:
-    offerCall(sessionId, sdp) {
-        this.send(proto.CallOffer(sessionId, sdp));
+    sendOffer(callId, sdp) {
+        this.send(proto.CallOffer(callId, sdp));
     }
 
-    answerCall(sessionId, sdp) {
-        this.send(proto.CallAnswer(sessionId, sdp));
+    answerCall(callId, sdp) {
+        this.send(proto.CallAnswer(callId, sdp));
     }
 
-    hangupCall(sessionId, reason) {
-        this.send(proto.CallHangup(sessionId, reason));
+    hangupCall(callId, reason) {
+        this.send(proto.CallHangup(callId, reason));
     }
 
-    sendCandidate(sessionId, candidate) {
-        this.send(proto.CallCandidate(sessionId, candidate));
+    sendCandidate(callId, candidate) {
+        this.send(proto.CallCandidate(callId, candidate));
     }
 
     // Chat API:
@@ -218,10 +226,6 @@ export class Artichoke {
         this.onErrorCallback = callback;
     }
 
-    onRemoteStream(callback) {
-        this.rtc.onRemoteStream(callback);
-    }
-
     // API:
     connect() {
         this.rtc = new RTCConnection(this.config);
@@ -233,7 +237,7 @@ export class Artichoke {
             switch (m.type) {
             case "call_answer":
                 _this.rtc.setRemoteDescription("answer", m.sdp, function(candidate) {
-                    _this.socket.sendCandidate(m.user, candidate);
+                    _this.socket.sendCandidate(m.id, candidate);
                 });
                 break;
 
@@ -262,35 +266,8 @@ export class Artichoke {
     }
 
     // Call API:
-    offerCall(peer, stream) {
-        this.rtc.addStream(stream);
-
-        let _this = this;
-        this.rtc.createOffer()
-            .then((offer) => _this.socket.offerCall(peer, offer))
-            .catch((error) => _this.onErrorCallback({"reason": "Offer creation failed.", "error": error}));
-    }
-
-    answerCall(offer, stream) {
-        this.rtc.addStream(stream);
-
-        let _this = this;
-        this.rtc.setRemoteDescription("offer", offer.sdp, function(candidate) {
-            _this.socket.sendCandidate(offer.user, candidate);
-        });
-
-        this.rtc.createAnswer()
-            .then((answer) => _this.socket.answerCall(offer.user, answer))
-            .catch((error) => _this.onErrorCallback({"reason": "Answer creation failed.", "error": error}));
-    }
-
-    rejectCall(offer) {
-        this.socket.hangupCall(offer.user, "rejected");
-    }
-
-    hangupCall(peer, reason) {
-        this.rtc.reconnect();
-        this.socket.hangupCall(peer, reason);
+    createCall(user) {
+        return this._wrapCall(this.rest.createCall(user));
     }
 
     // Chat room API:
@@ -315,6 +292,15 @@ export class Artichoke {
     }
 
     // Utils:
+    _wrapCall(promise) {
+        let _this = this;
+        return new Promise(function(resolve, reject) {
+            promise.then(function(call) {
+                resolve(createCall(_this.sessionId, call, _this));
+            }).catch(reject);
+        });
+    }
+
     _wrapRoom(promise) {
         let _this = this;
         return new Promise(function(resolve, reject) {
