@@ -1,0 +1,42 @@
+body {
+    padding-top: 50px;
+}
+
+.login-form {
+    text-align: center;
+}
+
+#page-contents {
+    padding: 40px 15px;
+    height: 100%;
+    width: 100%;
+}
+
+.info {
+    color: gray;
+}
+
+.out-of-way {
+    color: orange;
+}
+
+.delivered::after {
+    content: " ✓";
+}
+
+.chatbox-textarea {
+    -moz-appearance: textfield-multiline;
+    -webkit-appearance: textarea;
+    appearence: textarea;
+    border: 1px solid gray;
+    font: medium -moz-fixed;
+    font: -webkit-small-control;
+    overflow: auto;
+    padding: 2px;
+    width: 100%;
+    height: 300px;
+}
+
+.video-stream {
+    width: 100%;
+}
