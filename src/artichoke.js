@@ -207,6 +207,7 @@ export class Artichoke {
         this.onErrorCallback = nop;
         this.onEvent("msg_received", nop);
         this.onEvent("msg_delivered", nop);
+        this.onEvent("call_candidate", nop);
     }
 
     // Callbacks:
@@ -248,6 +249,15 @@ export class Artichoke {
             case "call_candidate":
                 _this.rtc.addICECandidate(m.candidate);
                 break;
+
+            case "call_created":
+                // FIXME Adjust message format in the backend.
+                _this._runCallbacks({
+                    type: "call_created",
+                    creator: m.creator,
+                    call: createCall(m.creator, m, _this)
+                });
+                return;
 
             case "error":
                 _this.onErrorCallback(m);
