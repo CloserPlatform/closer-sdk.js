@@ -198,6 +198,10 @@ $(document).ready(function() {
             receive(msg);
         });
 
+        room.onTyping(function(msg) {
+            console.log(msg.user + " is typing!");
+        });
+
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (ack) {
                 console.log("Received ack for message: ", ack);
@@ -205,6 +209,11 @@ $(document).ready(function() {
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
+        }, function(input) {
+            if([3, 8, 27, 64, 125, 216, 343].includes(input.length)) {
+                console.log("Indicating that user is typing.");
+                room.indicateTyping();
+            }
         });
 
         var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
@@ -294,6 +303,10 @@ $(document).ready(function() {
             receive(msg);
         });
 
+        room.onTyping(function(msg) {
+            console.log(msg.user + " is typing!");
+        });
+
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (ack) {
                 console.log("Received ack for message: ", ack);
@@ -301,6 +314,11 @@ $(document).ready(function() {
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
+        }, function(input) {
+            if([3, 8, 27, 64, 125, 216, 343].includes(input.length)) {
+                console.log("Indicating that user is typing.");
+                room.indicateTyping();
+            }
         });
 
         var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();

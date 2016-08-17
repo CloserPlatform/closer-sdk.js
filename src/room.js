@@ -27,12 +27,20 @@ class BaseRoom {
         return this.artichoke.socket.setMark(this.id, timestamp);
     }
 
+    indicateTyping() {
+        return this.artichoke.socket.sendTyping(this.id);
+    }
+
     onMessage(callback) {
         this._defineCallback("message", callback);
     }
 
     onAction(callback) {
         this._defineCallback("room_action", callback);
+    }
+
+    onTyping(callback) {
+        this._defineCallback("typing", callback);
     }
 
     _defineCallback(type, callback) {
