@@ -516,7 +516,7 @@ $(document).ready(function() {
                     }
                 });
 
-                session.chat.onEvent("call_created", function(m) {
+                session.chat.onCall(function(m) {
                     session.chat.createDirectRoom(m.creator).then(function(room) {
                         addRoom(room, session);
                         addCall(m.creator, room, m.call);

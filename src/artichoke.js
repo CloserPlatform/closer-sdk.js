@@ -275,6 +275,10 @@ export class Artichoke {
     }
 
     // Call API:
+    onCall(callback) {
+        this.onEvent("call_created", callback);
+    }
+
     createCall(user) {
         return this._wrapCall(this.rest.createCall(user));
     }
