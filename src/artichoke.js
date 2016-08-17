@@ -217,17 +217,13 @@ export class Artichoke {
         this.callbacks = {};
 
         // NOTE By default do nothing.
-        this.onErrorCallback = nop;
+        this.onEvent("error", nop);
         this.onEvent("msg_received", nop);
         this.onEvent("msg_delivered", nop);
         this.onEvent("call_candidate", nop);
     }
 
     // Callbacks:
-    onConnect(callback) {
-        this.onEvent("hello", callback);
-    }
-
     onEvent(type, callback) {
         this.log("Registered callback for message type: " + type);
         if (!(type in this.callbacks)) {
@@ -236,56 +232,54 @@ export class Artichoke {
         this.callbacks[type].push(callback);
     }
 
+    onConnect(callback) {
+        this.onEvent("hello", callback);
+    }
+
     onError(callback) {
-        this.onErrorCallback = callback;
+        this.onEvent("error", callback);
     }
 
     // API:
     connect() {
         this.rtc = new RTCConnection(this.config);
-        this.socket = new ArtichokeWS(this.config);
 
         let _this = this;
+        this.onEvent("call_hangup", (m) => _this.rtc.reconnect());
+        this.onEvent("call_candidate", (m) => _this.rtc.addICECandidate(m.candidate));
+        this.onEvent("call_answer", function(m) {
+            _this.rtc.setRemoteDescription("answer", m.sdp, function(candidate) {
+                _this.socket.sendCandidate(m.id, candidate);
+            });
+        });
+
+        this.socket = new ArtichokeWS(this.config);
+
         this.socket.onMessage(function(m) {
             switch (m.type) {
-            case "call_answer":
-                _this.rtc.setRemoteDescription("answer", m.sdp, function(candidate) {
-                    _this.socket.sendCandidate(m.id, candidate);
-                });
-                break;
-
-            case "call_hangup":
-                _this.rtc.reconnect();
-                break;
-
-            case "call_candidate":
-                _this.rtc.addICECandidate(m.candidate);
-                break;
-
             case "call_created":
                 // FIXME Adjust message format in the backend.
-                _this._runCallbacks("call_created", {
-                    type: "call_created",
+                _this._runCallbacks(m.type, {
+                    type: m.type,
                     creator: m.creator,
                     call: createCall(m, _this)
                 });
-                return;
-
-            case "room_created":
-                m.room = createRoom(m.room, _this);
                 break;
 
-            case "error":
-                _this.onErrorCallback(m);
-                return;
+            case "room_created":
+                _this._runCallbacks(m.type, {
+                    type: m.type,
+                    room: createRoom(m.room, _this)
+                });
+                break;
 
             case "message":
-                _this._runCallbacks("message", createMessage(m, _this));
-                return;
+                _this._runCallbacks(m.type, createMessage(m, _this));
+                break;
 
-            default: break;
+            default:
+                _this._runCallbacks(m.type, m);
             }
-            _this._runCallbacks(m.type, m);
         });
     }
 
@@ -345,8 +339,11 @@ export class Artichoke {
             this.log("Running callbacks for message type: " + type);
             return this.callbacks[type].forEach((cb) => cb(m));
         } else {
-            this.log("Unhandled message: " + JSON.stringify(m));
-            this.onErrorCallback({"reason": "Unhandled message.", "message": m});
+            this.log("Unhandled message " + type + ": " + JSON.stringify(m));
+            this._runCallbacks("error", {
+                reason: "Unhandled message.",
+                message: m
+            });
         }
     }
 }
