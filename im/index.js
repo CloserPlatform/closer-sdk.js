@@ -365,7 +365,7 @@ $(document).ready(function() {
         }
     }
 
-    function makeCall(call, peer, session, onTeardown) { // FIXME Remove session.
+    function makeCall(call, peer, onTeardown) {
         console.log("Building a call object for: ", call);
 
         var localStream = undefined;
@@ -396,32 +396,26 @@ $(document).ready(function() {
             streams.show();
         });
 
-        session.chat.onEvent("call_hangup", function(m) {
-            if(call.id === m.id) {
-                console.log("Received call hangup: ", m);
-                alert("Call ended, reason: " + m.reason);
+        call.onHangup(function(m) {
+            console.log("Received call hangup: ", m);
+            alert("Call ended, reason: " + m.reason);
+            stopStreams();
+        });
+
+        call.onAnswer(function(m) {
+            console.log("Received call answer: ", m);
+        });
+
+        call.onOffer(function(m) {
+            console.log("Received call offer: ", m);
+            if(confirm(peer + " is calling, answer?")) {
+                createLocalStream(function(stream) {
+                    call.answer(m, stream);
+                });
+            } else {
+                console.log("Rejecting call...");
+                call.reject(m);
                 stopStreams();
-            }
-        });
-
-        session.chat.onEvent("call_answer", function(m) {
-            if(call.id === m.id) {
-                console.log("Received call answer: ", m);
-            }
-        });
-
-        session.chat.onEvent("call_offer", function(m) {
-            if(call.id === m.id) {
-                console.log("Received call offer: ", m);
-                if(confirm(peer + " is calling, answer?")) {
-                    createLocalStream(function(stream) {
-                        call.answer(m, stream);
-                    });
-                } else {
-                    console.log("Rejecting call...");
-                    call.reject(m);
-                    stopStreams();
-                }
             }
         });
 
@@ -449,8 +443,8 @@ $(document).ready(function() {
         }
     }
 
-    function addCall(user, room, call, session) {
-        var box = makeCall(call, user, session, function() {
+    function addCall(user, room, call) {
+        var box = makeCall(call, user, function() {
             chatboxes[room.id].removeCall();
             delete calls[user];
         });
@@ -461,7 +455,7 @@ $(document).ready(function() {
     function callBuilder(session) {
         return function(room, user) {
             session.chat.createCall(user).then(function(call) {
-                addCall(user, room, call, session);
+                addCall(user, room, call);
                 switchers[room.id].switchTo();
             }).catch(function(error) {
                 console.log("Creating a call failed: ", error);
@@ -525,7 +519,7 @@ $(document).ready(function() {
                 session.chat.onEvent("call_created", function(m) {
                     session.chat.createDirectRoom(m.creator).then(function(room) {
                         addRoom(room, session);
-                        addCall(m.creator, room, m.call, session);
+                        addCall(m.creator, room, m.call);
                         switchers[room.id].switchTo();
                     }).catch(function(error) {
                         console.log("Creating direct room failed: ", error);

@@ -2,6 +2,7 @@ class Call {
     constructor(call, artichoke) {
         this.id = call.id;
         this.users = call.users;
+        this.log = artichoke.log;
         this.artichoke = artichoke;
     }
 
@@ -38,6 +39,29 @@ class Call {
 
     onRemoteStream(callback) {
         this.artichoke.rtc.onRemoteStream(callback);
+    }
+
+    onAnswer(callback) {
+        this._defineCallback("call_answer", callback);
+    }
+
+    onOffer(callback) {
+        this._defineCallback("call_offer", callback);
+    }
+
+    onHangup(callback) {
+        this._defineCallback("call_hangup", callback);
+    }
+
+    _defineCallback(type, callback) {
+        // FIXME It would be way better to store a hash of rooms and pick the relevant callback directly.
+        let _this = this;
+        this.artichoke.onEvent(type, function(msg) {
+            if (msg.id === _this.id) {
+                _this.log("Running callback " + type + " for room: " + _this.id);
+                callback(msg);
+            }
+        });
     }
 }
 
