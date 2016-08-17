@@ -21,6 +21,14 @@ class ArtichokeREST {
         return this._post(pathcat(this.url, this.callPath), proto.CallCreate(user));
     }
 
+    getCall(callId) {
+        return this._get(pathcat(this.url, this.callPath, callId));
+    }
+
+    getCalls() {
+        return this._get(pathcat(this.url, this.callPath));
+    }
+
     // Chat API:
     getChatHistory(roomId) {
         return this._get(pathcat(this.url, this.chatPath, roomId));
@@ -283,6 +291,14 @@ export class Artichoke {
         return this._wrapCall(this.rest.createCall(user));
     }
 
+    getCall(call) {
+        return this._wrapCall(this.rest.getCall(call));
+    }
+
+    getCalls(call) {
+        return this._wrapCall(this.rest.getCalls(call));
+    }
+
     // Chat room API:
     createRoom(name) {
         return this._wrapRoom(this.rest.createRoom(name));
@@ -306,22 +322,21 @@ export class Artichoke {
 
     // Utils:
     _wrapCall(promise) {
-        let _this = this;
-        return new Promise(function(resolve, reject) {
-            promise.then(function(call) {
-                resolve(createCall(call, _this));
-            }).catch(reject);
-        });
+        return this._wrap(createCall, promise);
     }
 
     _wrapRoom(promise) {
+        return this._wrap(createRoom, promise);
+    }
+
+    _wrap(ctor, promise) {
         let _this = this;
         return new Promise(function(resolve, reject) {
-            promise.then(function(r) {
-                if (Array.isArray(r)) {
-                    resolve(r.map((room) => createRoom(room, _this)));
+            promise.then(function(obj) {
+                if (Array.isArray(obj)) {
+                    resolve(obj.map((o) => ctor(o, _this)));
                 } else {
-                    resolve(createRoom(r, _this));
+                    resolve(ctor(obj, _this));
                 }
             }).catch(reject);
         });
