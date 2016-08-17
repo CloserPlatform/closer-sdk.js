@@ -142,8 +142,8 @@ class ArtichokeWS extends JSONWebSocket {
     }
 
     // Chat API:
-    setDelivered(messageId) {
-        this.send(proto.ChatDelivered(messageId, Date.now()));
+    setDelivered(messageId, timestamp) {
+        this.send(proto.ChatDelivered(messageId, timestamp));
     }
 
     // Room API:
@@ -278,7 +278,7 @@ export class Artichoke {
 
             case "message":
                 if (!m.delivered) {
-                    _this.socket.setDelivered(m.id);
+                    _this.socket.setDelivered(m.id, Date.now());
                 }
                 break;
 

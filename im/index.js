@@ -367,8 +367,8 @@ $(document).ready(function() {
                 msgs.forEach(function(msg) {
                     // FIXME Do this in the SDK.
                     if(msg.sender != sessionId && !msg.delivered) {
-                        room.artichoke.socket.setDelivered(msg.id);
                         msg.delivered = Date.now();
+                        room.artichoke.socket.setDelivered(msg.id, msg.delivered);
                     }
                     chatbox.receive(msg);
                 });
