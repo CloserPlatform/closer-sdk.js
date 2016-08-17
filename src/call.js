@@ -58,7 +58,7 @@ class Call {
         let _this = this;
         this.artichoke.onEvent(type, function(msg) {
             if (msg.id === _this.id) {
-                _this.log("Running callback " + type + " for room: " + _this.id);
+                _this.log("Running callback " + type + " for call: " + _this.id);
                 callback(msg);
             }
         });
