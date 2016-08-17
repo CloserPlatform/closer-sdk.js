@@ -39,7 +39,7 @@ class BaseRoom {
         // FIXME It would be way better to store a hash of rooms and pick the relevant callback directly.
         let _this = this;
         this.artichoke.onEvent(type, function(msg) {
-            if (msg.room === _this.id) {
+            if (msg.room === _this.id || msg.id === _this.id) {
                 _this.log("Running callback " + type + " for room: " + _this.id);
                 callback(msg);
             }
