@@ -490,7 +490,7 @@ $(document).ready(function() {
             session.chat.onEvent("hello", function(m) {
                 killSwitch.click(function() {
                     // NOTE Kills the client session.
-                    session.chat.hangupCall(null, null);
+                    session.chat.socket.hangupCall(null, null);
                 });
 
                 console.log("Connection ready for " + sessionId + "!");
