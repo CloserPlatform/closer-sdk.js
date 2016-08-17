@@ -159,6 +159,10 @@ class ArtichokeWS extends JSONWebSocket {
         });
     }
 
+    sendTyping(roomId) {
+        this.send(proto.Typing(roomId));
+    }
+
     onMessage(callback) {
         let _this = this;
         super.onMessage(function(msg) {

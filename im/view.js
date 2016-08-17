@@ -16,7 +16,7 @@ function makeLoginForm(id, onClick) {
 }
 
 function makeChatContainer(id, listId, chatsId, onJoin) {
-    var controls = makeInputField("Join!", onJoin);
+    var controls = makeInputField("Join!", onJoin, function() {});
     var list = $('<ul id="' + listId + '" class="nav nav-pills nav-stacked">');
     var rooms = $('<div class="col-lg-3">')
         .append(list)
@@ -101,12 +101,14 @@ function makeTextArea(className) {
     return text;
 }
 
-function makeInputField(name, onClick) {
+function makeInputField(name, onClick, onKey) {
     var field = $('<input type="text">')
         .keyup(function(e) {
             if (e.keyCode == 13) {
                 onClick(field.val());
                 field.val("");
+            } else {
+                onKey(field.val());
             }
         });
     var button = $('<button>')

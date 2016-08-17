@@ -47,6 +47,11 @@ export const RoomCreate = (name) => ({
     name
 });
 
+export const Typing = (id) => ({
+    type: "typing",
+    id
+});
+
 export const RoomCreateDirect = (peer) => ({
     type: "room_create_direct",
     peer
