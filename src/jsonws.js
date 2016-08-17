@@ -6,7 +6,7 @@ export class JSONWebSocket {
         this.log("Connecting to: " + this.url);
         this.socket = new WebSocket(url);
         this.socket.onopen = function() {
-            _this.log("Connected to: " + _this.url);
+            config.log("Connected to: " + url);
         };
     }
 
