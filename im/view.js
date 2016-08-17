@@ -151,3 +151,7 @@ function makeSplitGrid(contents) {
     });
     return row;
 }
+
+function makeDiv() {
+    return $('<div>');
+}

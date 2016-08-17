@@ -63,10 +63,10 @@ export class Room extends BaseRoom {
     }
 }
 
-export function createRoom(room, rest, ws) {
+export function createRoom(room, artichoke) {
     if (room.direct) {
-        return new DirectRoom(room, rest, ws);
+        return new DirectRoom(room, artichoke);
     } else {
-        return new Room(room, rest, ws);
+        return new Room(room, artichoke);
     }
 }
