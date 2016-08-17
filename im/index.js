@@ -196,9 +196,13 @@ $(document).ready(function() {
         room.onMessage(receive);
 
         var input = makeInputField("Send!", function(input) {
-            room.send(input).then(function (ack) {
-                console.log("Received ack for message: ", ack);
-                receive(ack.message);
+            room.send(input).then(function (msg) {
+                msg.onDelivery(function(m) {
+                    $('#' + m.id).addClass("delivered");
+                });
+
+                console.log("Received ack for message: ", msg);
+                receive(msg);
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
@@ -322,9 +326,13 @@ $(document).ready(function() {
         });
 
         var input = makeInputField("Send!", function(input) {
-            room.send(input).then(function (ack) {
-                console.log("Received ack for message: ", ack);
-                receive(ack.message);
+            room.send(input).then(function (msg) {
+                msg.onDelivery(function(m) {
+                    $('#' + m.id).addClass("delivered");
+                });
+
+                console.log("Received ack for message: ", msg);
+                receive(msg);
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
@@ -543,10 +551,6 @@ $(document).ready(function() {
                     }).catch(function(error) {
                         console.log("Creating direct room failed: ", error);
                     });
-                });
-
-                session.chat.onEvent("msg_delivered", function(m) {
-                    $('#' + m.id).addClass("delivered"); // FIXME Do it properly.
                 });
             });
 

@@ -12,7 +12,7 @@ class BaseRoom {
     }
 
     getHistory() {
-        return wrapPromise(this.artichoke.rest.getChatHistory(this.id), createMessage, [this.artichoke]);
+        return this._wrapMessage(this.artichoke.rest.getChatHistory(this.id));
     }
 
     getUsers() {
@@ -20,7 +20,7 @@ class BaseRoom {
     }
 
     send(message) {
-        return this.artichoke.socket.sendMessage(this.id, message);
+        return this._wrapMessage(this.artichoke.socket.sendMessage(this.id, message));
     }
 
     mark(timestamp) {
@@ -42,6 +42,10 @@ class BaseRoom {
 
     onTyping(callback) {
         this._defineCallback("typing", callback);
+    }
+
+    _wrapMessage(promise) {
+        return wrapPromise(promise, createMessage, [this.artichoke]);
     }
 
     _defineCallback(type, callback) {

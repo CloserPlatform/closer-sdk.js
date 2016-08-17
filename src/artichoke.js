@@ -153,7 +153,7 @@ class ArtichokeWS extends JSONWebSocket {
         return new Promise(function(resolve, reject) {
             let ref = "ref" + Date.now(); // FIXME Use UUID instead.
             _this.promises[ref] = {
-                resolve,
+                resolve, // FIXME This should createMessage().
                 reject
             };
             _this.send(proto.ChatRequest(roomId, body, ref));
@@ -169,6 +169,8 @@ class ArtichokeWS extends JSONWebSocket {
         super.onMessage(function(msg) {
             if (msg.type === "error" && msg.ref) {
                 _this._reject(msg.ref, msg);
+            } else if (msg.type === "msg_received" && msg.ref) {
+                _this._resolve(msg.ref, msg.message); // FIXME Don't rely on this.
             } else if (msg.ref) {
                 _this._resolve(msg.ref, msg);
             }

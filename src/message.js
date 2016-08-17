@@ -16,12 +16,13 @@ export class Message {
     }
 
     onDelivery(callback) {
+        // FIXME This registers a callback for EVERY message ever created. Nope.
         let _this = this;
         this.artichoke.onEvent("msg_delivered", function(msg) {
             if (msg.id === _this.id) {
                 _this.log("Running callback msg_delivered for message: " + _this.id);
                 _this.delivered = msg.timestamp;
-                callback(msg);
+                callback(_this);
             }
         });
     }
