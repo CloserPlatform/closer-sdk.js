@@ -2,8 +2,9 @@ import * as proto from "./protocol";
 import { nop, pathcat, wrapPromise } from "./utils";
 import { JSONWebSocket } from "./jsonws";
 import { RTCConnection } from "./rtc";
-import { createCall, Call } from "./call";
-import { createRoom, DirectRoom, Room } from "./room";
+import { createCall } from "./call";
+import { createMessage } from "./message";
+import { createRoom } from "./room";
 
 class ArtichokeREST {
     constructor(config) {
@@ -261,7 +262,7 @@ export class Artichoke {
 
             case "call_created":
                 // FIXME Adjust message format in the backend.
-                _this._runCallbacks({
+                _this._runCallbacks("call_created", {
                     type: "call_created",
                     creator: m.creator,
                     call: createCall(m, _this)
@@ -277,14 +278,12 @@ export class Artichoke {
                 return;
 
             case "message":
-                if (!m.delivered) {
-                    _this.socket.setDelivered(m.id, Date.now());
-                }
-                break;
+                _this._runCallbacks("message", createMessage(m, _this));
+                return;
 
             default: break;
             }
-            _this._runCallbacks(m);
+            _this._runCallbacks(m.type, m);
         });
     }
 
@@ -339,10 +338,10 @@ export class Artichoke {
         return wrapPromise(promise, createRoom, [this]);
     }
 
-    _runCallbacks(m) {
-        if (m.type in this.callbacks) {
-            this.log("Running callbacks for message type: " + m.type);
-            return this.callbacks[m.type].forEach((cb) => cb(m));
+    _runCallbacks(type, m) {
+        if (type in this.callbacks) {
+            this.log("Running callbacks for message type: " + type);
+            return this.callbacks[type].forEach((cb) => cb(m));
         } else {
             this.log("Unhandled message: " + JSON.stringify(m));
             this.onErrorCallback({"reason": "Unhandled message.", "message": m});

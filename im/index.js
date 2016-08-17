@@ -193,10 +193,7 @@ $(document).ready(function() {
 
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
-        room.onMessage(function(msg) {
-            msg["delivered"] = Date.now(); // FIXME Do it properly...
-            receive(msg);
-        });
+        room.onMessage(receive);
 
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (ack) {
@@ -315,7 +312,6 @@ $(document).ready(function() {
 
         var receive = makeReceiver(room, text);
         room.onMessage(function(msg) {
-            msg["delivered"] = Date.now(); // FIXME Do it properly...
             receive(msg);
             deactivateUser(msg.sender);
         });
