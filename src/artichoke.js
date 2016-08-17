@@ -11,7 +11,7 @@ class ArtichokeREST {
         this.apiKey = config.apiKey;
         this.url = "//" + pathcat(config.url, "api");
 
-        this.callPath = "call";
+        this.callPath = "calls";
         this.chatPath = "chat";
         this.roomPath = "rooms";
 
