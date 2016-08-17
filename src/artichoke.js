@@ -266,6 +266,10 @@ export class Artichoke {
                 });
                 return;
 
+            case "room_created":
+                m.room = createRoom(m.room, _this);
+                break;
+
             case "error":
                 _this.onErrorCallback(m);
                 return;
@@ -300,6 +304,10 @@ export class Artichoke {
     }
 
     // Chat room API:
+    onRoom(callback) {
+        this.onEvent("room_created", callback);
+    }
+
     createRoom(name) {
         return this._wrapRoom(this.rest.createRoom(name));
     }

@@ -506,13 +506,9 @@ $(document).ready(function() {
                     console.log("Fetching roster failed:", error);
                 });
 
-                session.chat.onEvent("message", function (msg) {
-                    if(!(msg.room in roster)) {
-                        session.chat.getRoom(msg.room).then(function(room) {
-                            addRoom(room, session);
-                        }).catch(function(error) {
-                            console.log("Fetching room failed: ", error);
-                        });
+                session.chat.onRoom(function (msg) {
+                    if(!(msg.room.id in roster)) {
+                        addRoom(msg.room, session);
                     }
                 });
 
