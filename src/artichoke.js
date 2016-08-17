@@ -14,7 +14,6 @@ class ArtichokeREST {
         this.callPath = "calls";
         this.chatPath = "chat";
         this.roomPath = "rooms";
-
     }
 
     // Call API:

@@ -427,8 +427,6 @@ $(document).ready(function() {
 
         function stopStreams() {
             streams.hide();
-            localBox.prop('src', null);
-            remoteBox.prop('src', null);
             if(localStream) {
                 if(localStream.stop) localStream.stop();
                 else localStream.getTracks().map(function(t) { t.stop(); });
