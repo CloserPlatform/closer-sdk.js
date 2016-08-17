@@ -309,7 +309,6 @@ $(document).ready(function() {
                 break;
             case "left": removeUser(msg.originator); break;
             }
-            deactivateUser(msg.originator);
             renderUsers(userList);
             receiveAction(msg);
         });
