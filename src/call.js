@@ -1,8 +1,7 @@
 class Call {
-    constructor(creator, call, artichoke) {
+    constructor(call, artichoke) {
         this.id = call.id;
         this.users = call.users;
-        this.creator = creator;
         this.artichoke = artichoke;
     }
 
@@ -42,6 +41,6 @@ class Call {
     }
 }
 
-export function createCall(creator, call, artichoke) {
-    return new Call(creator, call, artichoke);
+export function createCall(call, artichoke) {
+    return new Call(call, artichoke);
 }

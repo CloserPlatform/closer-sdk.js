@@ -254,7 +254,7 @@ export class Artichoke {
                 _this._runCallbacks({
                     type: "call_created",
                     creator: m.creator,
-                    call: createCall(m.creator, m, _this)
+                    call: createCall(m, _this)
                 });
                 return;
 
@@ -305,7 +305,7 @@ export class Artichoke {
         let _this = this;
         return new Promise(function(resolve, reject) {
             promise.then(function(call) {
-                resolve(createCall(_this.sessionId, call, _this));
+                resolve(createCall(call, _this));
             }).catch(reject);
         });
     }
