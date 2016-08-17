@@ -198,10 +198,6 @@ $(document).ready(function() {
             receive(msg);
         });
 
-        room.onTyping(function(msg) {
-            console.log(msg.user + " is typing!");
-        });
-
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (ack) {
                 console.log("Received ack for message: ", ack);
@@ -209,11 +205,6 @@ $(document).ready(function() {
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
-        }, function(input) {
-            if([3, 8, 27, 64, 125, 216, 343].includes(input.length)) {
-                console.log("Indicating that user is typing.");
-                room.indicateTyping();
-            }
         });
 
         var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
@@ -254,16 +245,41 @@ $(document).ready(function() {
                 var pill = makePill(user, user, function() {
                     directRoomBuilder(user);
                 });
+                if(list[user].isTyping) {
+                    pill.addClass("active");
+                }
                 users.append(pill);
             });
         }
 
         function addUser(user) {
-            userList[user] = user;
+            userList[user] = {
+                isTyping: false,
+                timer: null
+            };
         }
 
         function removeUser(user) {
             delete userList[user];
+        }
+
+        function deactivateUser(user) {
+            userList[user].isTyping = false;
+            renderUsers(userList);
+            if(userList[user].timer) {
+                window.clearTimeout(userList[user].timer);
+            }
+        }
+
+        function activateUser(user, time) {
+            userList[user].isTyping = true;
+            renderUsers(userList);
+            if(userList[user].timer) {
+                window.clearTimeout(userList[user].timer);
+            }
+            userList[user].timer = window.setTimeout(function() {
+                deactivateUser(user);
+            }, time);
         }
 
         room.getUsers().then(function(list) {
@@ -284,27 +300,30 @@ $(document).ready(function() {
             text.trigger('scroll-to-bottom');
         }
 
-        room.onAction(function(action) {
-            switch(action.action) {
+        room.onAction(function(msg) {
+            switch(msg.action) {
             case "joined":
-                if(action.originator != sessionId) { // FIXME Don't use sessionId.
-                    addUser(action.originator);
+                if(msg.originator != sessionId) { // FIXME Don't use sessionId.
+                    addUser(msg.originator);
                 }
                 break;
-            case "left": removeUser(action.originator); break;
+            case "left": removeUser(msg.originator); break;
             }
+            deactivateUser(msg.originator);
             renderUsers(userList);
-            receiveAction(action);
+            receiveAction(msg);
         });
 
         var receive = makeReceiver(room, text);
         room.onMessage(function(msg) {
             msg["delivered"] = Date.now(); // FIXME Do it properly...
             receive(msg);
+            deactivateUser(msg.sender);
         });
 
         room.onTyping(function(msg) {
             console.log(msg.user + " is typing!");
+            activateUser(msg.user, 5000);
         });
 
         var input = makeInputField("Send!", function(input) {
