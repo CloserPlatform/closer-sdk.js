@@ -479,21 +479,17 @@ $(document).ready(function() {
 
             newRoom = roomBuilder(session);
 
-            session.chat.onConnect(function() {
-                console.log("Connected to artichoke!");
-            });
-
             session.chat.onError(function(error) {
                 console.log("An error has occured: ", error);
             });
 
-            session.chat.onEvent("hello", function(m) {
+            session.chat.onConnect(function(m) {
+                console.log("Connected to Artichoke!");
+
                 killSwitch.click(function() {
                     // NOTE Kills the client session.
                     session.chat.socket.hangupCall(null, null);
                 });
-
-                console.log("Connection ready for " + sessionId + "!");
 
                 session.chat.getRoster().then(function(rooms) {
                     console.log("Roster: ", rooms);

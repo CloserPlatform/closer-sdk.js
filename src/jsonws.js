@@ -5,13 +5,8 @@ export class JSONWebSocket {
 
         this.log("Connecting to: " + this.url);
         this.socket = new WebSocket(url);
-    }
-
-    onConnect(callback) {
-        let _this = this;
         this.socket.onopen = function() {
             _this.log("Connected to: " + _this.url);
-            callback();
         };
     }
 

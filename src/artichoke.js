@@ -210,7 +210,6 @@ export class Artichoke {
         this.callbacks = {};
 
         // NOTE By default do nothing.
-        this.onConnectCallback = nop;
         this.onErrorCallback = nop;
         this.onEvent("msg_received", nop);
         this.onEvent("msg_delivered", nop);
@@ -219,7 +218,7 @@ export class Artichoke {
 
     // Callbacks:
     onConnect(callback) {
-        this.onConnectCallback = callback;
+        this.onEvent("hello", callback);
     }
 
     onEvent(type, callback) {
@@ -238,7 +237,6 @@ export class Artichoke {
     connect() {
         this.rtc = new RTCConnection(this.config);
         this.socket = new ArtichokeWS(this.config);
-        this.socket.onConnect(this.onConnectCallback);
 
         let _this = this;
         this.socket.onMessage(function(m) {
