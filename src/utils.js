@@ -17,3 +17,15 @@ export function merge(cfg, defaultCfg) {
     });
     return config;
 }
+
+export function wrapPromise(promise, fun, args) {
+    return new Promise(function(resolve, reject) {
+        promise.then(function(obj) {
+            if (Array.isArray(obj)) {
+                resolve(obj.map((o) => fun.apply(this, [o].concat(args))));
+            } else {
+                resolve(fun.apply(this, [obj].concat(args)));
+            }
+        }).catch(reject);
+    });
+}

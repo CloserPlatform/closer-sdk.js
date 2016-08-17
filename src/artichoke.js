@@ -1,5 +1,5 @@
 import * as proto from "./protocol";
-import { nop, pathcat } from "./utils";
+import { nop, pathcat, wrapPromise } from "./utils";
 import { JSONWebSocket } from "./jsonws";
 import { RTCConnection } from "./rtc";
 import { createCall, Call } from "./call";
@@ -332,24 +332,11 @@ export class Artichoke {
 
     // Utils:
     _wrapCall(promise) {
-        return this._wrap(createCall, promise);
+        return wrapPromise(promise, createCall, [this]);
     }
 
     _wrapRoom(promise) {
-        return this._wrap(createRoom, promise);
-    }
-
-    _wrap(ctor, promise) {
-        let _this = this;
-        return new Promise(function(resolve, reject) {
-            promise.then(function(obj) {
-                if (Array.isArray(obj)) {
-                    resolve(obj.map((o) => ctor(o, _this)));
-                } else {
-                    resolve(ctor(obj, _this));
-                }
-            }).catch(reject);
-        });
+        return wrapPromise(promise, createRoom, [this]);
     }
 
     _runCallbacks(m) {
