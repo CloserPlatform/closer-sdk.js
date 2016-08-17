@@ -1,4 +1,5 @@
-// Chat room stuff.
+import { createMessage } from "./message";
+import { wrapPromise } from "./utils";
 
 class BaseRoom {
     constructor(room, artichoke) {
@@ -11,7 +12,7 @@ class BaseRoom {
     }
 
     getHistory() {
-        return this.artichoke.rest.getChatHistory(this.id);
+        return wrapPromise(this.artichoke.rest.getChatHistory(this.id), createMessage, [this.artichoke]);
     }
 
     getUsers() {
