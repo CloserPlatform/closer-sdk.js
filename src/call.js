@@ -1,6 +1,8 @@
 import { RTCConnection } from "./rtc";
 import { nop } from "./utils";
 
+const tmpUser = "FIXME Actually dispatch the user...";
+
 class Call {
     constructor(call, artichoke) {
         this.id = call.id;
@@ -17,7 +19,7 @@ class Call {
     offer(stream) {
         let _this = this;
         return new Promise(function(resolve, reject) {
-            let rtc = _this._createRTC("FIXME");
+            let rtc = _this._createRTC(tmpUser);
             rtc.addStream(stream);
 
             rtc.createOffer()
@@ -30,7 +32,7 @@ class Call {
         let _this = this;
 
         return new Promise(function(resolve, reject) {
-            let rtc = _this._createRTC("FIXME");
+            let rtc = _this._createRTC(tmpUser);
             rtc.addStream(stream);
 
             rtc.setRemoteDescription("offer", offer.sdp, function(candidate) {
@@ -85,12 +87,13 @@ class Call {
         rtc.onRemoteStream(this._makeStreamCallback(user, this.onRemoteStreamCallback));
 
         let _this = this;
-        this.artichoke.onEvent("call_candidate", (m) => rtc.addICECandidate(m.candidate));
-        this.artichoke.onEvent("call_hangup", function(m) {
+        // FIXME These need to be dispatched per RTC connection.
+        this._defineCallback("call_candidate", (m) => rtc.addICECandidate(m.candidate));
+        this._defineCallback("call_hangup", function(m) {
             rtc.disconnect();
             delete _this.connections[user];
         });
-        this.artichoke.onEvent("call_answer", function(m) {
+        this._defineCallback("call_answer", function(m) {
             rtc.setRemoteDescription("answer", m.sdp, function(candidate) {
                 _this.artichoke.socket.sendCandidate(m.id, candidate);
             });

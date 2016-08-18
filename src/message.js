@@ -1,4 +1,4 @@
-export class Message {
+class Message {
     constructor(message, artichoke) {
         this.id = message.id;
         this.body = message.body;
