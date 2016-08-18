@@ -11,7 +11,7 @@ function makeLoginForm(id, onClick) {
                     </div>
                     <div class="form-group">
                         <label for="session-id">Name:</label>
-                        <input id="session-id" type="text" class="form-control" value="Nickname">
+                        <input id="session-id" type="text" class="form-control" placeholder="Nickname">
                         <br>
                     </div>
                 </div>
