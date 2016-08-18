@@ -6,7 +6,7 @@ $(document).ready(function() {
         navigator.getUserMedia = function(arg, t, c) {
             return navigator.mediaDevices.getUserMedia(arg).then(t).catch(c);
         };
-    };
+    }
 
     var loginBox = makeLoginBox();
     var chat = makeChat();
