@@ -193,15 +193,16 @@ $(document).ready(function() {
 
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
-        room.onMessage(function(msg) {
-            msg["delivered"] = Date.now(); // FIXME Do it properly...
-            receive(msg);
-        });
+        room.onMessage(receive);
 
         var input = makeInputField("Send!", function(input) {
-            room.send(input).then(function (ack) {
-                console.log("Received ack for message: ", ack);
-                receive(ack.message);
+            room.send(input).then(function (msg) {
+                msg.onDelivery(function(m) {
+                    $('#' + m.id).addClass("delivered");
+                });
+
+                console.log("Received ack for message: ", msg);
+                receive(msg);
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
@@ -315,7 +316,6 @@ $(document).ready(function() {
 
         var receive = makeReceiver(room, text);
         room.onMessage(function(msg) {
-            msg["delivered"] = Date.now(); // FIXME Do it properly...
             receive(msg);
             deactivateUser(msg.sender);
         });
@@ -326,9 +326,13 @@ $(document).ready(function() {
         });
 
         var input = makeInputField("Send!", function(input) {
-            room.send(input).then(function (ack) {
-                console.log("Received ack for message: ", ack);
-                receive(ack.message);
+            room.send(input).then(function (msg) {
+                msg.onDelivery(function(m) {
+                    $('#' + m.id).addClass("delivered");
+                });
+
+                console.log("Received ack for message: ", msg);
+                receive(msg);
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
@@ -365,11 +369,6 @@ $(document).ready(function() {
 
             room.getHistory().then(function(msgs) {
                 msgs.forEach(function(msg) {
-                    // FIXME Do this in the SDK.
-                    if(msg.sender != sessionId && !msg.delivered) {
-                        room.artichoke.socket.setDelivered(msg.id);
-                        msg.delivered = Date.now();
-                    }
                     chatbox.receive(msg);
                 });
             }).catch(function(error) {
@@ -552,10 +551,6 @@ $(document).ready(function() {
                     }).catch(function(error) {
                         console.log("Creating direct room failed: ", error);
                     });
-                });
-
-                session.chat.onEvent("msg_delivered", function(m) {
-                    $('#' + m.id).addClass("delivered"); // FIXME Do it properly.
                 });
             });
 

@@ -1,9 +1,10 @@
 import * as proto from "./protocol";
-import { nop, pathcat } from "./utils";
+import { nop, pathcat, wrapPromise } from "./utils";
 import { JSONWebSocket } from "./jsonws";
 import { RTCConnection } from "./rtc";
-import { createCall, Call } from "./call";
-import { createRoom, DirectRoom, Room } from "./room";
+import { createCall } from "./call";
+import { createMessage } from "./message";
+import { createRoom } from "./room";
 
 class ArtichokeREST {
     constructor(config) {
@@ -142,8 +143,8 @@ class ArtichokeWS extends JSONWebSocket {
     }
 
     // Chat API:
-    setDelivered(messageId) {
-        this.send(proto.ChatDelivered(messageId, Date.now()));
+    setDelivered(messageId, timestamp) {
+        this.send(proto.ChatDelivered(messageId, timestamp));
     }
 
     // Room API:
@@ -152,7 +153,7 @@ class ArtichokeWS extends JSONWebSocket {
         return new Promise(function(resolve, reject) {
             let ref = "ref" + Date.now(); // FIXME Use UUID instead.
             _this.promises[ref] = {
-                resolve,
+                resolve, // FIXME This should createMessage().
                 reject
             };
             _this.send(proto.ChatRequest(roomId, body, ref));
@@ -168,6 +169,8 @@ class ArtichokeWS extends JSONWebSocket {
         super.onMessage(function(msg) {
             if (msg.type === "error" && msg.ref) {
                 _this._reject(msg.ref, msg);
+            } else if (msg.type === "msg_received" && msg.ref) {
+                _this._resolve(msg.ref, msg.message); // FIXME Don't rely on this.
             } else if (msg.ref) {
                 _this._resolve(msg.ref, msg);
             }
@@ -261,7 +264,7 @@ export class Artichoke {
 
             case "call_created":
                 // FIXME Adjust message format in the backend.
-                _this._runCallbacks({
+                _this._runCallbacks("call_created", {
                     type: "call_created",
                     creator: m.creator,
                     call: createCall(m, _this)
@@ -277,14 +280,12 @@ export class Artichoke {
                 return;
 
             case "message":
-                if (!m.delivered) {
-                    _this.socket.setDelivered(m.id);
-                }
-                break;
+                _this._runCallbacks("message", createMessage(m, _this));
+                return;
 
             default: break;
             }
-            _this._runCallbacks(m);
+            _this._runCallbacks(m.type, m);
         });
     }
 
@@ -332,30 +333,17 @@ export class Artichoke {
 
     // Utils:
     _wrapCall(promise) {
-        return this._wrap(createCall, promise);
+        return wrapPromise(promise, createCall, [this]);
     }
 
     _wrapRoom(promise) {
-        return this._wrap(createRoom, promise);
+        return wrapPromise(promise, createRoom, [this]);
     }
 
-    _wrap(ctor, promise) {
-        let _this = this;
-        return new Promise(function(resolve, reject) {
-            promise.then(function(obj) {
-                if (Array.isArray(obj)) {
-                    resolve(obj.map((o) => ctor(o, _this)));
-                } else {
-                    resolve(ctor(obj, _this));
-                }
-            }).catch(reject);
-        });
-    }
-
-    _runCallbacks(m) {
-        if (m.type in this.callbacks) {
-            this.log("Running callbacks for message type: " + m.type);
-            return this.callbacks[m.type].forEach((cb) => cb(m));
+    _runCallbacks(type, m) {
+        if (type in this.callbacks) {
+            this.log("Running callbacks for message type: " + type);
+            return this.callbacks[type].forEach((cb) => cb(m));
         } else {
             this.log("Unhandled message: " + JSON.stringify(m));
             this.onErrorCallback({"reason": "Unhandled message.", "message": m});
