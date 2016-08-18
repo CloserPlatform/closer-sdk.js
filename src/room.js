@@ -60,9 +60,9 @@ class BaseRoom {
     }
 }
 
-export class DirectRoom extends BaseRoom {}
+class DirectRoom extends BaseRoom {}
 
-export class Room extends BaseRoom {
+class Room extends BaseRoom {
     join() {
         return this.artichoke.rest.joinRoom(this.id);
     }

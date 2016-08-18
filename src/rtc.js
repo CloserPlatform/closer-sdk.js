@@ -8,7 +8,7 @@ export class RTCConnection {
 
         this.conn = undefined;
 
-        this.reconnect();
+        this._connect();
     }
 
     addStream(stream) {
@@ -62,12 +62,13 @@ export class RTCConnection {
         this.onRemoteStreamCallback = callback;
     }
 
-    reconnect() {
-        if (this.conn) {
-            this.conn.close();
-        }
+    disconnect() {
+        this.log("Disconnecting a RTC connection.");
+        this.conn.close();
+    }
 
-        this.log("(Re)connecting the RTC peer connection.");
+    _connect() {
+        this.log("Connecting a RTC connection.");
         this.conn = new RTCPeerConnection(this.config);
 
         let _this = this;

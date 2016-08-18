@@ -1,7 +1,6 @@
 import * as proto from "./protocol";
 import { nop, pathcat, wrapPromise } from "./utils";
 import { JSONWebSocket } from "./jsonws";
-import { RTCConnection } from "./rtc";
 import { createCall } from "./call";
 import { createMessage } from "./message";
 import { createRoom } from "./room";
@@ -211,7 +210,6 @@ export class Artichoke {
         this.apiKey = config.apiKey;
 
         // Connection state:
-        this.rtc = undefined;
         this.socket = undefined;
 
         this.callbacks = {};
@@ -242,19 +240,9 @@ export class Artichoke {
 
     // API:
     connect() {
-        this.rtc = new RTCConnection(this.config);
-
-        let _this = this;
-        this.onEvent("call_hangup", (m) => _this.rtc.reconnect());
-        this.onEvent("call_candidate", (m) => _this.rtc.addICECandidate(m.candidate));
-        this.onEvent("call_answer", function(m) {
-            _this.rtc.setRemoteDescription("answer", m.sdp, function(candidate) {
-                _this.socket.sendCandidate(m.id, candidate);
-            });
-        });
-
         this.socket = new ArtichokeWS(this.config);
 
+        let _this = this;
         this.socket.onMessage(function(m) {
             switch (m.type) {
             case "call_created":
