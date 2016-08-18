@@ -15,31 +15,32 @@ class Call {
     }
 
     offer(stream) {
-        let rtc = this._createRTC("FIXME");
-
-        rtc.addStream(stream);
-
         let _this = this;
-        // FIXME Don't use private artichoke function.
-        rtc.createOffer()
-            .then((offer) => _this.artichoke.socket.sendOffer(_this.id, offer))
-            .catch((error) => _this.artichoke._runCallbacks("error", {"reason": "Offer creation failed.", "error": error}));
+        return new Promise(function(resolve, reject) {
+            let rtc = _this._createRTC("FIXME");
+            rtc.addStream(stream);
+
+            rtc.createOffer()
+                .then((offer) => resolve(_this.artichoke.socket.sendOffer(_this.id, offer)))
+                .catch(reject);
+        });
     }
 
     answer(offer, stream) {
-        let rtc = this._createRTC("FIXME");
-
-        rtc.addStream(stream);
-
         let _this = this;
-        rtc.setRemoteDescription("offer", offer.sdp, function(candidate) {
-            _this.artichoke.socket.sendCandidate(_this.id, candidate);
-        });
 
-        // FIXME Don't use private artichoke function.
-        rtc.createAnswer()
-            .then((answer) => _this.artichoke.socket.answerCall(_this.id, answer))
-            .catch((error) => _this.artichoke._runCallbacks("error", {"reason": "Answer creation failed.", "error": error}));
+        return new Promise(function(resolve, reject) {
+            let rtc = _this._createRTC("FIXME");
+            rtc.addStream(stream);
+
+            rtc.setRemoteDescription("offer", offer.sdp, function(candidate) {
+                _this.artichoke.socket.sendCandidate(_this.id, candidate);
+            });
+
+            rtc.createAnswer()
+                .then((answer) => resolve(_this.artichoke.socket.answerCall(_this.id, answer)))
+                .catch(reject);
+        });
     }
 
     reject() {

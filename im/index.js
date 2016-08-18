@@ -445,7 +445,9 @@ $(document).ready(function() {
             console.log("Received call offer: ", m);
             if(confirm(peer + " is calling, answer?")) {
                 createLocalStream(function(stream) {
-                    call.answer(m, stream);
+                    call.answer(m, stream).catch(function(error) {
+                        console.log("Answer creation failed: ", error);
+                    });
                 });
             } else {
                 console.log("Rejecting call...");
@@ -468,7 +470,9 @@ $(document).ready(function() {
             element: streams,
             offer: function() {
                 createLocalStream(function(stream) {
-                    call.offer(stream);
+                    call.offer(stream).catch(function(error) {
+                        console.log("Offer creation failed: ", error);
+                    });
                 });
             },
             hangup: function(reason) {
