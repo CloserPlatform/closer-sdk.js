@@ -49,7 +49,7 @@ class Call {
 
     hangup(reason) {
         this.artichoke.socket.hangupCall(this.id, reason);
-        Object.values(this.connections).forEach((c) => c.reconnect());
+        Object.values(this.connections).forEach((c) => c.disconnect());
         this.connections = {};
     }
 
@@ -87,7 +87,7 @@ class Call {
         let _this = this;
         this.artichoke.onEvent("call_candidate", (m) => rtc.addICECandidate(m.candidate));
         this.artichoke.onEvent("call_hangup", function(m) {
-            rtc.reconnect();
+            rtc.disconnect();
             delete _this.connections[user];
         });
         this.artichoke.onEvent("call_answer", function(m) {
