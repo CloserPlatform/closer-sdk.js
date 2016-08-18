@@ -1,4 +1,5 @@
 import { RTCConnection } from "./rtc";
+import { nop } from "./utils";
 
 class Call {
     constructor(call, artichoke) {
@@ -8,6 +9,9 @@ class Call {
         this.artichoke = artichoke;
 
         this.connections = {};
+
+        // By default do nothing:
+        this.onRemoteStreamCallback = nop;
     }
 
     offer(stream) {
@@ -49,7 +53,11 @@ class Call {
     }
 
     onRemoteStream(callback) {
-        Object.values(this.connections).forEach((c) => c.onRemoteStream(callback));
+        this.onRemoteStreamCallback = callback;
+        let _this = this;
+        Object.keys(this.connections).forEach(function(k) {
+            _this.connections[k].onRemoteStream(_this._makeStreamCallback(k, callback));
+        });
     }
 
     onAnswer(callback) {
@@ -64,8 +72,16 @@ class Call {
         this._defineCallback("call_hangup", callback);
     }
 
+    _makeStreamCallback(user, callback) {
+        return function(stream) {
+            return callback(user, stream);
+        };
+    }
+
     _createRTC(user) {
         let rtc = new RTCConnection(this.artichoke.config);
+
+        rtc.onRemoteStream(this._makeStreamCallback(user, this.onRemoteStreamCallback));
 
         let _this = this;
         this.artichoke.onEvent("call_candidate", (m) => rtc.addICECandidate(m.candidate));
