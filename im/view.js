@@ -6,15 +6,15 @@ function makeLoginForm(id, onClick) {
                 <div class="col-lg-2 col-lg-offset-5" style="text-align:left">
                     <div class="form-group">
                         <label for="server">Server:</label>
-                        <input id="server" type="text" class="form-control" value="localhost:5431">
+                        <input id="server" type="text" class="form-control" value="artichoke.ratel.io">
                         <br>
                     </div>
                     <div class="form-group">
                         <label for="session-id">Name:</label>
-                        <input id="session-id" type="text" class="form-control" value="Alice">
+                        <input id="session-id" type="text" class="form-control" value="Nickname">
                         <br>
                     </div>
-                </div>    
+                </div>
             </div>
         </form>
       `;
