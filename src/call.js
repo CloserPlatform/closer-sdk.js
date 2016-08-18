@@ -1,31 +1,41 @@
+import { RTCConnection } from "./rtc";
+
 class Call {
     constructor(call, artichoke) {
         this.id = call.id;
         this.users = call.users;
         this.log = artichoke.log;
         this.artichoke = artichoke;
+
+        this.connections = {};
     }
 
     offer(stream) {
-        this.artichoke.rtc.addStream(stream);
+        let rtc = this._createRTC("FIXME");
+
+        rtc.addStream(stream);
 
         let _this = this;
-        this.artichoke.rtc.createOffer()
+        // FIXME Don't use private artichoke function.
+        rtc.createOffer()
             .then((offer) => _this.artichoke.socket.sendOffer(_this.id, offer))
-            .catch((error) => _this.artichoke.onErrorCallback({"reason": "Offer creation failed.", "error": error}));
+            .catch((error) => _this.artichoke._runCallbacks("error", {"reason": "Offer creation failed.", "error": error}));
     }
 
     answer(offer, stream) {
-        this.artichoke.rtc.addStream(stream);
+        let rtc = this._createRTC("FIXME");
+
+        rtc.addStream(stream);
 
         let _this = this;
-        this.artichoke.rtc.setRemoteDescription("offer", offer.sdp, function(candidate) {
+        rtc.setRemoteDescription("offer", offer.sdp, function(candidate) {
             _this.artichoke.socket.sendCandidate(_this.id, candidate);
         });
 
-        this.artichoke.rtc.createAnswer()
+        // FIXME Don't use private artichoke function.
+        rtc.createAnswer()
             .then((answer) => _this.artichoke.socket.answerCall(_this.id, answer))
-            .catch((error) => _this.artichoke.onErrorCallback({"reason": "Answer creation failed.", "error": error}));
+            .catch((error) => _this.artichoke._runCallbacks("error", {"reason": "Answer creation failed.", "error": error}));
     }
 
     reject() {
@@ -33,12 +43,13 @@ class Call {
     }
 
     hangup(reason) {
-        this.artichoke.rtc.reconnect();
         this.artichoke.socket.hangupCall(this.id, reason);
+        Object.values(this.connections).forEach((c) => c.reconnect());
+        this.connections = {};
     }
 
     onRemoteStream(callback) {
-        this.artichoke.rtc.onRemoteStream(callback);
+        Object.values(this.connections).forEach((c) => c.onRemoteStream(callback));
     }
 
     onAnswer(callback) {
@@ -51,6 +62,25 @@ class Call {
 
     onHangup(callback) {
         this._defineCallback("call_hangup", callback);
+    }
+
+    _createRTC(user) {
+        let rtc = new RTCConnection(this.artichoke.config);
+
+        let _this = this;
+        this.artichoke.onEvent("call_candidate", (m) => rtc.addICECandidate(m.candidate));
+        this.artichoke.onEvent("call_hangup", function(m) {
+            rtc.reconnect();
+            delete _this.connections[user];
+        });
+        this.artichoke.onEvent("call_answer", function(m) {
+            rtc.setRemoteDescription("answer", m.sdp, function(candidate) {
+                _this.artichoke.socket.sendCandidate(m.id, candidate);
+            });
+        });
+
+        this.connections[user] = rtc;
+        return rtc;
     }
 
     _defineCallback(type, callback) {

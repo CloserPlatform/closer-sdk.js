@@ -425,11 +425,12 @@ $(document).ready(function() {
             });
         }
 
-        call.onRemoteStream(function(stream) {
+        // FIXME Define once.
+        function onRemoteStream(stream) {
             console.log("Remote stream started!");
             remoteBox.prop('src', window.URL.createObjectURL(stream));
             streams.show();
-        });
+        }
 
         call.onHangup(function(m) {
             console.log("Received call hangup: ", m);
@@ -446,6 +447,7 @@ $(document).ready(function() {
             if(confirm(peer + " is calling, answer?")) {
                 createLocalStream(function(stream) {
                     call.answer(m, stream);
+                    call.onRemoteStream(onRemoteStream); // FIXME Move away from here.
                 });
             } else {
                 console.log("Rejecting call...");
@@ -469,6 +471,7 @@ $(document).ready(function() {
             offer: function() {
                 createLocalStream(function(stream) {
                     call.offer(stream);
+                    call.onRemoteStream(onRemoteStream); // FIXME Move away from here.
                 });
             },
             hangup: function(reason) {
