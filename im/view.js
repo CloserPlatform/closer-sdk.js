@@ -1,11 +1,25 @@
 function makeLoginForm(id, onClick) {
-    var form = $('<form>')
-        .append('<input id="server" type="text" value="localhost:5431">')
-        .append('<br>')
-        .append('<input id="session-id" type="text" value="Alice">')
-        .append('<br>');
+    var form =
+      `
+        <form>
+            <div class="row">
+                <div class="col-lg-2 col-lg-offset-5" style="text-align:left">
+                    <div class="form-group">
+                        <label for="server">Server:</label>
+                        <input id="server" type="text" class="form-control" value="localhost:5431">
+                        <br>
+                    </div>
+                    <div class="form-group">
+                        <label for="session-id">Name:</label>
+                        <input id="session-id" type="text" class="form-control" value="Alice">
+                        <br>
+                    </div>
+                </div>    
+            </div>
+        </form>
+      `;
 
-    var button = $('<button>')
+    var button = $('<button class="btn btn-primary">')
         .html("Login!")
         .click(onClick);
 
@@ -102,7 +116,7 @@ function makeTextArea(className) {
 }
 
 function makeInputField(name, onClick, onKey) {
-    var field = $('<input type="text">')
+    var field = $('<input type="text" class="form-control form-group col-sm-2">')
         .keyup(function(e) {
             if (e.keyCode == 13) {
                 onClick(field.val());
@@ -111,7 +125,7 @@ function makeInputField(name, onClick, onKey) {
                 onKey(field.val());
             }
         });
-    var button = $('<button>')
+    var button = $('<button class="btn btn-primary">')
         .html(name)
         .click(function() {
             onClick(field.val());
