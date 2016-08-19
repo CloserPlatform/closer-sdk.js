@@ -63,13 +63,10 @@ $(document).ready(function() {
             console.log("Switching to: " + id);
 
             Object.keys(chatboxes).forEach(function(id) {
-                chatboxes[id].switcher.deactivate();
-                chatboxes[id].element.hide();
+                chatboxes[id].deactivate();
             });
 
-            chatboxes[id].switcher.activate();
-            chatboxes[id].mark();
-            chatboxes[id].element.show();
+            chatboxes[id].activate();
         };
     }
 
@@ -105,8 +102,8 @@ $(document).ready(function() {
     function makeReceiver(room, text) {
         return function(msg) {
             if(msg.timestamp > (room.currMark || 0)) {
-                if(!chatboxes[room.id].switcher.isActive()) {
-                    chatboxes[room.id].switcher.bumpUnread();
+                if(!chatboxes[room.id].isActive()) {
+                    chatboxes[room.id].bumpUnread();
                 } else {
                     room.mark(msg.timestamp);
                 }
@@ -187,14 +184,26 @@ $(document).ready(function() {
         var switcher = makeBoxSwitcher(room.id, name);
 
         return {
-            switcher: switcher,
+            switcher: switcher, // FIXME Remove this.
             element: chatbox,
-            receive: receive,
             switchTo: switchTo(room.id),
-            mark: function() {
+            isActive: function() {
+                return switcher.isActive();
+            },
+            bumpUnread: function() {
+                switcher.bumpUnread();
+            },
+            activate: function() {
+                chatbox.show();
                 room.mark(Date.now());
                 switcher.resetUnread();
+                switcher.activate();
             },
+            deactivate: function() {
+                chatbox.hide();
+                switcher.deactivate();
+            },
+            receive: receive,
             addCall: function(c) {
                 call.addClass("disabled");
                 hangup.removeClass("disabled");
@@ -338,14 +347,26 @@ $(document).ready(function() {
         });
 
         return {
-            switcher: switcher,
+            switcher: switcher, // FIXME Remove this.
             element: chatbox,
-            receive: receive,
             switchTo: switchTo(room.id),
-            mark: function() {
+            isActive: function() {
+                return switcher.isActive();
+            },
+            bumpUnread: function() {
+                switcher.bumpUnread();
+            },
+            activate: function() {
+                chatbox.show();
                 room.mark(Date.now());
                 switcher.resetUnread();
+                switcher.activate();
             },
+            deactivate: function() {
+                chatbox.hide();
+                switcher.deactivate();
+            },
+            receive: receive,
             remove: function() {
                 room.leave();
                 switcher.remove();
@@ -453,8 +474,26 @@ $(document).ready(function() {
             onTeardownCallback();
         }
 
+        var switcher = makeBoxSwitcher(call.id, "Call with: TODO", function() {
+            call.leave("hangup");
+            stopStreams();
+        });
+
         return {
+            switcher: switcher, // FIXME Remove this.
             element: streams,
+            switchTo: switchTo(call.id),
+            isActive: function() {
+                return switcher.isActive();
+            },
+            activate: function() {
+                streams.show();
+                switcher.activate();
+            },
+            deactivate: function() {
+                streams.hide();
+                switcher.deactivate();
+            },
             join: function() {
                 call.join(localStream);
             },
@@ -469,7 +508,9 @@ $(document).ready(function() {
     }
 
     function addCall(call, stream) {
-        return makeCall(call, stream);
+        var box = makeCall(call, stream);
+        chat.add(call.id, box);
+        return box;
     }
 
     function callBuilder(session) {
