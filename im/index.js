@@ -12,7 +12,6 @@ $(document).ready(function() {
     var chat = makeChat();
     var sessionId = undefined; // FIXME Get rid of it.
     var chatboxes = {};
-    var calls = {};
 
     var newRoom = function() {};
 
@@ -213,7 +212,6 @@ $(document).ready(function() {
 
                 onHangup = function() {
                     c.leave("hangup");
-                    delete calls[c.call.id];
                 }
 
                 callBox.append(c.element);
@@ -415,7 +413,9 @@ $(document).ready(function() {
         console.log("Building a call object for: ", call);
 
         var onTeardownCallback = function() {};
-        var localBox = makeStreamBox("local-stream").prop("muted", true).prop('src', window.URL.createObjectURL(localStream));
+        var localBox = makeStreamBox("local-stream")
+            .prop("muted", true)
+            .prop('src', window.URL.createObjectURL(localStream));
         var remoteBox = makeStreamBox("remote-stream");
         var streams = makeSplitGrid([localBox, remoteBox]);
 
@@ -449,7 +449,6 @@ $(document).ready(function() {
         }
 
         return {
-            call: call,
             element: streams,
             join: function() {
                 call.join(localStream);
@@ -465,9 +464,7 @@ $(document).ready(function() {
     }
 
     function addCall(call, stream) {
-        var box = makeCall(call, stream);
-        calls[call.id] = box;
-        return box;
+        return makeCall(call, stream);
     }
 
     function callBuilder(session) {
@@ -534,7 +531,7 @@ $(document).ready(function() {
                         createStream(function(stream) {
                             session.chat.createDirectRoom(m.user).then(function(room) {
                                 var chatbox = addRoom(room, session);
-                                var callbox = addCall(m.call, stream);
+                                var callbox = makeCall(m.call, stream);
                                 callbox.join();
                                 chatbox.addCall(callbox);
                                 chatbox.switcher.switchTo();
