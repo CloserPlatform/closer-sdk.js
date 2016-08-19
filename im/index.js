@@ -53,7 +53,6 @@ $(document).ready(function() {
                 $("#chatbox-container").append(chatbox.element);
             },
             remove: function(id) {
-                room.leave();
                 chatboxes[id].remove();
                 delete chatboxes[id];
             }
@@ -71,7 +70,7 @@ $(document).ready(function() {
             switcher = makeSwitcher(room.id, [name, " ", unread], switchTo);
         } else {
             switcher = makeSwitcher(room.id, [room.name, " ", unread], switchTo, function() {
-                chat.remove(room);
+                chat.remove(room.id);
             });
         }
 
@@ -190,7 +189,7 @@ $(document).ready(function() {
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
-        });
+        }, function() {});
 
         var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
         var switcher = makeRoomSwitcher(room);
@@ -345,6 +344,7 @@ $(document).ready(function() {
             element: chatbox,
             receive: receive,
             remove: function() {
+                room.leave();
                 switcher.remove();
                 chatbox.remove();
             }
