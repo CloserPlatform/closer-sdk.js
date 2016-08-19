@@ -245,7 +245,7 @@ export class Artichoke {
         let _this = this;
         this.socket.onMessage(function(m) {
             switch (m.type) {
-            case "call_invite":
+            case "call_invited":
                 _this._runCallbacks(m.type, {
                     type: m.type,
                     user: m.user,
@@ -272,7 +272,7 @@ export class Artichoke {
 
     // Call API:
     onCall(callback) {
-        this.onEvent("call_invite", callback);
+        this.onEvent("call_invited", callback);
     }
 
     createCall(users) {
