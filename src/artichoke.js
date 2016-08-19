@@ -284,8 +284,8 @@ export class Artichoke {
         return this._wrapCall(this.rest.getCall(call));
     }
 
-    getCalls(call) {
-        return this._wrapCall(this.rest.getCalls(call));
+    getCalls() {
+        return this._wrapCall(this.rest.getCalls());
     }
 
     // Chat room API:
