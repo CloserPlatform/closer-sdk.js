@@ -116,7 +116,7 @@ function makeTextArea(className) {
 }
 
 function makeInputField(name, onClick, onKey) {
-    var field = $('<input type="text" class="form-control form-group col-sm-2">')
+    var field = $('<input type="text" class="form-control form-group">')
         .keyup(function(e) {
             if (e.keyCode == 13) {
                 onClick(field.val());
@@ -125,16 +125,18 @@ function makeInputField(name, onClick, onKey) {
                 onKey(field.val());
             }
         });
-    var button = $('<button class="btn btn-primary">')
-        .html(name)
-        .click(function() {
-            onClick(field.val());
-            field.val("");
-        });
+    var button = $('<span class="input-group-btn">').append(
+        $('<button class="btn btn-primary">')
+            .html(name)
+            .click(function() {
+                onClick(field.val());
+                field.val("");
+            }));
 
-    return $('<div class="input-field">')
-        .append(field)
-        .append(button);
+    return $('<div class="form-group input-field">').append(
+        $('<div class="input-group">')
+            .append(field)
+            .append(button));
 }
 
 function makeChatbox(id, className, controls, text, input) {
