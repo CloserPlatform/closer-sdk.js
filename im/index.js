@@ -349,7 +349,9 @@ $(document).ready(function() {
     }
 
     function addRoom(room, session) {
-        if(!(room.id in chatboxes)) {
+        if(room.id in chatboxes) {
+            return chatboxes[room.id];
+        } else {
             console.log("Adding room to the chat: ", room);
 
             var chatbox = undefined;
@@ -368,14 +370,15 @@ $(document).ready(function() {
             }).catch(function(error) {
                 console.log("Fetching room history failed: ", error);
             });
+
+            return chatbox;
         }
     }
 
     function directRoomBuilder(session) {
         return function(user) {
             session.chat.createDirectRoom(user).then(function(room) {
-                addRoom(room, session);
-                chatboxes[room.id].switcher.switchTo();
+                addRoom(room, session).switcher.switchTo();
             }).catch(function(error) {
                 console.log("Creating a direct room failed: ", error);
             });
@@ -385,9 +388,8 @@ $(document).ready(function() {
     function roomBuilder(session) {
         return function(name) {
             session.chat.createRoom("#" + name).then(function(room) {
-                addRoom(room, session);
+                addRoom(room, session).switcher.switchTo();
                 room.join();
-                chatboxes[room.id].switcher.switchTo();
             }).catch(function(error) {
                 console.log("Creating a room failed: ", error);
             });
@@ -462,6 +464,7 @@ $(document).ready(function() {
         });
         calls[call.id] = box;
         chatboxes[room.id].addCall(box);
+        return box;
     }
 
     function callBuilder(session) {
@@ -526,10 +529,8 @@ $(document).ready(function() {
                     if(confirm(m.user + " is calling, answer?")) {
                         createStream(function(stream) {
                             session.chat.createDirectRoom(m.user).then(function(room) {
-                                addRoom(room, session);
-                                addCall(room, m.call, stream);
-                                calls[m.call.id].join();
-                                chatboxes[room.id].switcher.switchTo();
+                                addRoom(room, session).switcher.switchTo();
+                                addCall(room, m.call, stream).join();
                             }).catch(function(error) {
                                 console.log("Creating direct room failed: ", error);
                             });
