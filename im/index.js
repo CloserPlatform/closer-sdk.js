@@ -58,32 +58,23 @@ $(document).ready(function() {
         };
     }
 
-    function makeRoomSwitcher(room) {
-        console.log("Building room switcher for room: ", room);
+    function makeBoxSwitcher(id, name, onClose) {
+        console.log("Building a switcher for: ", name);
 
         var unread = makeBadge();
-        var switcher = undefined;
-
-        if (room.direct) {
-            var name = room.name.slice(3).split("-").filter(function(e) { return e !== sessionId; })[0];
-            switcher = makeSwitcher(room.id, [name, " ", unread], switchTo);
-        } else {
-            switcher = makeSwitcher(room.id, [room.name, " ", unread], switchTo, function() {
-                chat.remove(room.id);
-            });
-        }
+        var switcher = makeSwitcher(id, [name, " ", unread], switchTo, onClose);
 
         function switchTo() {
-            console.log("Switching to room: " + room.name);
+            console.log("Switching to: " + name);
 
             Object.keys(chatboxes).forEach(function(id) {
                 chatboxes[id].switcher.deactivate();
                 chatboxes[id].element.hide();
             });
 
-            chatboxes[room.id].switcher.activate();
-            chatboxes[room.id].switcher.markRoom();
-            chatboxes[room.id].element.show();
+            chatboxes[id].switcher.activate();
+            chatboxes[id].mark();
+            chatboxes[id].element.show();
         }
 
         return {
@@ -97,8 +88,7 @@ $(document).ready(function() {
             deactivate: function() {
                 switcher.removeClass("active");
             },
-            markRoom: function() {
-                room.mark(Date.now());
+            resetUnread: function() {
                 unread.html("");
             },
             bumpUnread: function() {
@@ -191,12 +181,18 @@ $(document).ready(function() {
         }, function() {});
 
         var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
-        var switcher = makeRoomSwitcher(room);
+
+        var name = room.name.slice(3).split("-").filter(function(e) { return e !== sessionId; })[0]; // FIXME Don't use sessionId.
+        var switcher = makeBoxSwitcher(room.id, name);
 
         return {
             switcher: switcher,
             element: chatbox,
             receive: receive,
+            mark: function() {
+                room.mark(Date.now());
+                switcher.resetUnread();
+            },
             addCall: function(c) {
                 call.addClass("disabled");
                 hangup.removeClass("disabled");
@@ -335,12 +331,18 @@ $(document).ready(function() {
         });
 
         var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
-        var switcher = makeRoomSwitcher(room);
+        var switcher = makeBoxSwitcher(room.id, room.name, function() {
+            chat.remove(room.id);
+        });
 
         return {
             switcher: switcher,
             element: chatbox,
             receive: receive,
+            mark: function() {
+                room.mark(Date.now());
+                switcher.resetUnread();
+            },
             remove: function() {
                 room.leave();
                 switcher.remove();
