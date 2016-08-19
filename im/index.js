@@ -11,8 +11,6 @@ $(document).ready(function() {
     var loginBox = makeLoginBox();
     var chat = makeChat();
     var sessionId = undefined; // FIXME Get rid of it.
-    var roster = {};
-    var switchers = {};
     var chatboxes = {};
     var calls = {};
 
@@ -44,22 +42,18 @@ $(document).ready(function() {
 
     function makeChat() {
         console.log("Building the chat!");
-        var chat = makeChatContainer("chat", "room-list", "chatbox-container", function(room) {
-            newRoom(room);
+        var chat = makeChatContainer("chat", "room-list", "chatbox-container", function(name) {
+            newRoom(name);
         });
         return {
             element: chat,
-            add: function(room, switcher, chatbox) {
-                roster[room.id] = room;
-                switchers[room.id] = switcher;
-                $("#room-list").append(switcher.element);
+            add: function(room, chatbox) {
                 chatboxes[room.id] = chatbox;
+                $("#room-list").append(chatbox.switcher.element);
                 $("#chatbox-container").append(chatbox.element);
             },
             remove: function(room) {
                 room.leave();
-                switchers[room.id].remove();
-                delete switchers[room.id];
                 chatboxes[room.id].remove();
                 delete chatboxes[room.id];
             }
@@ -70,33 +64,27 @@ $(document).ready(function() {
         console.log("Building room switcher for room: ", room);
 
         var unread = makeBadge();
-        var name = undefined;
-        var onClose = undefined;
+        var switcher = undefined;
 
         if (room.direct) {
-            name = room.name.slice(3).split("-").filter(function(e) { return e !== sessionId; })[0];
+            var name = room.name.slice(3).split("-").filter(function(e) { return e !== sessionId; })[0];
+            switcher = makeSwitcher(room.id, [name, " ", unread], switchTo);
         } else {
-            name = room.name;
-            onClose = function() {
+            switcher = makeSwitcher(room.id, [room.name, " ", unread], switchTo, function() {
                 chat.remove(room);
-            }
+            });
         }
-
-        var switcher = makeSwitcher(room.id, [name, " ", unread], switchTo, onClose);
 
         function switchTo() {
             console.log("Switching to room: " + room.name);
 
-            Object.keys(switchers).forEach(function(id) {
-                switchers[id].deactivate();
-            });
-            var switcher = switchers[room.id];
-            switcher.activate();
-            switcher.markRoom();
-
             Object.keys(chatboxes).forEach(function(id) {
+                chatboxes[id].switcher.deactivate();
                 chatboxes[id].element.hide();
             });
+
+            chatboxes[room.id].switcher.activate();
+            chatboxes[room.id].switcher.markRoom();
             chatboxes[room.id].element.show();
         }
 
@@ -128,8 +116,8 @@ $(document).ready(function() {
     function makeReceiver(room, text) {
         return function(msg) {
             if(msg.timestamp > (room.currMark || 0)) {
-                if(!switchers[room.id].isActive()) {
-                    switchers[room.id].bumpUnread();
+                if(!chatboxes[room.id].switcher.isActive()) {
+                    chatboxes[room.id].switcher.bumpUnread();
                 } else {
                     room.mark(msg.timestamp);
                 }
@@ -205,8 +193,10 @@ $(document).ready(function() {
         });
 
         var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
+        var switcher = makeRoomSwitcher(room);
 
         return {
+            switcher: switcher,
             element: chatbox,
             receive: receive,
             addCall: function(c) {
@@ -228,6 +218,7 @@ $(document).ready(function() {
                 onHangup = function() {};
             },
             remove: function() {
+                switcher.remove();
                 chatbox.remove();
             }
         }
@@ -344,11 +335,14 @@ $(document).ready(function() {
         });
 
         var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
+        var switcher = makeRoomSwitcher(room);
 
         return {
+            switcher: switcher,
             element: chatbox,
             receive: receive,
             remove: function() {
+                switcher.remove();
                 chatbox.remove();
             }
         }
@@ -365,7 +359,7 @@ $(document).ready(function() {
             } else {
                 chatbox = makeRoomChatbox(room, directRoomBuilder(session));
             }
-            chat.add(room, makeRoomSwitcher(room), chatbox);
+            chat.add(room, chatbox);
 
             room.getHistory().then(function(msgs) {
                 msgs.forEach(function(msg) {
@@ -381,7 +375,7 @@ $(document).ready(function() {
         return function(user) {
             session.chat.createDirectRoom(user).then(function(room) {
                 addRoom(room, session);
-                switchers[room.id].switchTo();
+                chatboxes[room.id].switcher.switchTo();
             }).catch(function(error) {
                 console.log("Creating a direct room failed: ", error);
             });
@@ -393,7 +387,7 @@ $(document).ready(function() {
             session.chat.createRoom("#" + name).then(function(room) {
                 addRoom(room, session);
                 room.join();
-                switchers[room.id].switchTo();
+                chatboxes[room.id].switcher.switchTo();
             }).catch(function(error) {
                 console.log("Creating a room failed: ", error);
             });
@@ -475,7 +469,7 @@ $(document).ready(function() {
             createStream(function(stream) {
                 session.chat.createCall([user]).then(function(call) {
                     addCall(room, call, stream);
-                    switchers[room.id].switchTo();
+                    chatboxes[room.id].switcher.switchTo();
                 }).catch(function(error) {
                     console.log("Creating a call failed: ", error);
                 });
@@ -523,9 +517,7 @@ $(document).ready(function() {
                 });
 
                 session.chat.onRoom(function (msg) {
-                    if(!(msg.room.id in roster)) {
-                        addRoom(msg.room, session);
-                    }
+                    addRoom(msg.room, session);
                 });
 
                 session.chat.onCall(function(m) {
@@ -537,7 +529,7 @@ $(document).ready(function() {
                                 addRoom(room, session);
                                 addCall(room, m.call, stream);
                                 calls[m.call.id].join();
-                                switchers[room.id].switchTo();
+                                chatboxes[room.id].switcher.switchTo();
                             }).catch(function(error) {
                                 console.log("Creating direct room failed: ", error);
                             });
