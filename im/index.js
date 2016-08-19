@@ -160,10 +160,6 @@ $(document).ready(function() {
             })[0];
 
             call = makeButton("btn-success", "Call!", function() {
-                // FIXME Actually check this.
-                // if(Object.keys(calls).length > 0) {
-                //     alert("You are already calling someone!");
-                // } else {
                 if(!call.hasClass("disabled")) {
                     call.addClass("disabled");
                     hangup.removeClass("disabled");
@@ -174,7 +170,6 @@ $(document).ready(function() {
 
                     callBuilder(room, peer);
                 }
-                // }
             });
 
             hangup = makeButton("btn-danger disabled", "Hangup!", function() {
