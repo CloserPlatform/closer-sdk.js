@@ -17,8 +17,8 @@ class ArtichokeREST {
     }
 
     // Call API:
-    createCall(user) {
-        return this._post(pathcat(this.url, this.callPath), proto.CallCreate(user));
+    createCall(users) {
+        return this._post(pathcat(this.url, this.callPath), proto.CallCreate(users));
     }
 
     getCall(callId) {
@@ -125,20 +125,20 @@ class ArtichokeWS extends JSONWebSocket {
     }
 
     // Call API:
-    sendOffer(callId, sdp) {
-        this.send(proto.CallOffer(callId, sdp));
+    sendDescription(callId, userId, description) {
+        this.send(proto.RTCDescription(callId, userId, description));
     }
 
-    answerCall(callId, sdp) {
-        this.send(proto.CallAnswer(callId, sdp));
+    sendCandidate(callId, userId, candidate) {
+        this.send(proto.RTCCandidate(callId, userId, candidate));
     }
 
-    hangupCall(callId, reason) {
-        this.send(proto.CallHangup(callId, reason));
+    joinCall(callId) {
+        this.send(proto.CallJoin(callId));
     }
 
-    sendCandidate(callId, candidate) {
-        this.send(proto.CallCandidate(callId, candidate));
+    leaveCall(callId, reason) {
+        this.send(proto.CallLeave(callId, reason));
     }
 
     // Chat API:
@@ -245,16 +245,15 @@ export class Artichoke {
         let _this = this;
         this.socket.onMessage(function(m) {
             switch (m.type) {
-            case "call_created":
-                // FIXME Adjust message format in the backend.
+            case "call_invite":
                 _this._runCallbacks(m.type, {
                     type: m.type,
-                    creator: m.creator,
+                    user: m.user,
                     call: createCall(m, _this)
                 });
                 break;
 
-            case "room_created":
+            case "room_created": // FIXME Rename to room_invite.
                 _this._runCallbacks(m.type, {
                     type: m.type,
                     room: createRoom(m.room, _this)
@@ -273,11 +272,11 @@ export class Artichoke {
 
     // Call API:
     onCall(callback) {
-        this.onEvent("call_created", callback);
+        this.onEvent("call_invite", callback);
     }
 
-    createCall(user) {
-        return this._wrapCall(this.rest.createCall(user));
+    createCall(users) {
+        return this._wrapCall(this.rest.createCall(users));
     }
 
     getCall(call) {

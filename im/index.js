@@ -493,7 +493,7 @@ $(document).ready(function() {
 
     function callBuilder(session) {
         return function(room, user) {
-            session.chat.createCall(user).then(function(call) {
+            session.chat.createCall([user]).then(function(call) {
                 addCall(user, room, call);
                 switchers[room.id].switchTo();
             }).catch(function(error) {
