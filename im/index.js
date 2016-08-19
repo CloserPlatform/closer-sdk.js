@@ -405,30 +405,26 @@ $(document).ready(function() {
         }
     }
 
-    function makeCall(call, onTeardown) {
+    function createStream(callback) {
+        navigator.getUserMedia({
+            "video": true,
+            "audio": true
+        }, function(stream) {
+            console.log("Local stream started!");
+            callback(stream);
+        }, function(error) {
+            console.log("Could not start stream: ", error);
+        });
+    }
+
+    function makeCall(call, localStream, onTeardown) {
         console.log("Building a call object for: ", call);
 
-        var localStream = undefined;
-
-        var localBox = makeStreamBox("local-stream").prop("muted", true);
+        var localBox = makeStreamBox("local-stream").prop("muted", true).prop('src', window.URL.createObjectURL(localStream));
         var remoteBox = makeStreamBox("remote-stream");
-        var streams = makeSplitGrid([localBox, remoteBox]).hide();
+        var streams = makeSplitGrid([localBox, remoteBox]);
 
-        function createLocalStream(callback) {
-            navigator.getUserMedia({
-                "video": true,
-                "audio": true
-            }, function(stream) {
-                console.log("Local stream started!");
-                localStream = stream;
-                localBox.prop('src', window.URL.createObjectURL(stream));
-                streams.show();
-
-                callback(stream);
-            }, function(error) {
-                console.log("Could not start stream: " + error);
-            });
-        }
+        call.addLocalStream(localStream);
 
         call.onRemoteStream(function(user, stream) {
             console.log("Remote stream for user " + user +  " started!");
@@ -460,15 +456,8 @@ $(document).ready(function() {
         return {
             call: call,
             element: streams,
-            createStream: function() {
-                createLocalStream(function(stream) {
-                    call.addStream(stream);
-                });
-            },
             join: function() {
-                createLocalStream(function(stream) {
-                    call.join(stream);
-                });
+                call.join(localStream);
             },
             leave: function(reason) {
                 call.leave(reason);
@@ -477,8 +466,8 @@ $(document).ready(function() {
         }
     }
 
-    function addCall(room, call) {
-        var box = makeCall(call, function() {
+    function addCall(room, call, stream) {
+        var box = makeCall(call, stream, function() {
             chatboxes[room.id].removeCall();
             delete calls[call.id];
         });
@@ -488,12 +477,13 @@ $(document).ready(function() {
 
     function callBuilder(session) {
         return function(room, user) {
-            session.chat.createCall([user]).then(function(call) {
-                addCall(room, call);
-                calls[call.id].createStream();
-                switchers[room.id].switchTo();
-            }).catch(function(error) {
-                console.log("Creating a call failed: ", error);
+            createStream(function(stream) {
+                session.chat.createCall([user]).then(function(call) {
+                    addCall(room, call, stream);
+                    switchers[room.id].switchTo();
+                }).catch(function(error) {
+                    console.log("Creating a call failed: ", error);
+                });
             });
         }
     }
@@ -547,13 +537,15 @@ $(document).ready(function() {
                     console.log("Received call offer: ", m);
 
                     if(confirm(m.user + " is calling, answer?")) {
-                        session.chat.createDirectRoom(m.user).then(function(room) {
-                            addRoom(room, session);
-                            addCall(room, m.call);
-                            calls[m.call.id].join();
-                            switchers[room.id].switchTo();
-                        }).catch(function(error) {
-                            console.log("Creating direct room failed: ", error);
+                        createStream(function(stream) {
+                            session.chat.createDirectRoom(m.user).then(function(room) {
+                                addRoom(room, session);
+                                addCall(room, m.call, stream);
+                                calls[m.call.id].join();
+                                switchers[room.id].switchTo();
+                            }).catch(function(error) {
+                                console.log("Creating direct room failed: ", error);
+                            });
                         });
                     } else {
                         console.log("Rejecting call...");

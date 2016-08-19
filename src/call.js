@@ -6,7 +6,6 @@ class Call {
         this.id = call.id;
         this.log = artichoke.log;
         this.artichoke = artichoke;
-
         this.localStream = undefined;
 
         this.pool = new RTCPool(this.id, artichoke);
@@ -23,12 +22,12 @@ class Call {
         });
     }
 
-    addStream(stream) {
+    addLocalStream(stream) {
         this.localStream = stream;
     }
 
     join(stream) {
-        this.addStream(stream);
+        this.addLocalStream(stream);
         this.artichoke.socket.joinCall(this.id);
     }
 
