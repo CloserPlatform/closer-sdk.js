@@ -119,41 +119,22 @@ $(document).ready(function() {
     function makeDirectChatbox(room, callBuilder) {
         console.log("Building direct chatbox: ", room);
 
-        var call = undefined;
-        var hangup = undefined;
-        var panel = makePanel();
-        var onHangup = function () {};
+        // FIXME 2hacky4me
+        var peer = room.name.slice(3).split("-").filter(function(e) { return e !== sessionId; })[0]; // FIXME Don't use sessionId.
 
-        room.getUsers().then(function(list) {
-            var peer = list.users.filter(function(u) {
-                return u != sessionId;
-            })[0];
-
-            call = makeButton("btn-success", "Call!", function() {
-                if(!call.hasClass("disabled")) {
-                    call.addClass("disabled");
-                    hangup.removeClass("disabled");
-                    callBuilder(room, peer);
-                }
-            });
-
-            hangup = makeButton("btn-danger disabled", "Hangup!", function() {
-                if(!hangup.hasClass("disabled")) {
-                    onHangup();
-                }
-            });
-
-            var row = makeButtonGroup()
-                .append(call)
-                .append(hangup);
-
-            panel.append(row);
-        }).catch(function(error) {
-            console.log("Fetching user list failed: ", error);
+        var call = makeButton("btn-success", "Call!", function() {
+            if(!call.hasClass("disabled")) {
+                call.addClass("disabled");
+                callBuilder(room, peer);
+            }
         });
 
+        var label = makeLabel(room.id, "Direct chat with " + peer);
+        var controls = makeButtonGroup().append(call).addClass('pull-right');
+        var panel = makePanel().append([label, controls]);
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
+
         room.onMessage(receive);
 
         var input = makeInputField("Send!", function(input) {
@@ -170,9 +151,7 @@ $(document).ready(function() {
         }, function() {});
 
         var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
-
-        var name = room.name.slice(3).split("-").filter(function(e) { return e !== sessionId; })[0]; // FIXME Don't use sessionId.
-        var switcher = makeBoxSwitcher(room.id, name);
+        var switcher = makeBoxSwitcher(room.id, peer);
 
         return {
             switcher: switcher, // FIXME Remove this.
@@ -197,17 +176,10 @@ $(document).ready(function() {
             receive: receive,
             addCall: function(callbox) {
                 call.addClass("disabled");
-                hangup.removeClass("disabled");
 
                 callbox.onTeardown(function() {
                     call.removeClass("disabled");
-                    hangup.addClass("disabled");
-                    onHangup = function() {};
                 });
-
-                onHangup = function() {
-                    callbox.leave("hangup");
-                }
             },
             remove: function() {
                 switcher.remove();
@@ -428,8 +400,15 @@ $(document).ready(function() {
         };
         var grid = makeDiv();
         var gridWrapper = makeDiv().append(grid);
-        var callbox = makeCallbox(call.id, "callbox", gridWrapper);
+
+        var hangup = makeButton("btn-danger", "Hangup!", function() {
+            endCall("hangup");
+        });
+
+        var controls = makePanel().append(makeButtonGroup().append(hangup));
+        var callbox = makeCallbox(call.id, "callbox", gridWrapper, controls);
         var onTeardownCallback = function() {};
+
         call.addLocalStream(localStream);
 
         call.onRemoteStream(function(user, stream) {

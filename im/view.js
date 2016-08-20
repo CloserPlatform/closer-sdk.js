@@ -37,8 +37,7 @@ function makeChatContainer(id, listId, chatsId, onJoin) {
     var panel = makePanel().append(list);
     var rooms = $('<div>').addClass('col-lg-2').append([panel, makeInputField('Join!', onJoin, function() {})]);
     var container = $('<div>').prop({
-        id: chatsId,
-        class: 'container-fluid'
+        id: chatsId
     });
 
     var chatbox = $('<div>').addClass('col-lg-8').append(container);
@@ -174,17 +173,23 @@ function makeStreamBox(id, name, stream, muted) {
             src: window.URL.createObjectURL(stream)
         });
 
-    return $('<div>').append([makeLabel(id, name), video]);
+    return $('<div>').addClass('stream-wrapper').append([makeLabel(id, name), $('<br>'), video]);
 }
 
 function makeSplitGrid(contents) {
     var row = $('<div>').addClass('row');
-    contents.forEach(function(content) {
-        var col = $('<div>')
-            .addClass('col-lg-' + Math.floor(12 / contents.length))
-            .append(content);
-        row.append(col);
-    });
+    if (contents.length === 1) {
+        row.append($('<div>')
+                   .addClass('col-lg-8 col-lg-offset-2')
+                   .append(contents))
+    } else {
+        contents.forEach(function(content) {
+            var col = $('<div>')
+                .addClass('col-lg-' + Math.floor(12 / contents.length))
+                .append(content);
+            row.append(col);
+        });
+    }
     return row;
 }
 
@@ -192,11 +197,11 @@ function makeDiv() {
     return $('<div>');
 }
 
-function makeCallbox(id, className, streams) {
+function makeCallbox(id, className, streams, controls) {
     return $('<div>')
         .prop({
             id: id,
             class: className
         })
-        .append(streams);
+        .append([streams, controls]);
 }
