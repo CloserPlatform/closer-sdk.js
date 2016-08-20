@@ -530,7 +530,7 @@ $(document).ready(function() {
             "url": server,
             "debug": true
         }).then(function(session) {
-            $('#demo-name').html(sessionId);
+            $('#demo-name').html("Ratel IM - " + sessionId);
 
             newRoom = roomBuilder(session);
 
