@@ -34,7 +34,7 @@ function makeChatContainer(id, listId, chatsId, onJoin) {
         id: listId,
         class: 'nav nav-pills nav-stacked'
     });
-    var panel = makePanel().append(list);
+    var panel = makePanel().addClass('switcher-wrapper').append(list);
     var rooms = $('<div>').addClass('col-lg-2').append([panel, makeInputField('Join!', onJoin, function() {})]);
     var container = $('<div>').prop({
         id: chatsId
