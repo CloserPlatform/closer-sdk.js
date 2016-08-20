@@ -121,11 +121,7 @@ $(document).ready(function() {
 
         var call = undefined;
         var hangup = undefined;
-
-        var callBox = makeDiv();
-        var panel = makePanel().append(callBox);
-
-        var onAddCall = function() {};
+        var panel = makePanel();
         var onHangup = function () {};
 
         room.getUsers().then(function(list) {
@@ -137,11 +133,6 @@ $(document).ready(function() {
                 if(!call.hasClass("disabled")) {
                     call.addClass("disabled");
                     hangup.removeClass("disabled");
-
-                    onAddCall = function(c) {
-                        c.join();
-                    }
-
                     callBuilder(room, peer);
                 }
             });
@@ -204,25 +195,19 @@ $(document).ready(function() {
                 switcher.deactivate();
             },
             receive: receive,
-            addCall: function(c) {
+            addCall: function(callbox) {
                 call.addClass("disabled");
                 hangup.removeClass("disabled");
 
-                c.onTeardown(function() {
+                callbox.onTeardown(function() {
                     call.removeClass("disabled");
                     hangup.addClass("disabled");
-                    callBox.html("");
-
-                    onAddCall = function() {};
                     onHangup = function() {};
                 });
 
                 onHangup = function() {
-                    c.leave("hangup");
+                    callbox.leave("hangup");
                 }
-
-                callBox.append(c.element);
-                onAddCall(c);
             },
             remove: function() {
                 switcher.remove();
@@ -343,6 +328,7 @@ $(document).ready(function() {
 
         var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
         var switcher = makeBoxSwitcher(room.id, room.name, function() {
+            room.leave();
             chat.remove(room.id);
         });
 
@@ -368,7 +354,6 @@ $(document).ready(function() {
             },
             receive: receive,
             remove: function() {
-                room.leave();
                 switcher.remove();
                 chatbox.remove();
             }
@@ -444,28 +429,33 @@ $(document).ready(function() {
             .prop('src', window.URL.createObjectURL(localStream));
         var remoteBox = makeStreamBox("remote-stream");
         var streams = makeSplitGrid([localBox, remoteBox]);
+        var callbox = makeCallbox(call.id, "callbox", streams);
 
         call.addLocalStream(localStream);
 
         call.onRemoteStream(function(user, stream) {
             console.log("Remote stream for user " + user +  " started!");
             remoteBox.prop('src', window.URL.createObjectURL(stream));
-            streams.show();
         });
 
         call.onLeft(function(m) {
             console.log("User left the call: ", m);
             alert("Call ended, reason: " + m.reason);
-            stopStreams();
-            call.leave("ended");
+            endCall("ended");
         });
 
         call.onJoined(function(m) {
             console.log("User joined the call: ", m);
         });
 
+        function endCall(reason) {
+            call.leave(reason);
+            stopStreams();
+            chat.remove(call.id);
+        }
+
         function stopStreams() {
-            streams.hide();
+            callbox.hide();
             if(localStream) {
                 if(localStream.stop) localStream.stop();
                 else localStream.getTracks().map(function(t) { t.stop(); });
@@ -474,35 +464,36 @@ $(document).ready(function() {
             onTeardownCallback();
         }
 
-        var switcher = makeBoxSwitcher(call.id, "Call with: TODO", function() {
-            call.leave("hangup");
-            stopStreams();
+        // FIXME Use a proper name instead of call.id
+        var switcher = makeBoxSwitcher(call.id, call.id, function() {
+            endCall("closed");
         });
 
         return {
             switcher: switcher, // FIXME Remove this.
-            element: streams,
+            element: callbox,
             switchTo: switchTo(call.id),
             isActive: function() {
                 return switcher.isActive();
             },
             activate: function() {
-                streams.show();
+                callbox.show();
                 switcher.activate();
             },
             deactivate: function() {
-                streams.hide();
+                callbox.hide();
                 switcher.deactivate();
             },
             join: function() {
                 call.join(localStream);
             },
-            leave: function(reason) {
-                call.leave(reason);
-                stopStreams();
-            },
+            leave: endCall,
             onTeardown: function(callback) {
                 onTeardownCallback = callback;
+            },
+            remove: function() {
+                callbox.remove();
+                switcher.remove();
             }
         }
     }
@@ -517,9 +508,9 @@ $(document).ready(function() {
         return function(room, user) {
             createStream(function(stream) {
                 session.chat.createCall([user]).then(function(call) {
-                    var chatbox = chatboxes[room.id];
-                    chatbox.addCall(addCall(call, stream));
-                    chatbox.switchTo();
+                    var box = addCall(call, stream);
+                    chatboxes[room.id].addCall(box);
+                    box.switchTo();
                 }).catch(function(error) {
                     console.log("Creating a call failed: ", error);
                 });
@@ -572,24 +563,18 @@ $(document).ready(function() {
 
                 session.chat.onCall(function(m) {
                     console.log("Received call offer: ", m);
-
                     if(confirm(m.user + " is calling, answer?")) {
                         createStream(function(stream) {
-                            session.chat.createDirectRoom(m.user).then(function(room) {
-                                var chatbox = addRoom(room, session);
-                                var callbox = makeCall(m.call, stream);
-                                callbox.join();
-                                chatbox.addCall(callbox);
-                                chatbox.switchTo();
-                            }).catch(function(error) {
-                                console.log("Creating direct room failed: ", error);
-                            });
+                            var callbox = addCall(m.call, stream);
+                            callbox.join();
+                            callbox.switchTo();
                         });
                     } else {
                         console.log("Rejecting call...");
                         m.call.reject(m);
                     }
                 });
+
             });
 
             session.chat.connect();

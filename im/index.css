@@ -28,7 +28,7 @@ body {
     text-align: center;
 }
 
-#chat, #chat > div, #chatbox-container, .chatbox {
+#chat, #chat > div, #chatbox-container, .chatbox, .callbox {
     height: 100%;
 }
 
