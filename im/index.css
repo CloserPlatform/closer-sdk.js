@@ -1,15 +1,35 @@
+html, body {
+    overflow: hidden;
+    height: 100%;
+}
+
 body {
     padding-top: 50px;
 }
 
-.login-form {
-    text-align: center;
+.body-wrap {
+    overflow: auto;
+    height: 100%;
+}
+
+.container-full {
+    margin: 0 auto;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
 #page-contents {
     margin-top: 40px;
     height: 100%;
-    width: 100%;
+}
+
+#login-box {
+    text-align: center;
+}
+
+#chat, #chat > div, #chatbox-container, .chatbox {
+    height: 100%;
 }
 
 #room-list {
@@ -28,11 +48,6 @@ body {
     content: " ✓";
 }
 
-.panel {
-    margin-bottom: 10px;
-    border: none;
-}
-
 .chatbox-textarea {
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -41,7 +56,7 @@ body {
     overflow: auto;
     padding: 2px;
     width: 100%;
-    height: 300px;
+    height: 80%;
     margin-bottom: 10px;
 }
 

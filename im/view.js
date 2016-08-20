@@ -1,48 +1,48 @@
 function makeLoginForm(id, onClick) {
-    var form =
-      `
-        <form>
-            <div class="row">
-                <div class="col-lg-2 col-lg-offset-5" style="text-align:left">
-                    <div class="form-group">
-                        <label for="server">Server:</label>
-                        <input id="server" type="text" class="form-control" value="artichoke.ratel.io">
-                        <br>
-                    </div>
-                    <div class="form-group">
-                        <label for="session-id">Name:</label>
-                        <input id="session-id" type="text" class="form-control" placeholder="Nickname">
-                        <br>
-                    </div>
-                </div>
-            </div>
-        </form>
-      `;
+    var form = $('<form>')
+        .css('text-align', "left")
+        .append([makeInput("server", "Server:", "Server", "artichoke.ratel.io"),
+                 makeInput("session-id", "Name:", "Nickname")]);
 
-    var button = $('<button class="btn btn-primary">')
-        .html("Login!")
-        .click(onClick);
-
-    return $('<div id="' + id + '" class="login-form">')
-        .append(form)
-        .append(button)
+    return $('<div>')
+        .prop({
+            id: id,
+            class: "col-lg-2 col-lg-offset-5"
+        })
+        .append([form, makeButton("btn-primary", "Login!", onClick)])
         .hide();
 }
 
+function makeInput(id, name, placeholder, value) {
+    var label = $('<label>').prop('for', id).append(name);
+    var input = $('<input>')
+        .prop({
+            id: id,
+            type: "text",
+            class: "form-control",
+            placeholder: placeholder,
+            value: value || ""
+        });
+    return $('<div>').addClass("form-group").append([label, input]);
+}
+
 function makeChatContainer(id, listId, chatsId, onJoin) {
-    var controls = makeInputField("Join!", onJoin, function() {});
-    var list = $('<ul id="' + listId + '" class="nav nav-pills nav-stacked">');
-    var rooms = $('<div class="col-lg-3">')
-        .append(list)
-        .append(controls);
-    var container = $('<div class="container-fluid" id="' + chatsId + '">');
-    var chatbox = $('<div class="col-lg-9">').append(container);
-    var row = $('<div class="row">')
-        .append(rooms)
-        .append(chatbox);
+    var list = $('<ul>').prop({
+        id: listId,
+        class: "nav nav-pills nav-stacked"
+    });
+    var panel = makePanel().append(list);
+
+    var rooms = $('<div>').addClass('col-lg-2').append([panel, makeInputField("Join!", onJoin, function() {})]);
+
+    var container = $('<div>').prop({
+        id: chatsId,
+        class: "container-fluid"
+    });
+    var chatbox = $('<div>').addClass('col-lg-8').append(container);
 
     return $('<div id="' + id + '">')
-        .append(row)
+        .append([rooms, chatbox])
         .hide();
 }
 
@@ -84,7 +84,7 @@ function makePill(className, contents, onClick) {
 }
 
 function makePanel() {
-    return $('<div class="panel">');
+    return $('<div>').addClass('well well-sm');
 }
 
 function makePills(className) {
@@ -148,7 +148,11 @@ function makeChatbox(id, className, controls, text, input) {
 
 function makeButton(className, contents, onClick) {
     return $('<button type="button" class="btn ' + className + '">')
-        .html(contents)
+        .prop({
+            type: "button",
+            class: "btn " + className
+        })
+        .append(contents)
         .click(onClick);
 }
 
