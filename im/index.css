@@ -28,12 +28,20 @@ body {
     text-align: center;
 }
 
-#chat, #chat > div, #chatbox-container, .chatbox, .callbox {
+#chat, #chat > div, .chatbox, .callbox {
+    height: 100%;
+}
+
+#room-list, #chatbox-container, #controls-container {
     height: 100%;
 }
 
 #room-list {
     margin-bottom: 10px
+}
+
+.avatar {
+    width: 90%;
 }
 
 .info {
@@ -48,8 +56,14 @@ body {
     content: " ✓";
 }
 
+.controls-wrapper {
+    max-height: 100%;
+}
+
 .switcher-wrapper {
-    min-height: 50%;
+    max-height: 90%;
+    margin-bottom: 10px;
+    overflow: auto;
 }
 
 .chatbox-textarea {
@@ -60,13 +74,13 @@ body {
     overflow: auto;
     padding: 2px;
     width: 100%;
-    height: 80%;
+    height: 90%;
     margin-bottom: 10px;
 }
 
 .stream-wrapper {
     width: 100%;
-    height: 80%;
+    height: 90%;
 }
 
 .video-stream {

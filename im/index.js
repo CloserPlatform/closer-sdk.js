@@ -41,14 +41,15 @@ $(document).ready(function() {
 
     function makeChat() {
         console.log("Building the chat!");
-        var chat = makeChatContainer("chat", "room-list", "chatbox-container", function(name) {
+        var chat = makeChatContainer("chat", "room-list", "chatbox-container", "controls-container", function(name) {
             newRoom(name);
-        });
+        }).hide();
         return {
             element: chat,
             add: function(id, chatbox) {
                 chatboxes[id] = chatbox;
                 $("#room-list").append(chatbox.switcher.element);
+                $("#controls-container").append(chatbox.controls);
                 $("#chatbox-container").append(chatbox.element);
             },
             remove: function(id) {
@@ -129,9 +130,11 @@ $(document).ready(function() {
             }
         });
 
-        var label = makeLabel(room.id, "Direct chat with " + peer);
-        var controls = makeButtonGroup().append(call).addClass('pull-right');
-        var panel = makePanel().append([label, controls]);
+        var avatar = makeAvatar('avatar', "http://vignette2.wikia.nocookie.net/creepypasta/images/4/4b/1287666826226.png");
+        var label = makeLabel(room.id, peer);
+        var buttons = makeButtonGroup().append(call);
+        var controls = makePanel().addClass('text-center').append([avatar, makeLineBreak(), label, makeLineBreak(), buttons]);
+
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
 
@@ -150,12 +153,13 @@ $(document).ready(function() {
             });
         }, function() {});
 
-        var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
+        var chatbox = makeChatbox(room.id, "chatbox", text, input).hide();
         var switcher = makeBoxSwitcher(room.id, peer);
 
         return {
-            switcher: switcher, // FIXME Remove this.
             element: chatbox,
+            switcher: switcher, // FIXME Remove this.
+            controls: controls,
             switchTo: switchTo(room.id),
             isActive: function() {
                 return switcher.isActive();
@@ -165,18 +169,19 @@ $(document).ready(function() {
             },
             activate: function() {
                 chatbox.show();
+                controls.show();
                 room.mark(Date.now());
                 switcher.resetUnread();
                 switcher.activate();
             },
             deactivate: function() {
                 chatbox.hide();
+                controls.hide();
                 switcher.deactivate();
             },
             receive: receive,
             addCall: function(callbox) {
                 call.addClass("disabled");
-
                 callbox.onTeardown(function() {
                     call.removeClass("disabled");
                 });
@@ -184,6 +189,7 @@ $(document).ready(function() {
             remove: function() {
                 switcher.remove();
                 chatbox.remove();
+                controls.remove();
             }
         }
     }
@@ -192,8 +198,8 @@ $(document).ready(function() {
         console.log("Building chatbox for room: ", room);
 
         var userList = {};
-        var users = makePills("chatbox-users");
-        var panel = makePanel().append(users);
+        var users = makePills("nav-stacked chatbox-users");
+        var controls = makePanel().append(users);
 
         function renderUsers(list) {
             users.html("");
@@ -298,15 +304,16 @@ $(document).ready(function() {
             }
         });
 
-        var chatbox = makeChatbox(room.id, "chatbox", panel, text, input).hide();
+        var chatbox = makeChatbox(room.id, "chatbox", text, input).hide();
         var switcher = makeBoxSwitcher(room.id, room.name, function() {
             room.leave();
             chat.remove(room.id);
         });
 
         return {
-            switcher: switcher, // FIXME Remove this.
             element: chatbox,
+            switcher: switcher, // FIXME Remove this.
+            controls: controls,
             switchTo: switchTo(room.id),
             isActive: function() {
                 return switcher.isActive();
@@ -316,18 +323,21 @@ $(document).ready(function() {
             },
             activate: function() {
                 chatbox.show();
+                controls.show();
                 room.mark(Date.now());
                 switcher.resetUnread();
                 switcher.activate();
             },
             deactivate: function() {
                 chatbox.hide();
+                controls.hide();
                 switcher.deactivate();
             },
             receive: receive,
             remove: function() {
                 switcher.remove();
                 chatbox.remove();
+                controls.remove();
             }
         }
     }
@@ -454,11 +464,14 @@ $(document).ready(function() {
             endCall("closed");
         });
 
+        var controls = ""; // FIXME Add user list.
+
         renderStreams();
 
         return {
-            switcher: switcher, // FIXME Remove this.
             element: callbox,
+            switcher: switcher, // FIXME Remove this.
+            controls: controls,
             switchTo: switchTo(call.id),
             isActive: function() {
                 return switcher.isActive();

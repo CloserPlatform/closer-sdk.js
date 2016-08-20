@@ -29,20 +29,25 @@ function makeInput(id, name, placeholder, value) {
     return $('<div>').addClass('form-group').append([makeLabel(id, name), input]);
 }
 
-function makeChatContainer(id, listId, chatsId, onJoin) {
+function makeChatContainer(id, switcherId, chatboxesId, controlsId, onJoin) {
     var list = $('<ul>').prop({
-        id: listId,
+        id: switcherId,
         class: 'nav nav-pills nav-stacked'
     });
     var panel = makePanel().addClass('switcher-wrapper').append(list);
-    var rooms = $('<div>').addClass('col-lg-2').append([panel, makeInputField('Join!', onJoin, function() {})]);
-    var container = $('<div>').prop({
-        id: chatsId
+    var switchers = $('<div>').addClass('col-lg-2').append([panel, makeInputField('Join!', onJoin, function() {})]);
+    var chatboxesContainer = $('<div>').prop({
+        id: chatboxesId
     });
+    var chatboxes = $('<div>').addClass('col-lg-8').append(chatboxesContainer);
 
-    var chatbox = $('<div>').addClass('col-lg-8').append(container);
+    var controlsContainer = $('<div>').prop({
+        id: controlsId,
+        class: 'controls-wrapper'
+    });
+    var controls = $('<div>').addClass('col-lg-2').append(controlsContainer);
 
-    return $('<div>').prop('id', id).append([rooms, chatbox]).hide();
+    return $('<div>').prop('id', id).append([switchers, chatboxes, controls]);
 }
 
 function makeAnchor(className, contents, onClick) {
@@ -140,13 +145,13 @@ function makeInputField(name, onClick, onKey) {
         .append($('<div>').addClass('input-group') .append([field, button]));
 }
 
-function makeChatbox(id, className, controls, text, input) {
+function makeChatbox(id, className, text, input) {
     return $('<div>')
         .prop({
             id: id,
             class: className
         })
-        .append([controls, text, input]);
+        .append([text, input]);
 }
 
 function makeButton(className, contents, onClick) {
@@ -204,4 +209,15 @@ function makeCallbox(id, className, streams, controls) {
             class: className
         })
         .append([streams, controls]);
+}
+
+function makeLineBreak() {
+    return $('<br>');
+}
+
+function makeAvatar(className, url) {
+    return $('<img>').prop({
+        src: url,
+        class: className
+    });
 }
