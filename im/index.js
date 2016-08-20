@@ -423,25 +423,26 @@ $(document).ready(function() {
     function makeCall(call, localStream) {
         console.log("Building a call object for: ", call);
 
+        var streams = {
+            "You": localStream
+        };
+        var grid = makeDiv();
+        var gridWrapper = makeDiv().append(grid);
+        var callbox = makeCallbox(call.id, "callbox", gridWrapper);
         var onTeardownCallback = function() {};
-        var localBox = makeStreamBox("local-stream")
-            .prop("muted", true)
-            .prop('src', window.URL.createObjectURL(localStream));
-        var remoteBox = makeStreamBox("remote-stream");
-        var streams = makeSplitGrid([localBox, remoteBox]);
-        var callbox = makeCallbox(call.id, "callbox", streams);
-
         call.addLocalStream(localStream);
 
         call.onRemoteStream(function(user, stream) {
             console.log("Remote stream for user " + user +  " started!");
-            remoteBox.prop('src', window.URL.createObjectURL(stream));
+            streams[user] = stream;
+            renderStreams();
         });
 
         call.onLeft(function(m) {
             console.log("User left the call: ", m);
-            alert("Call ended, reason: " + m.reason);
-            endCall("ended");
+            alert("User " + m.user + " left the call: " + m.reason);
+            delete streams[m.user];
+            renderStreams();
         });
 
         call.onJoined(function(m) {
@@ -451,23 +452,30 @@ $(document).ready(function() {
         function endCall(reason) {
             call.leave(reason);
             stopStreams();
+            onTeardownCallback();
             chat.remove(call.id);
+        }
+
+        function renderStreams() {
+            grid.remove();
+            grid = makeSplitGrid(Object.keys(streams).map(function(user) {
+                return makeStreamBox(user, user + ":", localStream, user === "You");
+            }));
+            gridWrapper.append(grid);
         }
 
         function stopStreams() {
             callbox.hide();
-            if(localStream) {
-                if(localStream.stop) localStream.stop();
-                else localStream.getTracks().map(function(t) { t.stop(); });
-                localStream = undefined;
-            };
-            onTeardownCallback();
+            if(localStream.stop) localStream.stop();
+            else localStream.getTracks().map(function(t) { t.stop(); });
         }
 
         // FIXME Use a proper name instead of call.id
         var switcher = makeBoxSwitcher(call.id, call.id, function() {
             endCall("closed");
         });
+
+        renderStreams();
 
         return {
             switcher: switcher, // FIXME Remove this.

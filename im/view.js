@@ -13,8 +13,11 @@ function makeLoginForm(id, onClick) {
         .hide();
 }
 
+function makeLabel(id, name) {
+    return $('<label>').prop('for', id).append(name);
+}
+
 function makeInput(id, name, placeholder, value) {
-    var label = $('<label>').prop('for', id).append(name);
     var input = $('<input>')
         .prop({
             id: id,
@@ -23,7 +26,7 @@ function makeInput(id, name, placeholder, value) {
             placeholder: placeholder,
             value: value || ""
         });
-    return $('<div>').addClass('form-group').append([label, input]);
+    return $('<div>').addClass('form-group').append([makeLabel(id, name), input]);
 }
 
 function makeChatContainer(id, listId, chatsId, onJoin) {
@@ -161,12 +164,17 @@ function makeButtonGroup() {
     return $('<div>').addClass('btn-group');
 }
 
-function makeStreamBox(className) {
-    return $('<video>')
+function makeStreamBox(id, name, stream, muted) {
+    var video = $('<video>')
         .prop({
-            class: 'video-stream ' + className,
-            autoplay: true
+            id: id,
+            class: 'video-stream',
+            autoplay: true,
+            muted: muted,
+            src: window.URL.createObjectURL(stream)
         });
+
+    return $('<div>').append([makeLabel(id, name), video]);
 }
 
 function makeSplitGrid(contents) {
