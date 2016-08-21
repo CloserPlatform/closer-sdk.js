@@ -15,7 +15,10 @@ $(document).ready(function() {
 
     var newRoom = function() {};
 
-    var killSwitch = $("#kill-switch").submit(function() { return false; }).hide();
+    var status = "available";
+    var statusSwitch = $("#status-switch").click(function() { return false; }).html("Status: " + status).hide();
+
+    var killSwitch = $("#kill-switch").click(function() { return false; }).hide();
     $('#demo-name').click(function() {
         killSwitch.show();
     });
@@ -598,6 +601,7 @@ $(document).ready(function() {
             "debug": true
         }).then(function(session) {
             $('#demo-name').html("Ratel IM - " + sessionId);
+            statusSwitch.show();
 
             newRoom = roomBuilder(session);
 
@@ -614,6 +618,14 @@ $(document).ready(function() {
                     session.chat.socket.leaveCall(null, null);
                 });
 
+                statusSwitch.click(function() {
+                    statusSwitch.toggleClass(status === "available" ? "btn-success" : "btn-info");
+                    status = status === "available" ? "away" : "available";
+                    statusSwitch.toggleClass(status === "available" ? "btn-success" : "btn-info");
+                    statusSwitch.html("Status: " + status);
+                    session.chat.setStatus(status);
+                });
+
                 session.chat.getRoster().then(function(rooms) {
                     console.log("Roster: ", rooms);
                     rooms.forEach(function(room) {
@@ -625,10 +637,10 @@ $(document).ready(function() {
                     console.log("Fetching roster failed:", error);
                 });
 
-                session.chat.onEvent("presence", function(m) {
-                    console.log("User " + m.sender + " is " + m.status + "!");
+                session.chat.onStatusChange(function(m) {
+                    console.log("User " + m.user + " is " + m.status + "!");
                     Object.keys(chatboxes).forEach(function(k) {
-                        chatboxes[k].onStatus(m.sender, m.status);
+                        chatboxes[k].onStatus(m.user, m.status);
                     });
                 });
 

@@ -35,6 +35,13 @@ export const Mark = (room, timestamp) => ({
     timestamp
 });
 
+export const Presence = (sender, status, timestamp) => ({
+    type: "presence",
+    sender,
+    status,
+    timestamp
+});
+
 export const RoomCreate = (name) => ({
     type: "room_create",
     name
