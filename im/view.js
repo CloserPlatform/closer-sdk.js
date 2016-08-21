@@ -34,7 +34,7 @@ function makeChatContainer(id, switcherId, chatboxesId, controlsId, onJoin) {
         id: switcherId,
         class: 'nav nav-pills nav-stacked'
     });
-    var panel = makePanel().addClass('switcher-wrapper').append(list);
+    var panel = makePanel(list).addClass('switcher-wrapper');
     var switchers = $('<div>').addClass('col-lg-2').append([panel, makeInputField('Join!', onJoin, function() {})]);
     var chatboxesContainer = $('<div>').prop({
         id: chatboxesId
@@ -81,8 +81,9 @@ function makePill(className, contents, onClick) {
     return $('<li>').addClass(className).append(makeAnchor("", contents, onClick));
 }
 
-function makePanel() {
-    return $('<div>').addClass('well well-sm');
+function makePanel(contents) {
+    var body = $('<div>').addClass('panel-body').append(contents);
+    return $('<div>').addClass('panel panel-default').append([body]);
 }
 
 function makePills(className) {
@@ -106,7 +107,7 @@ function makeTextLine(id, className, timestamp, string) {
 }
 
 function makeTextArea(className) {
-    var text = $('<div>').addClass(className);
+    var text = $('<div>').addClass('panel panel-default ' + className);
 
     text.bind('scroll-to-bottom', function(event) {
         var area = text.get()[0];

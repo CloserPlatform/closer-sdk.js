@@ -133,7 +133,7 @@ $(document).ready(function() {
         var avatar = makeAvatar('avatar', "http://vignette2.wikia.nocookie.net/creepypasta/images/4/4b/1287666826226.png");
         var label = makeLabel(room.id, peer);
         var buttons = makeButtonGroup().append(call);
-        var controls = makePanel().addClass('text-center').append([avatar, makeLineBreak(), label, makeLineBreak(), buttons]);
+        var controls = makePanel([avatar, makeLineBreak(), label, makeLineBreak(), buttons]).addClass('text-center').hide();
 
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
@@ -199,7 +199,7 @@ $(document).ready(function() {
 
         var userList = {};
         var users = makePills("nav-stacked chatbox-users");
-        var controls = makePanel().append(users);
+        var controls = makePanel(users);
 
         function renderUsers(list) {
             users.html("");
@@ -415,7 +415,7 @@ $(document).ready(function() {
             endCall("hangup");
         });
 
-        var controls = makePanel().append(makeButtonGroup().append(hangup));
+        var controls = makePanel(makeButtonGroup().append(hangup));
         var callbox = makeCallbox(call.id, "callbox", gridWrapper, controls);
         var onTeardownCallback = function() {};
 
