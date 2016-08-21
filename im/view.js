@@ -179,7 +179,7 @@ function makeStreamBox(id, name, stream, muted) {
             src: window.URL.createObjectURL(stream)
         });
 
-    return $('<div>').addClass('stream-wrapper').append([makeLabel(id, name), $('<br>'), video]);
+    return makePanel([makeLabel(id, name), $('<br>'), video]).addClass('stream-wrapper');
 }
 
 function makeSplitGrid(contents) {
