@@ -422,10 +422,6 @@ $(document).ready(function() {
         var grid = makeDiv();
         var gridWrapper = makeDiv().append(grid);
 
-        var hangup = makeButton("btn-danger", "Hangup!", function() {
-            endCall("hangup");
-        });
-
         var callbox = makeCallbox(call.id, "callbox", gridWrapper);
         var onTeardownCallback = function() {};
 
@@ -475,9 +471,12 @@ $(document).ready(function() {
         var switcher = makeBoxSwitcher(call.id, call.id, function() {
             endCall("closed");
         });
-        var buttons = makeButtonGroup().append(hangup);
-        var controls = makePanel([users.element, makeLineBreak(), buttons]).hide();
-
+        var hangup = makeButton("btn-danger", "Hangup!", function() {
+            endCall("hangup");
+        });
+        var buttons = makeDiv().addClass('text-center').append(makeButtonGroup().append(hangup));
+        var panel = makePanel(users.element);
+        var controls = makeDiv().append([panel, makeLineBreak(), buttons]).hide();
         renderStreams();
 
         return {
