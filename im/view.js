@@ -34,18 +34,23 @@ function makeChatContainer(id, switcherId, chatboxesId, controlsId, onJoin) {
         id: switcherId,
         class: 'nav nav-pills nav-stacked'
     });
-    var panel = makePanel(list).addClass('switcher-wrapper');
-    var switchers = $('<div>').addClass('col-lg-2').append([panel, makeInputField('Join!', onJoin, function() {})]);
-    var chatboxesContainer = $('<div>').prop({
-        id: chatboxesId
-    });
-    var chatboxes = $('<div>').addClass('col-lg-8').append(chatboxesContainer);
+    var panel = makePanel(list).addClass('switchers-wrapper');
+    var switchers = $('<div>')
+        .prop({
+            id: 'switchers-container',
+            class: 'col-lg-2'
+        })
+        .append([panel, makeInputField('Join!', onJoin, function() {})]);
 
-    var controlsContainer = $('<div>').prop({
-        id: controlsId,
-        class: 'controls-wrapper'
+    var chatboxes = $('<div>').prop({
+        id: chatboxesId,
+        class: 'col-lg-8'
     });
-    var controls = $('<div>').addClass('col-lg-2').append(controlsContainer);
+
+    var controls = $('<div>').prop({
+        id: controlsId,
+        class: 'col-lg-2'
+    });
 
     return $('<div>').prop('id', id).append([switchers, chatboxes, controls]);
 }
@@ -221,4 +226,13 @@ function makeAvatar(className, url) {
         src: url,
         class: className
     });
+}
+
+function makeControls(id, contents) {
+    return $('<div>')
+        .prop({
+            id: id,
+            class: 'controls'
+        })
+        .append(contents);
 }

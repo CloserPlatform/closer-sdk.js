@@ -28,7 +28,7 @@ body {
     text-align: center;
 }
 
-#chat, #chat > div, .chatbox, .callbox {
+#chat, #chat > div, .chatbox, .callbox, .controls {
     height: 100%;
 }
 
@@ -56,21 +56,23 @@ body {
     content: " ✓";
 }
 
-.controls-wrapper {
-    max-height: 100%;
+.panel {
+    margin-bottom: 10px;
 }
 
-.switcher-wrapper {
+.controls-wrapper {
     max-height: 90%;
-    margin-bottom: 10px;
+    overflow: auto;
+}
+
+.switchers-wrapper {
+    max-height: 90%;
     overflow: auto;
 }
 
 .chatbox-textarea {
     overflow: auto;
-    width: 100%;
     height: 90%;
-    margin-bottom: 10px;
 }
 
 .stream-wrapper {

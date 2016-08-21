@@ -154,8 +154,8 @@ $(document).ready(function() {
         });
 
         var buttons = makeButtonGroup().append(call);
-        var panel = makePanel([avatar, makeLineBreak(), label]);
-        var controls = makeDiv().append([panel, makeLineBreak(), buttons]).addClass('text-center').hide();
+        var panel = makePanel([avatar, makeLineBreak(), label]).addClass('controls-wrapper');
+        var controls = makeControls(room.id, [panel, buttons]).addClass('text-center').hide();
 
         return {
             element: chatbox,
@@ -331,8 +331,8 @@ $(document).ready(function() {
         });
 
         var buttons = makeButtonGroup().append(call);
-        var panel = makePanel(users.element);
-        var controls = makeDiv().append([panel, makeLineBreak(), buttons]).addClass('text-center').hide();
+        var panel = makePanel(users.element).addClass('controls-wrapper');
+        var controls = makeControls(room.id, [panel, buttons]).addClass('text-center').hide();
 
         return {
             element: chatbox,
@@ -491,12 +491,14 @@ $(document).ready(function() {
         var switcher = makeBoxSwitcher(call.id, call.id, function() {
             endCall("closed");
         });
+
         var hangup = makeButton("btn-danger", "Hangup!", function() {
             endCall("hangup");
         });
-        var buttons = makeDiv().addClass('text-center').append(makeButtonGroup().append(hangup));
-        var panel = makePanel(users.element);
-        var controls = makeDiv().append([panel, makeLineBreak(), buttons]).hide();
+
+        var buttons = makeButtonGroup().append(hangup);
+        var panel = makePanel(users.element).addClass('controls-wrapper');
+        var controls = makeControls(call.id, [panel, buttons]).addClass('text-center').hide();
         renderStreams();
 
         return {
