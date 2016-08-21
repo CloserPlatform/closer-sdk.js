@@ -441,10 +441,8 @@ $(document).ready(function() {
         var streams = {
             "You": localStream
         };
-        var grid = makeDiv();
-        var gridWrapper = makeDiv().append(grid);
 
-        var callbox = makeCallbox(call.id, "callbox", gridWrapper);
+        var callbox = makeCallbox(call.id, "callbox");
         var onTeardownCallback = function() {};
 
         call.addLocalStream(localStream);
@@ -476,11 +474,11 @@ $(document).ready(function() {
         }
 
         function renderStreams() {
-            grid.remove();
-            grid = makeSplitGrid(Object.keys(streams).map(function(user) {
+            callbox.empty();
+            var grid = makeSplitGrid(Object.keys(streams).map(function(user) {
                 return makeStreamBox(user, user + ":", localStream, user === "You");
             }));
-            gridWrapper.append(grid);
+            callbox.append(grid);
         }
 
         function stopStreams() {

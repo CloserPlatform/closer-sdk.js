@@ -188,20 +188,35 @@ function makeStreamBox(id, name, stream, muted) {
 }
 
 function makeSplitGrid(contents) {
-    var row = $('<div>').addClass('row');
-    if (contents.length === 1) {
-        row.append($('<div>')
-                   .addClass('col-lg-8 col-lg-offset-2')
-                   .append(contents))
-    } else {
-        contents.forEach(function(content) {
-            var col = $('<div>')
-                .addClass('col-lg-' + Math.floor(12 / contents.length))
-                .append(content);
-            row.append(col);
-        });
+    switch (contents.length) {
+    case 1:
+        var col = $('<div>').addClass('col-lg-8 col-lg-offset-2').append(contents);
+        return $('<div>').addClass('row').append(col);
+
+    case 2:
+        return $('<div>').addClass('row').append(contents.map(function(c) {
+            return $('<div>').addClass('col-lg-6').append(c);
+        }));
+
+    default:
+        var size = Math.ceil(Math.sqrt(contents.length));
+        var rows = [];
+
+        // FIXME Size it properly...
+        for(var i = 0; i < size; i = i + 1) {
+            rows.push($('<div>').addClass('row').css({
+                'height': (1 / size * 100) + '%',
+                'padding-bottom': '10px'
+            }));
+        }
+
+        for(var i = 0; i < contents.length; i = i + 1) {
+            var col = $('<div>').addClass('col-lg-' + 12/size).css('height', '100%').append(contents[i]);
+            rows[Math.floor(i / size)].append(col);
+        }
+
+        return rows;
     }
-    return row;
 }
 
 function makeDiv() {

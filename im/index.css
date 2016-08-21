@@ -20,7 +20,7 @@ body {
 }
 
 #page-contents {
-    margin-top: 30px;
+    padding-top: 30px;
     height: 100%;
 }
 
@@ -75,11 +75,20 @@ body {
     height: 90%;
 }
 
+.callbox {
+    padding-bottom: 10px;
+}
+
 .stream-wrapper {
     width: 100%;
-    height: 90%;
+    height: 100%;
+}
+
+.stream-wrapper > div {
+    height: 100%;
 }
 
 .video-stream {
     width: 100%;
+    height: 90%;
 }
