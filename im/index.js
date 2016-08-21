@@ -415,6 +415,7 @@ $(document).ready(function() {
     function makeCall(call, localStream) {
         console.log("Building a call object for: ", call);
 
+        var users = makeUserList(function() {});
         var streams = {
             "You": localStream
         };
@@ -434,6 +435,7 @@ $(document).ready(function() {
             console.log("Remote stream for user " + user +  " started!");
             streams[user] = stream;
             renderStreams();
+            users.add(user);
         });
 
         call.onLeft(function(m) {
@@ -441,6 +443,7 @@ $(document).ready(function() {
             alert("User " + m.user + " left the call: " + m.reason);
             delete streams[m.user];
             renderStreams();
+            users.remove(m.user);
         });
 
         call.onJoined(function(m) {
@@ -472,7 +475,8 @@ $(document).ready(function() {
         var switcher = makeBoxSwitcher(call.id, call.id, function() {
             endCall("closed");
         });
-        var controls = makePanel(makeButtonGroup().append(hangup)).hide();
+        var buttons = makeButtonGroup().append(hangup);
+        var controls = makePanel([users.element, makeLineBreak(), buttons]).hide();
 
         renderStreams();
 
