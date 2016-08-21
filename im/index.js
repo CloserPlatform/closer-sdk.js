@@ -456,7 +456,6 @@ $(document).ready(function() {
 
         call.onLeft(function(m) {
             console.log("User left the call: ", m);
-            alert("User " + m.user + " left the call: " + m.reason);
             delete streams[m.user];
             renderStreams();
             users.remove(m.user);
