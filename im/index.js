@@ -130,11 +130,6 @@ $(document).ready(function() {
             }
         });
 
-        var avatar = makeAvatar('avatar', "http://vignette2.wikia.nocookie.net/creepypasta/images/4/4b/1287666826226.png");
-        var label = makeLabel(room.id, peer);
-        var buttons = makeButtonGroup().append(call);
-        var controls = makePanel([avatar, makeLineBreak(), label, makeLineBreak(), buttons]).addClass('text-center').hide();
-
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
 
@@ -155,6 +150,11 @@ $(document).ready(function() {
 
         var chatbox = makeChatbox(room.id, "chatbox", text, input).hide();
         var switcher = makeBoxSwitcher(room.id, peer);
+        var avatar = makeAvatar('avatar', "http://vignette2.wikia.nocookie.net/creepypasta/images/4/4b/1287666826226.png");
+        var label = makeLabel(room.id, peer);
+        var buttons = makeButtonGroup().append(call);
+        var panel = makePanel([avatar, makeLineBreak(), label]);
+        var controls = makeDiv().append([panel, makeLineBreak(), buttons]).addClass('text-center').hide();
 
         return {
             element: chatbox,
