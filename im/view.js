@@ -203,13 +203,13 @@ function makeDiv() {
     return $('<div>');
 }
 
-function makeCallbox(id, className, streams, controls) {
+function makeCallbox(id, className, streams) {
     return $('<div>')
         .prop({
             id: id,
             class: className
         })
-        .append([streams, controls]);
+        .append(streams);
 }
 
 function makeLineBreak() {

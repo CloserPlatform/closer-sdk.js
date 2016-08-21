@@ -415,8 +415,7 @@ $(document).ready(function() {
             endCall("hangup");
         });
 
-        var controls = makePanel(makeButtonGroup().append(hangup));
-        var callbox = makeCallbox(call.id, "callbox", gridWrapper, controls);
+        var callbox = makeCallbox(call.id, "callbox", gridWrapper);
         var onTeardownCallback = function() {};
 
         call.addLocalStream(localStream);
@@ -463,8 +462,7 @@ $(document).ready(function() {
         var switcher = makeBoxSwitcher(call.id, call.id, function() {
             endCall("closed");
         });
-
-        var controls = ""; // FIXME Add user list.
+        var controls = makePanel(makeButtonGroup().append(hangup)).hide();
 
         renderStreams();
 
@@ -478,10 +476,12 @@ $(document).ready(function() {
             },
             activate: function() {
                 callbox.show();
+                controls.show();
                 switcher.activate();
             },
             deactivate: function() {
                 callbox.hide();
+                controls.hide();
                 switcher.deactivate();
             },
             join: function() {
@@ -493,6 +493,7 @@ $(document).ready(function() {
             },
             remove: function() {
                 callbox.remove();
+                controls.remove();
                 switcher.remove();
             }
         }
