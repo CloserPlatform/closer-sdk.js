@@ -13,8 +13,13 @@ function makeLoginForm(id, onClick) {
         .hide();
 }
 
-function makeLabel(id, name) {
-    return $('<label>').prop('for', id).append(name);
+function makeLabel(id, className, name) {
+    return $('<label>')
+        .prop({
+            for: id,
+            class: className
+        })
+        .append(name);
 }
 
 function makeInput(id, name, placeholder, value) {
@@ -26,7 +31,7 @@ function makeInput(id, name, placeholder, value) {
             placeholder: placeholder,
             value: value || ""
         });
-    return $('<div>').addClass('form-group').append([makeLabel(id, name), input]);
+    return $('<div>').addClass('form-group').append([makeLabel(id, '', name), input]);
 }
 
 function makeChatContainer(id, switcherId, chatboxesId, controlsId, onJoin) {
@@ -184,7 +189,7 @@ function makeStreamBox(id, name, stream, muted) {
             src: window.URL.createObjectURL(stream)
         });
 
-    return makePanel([makeLabel(id, name), $('<br>'), video]).addClass('stream-wrapper');
+    return makePanel([makeLabel(id, '', name), $('<br>'), video]).addClass('stream-wrapper');
 }
 
 function makeSplitGrid(contents) {

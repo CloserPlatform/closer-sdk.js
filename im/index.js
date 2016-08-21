@@ -144,7 +144,7 @@ $(document).ready(function() {
         var switcher = makeBoxSwitcher(room.id, peer);
 
         var avatar = makeAvatar('avatar', "http://vignette2.wikia.nocookie.net/creepypasta/images/4/4b/1287666826226.png");
-        var label = makeLabel(room.id, peer);
+        var label = makeLabel(room.id, "", peer);
 
         var call = makeButton("btn-success", "Call!", function() {
             if(!call.hasClass("disabled")) {
@@ -167,6 +167,18 @@ $(document).ready(function() {
             },
             bumpUnread: function() {
                 switcher.bumpUnread();
+            },
+            onStatus: function(user, status) {
+                if(user === peer) {
+                    switch(status) {
+                    case "available":
+                        call.removeClass("disabled");
+                        break;
+                    case "away":
+                    case "unavailable":
+                        call.addClass("disabled");
+                    }
+                }
             },
             activate: function() {
                 chatbox.show();
@@ -203,7 +215,12 @@ $(document).ready(function() {
         function render() {
             users.html("");
             Object.keys(list).forEach(function(user) {
-                var pill = makePill(user, user, function() {
+                var colors = {
+                    "available": "label label-success",
+                    "unavailable": 'label label-default',
+                    "away": 'label label-info'
+                }
+                var pill = makePill(user, makeLabel(user, colors[list[user].status], user), function() {
                     onClick(user);
                 });
                 if(list[user].isTyping) {
@@ -228,6 +245,7 @@ $(document).ready(function() {
             },
             add: function(user) {
                 list[user] = {
+                    status: "available", // FIXME Actually check this somehow.
                     isTyping: false,
                     timer: null
                 };
@@ -247,6 +265,10 @@ $(document).ready(function() {
                 list[user].timer = window.setTimeout(function() {
                     deactivate(user);
                 }, time);
+            },
+            setStatus: function(user, status) {
+                list[user].status = status;
+                render();
             }
         }
     }
@@ -342,6 +364,11 @@ $(document).ready(function() {
             switchTo: switchTo(room.id),
             isActive: function() {
                 return switcher.isActive();
+            },
+            onStatus: function(user, status) {
+                if(users.list().includes(user)) {
+                    users.setStatus(user, status);
+                }
             },
             bumpUnread: function() {
                 switcher.bumpUnread();
@@ -508,6 +535,11 @@ $(document).ready(function() {
             isActive: function() {
                 return switcher.isActive();
             },
+            onStatus: function(user, status) {
+                if(users.list().includes(user)) {
+                    users.setStatus(user, status);
+                }
+            },
             activate: function() {
                 callbox.show();
                 controls.show();
@@ -595,6 +627,9 @@ $(document).ready(function() {
 
                 session.chat.onEvent("presence", function(m) {
                     console.log("User " + m.sender + " is " + m.status + "!");
+                    Object.keys(chatboxes).forEach(function(k) {
+                        chatboxes[k].onStatus(m.sender, m.status);
+                    });
                 });
 
                 session.chat.onRoom(function (msg) {
