@@ -194,18 +194,15 @@ $(document).ready(function() {
         }
     }
 
-    function makeRoomChatbox(room, directRoomBuilder) {
-        console.log("Building chatbox for room: ", room);
+    function makeUserList(onClick) {
+        var list = {};
+        var users = makePills("nav-stacked user-list");
 
-        var userList = {};
-        var users = makePills("nav-stacked chatbox-users");
-        var controls = makePanel(users);
-
-        function renderUsers(list) {
+        function render() {
             users.html("");
             Object.keys(list).forEach(function(user) {
                 var pill = makePill(user, user, function() {
-                    directRoomBuilder(user);
+                    onClick(user);
                 });
                 if(list[user].isTyping) {
                     pill.addClass("active");
@@ -214,41 +211,54 @@ $(document).ready(function() {
             });
         }
 
-        function addUser(user) {
-            userList[user] = {
-                isTyping: false,
-                timer: null
-            };
-        }
-
-        function removeUser(user) {
-            delete userList[user];
-        }
-
-        function deactivateUser(user) {
-            userList[user].isTyping = false;
-            renderUsers(userList);
-            if(userList[user].timer) {
-                window.clearTimeout(userList[user].timer);
+        function deactivate(user) {
+            list[user].isTyping = false;
+            render();
+            if(list[user].timer) {
+                window.clearTimeout(list[user].timer);
             }
         }
 
-        function activateUser(user, time) {
-            userList[user].isTyping = true;
-            renderUsers(userList);
-            if(userList[user].timer) {
-                window.clearTimeout(userList[user].timer);
+        return {
+            element: users,
+            add: function(user) {
+                list[user] = {
+                    isTyping: false,
+                    timer: null
+                };
+                render();
+            },
+            remove: function(user) {
+                delete userList[user];
+                render();
+            },
+            deactivate: deactivate,
+            activate: function(user, time) {
+                list[user].isTyping = true;
+                render();
+                if(list[user].timer) {
+                    window.clearTimeout(list[user].timer);
+                }
+                list[user].timer = window.setTimeout(function() {
+                    deactivate(user);
+                }, time);
             }
-            userList[user].timer = window.setTimeout(function() {
-                deactivateUser(user);
-            }, time);
         }
+    }
+
+    function makeRoomChatbox(room, directRoomBuilder) {
+        console.log("Building chatbox for room: ", room);
+
+        var users = makeUserList(function(user) {
+            directRoomBuilder(user);
+        });
 
         room.getUsers().then(function(list) {
             list.users.filter(function(u) {
                 return u != sessionId; // FIXME Don't use sessionId.
-            }).forEach(addUser);
-            renderUsers(userList);
+            }).forEach(function(u) {
+                users.add(u);
+            });
         }).catch(function(error) {
             console.log("Fetching user list failed: ", error);
         });
@@ -266,24 +276,23 @@ $(document).ready(function() {
             switch(msg.action) {
             case "joined":
                 if(msg.originator != sessionId) { // FIXME Don't use sessionId.
-                    addUser(msg.originator);
+                    users.add(msg.originator);
                 }
                 break;
-            case "left": removeUser(msg.originator); break;
+            case "left": users.add(msg.originator); break;
             }
-            renderUsers(userList);
             receiveAction(msg);
         });
 
         var receive = makeReceiver(room, text);
         room.onMessage(function(msg) {
             receive(msg);
-            deactivateUser(msg.sender);
+            users.deactivate(msg.sender);
         });
 
         room.onTyping(function(msg) {
             console.log(msg.user + " is typing!");
-            activateUser(msg.user, 5000);
+            users.activate(msg.user, 5000);
         });
 
         var input = makeInputField("Send!", function(input) {
@@ -309,6 +318,7 @@ $(document).ready(function() {
             room.leave();
             chat.remove(room.id);
         });
+        var controls = makePanel(users.element);
 
         return {
             element: chatbox,
