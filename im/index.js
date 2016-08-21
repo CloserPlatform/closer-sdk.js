@@ -536,7 +536,8 @@ $(document).ready(function() {
             newRoom = roomBuilder(session);
 
             session.chat.onError(function(error) {
-                console.log("An error has occured: ", error);
+                console.log("An error has occured: ", error.reason);
+                alert("Session disconnected!");
             });
 
             session.chat.onConnect(function(m) {
@@ -544,7 +545,7 @@ $(document).ready(function() {
 
                 killSwitch.click(function() {
                     // NOTE Kills the client session.
-                    session.chat.socket.hangupCall(null, null);
+                    session.chat.socket.leaveCall(null, null);
                 });
 
                 session.chat.getRoster().then(function(rooms) {
@@ -556,6 +557,10 @@ $(document).ready(function() {
                     newRoom("general");
                 }).catch(function(error) {
                     console.log("Fetching roster failed:", error);
+                });
+
+                session.chat.onEvent("presence", function(m) {
+                    console.log("User " + m.sender + " is " + m.status + "!");
                 });
 
                 session.chat.onRoom(function (msg) {
