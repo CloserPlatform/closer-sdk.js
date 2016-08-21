@@ -122,14 +122,6 @@ $(document).ready(function() {
 
         // FIXME 2hacky4me
         var peer = room.name.slice(3).split("-").filter(function(e) { return e !== sessionId; })[0]; // FIXME Don't use sessionId.
-
-        var call = makeButton("btn-success", "Call!", function() {
-            if(!call.hasClass("disabled")) {
-                call.addClass("disabled");
-                callBuilder(room, peer);
-            }
-        });
-
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
 
@@ -150,8 +142,17 @@ $(document).ready(function() {
 
         var chatbox = makeChatbox(room.id, "chatbox", text, input).hide();
         var switcher = makeBoxSwitcher(room.id, peer);
+
         var avatar = makeAvatar('avatar', "http://vignette2.wikia.nocookie.net/creepypasta/images/4/4b/1287666826226.png");
         var label = makeLabel(room.id, peer);
+
+        var call = makeButton("btn-success", "Call!", function() {
+            if(!call.hasClass("disabled")) {
+                call.addClass("disabled");
+                callBuilder(room, [peer]);
+            }
+        });
+
         var buttons = makeButtonGroup().append(call);
         var panel = makePanel([avatar, makeLineBreak(), label]);
         var controls = makeDiv().append([panel, makeLineBreak(), buttons]).addClass('text-center').hide();
@@ -221,6 +222,9 @@ $(document).ready(function() {
 
         return {
             element: users,
+            list: function() {
+                return Object.keys(list);
+            },
             add: function(user) {
                 list[user] = {
                     isTyping: false,
@@ -229,7 +233,7 @@ $(document).ready(function() {
                 render();
             },
             remove: function(user) {
-                delete userList[user];
+                delete list[user];
                 render();
             },
             deactivate: deactivate,
@@ -246,8 +250,8 @@ $(document).ready(function() {
         }
     }
 
-    function makeRoomChatbox(room, directRoomBuilder) {
-        console.log("Building chatbox for room: ", room);
+    function makeGroupChatbox(room, directRoomBuilder, callBuilder) {
+        console.log("Building group chatbox for room: ", room);
 
         var users = makeUserList(function(user) {
             directRoomBuilder(user);
@@ -318,7 +322,17 @@ $(document).ready(function() {
             room.leave();
             chat.remove(room.id);
         });
-        var controls = makePanel(users.element);
+
+        var call = makeButton("btn-success", "Conference!", function() {
+            if(!call.hasClass("disabled")) {
+                call.addClass("disabled");
+                callBuilder(room, users.list());
+            }
+        });
+
+        var buttons = makeButtonGroup().append(call);
+        var panel = makePanel(users.element);
+        var controls = makeDiv().append([panel, makeLineBreak(), buttons]).addClass('text-center').hide();
 
         return {
             element: chatbox,
@@ -343,6 +357,12 @@ $(document).ready(function() {
                 controls.hide();
                 switcher.deactivate();
             },
+            addCall: function(callbox) {
+                call.addClass("disabled");
+                callbox.onTeardown(function() {
+                    call.removeClass("disabled");
+                });
+            },
             receive: receive,
             remove: function() {
                 switcher.remove();
@@ -363,7 +383,7 @@ $(document).ready(function() {
             if(room.direct) {
                 chatbox = makeDirectChatbox(room, callBuilder(session));
             } else {
-                chatbox = makeRoomChatbox(room, directRoomBuilder(session));
+                chatbox = makeGroupChatbox(room, directRoomBuilder(session), callBuilder(session));
             }
 
             room.getHistory().then(function(msgs) {
@@ -519,9 +539,9 @@ $(document).ready(function() {
     }
 
     function callBuilder(session) {
-        return function(room, user) {
+        return function(room, users) {
             createStream(function(stream) {
-                session.chat.createCall([user]).then(function(call) {
+                session.chat.createCall(users).then(function(call) {
                     var box = addCall(call, stream);
                     chatboxes[room.id].addCall(box);
                     box.switchTo();
