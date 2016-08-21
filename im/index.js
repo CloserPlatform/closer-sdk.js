@@ -185,6 +185,7 @@ $(document).ready(function() {
                 call.addClass("disabled");
                 callbox.onTeardown(function() {
                     call.removeClass("disabled");
+                    switchTo(room.id)();
                 });
             },
             remove: function() {
@@ -361,6 +362,7 @@ $(document).ready(function() {
                 call.addClass("disabled");
                 callbox.onTeardown(function() {
                     call.removeClass("disabled");
+                    switchTo(room.id)();
                 });
             },
             receive: receive,
