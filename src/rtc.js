@@ -31,6 +31,8 @@ export class RTCConnection {
     }
 
     offer(callId, peer) {
+        this.log("Creating RTC offer.");
+
         let _this = this;
         this.conn.createOffer(function(offer) {
             _this.conn.setLocalDescription(offer);
@@ -44,7 +46,8 @@ export class RTCConnection {
     }
 
     answer(callId, peer, remoteDescription) {
-        this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription));
+        this.log("Creating RTC answer.");
+        this.setRemoteDescription(remoteDescription);
 
         let _this = this;
         this.conn.createAnswer(function(answer) {
@@ -60,6 +63,10 @@ export class RTCConnection {
 
     onRemoteStream(callback) {
         this.onRemoteStreamCallback = callback;
+    }
+
+    setRemoteDescription(remoteDescription) {
+        this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription));
     }
 
     _initOnICECandidate(callId, peer) {
@@ -100,9 +107,13 @@ export class RTCPool {
         let _this = this;
         artichoke.onEvent("rtc_description", function(msg) {
             if (msg.id === callId) {
-                _this.log("Received an RTC description: " + msg.description);
+                _this.log("Received an RTC description: " + msg.description.sdp);
                 let rtc = _this._create(msg.peer);
-                rtc.answer(_this.callId, msg.peer, msg.description);
+                if (msg.description.type === "offer") {
+                    rtc.answer(_this.callId, msg.peer, msg.description);
+                } else {
+                    rtc.setRemoteDescription(msg.description);
+                }
                 _this.onConnectionCallback(msg.peer, rtc);
             }
         });
