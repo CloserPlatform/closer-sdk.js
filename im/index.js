@@ -152,6 +152,7 @@ $(document).ready(function() {
         var panel = makePanel().append(callBox);
 
         var onAddCall = function() {};
+        var onHangup = function () {};
 
         room.getUsers().then(function(list) {
             var peer = list.users.filter(function(u) {
@@ -159,26 +160,21 @@ $(document).ready(function() {
             })[0];
 
             call = makeButton("btn-success", "Call!", function() {
-                // FIXME Actually check this.
-                // if(Object.keys(calls).length > 0) {
-                //     alert("You are already calling someone!");
-                // } else {
                 if(!call.hasClass("disabled")) {
                     call.addClass("disabled");
                     hangup.removeClass("disabled");
 
                     onAddCall = function(c) {
-                        c.offer();
+                        c.join();
                     }
 
                     callBuilder(room, peer);
                 }
-                // }
             });
 
             hangup = makeButton("btn-danger disabled", "Hangup!", function() {
                 if(!hangup.hasClass("disabled")) {
-                    calls[peer].hangup("hangup");
+                    onHangup();
                 }
             });
 
@@ -217,7 +213,10 @@ $(document).ready(function() {
                 call.addClass("disabled");
                 hangup.removeClass("disabled");
                 callBox.append(c.element);
-
+                onHangup = function() {
+                    c.leave("hangup");
+                    delete calls[c.call.id];
+                }
                 onAddCall(c);
             },
             removeCall: function() {
@@ -226,6 +225,7 @@ $(document).ready(function() {
                 callBox.html("");
 
                 onAddCall = function() {};
+                onHangup = function() {};
             },
             remove: function() {
                 chatbox.remove();
@@ -400,30 +400,26 @@ $(document).ready(function() {
         }
     }
 
-    function makeCall(call, peer, onTeardown) {
+    function createStream(callback) {
+        navigator.getUserMedia({
+            "video": true,
+            "audio": true
+        }, function(stream) {
+            console.log("Local stream started!");
+            callback(stream);
+        }, function(error) {
+            console.log("Could not start stream: ", error);
+        });
+    }
+
+    function makeCall(call, localStream, onTeardown) {
         console.log("Building a call object for: ", call);
 
-        var localStream = undefined;
-
-        var localBox = makeStreamBox("local-stream").prop("muted", true);
+        var localBox = makeStreamBox("local-stream").prop("muted", true).prop('src', window.URL.createObjectURL(localStream));
         var remoteBox = makeStreamBox("remote-stream");
-        var streams = makeSplitGrid([localBox, remoteBox]).hide();
+        var streams = makeSplitGrid([localBox, remoteBox]);
 
-        function createLocalStream(callback) {
-            navigator.getUserMedia({
-                "video": true,
-                "audio": true
-            }, function(stream) {
-                console.log("Local stream started!");
-                localStream = stream;
-                localBox.prop('src', window.URL.createObjectURL(stream));
-                streams.show();
-
-                callback(stream);
-            }, function(error) {
-                console.log("Could not start stream: " + error);
-            });
-        }
+        call.addLocalStream(localStream);
 
         call.onRemoteStream(function(user, stream) {
             console.log("Remote stream for user " + user +  " started!");
@@ -431,29 +427,15 @@ $(document).ready(function() {
             streams.show();
         });
 
-        call.onHangup(function(m) {
-            console.log("Received call hangup: ", m);
+        call.onLeft(function(m) {
+            console.log("User left the call: ", m);
             alert("Call ended, reason: " + m.reason);
             stopStreams();
+            call.leave("ended");
         });
 
-        call.onAnswer(function(m) {
-            console.log("Received call answer: ", m);
-        });
-
-        call.onOffer(function(m) {
-            console.log("Received call offer: ", m);
-            if(confirm(peer + " is calling, answer?")) {
-                createLocalStream(function(stream) {
-                    call.answer(m, stream).catch(function(error) {
-                        console.log("Answer creation failed: ", error);
-                    });
-                });
-            } else {
-                console.log("Rejecting call...");
-                call.reject(m);
-                stopStreams();
-            }
+        call.onJoined(function(m) {
+            console.log("User joined the call: ", m);
         });
 
         function stopStreams() {
@@ -467,37 +449,36 @@ $(document).ready(function() {
         }
 
         return {
+            call: call,
             element: streams,
-            offer: function() {
-                createLocalStream(function(stream) {
-                    call.offer(stream).catch(function(error) {
-                        console.log("Offer creation failed: ", error);
-                    });
-                });
+            join: function() {
+                call.join(localStream);
             },
-            hangup: function(reason) {
-                call.hangup(reason);
+            leave: function(reason) {
+                call.leave(reason);
                 stopStreams();
             },
         }
     }
 
-    function addCall(user, room, call) {
-        var box = makeCall(call, user, function() {
+    function addCall(room, call, stream) {
+        var box = makeCall(call, stream, function() {
             chatboxes[room.id].removeCall();
-            delete calls[user];
+            delete calls[call.id];
         });
-        calls[user] = box;
+        calls[call.id] = box;
         chatboxes[room.id].addCall(box);
     }
 
     function callBuilder(session) {
         return function(room, user) {
-            session.chat.createCall(user).then(function(call) {
-                addCall(user, room, call);
-                switchers[room.id].switchTo();
-            }).catch(function(error) {
-                console.log("Creating a call failed: ", error);
+            createStream(function(stream) {
+                session.chat.createCall([user]).then(function(call) {
+                    addCall(room, call, stream);
+                    switchers[room.id].switchTo();
+                }).catch(function(error) {
+                    console.log("Creating a call failed: ", error);
+                });
             });
         }
     }
@@ -548,13 +529,23 @@ $(document).ready(function() {
                 });
 
                 session.chat.onCall(function(m) {
-                    session.chat.createDirectRoom(m.creator).then(function(room) {
-                        addRoom(room, session);
-                        addCall(m.creator, room, m.call);
-                        switchers[room.id].switchTo();
-                    }).catch(function(error) {
-                        console.log("Creating direct room failed: ", error);
-                    });
+                    console.log("Received call offer: ", m);
+
+                    if(confirm(m.user + " is calling, answer?")) {
+                        createStream(function(stream) {
+                            session.chat.createDirectRoom(m.user).then(function(room) {
+                                addRoom(room, session);
+                                addCall(room, m.call, stream);
+                                calls[m.call.id].join();
+                                switchers[room.id].switchTo();
+                            }).catch(function(error) {
+                                console.log("Creating direct room failed: ", error);
+                            });
+                        });
+                    } else {
+                        console.log("Rejecting call...");
+                        m.call.reject(m);
+                    }
                 });
             });
 

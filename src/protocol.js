@@ -1,32 +1,19 @@
 // Artichoke protocol messages:
 
-export const CallAnswer = (id, sdp) => ({
-    type: "call_answer",
-    id,
-    sdp
-});
-
-export const CallCandidate = (id, candidate) => ({
-    type: "call_candidate",
-    id,
-    candidate
-});
-
-export const CallCreate = (user) => ({
+export const CallCreate = (users) => ({
     type: "call_create",
-    user
+    users
 });
 
-export const CallHangup = (id, reason) => ({
-    type: "call_hangup",
+export const CallJoin = (id) => ({
+    type: "call_join",
+    id
+});
+
+export const CallLeave = (id, reason) => ({
+    type: "call_leave",
     id,
     reason
-});
-
-export const CallOffer = (id, sdp) => ({
-    type: "call_offer",
-    id,
-    sdp
 });
 
 export const ChatRequest = (room, body, ref) => ({
@@ -42,14 +29,15 @@ export const ChatDelivered = (id, timestamp) => ({
     timestamp
 });
 
+export const Mark = (room, timestamp) => ({
+    type: "mark",
+    room,
+    timestamp
+});
+
 export const RoomCreate = (name) => ({
     type: "room_create",
     name
-});
-
-export const Typing = (id) => ({
-    type: "typing",
-    id
 });
 
 export const RoomCreateDirect = (peer) => ({
@@ -57,9 +45,21 @@ export const RoomCreateDirect = (peer) => ({
     peer
 });
 
+export const RTCDescription = (id, peer, description) => ({
+    type: "rtc_description",
+    id,
+    peer,
+    description
+});
 
-export const Mark = (room, timestamp) => ({
-    type: "mark",
-    room,
-    timestamp
+export const RTCCandidate = (id, peer, candidate) => ({
+    type: "rtc_candidate",
+    id,
+    peer,
+    candidate
+});
+
+export const Typing = (id) => ({
+    type: "typing",
+    id
 });
