@@ -147,4 +147,9 @@ export class RTCPool {
             delete this.connections[peer];
         }
     }
+
+    destroyAll() {
+        let _this = this;
+        Object.keys(this.connections).forEach((key) => _this.destroy(key));
+    }
 }

@@ -33,6 +33,7 @@ class Call {
 
     leave(reason) {
         this.artichoke.socket.leaveCall(this.id, reason);
+        this.pool.destroyAll();
     }
 
     reject() {
