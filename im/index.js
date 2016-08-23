@@ -505,7 +505,7 @@ $(document).ready(function() {
         function renderStreams() {
             callbox.empty();
             var grid = makeSplitGrid(Object.keys(streams).map(function(user) {
-                return makeStreamBox(user, user + ":", localStream, user === "You");
+                return makeStreamBox(user, user + ":", streams[user], user === "You");
             }));
             callbox.append(grid);
         }
