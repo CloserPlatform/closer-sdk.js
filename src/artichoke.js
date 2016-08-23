@@ -1,5 +1,5 @@
 import * as proto from "./protocol";
-import { nop, pathcat, wrapPromise } from "./utils";
+import { merge, nop, pathcat, wrapPromise } from "./utils";
 import { JSONWebSocket } from "./jsonws";
 import { createCall } from "./call";
 import { createMessage } from "./message";
@@ -352,10 +352,16 @@ export class Artichoke {
             return this.callbacks[type].forEach((cb) => cb(m));
         } else {
             this.log("Unhandled message " + type + ": " + JSON.stringify(m));
-            this._runCallbacks("error", {
-                reason: "Unhandled message.",
+            this._error("Unhandled message.", {
                 message: m
             });
         }
+    }
+
+    _error(reason, info) {
+        this._runCallbacks("error", merge({
+            type: "error",
+            reason
+        }, info));
     }
 }

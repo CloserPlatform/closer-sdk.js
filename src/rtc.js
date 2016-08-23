@@ -37,7 +37,9 @@ export class RTCConnection {
             _this._initOnICECandidate(callId, peer);
             _this.artichoke.socket.sendDescription(callId, peer, offer);
         }, function(error) {
-            // FIXME Handle error.
+            _this.artichoke._error("Could not create an RTC offer.", {
+                error
+            });
         });
     }
 
@@ -50,7 +52,9 @@ export class RTCConnection {
             _this._initOnICECandidate(callId, peer);
             _this.artichoke.socket.sendDescription(callId, peer, answer);
         }, function(error) {
-            // FIXME Handle error.
+            _this.artichoke._error("Could not create an RTC answer.", {
+                error
+            });
         });
     }
 
@@ -109,7 +113,9 @@ export class RTCPool {
                 if (msg.peer in _this.connections) {
                     _this.connections[msg.peer].addCandidate(msg.candidate);
                 } else {
-                    // FIXME Handle error.
+                    _this.artichoke._error("Received an invalid RTC candidate.", {
+                        error: msg.peer + " is not currently in this call."
+                    });
                 }
             }
         });
@@ -139,8 +145,6 @@ export class RTCPool {
         if (peer in this.connections) {
             this.connections[peer].disconnect();
             delete this.connections[peer];
-        } else {
-            // FIXME Handle error.
         }
     }
 }
