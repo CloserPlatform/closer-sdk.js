@@ -1,5 +1,5 @@
 import * as proto from "./protocol";
-import { nop, pathcat, wrapPromise } from "./utils";
+import { merge, nop, pathcat, wrapPromise } from "./utils";
 import { JSONWebSocket } from "./jsonws";
 import { createCall } from "./call";
 import { createMessage } from "./message";
@@ -124,13 +124,18 @@ class ArtichokeWS extends JSONWebSocket {
         this.promises = {};
     }
 
-    // Call API:
-    sendDescription(callId, userId, description) {
-        this.send(proto.RTCDescription(callId, userId, description));
+    // Misc API:
+    setStatus(sessionId, status, timestamp) {
+        this.send(proto.Presence(sessionId, status, timestamp));
     }
 
-    sendCandidate(callId, userId, candidate) {
-        this.send(proto.RTCCandidate(callId, userId, candidate));
+    // Call API:
+    sendDescription(callId, sessionId, description) {
+        this.send(proto.RTCDescription(callId, sessionId, description));
+    }
+
+    sendCandidate(callId, sessionId, candidate) {
+        this.send(proto.RTCCandidate(callId, sessionId, candidate));
     }
 
     joinCall(callId) {
@@ -246,6 +251,7 @@ export class Artichoke {
         this.socket.onMessage(function(m) {
             switch (m.type) {
             case "call_invited":
+                // FIXME Adjust format on the backend.
                 _this._runCallbacks(m.type, {
                     type: m.type,
                     user: m.user,
@@ -264,10 +270,29 @@ export class Artichoke {
                 _this._runCallbacks(m.type, createMessage(m, _this));
                 break;
 
+            case "presence":
+                // FIXME Adjust format on the backend.
+                _this._runCallbacks(m.type, {
+                    type: m.type,
+                    user: m.sender,
+                    status: m.status,
+                    timestamp: m.timestamp
+                });
+                break;
+
             default:
                 _this._runCallbacks(m.type, m);
             }
         });
+    }
+
+    // Misc API:
+    onStatusChange(callback) {
+        this.onEvent("presence", callback);
+    }
+
+    setStatus(status) {
+        this.socket.setStatus(this.sessionId, status, Date.now());
     }
 
     // Call API:
@@ -327,10 +352,16 @@ export class Artichoke {
             return this.callbacks[type].forEach((cb) => cb(m));
         } else {
             this.log("Unhandled message " + type + ": " + JSON.stringify(m));
-            this._runCallbacks("error", {
-                reason: "Unhandled message.",
+            this._error("Unhandled message.", {
                 message: m
             });
         }
+    }
+
+    _error(reason, info) {
+        this._runCallbacks("error", merge({
+            type: "error",
+            reason
+        }, info));
     }
 }

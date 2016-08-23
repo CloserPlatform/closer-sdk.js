@@ -1,11 +1,10 @@
 <!doctype html>
 <html>
   <head>
-    <title>Artichoke demo</title>
+    <title>Ratel IM demo</title>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
     <meta content="utf-8" http-equiv="encoding">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="http://bootswatch.com/spacelab/bootstrap.min.css">
     <link rel="stylesheet" type="text/css" href="index.css"></link>
     <script src="http://code.jquery.com/jquery-3.1.0.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
@@ -14,19 +13,19 @@
     <script src="/im/index.js"></script>
   </head>
   <body>
-    <nav class="navbar navbar-inverse navbar-fixed-top">
-      <div class="container">
-        <div class="navbar-header">
-          <a id="demo-name" class="navbar-brand" href="#">Ratel IM</a>
-        </div>
-	<form class="navbar-form">
-	  <button type="submit" id="kill-switch" class="btn btn-danger pull-right">Kill!</button>
-	</form>
+    <div class="body-wrap">
+      <div class="container-full">
+	<div class="navbar navbar-inverse navbar-fixed-top">
+          <div class="navbar-header">
+            <a id="demo-name" class="navbar-brand" href="#">Ratel IM</a>
+          </div>
+	  <form class="navbar-form pull-right">
+	    <button type="button" id="status-switch" class="btn btn-success">Status:</button>
+	    <button type="button" id="kill-switch" class="btn btn-danger">Kill!</button>
+	  </form>
+	</div>
+	<div id="page-contents"></div>
       </div>
-    </nav>
-
-    <div class="container">
-      <div id="page-contents"> </div>
     </div>
   </body>
 </html>
