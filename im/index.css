@@ -28,16 +28,19 @@ body {
     text-align: center;
 }
 
-#chat, #chat > div, .chatbox, .callbox, .controls {
+#chat, #switchers-container, #chatbox-container, #controls-container {
     height: 100%;
 }
 
-#room-list, #chatbox-container, #controls-container {
+.switchers, .chatbox, .callbox, .controls {
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
 }
 
-#room-list {
-    margin-bottom: 10px
+.buttons, .input-field {
+    margin-bottom: 10px;
 }
 
 .avatar {
@@ -61,18 +64,16 @@ body {
 }
 
 .controls-wrapper {
-    max-height: 90%;
     overflow: auto;
 }
 
 .switchers-wrapper {
-    max-height: 90%;
     overflow: auto;
 }
 
 .chatbox-textarea {
     overflow: auto;
-    height: 90%;
+    flex-grow: 1;
 }
 
 .callbox {

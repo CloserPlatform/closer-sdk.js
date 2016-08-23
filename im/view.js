@@ -1,14 +1,10 @@
 function makeLoginForm(id, onClick) {
     var form = $('<form>')
-        .css('text-align', 'left')
         .append([makeInput('server', 'Server:', 'Server', 'artichoke.ratel.io'),
                  makeInput('session-id', 'Name:', 'Nickname')]);
 
     return $('<div>')
-        .prop({
-            id: id,
-            class: 'col-lg-2 col-lg-offset-5'
-        })
+        .prop('id', id)
         .append([form, makeButton('btn-primary', 'Login!', onClick)])
         .hide();
 }
@@ -40,12 +36,13 @@ function makeChatContainer(id, switcherId, chatboxesId, controlsId, onJoin) {
         class: 'nav nav-pills nav-stacked'
     });
     var panel = makePanel(list).addClass('switchers-wrapper');
+    var wrapper = makeDiv().addClass('switchers').append([panel, makeInputField('Join!', onJoin, function() {})]);
     var switchers = $('<div>')
         .prop({
             id: 'switchers-container',
             class: 'col-lg-2'
         })
-        .append([panel, makeInputField('Join!', onJoin, function() {})]);
+        .append(wrapper);
 
     var chatboxes = $('<div>').prop({
         id: chatboxesId,
@@ -176,7 +173,7 @@ function makeButton(className, contents, onClick) {
 }
 
 function makeButtonGroup() {
-    return $('<div>').addClass('btn-group');
+    return $('<div>').addClass('btn-group buttons');
 }
 
 function makeStreamBox(id, name, stream, muted) {
