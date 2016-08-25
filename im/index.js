@@ -495,6 +495,10 @@ $(document).ready(function() {
             console.log("User joined the call: ", m);
         });
 
+        call.onInvited(function(m) {
+            console.log(m.sender + " invited " + m.user + " to join the call: ", m);
+        });
+
         function endCall(reason) {
             call.leave(reason);
             stopStreams();
