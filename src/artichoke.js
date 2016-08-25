@@ -17,8 +17,12 @@ class ArtichokeREST {
     }
 
     // Call API:
-    createCall(users) {
-        return this._post(pathcat(this.url, this.callPath), proto.CallCreate(users));
+    createCall(sessions) {
+        return this._post(pathcat(this.url, this.callPath), proto.CallCreate(sessions));
+    }
+
+    createDirectCall(sessionId) {
+        return this._post(pathcat(this.url, this.callPath), proto.CallCreateDirect(sessionId));
     }
 
     getCall(callId) {
@@ -297,6 +301,10 @@ export class Artichoke {
     // Call API:
     onCall(callback) {
         this.onEvent("call_invitation", callback);
+    }
+
+    createDirectCall(peer) {
+        return this._wrapCall(this.rest.createDirectCall(peer));
     }
 
     createCall(users) {

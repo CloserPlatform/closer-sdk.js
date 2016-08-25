@@ -120,7 +120,7 @@ $(document).ready(function() {
         }
     }
 
-    function makeDirectChatbox(room, callBuilder) {
+    function makeDirectChatbox(room, directCallBuilder) {
         console.log("Building direct chatbox: ", room);
 
         // FIXME 2hacky4me
@@ -152,7 +152,7 @@ $(document).ready(function() {
         var call = makeButton("btn-success", "Call!", function() {
             if(!call.hasClass("disabled")) {
                 call.addClass("disabled");
-                callBuilder(room, [peer]);
+                directCallBuilder(room, peer);
             }
         });
 
@@ -413,7 +413,7 @@ $(document).ready(function() {
             var chatbox = undefined;
 
             if(room.direct) {
-                chatbox = makeDirectChatbox(room, callBuilder(session));
+                chatbox = makeDirectChatbox(room, directCallBuilder(session));
             } else {
                 chatbox = makeGroupChatbox(room, directRoomBuilder(session), callBuilder(session));
             }
@@ -489,6 +489,10 @@ $(document).ready(function() {
             delete streams[m.user];
             renderStreams();
             users.remove(m.user);
+
+            if(call.direct && users.list().length === 0) {
+                endCall("ended");
+            }
         });
 
         call.onJoined(function(m) {
@@ -578,6 +582,20 @@ $(document).ready(function() {
         return box;
     }
 
+    function directCallBuilder(session) {
+        return function(room, user) {
+            createStream(function(stream) {
+                session.chat.createDirectCall(user).then(function(call) {
+                    var box = addCall(call, stream);
+                    chatboxes[room.id].addCall(box);
+                    box.switchTo();
+                }).catch(function(error) {
+                    console.log("Creating a call failed: ", error);
+                });
+            });
+        }
+    }
+
     function callBuilder(session) {
         return function(room, users) {
             createStream(function(stream) {
@@ -654,7 +672,13 @@ $(document).ready(function() {
 
                 session.chat.onCall(function(m) {
                     console.log("Received call offer: ", m);
-                    if(confirm(m.user + " is calling, answer?")) {
+                    var line = "";
+                    if(m.call.direct) {
+                        line = m.user + " is calling, answer?";
+                    } else {
+                        line = m.user + " invites you to join a conference call with " + m.call.users.toString();
+                    }
+                    if(confirm(line)) {
                         createStream(function(stream) {
                             var callbox = addCall(m.call, stream);
                             callbox.join();

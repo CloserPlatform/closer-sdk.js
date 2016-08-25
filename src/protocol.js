@@ -1,8 +1,11 @@
 // Artichoke protocol messages:
 
 export const CallCreate = (users) => ({
-    type: "call_create",
     users
+});
+
+export const CallCreateDirect = (peer) => ({
+    peer
 });
 
 export const CallJoin = (id) => ({
