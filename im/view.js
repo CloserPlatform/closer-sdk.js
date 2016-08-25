@@ -193,10 +193,10 @@ function makeStreamBox(id, name, stream, muted) {
 function makeSplitGrid(contents) {
     var size = Math.ceil(Math.sqrt(contents.length)); // FIXME Should be 1 for contents.length == 2.
     var rows = [];
-    for(var i = 0; i < size; i = i + 1) {
+    for(var i = 0; i < size; i++) {
         rows.push($('<div>').addClass('grid-row'));
     }
-    for(var i = 0; i < contents.length; i = i + 1) {
+    for(var i = 0; i < contents.length; i++) {
         // FIXME Size it properly.
         rows[Math.floor(i / size)].css('height', (1 / size * 100) + '%').append(contents[i].addClass('grid-item'));
     }
