@@ -25,7 +25,12 @@ body {
 }
 
 #login-box {
-    text-align: center;
+    height: 50%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
 }
 
 #chat, #switchers-container, #chatbox-container, #controls-container {
