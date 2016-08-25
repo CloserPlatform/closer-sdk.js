@@ -36,6 +36,14 @@ class Call {
         });
     }
 
+    getUsers() {
+        let _this = this;
+        return Promise(function(resolve, reject) {
+            // NOTE No need to retrieve the list if it's cached here.
+            resolve(_this.users);
+        });
+    }
+
     addLocalStream(stream) {
         this.localStream = stream;
     }
