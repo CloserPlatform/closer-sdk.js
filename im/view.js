@@ -186,39 +186,21 @@ function makeStreamBox(id, name, stream, muted) {
             src: window.URL.createObjectURL(stream)
         });
 
-    return makePanel([makeLabel(id, '', name), $('<br>'), video]).addClass('stream-wrapper');
+    var panel = $('<div>').addClass('panel panel-default stream-wrapper').append([makeLabel(id, '', name), video])
+    return $('<div>').append(panel);
 }
 
 function makeSplitGrid(contents) {
-    switch (contents.length) {
-    case 1:
-        var col = $('<div>').addClass('col-lg-8 col-lg-offset-2').append(contents);
-        return $('<div>').addClass('row').append(col);
-
-    case 2:
-        return $('<div>').addClass('row').append(contents.map(function(c) {
-            return $('<div>').addClass('col-lg-6').append(c);
-        }));
-
-    default:
-        var size = Math.ceil(Math.sqrt(contents.length));
-        var rows = [];
-
-        // FIXME Size it properly...
-        for(var i = 0; i < size; i = i + 1) {
-            rows.push($('<div>').addClass('row').css({
-                'height': (1 / size * 100) + '%',
-                'padding-bottom': '10px'
-            }));
-        }
-
-        for(var i = 0; i < contents.length; i = i + 1) {
-            var col = $('<div>').addClass('col-lg-' + 12/size).css('height', '100%').append(contents[i]);
-            rows[Math.floor(i / size)].append(col);
-        }
-
-        return rows;
+    var size = Math.ceil(Math.sqrt(contents.length)); // FIXME Should be 1 for contents.length == 2.
+    var rows = [];
+    for(var i = 0; i < size; i = i + 1) {
+        rows.push($('<div>').addClass('grid-row'));
     }
+    for(var i = 0; i < contents.length; i = i + 1) {
+        // FIXME Size it properly.
+        rows[Math.floor(i / size)].css('height', (1 / size * 100) + '%').append(contents[i].addClass('grid-item'));
+    }
+    return $('<div>').addClass('grid').append(rows);
 }
 
 function makeDiv() {
