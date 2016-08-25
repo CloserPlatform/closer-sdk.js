@@ -8,6 +8,12 @@ export const CallCreateDirect = (peer) => ({
     peer
 });
 
+export const CallInvite = (id, user) => ({
+    type: "call_invite",
+    id,
+    user
+});
+
 export const CallJoin = (id) => ({
     type: "call_join",
     id

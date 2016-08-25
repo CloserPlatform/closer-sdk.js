@@ -529,13 +529,16 @@ $(document).ready(function() {
             endCall("closed");
         });
 
-        var hangup = makeButton("btn-danger", "Hangup!", function() {
+        var hangup = makeButton('btn-danger', "Hangup!", function() {
             endCall("hangup");
         });
 
         var buttons = makeButtonGroup().append(hangup);
         var panel = makePanel(users.element).addClass('controls-wrapper');
-        var controls = makeControls(call.id, [panel, buttons]).addClass('text-center').hide();
+        var input = call.direct ? makeDiv() : makeInputField("Invite!", function(user) {
+            call.invite(user);
+        }, function() {});
+        var controls = makeControls(call.id, [panel, input, buttons]).addClass('text-center').hide();
         renderStreams();
 
         return {

@@ -150,6 +150,10 @@ class ArtichokeWS extends JSONWebSocket {
         this.send(proto.CallLeave(callId, reason));
     }
 
+    inviteToCall(callId, sessionId) {
+        this.send(proto.CallInvite(callId, sessionId));
+    }
+
     // Chat API:
     setDelivered(messageId, timestamp) {
         this.send(proto.ChatDelivered(messageId, timestamp));

@@ -40,9 +40,14 @@ class Call {
         this.localStream = stream;
     }
 
+    // FIXME These three ought to use the REST API.
     join(stream) {
         this.addLocalStream(stream);
         this.artichoke.socket.joinCall(this.id);
+    }
+
+    invite(user) {
+        this.artichoke.socket.inviteToCall(this.id, user);
     }
 
     leave(reason) {
