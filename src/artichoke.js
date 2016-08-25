@@ -250,16 +250,15 @@ export class Artichoke {
         let _this = this;
         this.socket.onMessage(function(m) {
             switch (m.type) {
-            case "call_invited":
-                // FIXME Adjust format on the backend.
+            case "call_invitation":
                 _this._runCallbacks(m.type, {
                     type: m.type,
                     user: m.user,
-                    call: createCall(m, _this)
+                    call: createCall(m.call, _this)
                 });
                 break;
 
-            case "room_created": // FIXME Rename to room_invite.
+            case "room_created": // FIXME Rename to room_invitation.
                 _this._runCallbacks(m.type, {
                     type: m.type,
                     room: createRoom(m.room, _this)
@@ -297,7 +296,7 @@ export class Artichoke {
 
     // Call API:
     onCall(callback) {
-        this.onEvent("call_invited", callback);
+        this.onEvent("call_invitation", callback);
     }
 
     createCall(users) {
