@@ -52,12 +52,10 @@ export const Presence = (sender, status, timestamp) => ({
 });
 
 export const RoomCreate = (name) => ({
-    type: "room_create",
     name
 });
 
 export const RoomCreateDirect = (peer) => ({
-    type: "room_create_direct",
     peer
 });
 
