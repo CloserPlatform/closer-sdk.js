@@ -1,14 +1,18 @@
 import { nop } from "./utils";
 
 // Cross-browser support:
-const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-
+const _RTCPeerConnection = webkitRTCPeerConnection || RTCPeerConnection || mozRTCPeerConnection;
 export class RTCConnection {
+    artichoke;
+    log;
+    conn;
+    onRemoteStreamCallback;
+
     constructor(config, artichoke) {
         this.artichoke = artichoke;
         this.log = artichoke.log;
         this.log("Connecting an RTC connection.");
-        this.conn = new RTCPeerConnection(config);
+        this.conn = new _RTCPeerConnection(config);
         this.onRemoteStreamCallback = undefined;
         this._initOnRemoteStream();
     }
@@ -95,6 +99,12 @@ export class RTCConnection {
 }
 
 export class RTCPool {
+    callId;
+    artichoke;
+    log;
+    config;
+    connections;
+    onConnectionCallback;
     constructor(callId, artichoke) {
         this.callId = callId;
         this.artichoke = artichoke;

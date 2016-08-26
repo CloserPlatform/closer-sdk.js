@@ -1,4 +1,13 @@
 class Message {
+    id;
+    body;
+    sender;
+    room;
+    timestamp;
+    delivered;
+    log;
+    artichoke;
+
     constructor(message, artichoke) {
         this.id = message.id;
         this.body = message.body;

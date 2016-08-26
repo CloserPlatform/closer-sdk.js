@@ -2,6 +2,12 @@ import { RTCConnection, RTCPool } from "./rtc";
 import { nop } from "./utils";
 
 class Call {
+    id;
+    log;
+    artichoke;
+    localStream;
+    pool;
+    onRemoteStreamCallback;
     constructor(call, artichoke) {
         this.id = call.id;
         this.users = call.users;

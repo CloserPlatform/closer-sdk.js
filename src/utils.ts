@@ -2,7 +2,7 @@
 
 export function nop() {}
 
-export function pathcat() {
+export function pathcat(array) {
     let output = [];
     for (let i = 0; i < arguments.length; i++) {
         output.push(arguments[i]);
