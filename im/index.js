@@ -13,6 +13,8 @@ $(document).ready(function() {
     var sessionId = undefined; // FIXME Get rid of it.
     var chatboxes = {};
 
+    var callIndex = 1;
+
     var newRoom = function() {};
 
     var status = "available";
@@ -517,7 +519,9 @@ $(document).ready(function() {
         }
 
         // FIXME Use a proper name instead of call.id
-        var switcher = makeBoxSwitcher(call.id, call.id, function() {
+        var name = "Call #" + callIndex;
+        callIndex = callIndex + 1;
+        var switcher = makeBoxSwitcher(call.id, name, function() {
             endCall("closed");
         });
 

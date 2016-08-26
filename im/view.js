@@ -1,14 +1,10 @@
 function makeLoginForm(id, onClick) {
     var form = $('<form>')
-        .css('text-align', 'left')
         .append([makeInput('server', 'Server:', 'Server', 'artichoke.ratel.io'),
                  makeInput('session-id', 'Name:', 'Nickname')]);
 
     return $('<div>')
-        .prop({
-            id: id,
-            class: 'col-lg-2 col-lg-offset-5'
-        })
+        .prop('id', id)
         .append([form, makeButton('btn-primary', 'Login!', onClick)])
         .hide();
 }
@@ -40,12 +36,13 @@ function makeChatContainer(id, switcherId, chatboxesId, controlsId, onJoin) {
         class: 'nav nav-pills nav-stacked'
     });
     var panel = makePanel(list).addClass('switchers-wrapper');
+    var wrapper = makeDiv().addClass('switchers').append([panel, makeInputField('Join!', onJoin, function() {})]);
     var switchers = $('<div>')
         .prop({
             id: 'switchers-container',
             class: 'col-lg-2'
         })
-        .append([panel, makeInputField('Join!', onJoin, function() {})]);
+        .append(wrapper);
 
     var chatboxes = $('<div>').prop({
         id: chatboxesId,
@@ -176,7 +173,7 @@ function makeButton(className, contents, onClick) {
 }
 
 function makeButtonGroup() {
-    return $('<div>').addClass('btn-group');
+    return $('<div>').addClass('btn-group buttons');
 }
 
 function makeStreamBox(id, name, stream, muted) {
@@ -189,39 +186,21 @@ function makeStreamBox(id, name, stream, muted) {
             src: window.URL.createObjectURL(stream)
         });
 
-    return makePanel([makeLabel(id, '', name), $('<br>'), video]).addClass('stream-wrapper');
+    var panel = $('<div>').addClass('panel panel-default stream-wrapper').append([makeLabel(id, '', name), video])
+    return $('<div>').append(panel);
 }
 
 function makeSplitGrid(contents) {
-    switch (contents.length) {
-    case 1:
-        var col = $('<div>').addClass('col-lg-8 col-lg-offset-2').append(contents);
-        return $('<div>').addClass('row').append(col);
-
-    case 2:
-        return $('<div>').addClass('row').append(contents.map(function(c) {
-            return $('<div>').addClass('col-lg-6').append(c);
-        }));
-
-    default:
-        var size = Math.ceil(Math.sqrt(contents.length));
-        var rows = [];
-
-        // FIXME Size it properly...
-        for(var i = 0; i < size; i = i + 1) {
-            rows.push($('<div>').addClass('row').css({
-                'height': (1 / size * 100) + '%',
-                'padding-bottom': '10px'
-            }));
-        }
-
-        for(var i = 0; i < contents.length; i = i + 1) {
-            var col = $('<div>').addClass('col-lg-' + 12/size).css('height', '100%').append(contents[i]);
-            rows[Math.floor(i / size)].append(col);
-        }
-
-        return rows;
+    var size = Math.ceil(Math.sqrt(contents.length)); // FIXME Should be 1 for contents.length == 2.
+    var rows = [];
+    for(var i = 0; i < size; i++) {
+        rows.push($('<div>').addClass('grid-row'));
     }
+    for(var i = 0; i < contents.length; i++) {
+        // FIXME Size it properly.
+        rows[Math.floor(i / size)].css('height', (1 / size * 100) + '%').append(contents[i].addClass('grid-item'));
+    }
+    return $('<div>').addClass('grid').append(rows);
 }
 
 function makeDiv() {

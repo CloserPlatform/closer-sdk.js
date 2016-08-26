@@ -25,19 +25,27 @@ body {
 }
 
 #login-box {
-    text-align: center;
+    height: 50%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
 }
 
-#chat, #chat > div, .chatbox, .callbox, .controls {
+#chat, #switchers-container, #chatbox-container, #controls-container {
     height: 100%;
 }
 
-#room-list, #chatbox-container, #controls-container {
+.switchers, .chatbox, .callbox, .controls {
     height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
 }
 
-#room-list {
-    margin-bottom: 10px
+.buttons, .input-field {
+    margin-bottom: 10px;
 }
 
 .avatar {
@@ -53,42 +61,60 @@ body {
 }
 
 .delivered::after {
-    content: " ✓";
+    content: "✓";
+    padding-left: 3px;
 }
 
 .panel {
-    margin-bottom: 10px;
+    padding-bottom: 10px;
 }
 
 .controls-wrapper {
-    max-height: 90%;
     overflow: auto;
 }
 
 .switchers-wrapper {
-    max-height: 90%;
     overflow: auto;
 }
 
 .chatbox-textarea {
     overflow: auto;
-    height: 90%;
+    flex-grow: 1;
 }
 
-.callbox {
+.grid {
+    height: 100%;
+
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+}
+
+.grid-row {
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.grid-item {
+    height: 100%;
     padding-bottom: 10px;
 }
 
 .stream-wrapper {
-    width: 100%;
     height: 100%;
-}
 
-.stream-wrapper > div {
-    height: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .video-stream {
     width: 100%;
     height: 90%;
+    padding: 10px;
 }
