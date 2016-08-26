@@ -8,23 +8,6 @@ export const CallCreateDirect = (peer) => ({
     peer
 });
 
-export const CallInvite = (id, user) => ({
-    type: "call_invite",
-    id,
-    user
-});
-
-export const CallJoin = (id) => ({
-    type: "call_join",
-    id
-});
-
-export const CallLeave = (id, reason) => ({
-    type: "call_leave",
-    id,
-    reason
-});
-
 export const ChatRequest = (room, body, ref) => ({
     type: "msg_request",
     room,
@@ -36,6 +19,10 @@ export const ChatDelivered = (id, timestamp) => ({
     type: "msg_delivered",
     id,
     timestamp
+});
+
+export const LeaveReason = (reason) => ({
+    reason
 });
 
 export const Mark = (room, timestamp) => ({

@@ -33,6 +33,18 @@ class ArtichokeREST {
         return this._get(pathcat(this.url, this.callPath));
     }
 
+    joinCall(callId) {
+        return this._post(pathcat(this.url, this.callPath, callId, "join"));
+    }
+
+    leaveCall(callId, reason) {
+        return this._post(pathcat(this.url, this.callPath, callId, "leave"), proto.LeaveReason(reason));
+    }
+
+    inviteToCall(callId, sessionId) {
+        return this._post(pathcat(this.url, this.callPath, callId, "invite", sessionId));
+    }
+
     // Chat API:
     getChatHistory(roomId) {
         return this._get(pathcat(this.url, this.chatPath, roomId));
@@ -140,18 +152,6 @@ class ArtichokeWS extends JSONWebSocket {
 
     sendCandidate(callId, sessionId, candidate) {
         this.send(proto.RTCCandidate(callId, sessionId, candidate));
-    }
-
-    joinCall(callId) {
-        this.send(proto.CallJoin(callId));
-    }
-
-    leaveCall(callId, reason) {
-        this.send(proto.CallLeave(callId, reason));
-    }
-
-    inviteToCall(callId, sessionId) {
-        this.send(proto.CallInvite(callId, sessionId));
     }
 
     // Chat API:

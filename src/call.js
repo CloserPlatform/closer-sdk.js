@@ -51,15 +51,15 @@ class Call {
     // FIXME These three ought to use the REST API.
     join(stream) {
         this.addLocalStream(stream);
-        this.artichoke.socket.joinCall(this.id);
+        this.artichoke.rest.joinCall(this.id);
     }
 
     invite(user) {
-        this.artichoke.socket.inviteToCall(this.id, user);
+        this.artichoke.rest.inviteToCall(this.id, user);
     }
 
     leave(reason) {
-        this.artichoke.socket.leaveCall(this.id, reason);
+        this.artichoke.rest.leaveCall(this.id, reason);
         this.pool.destroyAll();
     }
 
