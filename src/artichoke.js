@@ -17,8 +17,12 @@ class ArtichokeREST {
     }
 
     // Call API:
-    createCall(users) {
-        return this._post(pathcat(this.url, this.callPath), proto.CallCreate(users));
+    createCall(sessions) {
+        return this._post(pathcat(this.url, this.callPath), proto.CallCreate(sessions));
+    }
+
+    createDirectCall(sessionId) {
+        return this._post(pathcat(this.url, this.callPath), proto.CallCreateDirect(sessionId));
     }
 
     getCall(callId) {
@@ -27,6 +31,18 @@ class ArtichokeREST {
 
     getCalls() {
         return this._get(pathcat(this.url, this.callPath));
+    }
+
+    joinCall(callId) {
+        return this._post(pathcat(this.url, this.callPath, callId, "join"));
+    }
+
+    leaveCall(callId, reason) {
+        return this._post(pathcat(this.url, this.callPath, callId, "leave"), proto.LeaveReason(reason));
+    }
+
+    inviteToCall(callId, sessionId) {
+        return this._post(pathcat(this.url, this.callPath, callId, "invite", sessionId));
     }
 
     // Chat API:
@@ -138,14 +154,6 @@ class ArtichokeWS extends JSONWebSocket {
         this.send(proto.RTCCandidate(callId, sessionId, candidate));
     }
 
-    joinCall(callId) {
-        this.send(proto.CallJoin(callId));
-    }
-
-    leaveCall(callId, reason) {
-        this.send(proto.CallLeave(callId, reason));
-    }
-
     // Chat API:
     setDelivered(messageId, timestamp) {
         this.send(proto.ChatDelivered(messageId, timestamp));
@@ -250,16 +258,15 @@ export class Artichoke {
         let _this = this;
         this.socket.onMessage(function(m) {
             switch (m.type) {
-            case "call_invited":
-                // FIXME Adjust format on the backend.
+            case "call_invitation":
                 _this._runCallbacks(m.type, {
                     type: m.type,
                     user: m.user,
-                    call: createCall(m, _this)
+                    call: createCall(m.call, _this)
                 });
                 break;
 
-            case "room_created": // FIXME Rename to room_invite.
+            case "room_created": // FIXME Rename to room_invitation.
                 _this._runCallbacks(m.type, {
                     type: m.type,
                     room: createRoom(m.room, _this)
@@ -297,7 +304,11 @@ export class Artichoke {
 
     // Call API:
     onCall(callback) {
-        this.onEvent("call_invited", callback);
+        this.onEvent("call_invitation", callback);
+    }
+
+    createDirectCall(peer) {
+        return this._wrapCall(this.rest.createDirectCall(peer));
     }
 
     createCall(users) {

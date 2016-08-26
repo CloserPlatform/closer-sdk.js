@@ -1,19 +1,11 @@
 // Artichoke protocol messages:
 
 export const CallCreate = (users) => ({
-    type: "call_create",
     users
 });
 
-export const CallJoin = (id) => ({
-    type: "call_join",
-    id
-});
-
-export const CallLeave = (id, reason) => ({
-    type: "call_leave",
-    id,
-    reason
+export const CallCreateDirect = (peer) => ({
+    peer
 });
 
 export const ChatRequest = (room, body, ref) => ({
@@ -27,6 +19,10 @@ export const ChatDelivered = (id, timestamp) => ({
     type: "msg_delivered",
     id,
     timestamp
+});
+
+export const LeaveReason = (reason) => ({
+    reason
 });
 
 export const Mark = (room, timestamp) => ({
@@ -43,12 +39,10 @@ export const Presence = (sender, status, timestamp) => ({
 });
 
 export const RoomCreate = (name) => ({
-    type: "room_create",
     name
 });
 
 export const RoomCreateDirect = (peer) => ({
-    type: "room_create_direct",
     peer
 });
 

@@ -122,7 +122,7 @@ $(document).ready(function() {
         }
     }
 
-    function makeDirectChatbox(room, callBuilder) {
+    function makeDirectChatbox(room, directCallBuilder) {
         console.log("Building direct chatbox: ", room);
 
         // FIXME 2hacky4me
@@ -154,7 +154,7 @@ $(document).ready(function() {
         var call = makeButton("btn-success", "Call!", function() {
             if(!call.hasClass("disabled")) {
                 call.addClass("disabled");
-                callBuilder(room, [peer]);
+                directCallBuilder(room, peer);
             }
         });
 
@@ -415,7 +415,7 @@ $(document).ready(function() {
             var chatbox = undefined;
 
             if(room.direct) {
-                chatbox = makeDirectChatbox(room, callBuilder(session));
+                chatbox = makeDirectChatbox(room, directCallBuilder(session));
             } else {
                 chatbox = makeGroupChatbox(room, directRoomBuilder(session), callBuilder(session));
             }
@@ -491,10 +491,18 @@ $(document).ready(function() {
             delete streams[m.user];
             renderStreams();
             users.remove(m.user);
+
+            if(call.direct && users.list().length === 0) {
+                endCall("ended");
+            }
         });
 
         call.onJoined(function(m) {
             console.log("User joined the call: ", m);
+        });
+
+        call.onInvited(function(m) {
+            console.log(m.sender + " invited " + m.user + " to join the call: ", m);
         });
 
         function endCall(reason) {
@@ -525,13 +533,16 @@ $(document).ready(function() {
             endCall("closed");
         });
 
-        var hangup = makeButton("btn-danger", "Hangup!", function() {
+        var hangup = makeButton('btn-danger', "Hangup!", function() {
             endCall("hangup");
         });
 
         var buttons = makeButtonGroup().append(hangup);
         var panel = makePanel(users.element).addClass('controls-wrapper');
-        var controls = makeControls(call.id, [panel, buttons]).addClass('text-center').hide();
+        var input = call.direct ? makeDiv() : makeInputField("Invite!", function(user) {
+            call.invite(user);
+        }, function() {});
+        var controls = makeControls(call.id, [panel, input, buttons]).addClass('text-center').hide();
         renderStreams();
 
         return {
@@ -576,6 +587,20 @@ $(document).ready(function() {
         var box = makeCall(call, stream);
         chat.add(call.id, box);
         return box;
+    }
+
+    function directCallBuilder(session) {
+        return function(room, user) {
+            createStream(function(stream) {
+                session.chat.createDirectCall(user).then(function(call) {
+                    var box = addCall(call, stream);
+                    chatboxes[room.id].addCall(box);
+                    box.switchTo();
+                }).catch(function(error) {
+                    console.log("Creating a call failed: ", error);
+                });
+            });
+        }
     }
 
     function callBuilder(session) {
@@ -654,7 +679,13 @@ $(document).ready(function() {
 
                 session.chat.onCall(function(m) {
                     console.log("Received call offer: ", m);
-                    if(confirm(m.user + " is calling, answer?")) {
+                    var line = "";
+                    if(m.call.direct) {
+                        line = m.user + " is calling, answer?";
+                    } else {
+                        line = m.user + " invites you to join a conference call with " + m.call.users.toString();
+                    }
+                    if(confirm(line)) {
                         createStream(function(stream) {
                             var callbox = addCall(m.call, stream);
                             callbox.join();
