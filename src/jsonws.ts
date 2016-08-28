@@ -1,4 +1,7 @@
 export class JSONWebSocket {
+    log;
+    url;
+    socket;
     constructor(url, config) {
         this.log = config.log;
         this.url = url;

@@ -1,5 +1,4 @@
 # Ratel JavaScript SDK
-
 Building:
 
 ```
@@ -11,4 +10,11 @@ Running:
 
 ```
 npm start
+```
+
+Test environment:
+
+```
+npm test
+npm run test-dev
 ```

@@ -1,7 +1,16 @@
-import { RTCConnection, RTCPool } from "./rtc";
+import { RTCPool } from "./rtc";
 import { nop } from "./utils";
 
 class Call {
+    id;
+    users;
+    direct;
+
+    log;
+    artichoke;
+    localStream;
+    pool;
+    onRemoteStreamCallback;
     constructor(call, artichoke) {
         this.id = call.id;
         this.users = call.users;
@@ -38,7 +47,7 @@ class Call {
 
     getUsers() {
         let _this = this;
-        return Promise(function(resolve, reject) {
+        return new Promise(function(resolve, reject) {
             // NOTE No need to retrieve the list if it's cached here.
             resolve(_this.users);
         });

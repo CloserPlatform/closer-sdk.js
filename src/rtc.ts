@@ -1,14 +1,29 @@
 import { nop } from "./utils";
 
 // Cross-browser support:
-const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+function newRTCPeerConnection(config) {
+    if (typeof RTCPeerConnection !== "undefined") {
+        return new RTCPeerConnection(config);
+    } else if (typeof webkitRTCPeerConnection !== "undefined") {
+        return new webkitRTCPeerConnection(config);
+    } else if (typeof mozRTCPeerConnection !== "undefined") {
+        return new mozRTCPeerConnection(config);
+    } else {
+        // FIXME Add support for more browsers.
+    };
+}
 
 export class RTCConnection {
+    artichoke;
+    log;
+    conn;
+    onRemoteStreamCallback;
+
     constructor(config, artichoke) {
         this.artichoke = artichoke;
         this.log = artichoke.log;
         this.log("Connecting an RTC connection.");
-        this.conn = new RTCPeerConnection(config);
+        this.conn = newRTCPeerConnection(config);
         this.onRemoteStreamCallback = undefined;
         this._initOnRemoteStream();
     }
@@ -86,7 +101,7 @@ export class RTCConnection {
             _this.onRemoteStreamCallback(event.stream || event.streams[0]);
         };
 
-        if (this.conn.ontrack === null) {
+        if (typeof this.conn.ontrack !== "undefined") {
             this.conn.ontrack = onstream;
         } else {
             this.conn.onaddstream = onstream;
@@ -95,6 +110,12 @@ export class RTCConnection {
 }
 
 export class RTCPool {
+    callId;
+    artichoke;
+    log;
+    config;
+    connections;
+    onConnectionCallback;
     constructor(callId, artichoke) {
         this.callId = callId;
         this.artichoke = artichoke;
@@ -108,13 +129,13 @@ export class RTCPool {
         artichoke.onEvent("rtc_description", function(msg) {
             if (msg.id === callId) {
                 _this.log("Received an RTC description: " + msg.description.sdp);
-                let rtc = _this._create(msg.peer);
-                if (msg.description.type === "offer") {
-                    rtc.answer(_this.callId, msg.peer, msg.description);
+                if (msg.peer in _this.connections) {
+                    _this.connections[msg.peer].setRemoteDescription(msg.description);
                 } else {
-                    rtc.setRemoteDescription(msg.description);
+                    let rtc = _this._create(msg.peer);
+                    rtc.answer(_this.callId, msg.peer, msg.description);
+                    _this.onConnectionCallback(msg.peer, rtc);
                 }
-                _this.onConnectionCallback(msg.peer, rtc);
             }
         });
 
@@ -143,10 +164,6 @@ export class RTCPool {
     }
 
     _create(peer) {
-        if (peer in this.connections) {
-            return this.connections[peer];
-        }
-
         let rtc = new RTCConnection(this.config.rtc, this.artichoke);
         this.connections[peer] = rtc;
         return rtc;

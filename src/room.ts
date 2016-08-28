@@ -2,6 +2,12 @@ import { createMessage } from "./message";
 import { wrapPromise } from "./utils";
 
 class BaseRoom {
+    id;
+    name;
+    currMark;
+    direct;
+    log;
+    artichoke;
     constructor(room, artichoke) {
         this.id = room.id;
         this.name = room.name;

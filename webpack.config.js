@@ -2,21 +2,21 @@ var path = require('path');
 var webpack = require('webpack');
 
 module.exports = {
-    entry: './src/main.js',
+    entry: './src/main.ts',
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'ratel-sdk.js',
         libraryTarget: 'var',
         library: 'RatelSDK'
     },
+    resolve: {
+        extensions: ['', '.webpack.js', '.web.js', '.ts', '.js']
+    },
     module: {
         loaders: [
             {
-                test: /\.js$/,
-                loader: 'babel-loader',
-                query: {
-                    presets: ['es2015']
-                }
+                test: /\.tsx?$/,
+                loader: 'ts-loader'
             }
         ]
     },
