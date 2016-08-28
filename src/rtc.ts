@@ -129,13 +129,13 @@ export class RTCPool {
         artichoke.onEvent("rtc_description", function(msg) {
             if (msg.id === callId) {
                 _this.log("Received an RTC description: " + msg.description.sdp);
-                let rtc = _this._create(msg.peer);
-                if (msg.description.type === "offer") {
-                    rtc.answer(_this.callId, msg.peer, msg.description);
+                if (msg.peer in _this.connections) {
+                    _this.connections[msg.peer].setRemoteDescription(msg.description);
                 } else {
-                    rtc.setRemoteDescription(msg.description);
+                    let rtc = _this._create(msg.peer);
+                    rtc.answer(_this.callId, msg.peer, msg.description);
+                    _this.onConnectionCallback(msg.peer, rtc);
                 }
-                _this.onConnectionCallback(msg.peer, rtc);
             }
         });
 
@@ -164,10 +164,6 @@ export class RTCPool {
     }
 
     _create(peer) {
-        if (peer in this.connections) {
-            return this.connections[peer];
-        }
-
         let rtc = new RTCConnection(this.config.rtc, this.artichoke);
         this.connections[peer] = rtc;
         return rtc;
