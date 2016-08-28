@@ -6,7 +6,8 @@
   "scripts": {
     "deps": "typings install",
     "lint": "eslint src",
-    "test": "karma start",
+    "test": "karma start --single-run",
+    "test-dev": "karma start",
     "build": "webpack",
     "start": "python3 -m http.server",
     "prepublish": "npm run deps && npm run build",
