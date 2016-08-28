@@ -101,7 +101,7 @@ export class RTCConnection {
             _this.onRemoteStreamCallback(event.stream || event.streams[0]);
         };
 
-        if (this.conn.ontrack === null) {
+        if (typeof this.conn.ontrack !== 'undefined') {
             this.conn.ontrack = onstream;
         } else {
             this.conn.onaddstream = onstream;
