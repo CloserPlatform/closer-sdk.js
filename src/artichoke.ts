@@ -24,11 +24,11 @@ class ArtichokeREST {
     }
 
     createCall(sessions) {
-        return this._post(pathcat(this.url, this.callPath), proto.CallCreate(sessions));
+        return this._post(pathcat([this.url, this.callPath]), proto.CallCreate(sessions));
     }
 
     createDirectCall(sessionId) {
-        return this._post(pathcat(this.url, this.callPath), proto.CallCreateDirect(sessionId));
+        return this._post(pathcat([this.url, this.callPath]), proto.CallCreateDirect(sessionId));
     }
 
     getCall(callId) {
@@ -40,16 +40,16 @@ class ArtichokeREST {
     }
 
     joinCall(callId) {
-        // FIXME
+        // FIXME uncomment and check whats going on : (
         // return this._post(pathcat([this.url, this.callPath, callId, "join"]));
     }
 
     leaveCall(callId, reason) {
-        return this._post(pathcat(this.url, this.callPath, callId, "leave"), proto.LeaveReason(reason));
+        return this._post(pathcat([this.url, this.callPath, callId, "leave"]), proto.LeaveReason(reason));
     }
 
     inviteToCall(callId, sessionId) {
-        // FIXME
+        // FIXME uncomment and check whats going on : (
         // return this._post(pathcat([this.url, this.callPath, callId, "invite", sessionId]));
     }
 
