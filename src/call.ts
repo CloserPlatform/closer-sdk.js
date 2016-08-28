@@ -1,4 +1,4 @@
-import { RTCConnection, RTCPool } from "./rtc";
+import { RTCPool } from "./rtc";
 import { nop } from "./utils";
 
 class Call {

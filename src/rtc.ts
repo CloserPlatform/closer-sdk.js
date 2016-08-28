@@ -2,11 +2,11 @@ import { nop } from "./utils";
 
 // Cross-browser support:
 function newRTCPeerConnection(config) {
-    if (typeof RTCPeerConnection !== 'undefined') {
+    if (typeof RTCPeerConnection !== "undefined") {
         return new RTCPeerConnection(config);
-    } else if (typeof webkitRTCPeerConnection !== 'undefined') {
+    } else if (typeof webkitRTCPeerConnection !== "undefined") {
         return new webkitRTCPeerConnection(config);
-    } else if (typeof mozRTCPeerConnection !== 'undefined') {
+    } else if (typeof mozRTCPeerConnection !== "undefined") {
         return new mozRTCPeerConnection(config);
     } else {
         // FIXME Add support for more browsers.
@@ -101,7 +101,7 @@ export class RTCConnection {
             _this.onRemoteStreamCallback(event.stream || event.streams[0]);
         };
 
-        if (typeof this.conn.ontrack !== 'undefined') {
+        if (typeof this.conn.ontrack !== "undefined") {
             this.conn.ontrack = onstream;
         } else {
             this.conn.onaddstream = onstream;

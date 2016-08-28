@@ -1,9 +1,9 @@
-import * as proto from "./protocol";
-import { merge, nop, pathcat, wrapPromise } from "./utils";
-import { JSONWebSocket } from "./jsonws";
 import { createCall } from "./call";
+import { JSONWebSocket } from "./jsonws";
 import { createMessage } from "./message";
+import * as proto from "./protocol";
 import { createRoom } from "./room";
+import { merge, nop, pathcat, wrapPromise } from "./utils";
 
 class ArtichokeREST {
     log;
@@ -101,13 +101,13 @@ class ArtichokeREST {
                 resolve(JSON.parse(xhttp.responseText));
             } else if (xhttp.readyState === 4 && xhttp.status === 204) {
                 _this.log("NoContent response.");
-                resolve(null);
+                resolve(undefined);
             } else if (xhttp.readyState === 4) {
                 _this.log("Error response: " + xhttp.responseText);
                 try {
                     reject(JSON.parse(xhttp.responseText));
                 } catch (error) {
-                    reject(null); // FIXME Make sure that this never happens.
+                    reject(undefined); // FIXME Make sure that this never happens.
                 }
             }
         };

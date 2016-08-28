@@ -1,6 +1,8 @@
 // Various utilities.
 
-export function nop() {}
+export function nop() {
+    // NOTE Don't do anything.
+}
 
 export function pathcat(parts) {
     let output = [];
@@ -24,9 +26,9 @@ export function wrapPromise(promise, fun, args) {
     return new Promise(function(resolve, reject) {
         promise.then(function(obj) {
             if (Array.isArray(obj)) {
-                resolve(obj.map((o) => fun.apply(this, [o].concat(args))));
+                resolve(obj.map((o) => fun.apply(fun, [o].concat(args))));
             } else {
-                resolve(fun.apply(this, [obj].concat(args)));
+                resolve(fun.apply(fun, [obj].concat(args)));
             }
         }).catch(reject);
     });

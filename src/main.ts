@@ -4,7 +4,7 @@ import { merge } from "./utils";
 const defaultConfig = {
     "rtc": {"iceServers": [{"urls": ["stun:46.101.163.186:3478", "turn:46.101.163.186:3478"],
                             "username": "test123",
-                            "credential":"test456"}]},
+                            "credential": "test456"}]},
     "url": "localhost:5431",
     "debug": false
 };
