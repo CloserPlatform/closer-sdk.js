@@ -40,8 +40,7 @@ class ArtichokeREST {
     }
 
     joinCall(callId) {
-        // FIXME uncomment and check whats going on : (
-        // return this._post(pathcat([this.url, this.callPath, callId, "join"]));
+        return this._post(pathcat([this.url, this.callPath, callId, "join"]), "");
     }
 
     leaveCall(callId, reason) {
@@ -49,8 +48,7 @@ class ArtichokeREST {
     }
 
     inviteToCall(callId, sessionId) {
-        // FIXME uncomment and check whats going on : (
-        // return this._post(pathcat([this.url, this.callPath, callId, "invite", sessionId]));
+        return this._post(pathcat([this.url, this.callPath, callId, "invite", sessionId]), "");
     }
 
     // Chat API:
