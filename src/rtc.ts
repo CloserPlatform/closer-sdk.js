@@ -1,7 +1,18 @@
 import { nop } from "./utils";
 
 // Cross-browser support:
-const _RTCPeerConnection = webkitRTCPeerConnection || RTCPeerConnection || mozRTCPeerConnection;
+function newRTCPeerConnection(config) {
+    if (typeof RTCPeerConnection !== 'undefined') {
+        return new RTCPeerConnection(config);
+    } else if (typeof webkitRTCPeerConnection !== 'undefined') {
+        return new webkitRTCPeerConnection(config);
+    } else if (typeof mozRTCPeerConnection !== 'undefined') {
+        return new mozRTCPeerConnection(config);
+    } else {
+        // FIXME Add support for more browsers.
+    };
+}
+
 export class RTCConnection {
     artichoke;
     log;
@@ -12,7 +23,7 @@ export class RTCConnection {
         this.artichoke = artichoke;
         this.log = artichoke.log;
         this.log("Connecting an RTC connection.");
-        this.conn = new _RTCPeerConnection(config);
+        this.conn = newRTCPeerConnection(config);
         this.onRemoteStreamCallback = undefined;
         this._initOnRemoteStream();
     }
