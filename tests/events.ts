@@ -68,6 +68,27 @@ describe("Event Handler", () => {
         });
     });
 
+    it("should allow defining multiple event handlers and run them all", () => {
+        let eh = new EventHandler();
+        let first = 0;
+        let second = 0;
+
+        eh.onEvent("message", (msg: Message) => first++);
+        eh.onEvent("message", (msg: Message) => second++);
+
+        [1, 2, 3, 4, 5].forEach((i) => {
+            eh.notify({
+                type: "message",
+                id: i.toString(),
+                body: "Oh hi",
+                sender: "bob"
+            } as Message);
+        });
+
+        expect(first).toBe(5);
+        expect(second).toBe(5);
+    });
+
     it("should allow defining concrete event handlers", () => {
         let eh = new EventHandler();
         let ok = "0";
@@ -87,5 +108,47 @@ describe("Event Handler", () => {
         });
 
         expect(ok).toBe("3");
+    });
+
+    it("should allow defining multiple concrete event handlers and run them all", () => {
+        let eh = new EventHandler();
+        let first = false;
+        let second = false;
+
+        eh.onConcreteEvent("message", "3", (msg: Message) => first = true);
+        eh.onConcreteEvent("message", "1", (msg: Message) => second = true);
+
+        [1, 2, 3, 4, 5].forEach((i) => {
+            eh.notify({
+                type: "message",
+                id: i.toString(),
+                body: "Hi bob",
+                sender: "alice"
+            } as Message);
+        });
+
+        expect(first).toBe(true);
+        expect(second).toBe(true);
+    });
+
+    it("should run regular event handlers even if concrete event handlers are defined", () => {
+        let eh = new EventHandler();
+        let first = false;
+        let second = 0;
+
+        eh.onConcreteEvent("message", "3", (msg: Message) => first = true);
+        eh.onEvent("message", (msg: Message) => second++);
+
+        [1, 2, 3, 4, 5].forEach((i) => {
+            eh.notify({
+                type: "message",
+                id: i.toString(),
+                body: "Hi bob",
+                sender: "alice"
+            } as Message);
+        });
+
+        expect(first).toBe(true);
+        expect(second).toBe(5);
     });
 });

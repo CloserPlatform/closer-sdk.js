@@ -26,23 +26,33 @@ export class EventHandler {
     }
 
     notify(event: Event) {
-        let e = event as EventWithId;
-
-        if (e.id && e.type in this.perId && e.id in this.perId[e.type]) {
-            this.perId[e.type][e.id](e);
-        } else if (e.type in this.perType) {
-            this.perType[e.type].forEach(function(cb) {
-                cb(e);
-            });
-        } else {
+        if ([this.notifyById(event as EventWithId), this.notifyByType(event)].every((r) => !r)) {
             this.perType["error"].forEach(function(cb) {
                 cb({
                     type: "error",
-                    reason: "Unhandled event: " + e.type,
-                    event: e
+                    reason: "Unhandled event: " + event.type,
+                    event
                 });
             });
         }
+    }
+
+    private notifyByType(event: Event): boolean {
+        if (event.type in this.perType) {
+            this.perType[event.type].forEach(function(cb) {
+                cb(event);
+            });
+            return true;
+        }
+        return false;
+    }
+
+    private notifyById(event: EventWithId): boolean {
+        if (event.type in this.perId && event.id in this.perId[event.type]) {
+            this.perId[event.type][event.id](event);
+            return true;
+        }
+        return false;
     }
 
     onError(callback: Callback<Error>) {
