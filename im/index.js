@@ -501,10 +501,6 @@ $(document).ready(function() {
             console.log("User joined the call: ", m);
         });
 
-        call.onInvited(function(m) {
-            console.log(m.sender + " invited " + m.user + " to join the call: ", m);
-        });
-
         function endCall(reason) {
             call.leave(reason);
             stopStreams();
@@ -537,11 +533,22 @@ $(document).ready(function() {
             endCall("hangup");
         });
 
+        var input = undefined;
+
+        if(call.direct) {
+            input = makeDiv();
+
+            call.onInvited(function(m) {
+                console.log(m.sender + " invited " + m.user + " to join the call: ", m);
+            });
+        } else {
+            input = makeInputField("Invite!", function(user) {
+                call.invite(user);
+            }, function() {});
+        }
+
         var buttons = makeButtonGroup().append(hangup);
         var panel = makePanel(users.element).addClass('controls-wrapper');
-        var input = call.direct ? makeDiv() : makeInputField("Invite!", function(user) {
-            call.invite(user);
-        }, function() {});
         var controls = makeControls(call.id, [panel, input, buttons]).addClass('text-center').hide();
         renderStreams();
 

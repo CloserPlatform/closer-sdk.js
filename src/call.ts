@@ -1,7 +1,7 @@
 import { RTCPool } from "./rtc";
 import { nop } from "./utils";
 
-class Call {
+class BaseCall {
     id;
     users;
     direct;
@@ -55,22 +55,18 @@ class Call {
         this.pool.addLocalStream(stream);
     }
 
+    reject() {
+        this.leave("rejected");
+    }
+
     join(stream) {
         this.addLocalStream(stream);
         this.artichoke.rest.joinCall(this.id);
     }
 
-    invite(user) {
-        this.artichoke.rest.inviteToCall(this.id, user);
-    }
-
     leave(reason) {
         this.artichoke.rest.leaveCall(this.id, reason);
         this.pool.destroyAll();
-    }
-
-    reject() {
-        this.leave("rejected");
     }
 
     onLeft(callback) {
@@ -79,10 +75,6 @@ class Call {
 
     onJoined(callback) {
         this._defineCallback("call_joined", callback);
-    }
-
-    onInvited(callback) {
-        this._defineCallback("call_invited", callback);
     }
 
     onRemoteStream(callback) {
@@ -109,6 +101,22 @@ class Call {
     }
 }
 
+export class DirectCall extends BaseCall {}
+
+export class Call extends BaseCall {
+    invite(user) {
+        this.artichoke.rest.inviteToCall(this.id, user);
+    }
+
+    onInvited(callback) {
+        this._defineCallback("call_invited", callback);
+    }
+}
+
 export function createCall(call, artichoke) {
-    return new Call(call, artichoke);
+    if (call.direct) {
+        return new DirectCall(call, artichoke);
+    } else {
+        return new Call(call, artichoke);
+    }
 }
