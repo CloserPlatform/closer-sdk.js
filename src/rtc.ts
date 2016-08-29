@@ -19,11 +19,12 @@ export class RTCConnection {
     conn;
     onRemoteStreamCallback;
 
-    constructor(config, artichoke) {
+    constructor(stream, config, artichoke) {
         this.artichoke = artichoke;
         this.log = artichoke.log;
         this.log("Connecting an RTC connection.");
         this.conn = newRTCPeerConnection(config);
+        this.conn.addStream(stream);
         this.onRemoteStreamCallback = undefined;
         this._initOnRemoteStream();
     }
@@ -31,10 +32,6 @@ export class RTCConnection {
     disconnect() {
         this.log("Disconnecting an RTC connection.");
         this.conn.close();
-    }
-
-    addStream(stream) {
-        this.conn.addStream(stream);
     }
 
     addCandidate(candidate) {
@@ -111,11 +108,13 @@ export class RTCConnection {
 
 export class RTCPool {
     callId;
+    localStream;
     artichoke;
     log;
     config;
     connections;
     onConnectionCallback;
+
     constructor(callId, artichoke) {
         this.callId = callId;
         this.artichoke = artichoke;
@@ -123,6 +122,7 @@ export class RTCPool {
         this.config = artichoke.config;
         this.connections = {};
 
+        this.localStream = undefined;
         this.onConnectionCallback = nop;
 
         let _this = this;
@@ -157,6 +157,10 @@ export class RTCPool {
         this.onConnectionCallback = callback;
     }
 
+    addLocalStream(stream) {
+        this.localStream = stream;
+    }
+
     create(peer) {
         let rtc = this._create(peer);
         rtc.offer(this.callId, peer);
@@ -164,7 +168,7 @@ export class RTCPool {
     }
 
     _create(peer) {
-        let rtc = new RTCConnection(this.config.rtc, this.artichoke);
+        let rtc = new RTCConnection(this.localStream, this.config.rtc, this.artichoke);
         this.connections[peer] = rtc;
         return rtc;
     }
