@@ -8,9 +8,9 @@ class Call {
 
     log;
     artichoke;
-    localStream;
     pool;
     onRemoteStreamCallback;
+
     constructor(call, artichoke) {
         this.id = call.id;
         this.users = call.users;
@@ -18,7 +18,6 @@ class Call {
 
         this.log = artichoke.log;
         this.artichoke = artichoke;
-        this.localStream = undefined;
 
         this.pool = new RTCPool(this.id, artichoke);
 
@@ -30,7 +29,6 @@ class Call {
             rtc.onRemoteStream(function(stream) {
                 return _this.onRemoteStreamCallback(peer, stream);
             });
-            rtc.addStream(_this.localStream);
         });
 
         // Signaling callbacks:
@@ -54,10 +52,9 @@ class Call {
     }
 
     addLocalStream(stream) {
-        this.localStream = stream;
+        this.pool.addLocalStream(stream);
     }
 
-    // FIXME These three ought to use the REST API.
     join(stream) {
         this.addLocalStream(stream);
         this.artichoke.rest.joinCall(this.id);
@@ -98,7 +95,6 @@ class Call {
         rtc.onRemoteStream(function(stream) {
             return _this.onRemoteStreamCallback(user, stream);
         });
-        rtc.addStream(this.localStream);
     }
 
     _defineCallback(type, callback) {
