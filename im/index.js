@@ -688,9 +688,9 @@ $(document).ready(function() {
                     console.log("Received call offer: ", m);
                     var line = "";
                     if(m.call.direct) {
-                        line = m.user + " is calling, answer?";
+                        line = m.sender + " is calling, answer?";
                     } else {
-                        line = m.user + " invites you to join a conference call with " + m.call.users.toString();
+                        line = m.sender + " invites you to join a conference call with " + m.call.users.toString();
                     }
                     if(confirm(line)) {
                         createStream(function(stream) {

@@ -271,11 +271,12 @@ export class Artichoke {
 
         let _this = this;
         this.socket.onMessage(function(m) {
+            // FIXME Adjust format on the backend.
             switch (m.type) {
             case "call_invitation":
                 _this._runCallbacks(m.type, {
                     type: m.type,
-                    user: m.user,
+                    sender: m.user,
                     call: createCall(m.call, _this)
                 });
                 break;
@@ -292,7 +293,6 @@ export class Artichoke {
                 break;
 
             case "presence":
-                // FIXME Adjust format on the backend.
                 _this._runCallbacks(m.type, {
                     type: m.type,
                     user: m.sender,
