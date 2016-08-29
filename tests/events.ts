@@ -15,10 +15,7 @@ describe("Event Handler", () => {
         let eh = new EventHandler();
         let ok = false;
 
-        eh.onError((error: ErrorWithStatus) => {
-            ok = error.status;
-        });
-
+        eh.onError((error: ErrorWithStatus) => ok = error.status);
         expect(ok).toBe(false);
 
         eh.notify({
@@ -30,18 +27,13 @@ describe("Event Handler", () => {
         expect(ok).toBe(true);
     });
 
-    it("should run error handler on unhandeld message", () => {
+    it("should run error handler on unhandled message", () => {
         let eh = new EventHandler();
         let ok = false;
 
-        eh.onError((error: Error) => {
-            ok = true;
-        });
-
+        eh.onError((error: Error) => ok = true);
         expect(ok).toBe(false);
-
         eh.notify({ type: "unhandled" });
-
         expect(ok).toBe(true);
     });
 
@@ -49,11 +41,7 @@ describe("Event Handler", () => {
         let eh = new EventHandler();
         let ok = 0;
 
-        eh.onEvent("message", (msg: Message) => {
-            console.log("[" + msg.sender + "] " + msg.body);
-            ok++;
-        });
-
+        eh.onEvent("message", (msg: Message) => ok++);
         expect(ok).toBe(0);
 
         [1, 2, 3, 4, 5].forEach((i) => {
@@ -93,10 +81,7 @@ describe("Event Handler", () => {
         let eh = new EventHandler();
         let ok = "0";
 
-        eh.onConcreteEvent("message", "3", (msg: Message) => {
-            console.log("[" + msg.sender + "] " + msg.body);
-            ok = msg.id;
-        });
+        eh.onConcreteEvent("message", "3", (msg: Message) => ok = msg.id);
 
         [1, 2, 3, 4, 5].forEach((i) => {
             eh.notify({
