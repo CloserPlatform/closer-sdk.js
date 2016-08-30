@@ -1,4 +1,5 @@
 $(document).ready(function() {
+    displayVersion();
     // Cross-browser support:
     navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
 
