@@ -1,29 +1,27 @@
+import * as config from "./config";
 import { Session } from "./session";
-import { merge } from "./utils";
 
-const defaultConfig = {
-    "rtc": {
-        "iceServers": [{
-            "urls": ["stun:turn.ratel.im:5349", "turn:turn.ratel.im:5349"],
-            "username": "test123",
-            "credential": "test456"
-        }]
-    },
-    "url": "localhost:5431",
-    "debug": false
-};
-
-export function withApiKey(sessionId, apiKey, conf) {
+export function withApiKey(sessionId: config.ID, apiKey: config.ApiKey, conf: config.Config): Promise<Session> {
     return new Promise(function(resolve, reject) {
         // TODO Check supplied apiKey.
-        resolve(new Session(merge({
-            sessionId,
-            apiKey
-        }, merge(conf, defaultConfig))));
+        conf.sessionId = sessionId;
+        conf.apiKey = apiKey;
+
+        resolve(new Session(config.load(conf)));
     });
 }
 
-export function withSignedAuth(sessionData, conf) {
+type Timestamp = number;
+type Signature = string;
+
+export interface SessionData {
+    organizationId: config.ID;
+    sessionId: config.ID;
+    timestamp: Timestamp;
+    signature: Signature;
+}
+
+export function withSignedAuth(sessionData: SessionData, conf: config.Config): Promise<Session> {
     // TODO Check if session data is valid.
     // TODO Obtain an API Key from Ratel backend.
     return withApiKey(sessionData.sessionId, sessionData.sessionId, conf);
