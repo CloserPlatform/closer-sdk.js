@@ -1,5 +1,6 @@
-import { Error, Event, EventHandler, Message } from "../src/events";
+import { EventHandler } from "../src/events";
 import { log } from "./fixtures";
+import { Error, Event, Message} from "../src/protocol";
 
 interface ErrorWithStatus extends Error {
     status: boolean;
@@ -43,6 +44,7 @@ describe("Event Handler", () => {
             eh.notify({
                 type: "message",
                 id: i.toString(),
+                room: "room",
                 body: "Oh hi",
                 sender: "bob",
                 timestamp: Date.now()
@@ -64,8 +66,10 @@ describe("Event Handler", () => {
             eh.notify({
                 type: "message",
                 id: i.toString(),
+                room: "room",
                 body: "Oh hi",
-                sender: "bob"
+                sender: "bob",
+                timestamp: Date.now()
             } as Message);
         });
 
@@ -83,8 +87,10 @@ describe("Event Handler", () => {
             eh.notify({
                 type: "message",
                 id: i.toString(),
+                room: "room",
                 body: "Hi bob",
-                sender: "alice"
+                sender: "alice",
+                timestamp: Date.now()
             } as Message);
         });
 
@@ -103,8 +109,10 @@ describe("Event Handler", () => {
             eh.notify({
                 type: "message",
                 id: i.toString(),
+                room: "room",
                 body: "Hi bob",
-                sender: "alice"
+                sender: "alice",
+                timestamp: Date.now()
             } as Message);
         });
 
@@ -124,8 +132,10 @@ describe("Event Handler", () => {
             eh.notify({
                 type: "message",
                 id: i.toString(),
+                room: "room",
                 body: "Hi bob",
-                sender: "alice"
+                sender: "alice",
+                timestamp: Date.now()
             } as Message);
         });
 

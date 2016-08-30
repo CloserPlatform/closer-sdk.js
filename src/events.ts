@@ -1,29 +1,7 @@
 import { Logger } from "./logger";
+import { Error, Event, ID, Type } from "./protocol";
 
 export type Callback<T> = (T) => void;
-export type Type = string;
-export type ID = string;
-export type Timestamp = number;
-
-export interface Event {
-    type: Type;
-}
-
-interface EventWithId extends Event {
-    id: ID;
-}
-
-export interface Message extends EventWithId {
-    body: string;
-    sender: ID;
-    room: ID;
-    timestamp: number;
-    delivered?: number;
-}
-
-export interface Error extends Event {
-    reason: string;
-}
 
 export class EventHandler {
     private log: Logger;
@@ -38,7 +16,7 @@ export class EventHandler {
     }
 
     notify(event: Event) {
-        if ([this.notifyById(event as EventWithId), this.notifyByType(event)].every((r) => !r)) {
+        if ([this.notifyById(event), this.notifyByType(event)].every((r) => !r)) {
             this.log("Unhandled event " + event.type + ": " + JSON.stringify(event));
             this.perType["error"].forEach(function(cb) {
                 cb({
@@ -61,8 +39,8 @@ export class EventHandler {
         return false;
     }
 
-    private notifyById(event: EventWithId): boolean {
-        if (event.type in this.perId && event.id in this.perId[event.type]) {
+    private notifyById(event: Event): boolean {
+        if (event.id && event.type in this.perId && event.id in this.perId[event.type]) {
             this.log("Running callbacks for event type " + event.type + ", id " + event.id);
             this.perId[event.type][event.id](event);
             return true;

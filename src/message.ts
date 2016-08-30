@@ -1,21 +1,22 @@
 import { Artichoke } from "./artichoke";
-import * as events from "./events";
+import { Callback } from "./events";
 import { Logger } from "./logger";
+import { Event, ID, Message as MSG, Timestamp }  from "./protocol";
 
-class Message implements events.Message { // FIXME A message shouldn't be an Event...
+class Message implements MSG { // FIXME A message shouldn't be an Event...
     public type: string = "message";
 
-    public id: events.ID;
+    public id: ID;
     public body: string;
-    public sender: events.ID;
-    public room: events.ID;
-    public timestamp: events.Timestamp;
-    public delivered: events.Timestamp;
+    public sender: ID;
+    public room: ID;
+    public timestamp: Timestamp;
+    public delivered: Timestamp;
 
     private log: Logger;
     private artichoke: Artichoke;
 
-    constructor(message: events.Message, artichoke: Artichoke) {
+    constructor(message: MSG, artichoke: Artichoke) {
         this.id = message.id;
         this.body = message.body;
         this.sender = message.sender;
@@ -31,7 +32,7 @@ class Message implements events.Message { // FIXME A message shouldn't be an Eve
         }
     }
 
-    onDelivery(callback: events.Callback<events.Event>) {
+    onDelivery(callback: Callback<Event>) {
         // FIXME This registers a callback for EVERY message ever created. Nope.
         let _this = this;
         this.artichoke.onEvent("msg_delivered", function(msg) {
@@ -51,6 +52,6 @@ class Message implements events.Message { // FIXME A message shouldn't be an Eve
     }
 }
 
-export function createMessage(message: events.Message, artichoke: Artichoke): Message {
+export function createMessage(message: MSG, artichoke: Artichoke): Message {
     return new Message(message, artichoke);
 }

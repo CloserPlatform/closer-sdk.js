@@ -1,5 +1,27 @@
 // Artichoke protocol messages:
 
+export type Type = string;
+export type ID = string;
+export type Timestamp = number;
+
+export interface Event {
+    type: Type;
+    id?: ID;
+}
+
+export interface Message extends Event {
+    body: string;
+    sender: ID;
+    room: ID;
+    timestamp: number;
+    delivered?: number;
+}
+
+export interface Error extends Event {
+    reason: string;
+}
+
+// FIXME Remove these:
 export const CallCreate = (users) => ({
     users
 });

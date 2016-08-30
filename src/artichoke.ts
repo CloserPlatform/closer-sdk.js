@@ -1,6 +1,6 @@
 import { createCall } from "./call";
 import { ApiKey, Config } from "./config";
-import * as events from "./events";
+import { Callback, EventHandler } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
 import { createMessage } from "./message";
@@ -117,7 +117,7 @@ class ArtichokeREST {
         };
     }
 
-    _get(path: Array<string>): Promise<events.Event | Array<events.Event>> {
+    _get(path: Array<string>): Promise<proto.Event | Array<proto.Event>> {
         let _this = this;
         return new Promise(function(resolve, reject) {
             let xhttp = new XMLHttpRequest();
@@ -130,7 +130,7 @@ class ArtichokeREST {
         });
     }
 
-    _post(path: Array<string>, obj): Promise<events.Event | Array<events.Event>> {
+    _post(path: Array<string>, obj): Promise<proto.Event | Array<proto.Event>> {
         let _this = this;
         return new Promise(function(resolve, reject) {
             let json = JSON.stringify(obj);
@@ -147,8 +147,8 @@ class ArtichokeREST {
 }
 
 interface PromiseFunctions {
-    resolve: events.Callback<events.Event>;
-    reject: events.Callback<events.Error>;
+    resolve: Callback<proto.Event>;
+    reject: Callback<proto.Error>;
 }
 
 class ArtichokeWS extends JSONWebSocket {
@@ -230,7 +230,7 @@ class ArtichokeWS extends JSONWebSocket {
 
 export class Artichoke {
     private config: Config;
-    private events: events.EventHandler;
+    private events: EventHandler;
 
     // FIXME Make these private.
     public log: Logger;
@@ -241,7 +241,7 @@ export class Artichoke {
     public sessionId;
     public apiKey;
 
-    constructor(config: Config, log: Logger, eh: events.EventHandler) {
+    constructor(config: Config, log: Logger, eh: EventHandler) {
         this.config = config;
         this.log = log;
         this.events = eh;
@@ -265,15 +265,15 @@ export class Artichoke {
 
     // Callbacks:
     // FIXME Remove this.
-    onEvent(type: string, callback: events.Callback<events.Event>) {
+    onEvent(type: string, callback: Callback<proto.Event>) {
         this.events.onEvent(type, callback);
     }
 
-    onConnect(callback: events.Callback<events.Event>) {
+    onConnect(callback: Callback<proto.Event>) {
         this.events.onEvent("hello", callback);
     }
 
-    onError(callback: events.Callback<events.Error>) {
+    onError(callback: Callback<proto.Error>) {
         this.events.onError(callback);
     }
 
@@ -290,14 +290,14 @@ export class Artichoke {
                     type: m.type,
                     sender: m.user,
                     call: createCall(m.call, _this)
-                } as events.Event);
+                } as proto.Event);
                 break;
 
             case "room_created": // FIXME Rename to room_invitation.
                 _this.events.notify({
                     type: m.type,
                     room: createRoom(m.room, _this)
-                } as events.Event);
+                } as proto.Event);
                 break;
 
             case "message":
@@ -310,11 +310,11 @@ export class Artichoke {
                     user: m.sender,
                     status: m.status,
                     timestamp: m.timestamp
-                } as events.Event);
+                } as proto.Event);
                 break;
 
             default:
-                _this.events.notify(m as events.Event);
+                _this.events.notify(m as proto.Event);
             }
         });
     }
