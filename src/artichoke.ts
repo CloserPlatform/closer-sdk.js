@@ -28,11 +28,11 @@ class ArtichokeREST {
     }
 
     createCall(sessions) {
-        return this._post([this.url, this.callPath], proto.CallCreate(sessions));
+        return this._post([this.url, this.callPath], proto.createCall(sessions));
     }
 
     createDirectCall(sessionId) {
-        return this._post([this.url, this.callPath], proto.CallCreateDirect(sessionId));
+        return this._post([this.url, this.callPath], proto.createDirectCall(sessionId));
     }
 
     getCall(callId) {
@@ -48,7 +48,7 @@ class ArtichokeREST {
     }
 
     leaveCall(callId, reason) {
-        return this._post([this.url, this.callPath, callId, "leave"], proto.LeaveReason(reason));
+        return this._post([this.url, this.callPath, callId, "leave"], proto.leaveReason(reason));
     }
 
     inviteToCall(callId, sessionId) {
@@ -62,11 +62,11 @@ class ArtichokeREST {
 
     // Chat room API:
     createRoom(name) {
-        return this._post([this.url, this.roomPath], proto.RoomCreate(name));
+        return this._post([this.url, this.roomPath], proto.createRoom(name));
     }
 
     createDirectRoom(sessionId) {
-        return this._post([this.url, this.roomPath], proto.RoomCreateDirect(sessionId));
+        return this._post([this.url, this.roomPath], proto.createDirectRoom(sessionId));
     }
 
     getRoom(roomId) {
@@ -161,21 +161,21 @@ class ArtichokeWS extends JSONWebSocket {
 
     // Misc API:
     setStatus(sessionId, status, timestamp) {
-        this.send(proto.Presence(sessionId, status, timestamp));
+        this.send(proto.presence(sessionId, status, timestamp));
     }
 
     // Call API:
     sendDescription(callId, sessionId, description) {
-        this.send(proto.RTCDescription(callId, sessionId, description));
+        this.send(proto.rtcDescription(callId, sessionId, description));
     }
 
     sendCandidate(callId, sessionId, candidate) {
-        this.send(proto.RTCCandidate(callId, sessionId, candidate));
+        this.send(proto.rtcCandidate(callId, sessionId, candidate));
     }
 
     // Chat API:
     setDelivered(messageId, timestamp) {
-        this.send(proto.ChatDelivered(messageId, timestamp));
+        this.send(proto.messageDelivered(messageId, timestamp));
     }
 
     // Room API:
@@ -187,12 +187,12 @@ class ArtichokeWS extends JSONWebSocket {
                 resolve, // FIXME This should createMessage().
                 reject
             };
-            _this.send(proto.ChatRequest(roomId, body, ref));
+            _this.send(proto.messageRequest(roomId, body, ref));
         });
     }
 
     sendTyping(roomId) {
-        this.send(proto.Typing(roomId));
+        this.send(proto.typing(roomId));
     }
 
     onMessage(callback) {
@@ -224,7 +224,7 @@ class ArtichokeWS extends JSONWebSocket {
     }
 
     setMark(roomId, timestamp) {
-        this.send(proto.Mark(roomId, timestamp));
+        this.send(proto.mark(roomId, timestamp));
     }
 }
 

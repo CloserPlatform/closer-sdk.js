@@ -1,7 +1,7 @@
 import { Artichoke } from "./artichoke";
 import { Callback } from "./events";
 import { Logger } from "./logger";
-import { Event, ID, Message as MSG, Timestamp }  from "./protocol";
+import { ID, Message as MSG, MessageDelivered, Timestamp }  from "./protocol";
 
 class Message implements MSG { // FIXME A message shouldn't be an Event...
     public type: string = "message";
@@ -32,10 +32,10 @@ class Message implements MSG { // FIXME A message shouldn't be an Event...
         }
     }
 
-    onDelivery(callback: Callback<Event>) {
+    onDelivery(callback: Callback<MessageDelivered>) {
         // FIXME This registers a callback for EVERY message ever created. Nope.
         let _this = this;
-        this.artichoke.onEvent("msg_delivered", function(msg) {
+        this.artichoke.onEvent("msg_delivered", function(msg: MessageDelivered) {
             if (msg.id === _this.id) {
                 _this.log("Running callback msg_delivered for message: " + _this.id);
                 _this.delivered = msg.timestamp;

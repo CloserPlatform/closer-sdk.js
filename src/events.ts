@@ -1,7 +1,9 @@
 import { Logger } from "./logger";
 import { Error, Event, ID, Type } from "./protocol";
 
-export type Callback<T> = (T) => void;
+export interface Callback<T> {
+    (arg: T): void;
+}
 
 export class EventHandler {
     private log: Logger;
@@ -23,7 +25,7 @@ export class EventHandler {
                     type: "error",
                     reason: "Unhandled event: " + event.type,
                     event
-                });
+                } as Event);
             });
         }
     }
