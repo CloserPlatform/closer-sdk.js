@@ -2,9 +2,14 @@ import { Session } from "./session";
 import { merge } from "./utils";
 
 const defaultConfig = {
-    "rtc": {"iceServers": [{"urls": ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
-                            "username": "test123",
-                            "credential": "test456"}]},
+    "rtc": {
+        "iceTransportPolicy": "relay",
+        "iceServers": [{
+            "urls": ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
+            "username": "test123",
+            "credential": "test456"
+        }]
+    },
     "url": "localhost:5431",
     "debug": false
 };
