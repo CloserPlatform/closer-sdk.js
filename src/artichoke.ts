@@ -1,5 +1,5 @@
 import { createCall } from "./call";
-import { Config } from "./config";
+import { ApiKey, Config } from "./config";
 import * as events from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
@@ -9,15 +9,16 @@ import { createRoom } from "./room";
 import { nop, pathcat, wrapPromise } from "./utils";
 
 class ArtichokeREST {
-    log;
-    apiKey;
-    url;
-    callPath;
-    chatPath;
-    roomPath;
+    private log: Logger;
+    private apiKey: ApiKey;
 
-    constructor(config) {
-        this.log = config.log;
+    private url: string;
+    private callPath: string;
+    private chatPath: string;
+    private roomPath: string;
+
+    constructor(config: Config, log: Logger) {
+        this.log = log;
         this.apiKey = config.apiKey;
         this.url = "//" + pathcat([config.url, "api"]);
 
@@ -143,10 +144,16 @@ class ArtichokeREST {
     }
 }
 
+interface PromiseFunctions {
+    resolve: events.Callback<events.Event>;
+    reject: events.Callback<events.Error>;
+}
+
 class ArtichokeWS extends JSONWebSocket {
-    promises;
-    constructor(config) {
-        super("wss://" + pathcat([config.url, "ws", config.apiKey]), config);
+    private promises: { [ref: string]: PromiseFunctions };
+
+    constructor(config: Config, log: Logger) {
+        super("wss://" + pathcat([config.url, "ws", config.apiKey]), log);
         this.promises = {};
     }
 
@@ -239,7 +246,7 @@ export class Artichoke {
 
         this.log("this.config: " + JSON.stringify(this.config));
 
-        this.rest = new ArtichokeREST(config);
+        this.rest = new ArtichokeREST(config, log);
 
         // User config:
         this.sessionId = config.sessionId;
@@ -270,7 +277,7 @@ export class Artichoke {
 
     // API:
     connect() {
-        this.socket = new ArtichokeWS(this.config);
+        this.socket = new ArtichokeWS(this.config, this.log);
 
         let _this = this;
         this.socket.onMessage(function(m) {

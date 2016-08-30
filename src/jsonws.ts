@@ -2,14 +2,15 @@ export class JSONWebSocket {
     log;
     url;
     socket;
-    constructor(url, config) {
-        this.log = config.log;
+
+    constructor(url, log) {
+        this.log = log;
         this.url = url;
 
         this.log("Connecting to: " + this.url);
         this.socket = new WebSocket(url);
         this.socket.onopen = function() {
-            config.log("Connected to: " + url);
+            log("Connected to: " + url);
         };
     }
 
