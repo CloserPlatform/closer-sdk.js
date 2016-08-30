@@ -28,73 +28,73 @@ class ArtichokeREST {
     }
 
     createCall(sessions) {
-        return this._post(pathcat([this.url, this.callPath]), proto.CallCreate(sessions));
+        return this._post([this.url, this.callPath], proto.CallCreate(sessions));
     }
 
     createDirectCall(sessionId) {
-        return this._post(pathcat([this.url, this.callPath]), proto.CallCreateDirect(sessionId));
+        return this._post([this.url, this.callPath], proto.CallCreateDirect(sessionId));
     }
 
     getCall(callId) {
-        return this._get(pathcat([this.url, this.callPath, callId]));
+        return this._get([this.url, this.callPath, callId]);
     }
 
     getCalls() {
-        return this._get(pathcat([this.url, this.callPath]));
+        return this._get([this.url, this.callPath]);
     }
 
     joinCall(callId) {
-        return this._post(pathcat([this.url, this.callPath, callId, "join"]), "");
+        return this._post([this.url, this.callPath, callId, "join"], "");
     }
 
     leaveCall(callId, reason) {
-        return this._post(pathcat([this.url, this.callPath, callId, "leave"]), proto.LeaveReason(reason));
+        return this._post([this.url, this.callPath, callId, "leave"], proto.LeaveReason(reason));
     }
 
     inviteToCall(callId, sessionId) {
-        return this._post(pathcat([this.url, this.callPath, callId, "invite", sessionId]), "");
+        return this._post([this.url, this.callPath, callId, "invite", sessionId], "");
     }
 
     // Chat API:
     getChatHistory(roomId) {
-        return this._get(pathcat([this.url, this.chatPath, roomId]));
+        return this._get([this.url, this.chatPath, roomId]);
     }
 
     // Chat room API:
     createRoom(name) {
-        return this._post(pathcat([this.url, this.roomPath]), proto.RoomCreate(name));
+        return this._post([this.url, this.roomPath], proto.RoomCreate(name));
     }
 
     createDirectRoom(sessionId) {
-        return this._post(pathcat([this.url, this.roomPath]), proto.RoomCreateDirect(sessionId));
+        return this._post([this.url, this.roomPath], proto.RoomCreateDirect(sessionId));
     }
 
     getRoom(roomId) {
-        return this._get(pathcat([this.url, this.roomPath, roomId]));
+        return this._get([this.url, this.roomPath, roomId]);
     }
 
     getRooms() {
-        return this._get(pathcat([this.url, this.roomPath]));
+        return this._get([this.url, this.roomPath]);
     }
 
     getRoster() {
-        return this._get(pathcat([this.url, this.roomPath, "unread"]));
+        return this._get([this.url, this.roomPath, "unread"]);
     }
 
     getUsers(roomId) {
-        return this._get(pathcat([this.url, this.roomPath, roomId, "users"]));
+        return this._get([this.url, this.roomPath, roomId, "users"]);
     }
 
     joinRoom(roomId) {
-        return this._post(pathcat([this.url, this.roomPath, roomId, "join"]), "");
+        return this._post([this.url, this.roomPath, roomId, "join"], "");
     }
 
     leaveRoom(roomId) {
-        return this._post(pathcat([this.url, this.roomPath, roomId, "leave"]), "");
+        return this._post([this.url, this.roomPath, roomId, "leave"], "");
     }
 
     inviteToRoom(roomId, sessionId) {
-        return this._post(pathcat([this.url, this.roomPath, roomId, "invite", sessionId]), "");
+        return this._post([this.url, this.roomPath, roomId, "invite", sessionId], "");
     }
 
     _responseCallback(xhttp, resolve, reject) {
@@ -117,10 +117,11 @@ class ArtichokeREST {
         };
     }
 
-    _get(url) {
+    _get(path: Array<string>): Promise<events.Event | Array<events.Event>> {
         let _this = this;
         return new Promise(function(resolve, reject) {
             let xhttp = new XMLHttpRequest();
+            let url = pathcat(path);
             xhttp.onreadystatechange = _this._responseCallback(xhttp, resolve, reject);
             _this.log("GET " + url);
             xhttp.open("GET", url, true);
@@ -129,11 +130,12 @@ class ArtichokeREST {
         });
     }
 
-    _post(url, obj) {
+    _post(path: Array<string>, obj): Promise<events.Event | Array<events.Event>> {
         let _this = this;
         return new Promise(function(resolve, reject) {
             let json = JSON.stringify(obj);
             let xhttp = new XMLHttpRequest();
+            let url = pathcat(path);
             xhttp.onreadystatechange = _this._responseCallback(xhttp, resolve, reject);
             _this.log("POST " + url + " " + json);
             xhttp.open("POST", url, true);
