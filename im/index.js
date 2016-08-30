@@ -634,6 +634,14 @@ $(document).ready(function() {
             "timestamp": Date.now(),
             "signature": "FIXME"
         }, {
+            "rtc": {
+                "iceTransportPolicy": "relay",
+                "iceServers": [{
+                    "urls": ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
+                    "username": "test123",
+                    "credential": "test456"
+                }]
+            },
             "url": server,
             "debug": true
         }).then(function(session) {
