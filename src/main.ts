@@ -4,7 +4,7 @@ import { merge } from "./utils";
 const defaultConfig = {
     "rtc": {
         "iceServers": [{
-            "urls": ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
+            "urls": ["stun:turn.ratel.im:5349", "turn:turn.ratel.im:5349"],
             "username": "test123",
             "credential": "test456"
         }]
