@@ -1,14 +1,8 @@
-import { Error, Event, EventHandler } from "../src/events";
+import { Error, Event, EventHandler, Message } from "../src/events";
 import { log } from "./fixtures";
 
 interface ErrorWithStatus extends Error {
     status: boolean;
-}
-
-interface Message extends Event {
-    id: string;
-    body: string;
-    sender: string;
 }
 
 describe("Event Handler", () => {
@@ -50,7 +44,8 @@ describe("Event Handler", () => {
                 type: "message",
                 id: i.toString(),
                 body: "Oh hi",
-                sender: "bob"
+                sender: "bob",
+                timestamp: Date.now()
             } as Message);
 
             expect(ok).toBe(i);

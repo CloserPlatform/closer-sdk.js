@@ -1,7 +1,9 @@
 import { Logger } from "./logger";
 
+export type Callback<T> = (T) => void;
 export type Type = string;
 export type ID = string;
+export type Timestamp = number;
 
 export interface Event {
     type: Type;
@@ -11,11 +13,17 @@ interface EventWithId extends Event {
     id: ID;
 }
 
+export interface Message extends EventWithId {
+    body: string;
+    sender: ID;
+    room: ID;
+    timestamp: number;
+    delivered?: number;
+}
+
 export interface Error extends Event {
     reason: string;
 }
-
-type Callback<T> = (T) => void;
 
 export class EventHandler {
     private log: Logger;

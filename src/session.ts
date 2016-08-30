@@ -1,16 +1,18 @@
-import { Artichoke } from "./artichoke.ts";
-import { nop } from "./utils";
+import { Artichoke } from "./artichoke";
+import * as config from "./config";
+import { EventHandler } from "./events";
+import * as logger from "./logger";
 
 export class Session {
-    id;
-    artichoke;
-    constructor(config) {
-        this.id = config.sessionId;
-        config.log = config.debug ? (line) => console.log("[DEBUG] " + line) : nop;
-        this.artichoke = new Artichoke(config);
-    }
+    public id: config.ID;
+    public chat: Artichoke;
+    public events: EventHandler;
 
-    get chat() {
-        return this.artichoke;
+    constructor(conf: config.Config) {
+        let log = conf.debug ? logger.debugConsole : logger.devNull;
+
+        this.id = conf.sessionId;
+        this.events = new EventHandler(log);
+        this.chat = new Artichoke(conf, log, this.events);
     }
 }

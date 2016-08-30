@@ -12,16 +12,6 @@ export function pathcat(parts) {
     return output.join("/");
 }
 
-export function merge(a, b) {
-    b = b || {};
-
-    let result = a;
-    Object.getOwnPropertyNames(b).forEach((p) => {
-        result[p] = a[p] || b[p];
-    });
-    return result;
-}
-
 export function wrapPromise(promise, fun, args) {
     return new Promise(function(resolve, reject) {
         promise.then(function(obj) {

@@ -1,14 +1,21 @@
-class Message {
-    id;
-    body;
-    sender;
-    room;
-    timestamp;
-    delivered;
-    log;
-    artichoke;
+import { Artichoke } from "./artichoke";
+import * as events from "./events";
+import { Logger } from "./logger";
 
-    constructor(message, artichoke) {
+class Message implements events.Message { // FIXME A message shouldn't be an Event...
+    public type: string = "message";
+
+    public id: events.ID;
+    public body: string;
+    public sender: events.ID;
+    public room: events.ID;
+    public timestamp: events.Timestamp;
+    public delivered: events.Timestamp;
+
+    private log: Logger;
+    private artichoke: Artichoke;
+
+    constructor(message: events.Message, artichoke: Artichoke) {
         this.id = message.id;
         this.body = message.body;
         this.sender = message.sender;
@@ -20,11 +27,11 @@ class Message {
         this.artichoke = artichoke;
 
         if (!(this.sender === artichoke.sessionId || this.delivered)) {
-            this._markDelivered();
+            this.markDelivered();
         }
     }
 
-    onDelivery(callback) {
+    onDelivery(callback: events.Callback<events.Event>) {
         // FIXME This registers a callback for EVERY message ever created. Nope.
         let _this = this;
         this.artichoke.onEvent("msg_delivered", function(msg) {
@@ -38,12 +45,12 @@ class Message {
 
     // TODO markRead, onRead, edit & onEdit
 
-    _markDelivered() {
+    private markDelivered() {
         this.delivered = Date.now();
         this.artichoke.socket.setDelivered(this.id, this.delivered);
     }
 }
 
-export function createMessage(message, artichoke) {
+export function createMessage(message: events.Message, artichoke: Artichoke): Message {
     return new Message(message, artichoke);
 }

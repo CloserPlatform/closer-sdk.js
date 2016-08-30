@@ -1,9 +1,12 @@
 import { createCall } from "./call";
+import { Config } from "./config";
+import * as events from "./events";
 import { JSONWebSocket } from "./jsonws";
+import { Logger } from "./logger";
 import { createMessage } from "./message";
 import * as proto from "./protocol";
 import { createRoom } from "./room";
-import { merge, nop, pathcat, wrapPromise } from "./utils";
+import { nop, pathcat, wrapPromise } from "./utils";
 
 class ArtichokeREST {
     log;
@@ -217,16 +220,22 @@ class ArtichokeWS extends JSONWebSocket {
 }
 
 export class Artichoke {
-    config;
-    log;
-    rest;
-    sessionId;
-    apiKey;
-    socket;
-    callbacks;
-    constructor(config) {
+    private config: Config;
+    private events: events.EventHandler;
+
+    // FIXME Make these private.
+    public log: Logger;
+    public rest;
+    public socket;
+
+    // FIXME Move these away from here.
+    public sessionId;
+    public apiKey;
+
+    constructor(config: Config, log: Logger, eh: events.EventHandler) {
         this.config = config;
-        this.log = config.log;
+        this.log = log;
+        this.events = eh;
 
         this.log("this.config: " + JSON.stringify(this.config));
 
@@ -239,30 +248,24 @@ export class Artichoke {
         // Connection state:
         this.socket = undefined;
 
-        this.callbacks = {};
-
         // NOTE By default do nothing.
-        this.onEvent("error", nop);
-        this.onEvent("msg_received", nop);
-        this.onEvent("msg_delivered", nop);
-        this.onEvent("call_candidate", nop);
+        this.events.onEvent("error", nop);
+        this.events.onEvent("msg_received", nop);
+        this.events.onEvent("msg_delivered", nop);
     }
 
     // Callbacks:
-    onEvent(type, callback) {
-        this.log("Registered callback for message type: " + type);
-        if (!(type in this.callbacks)) {
-            this.callbacks[type] = [];
-        }
-        this.callbacks[type].push(callback);
+    // FIXME Remove this.
+    onEvent(type: string, callback: events.Callback<events.Event>) {
+        this.events.onEvent(type, callback);
     }
 
-    onConnect(callback) {
-        this.onEvent("hello", callback);
+    onConnect(callback: events.Callback<events.Event>) {
+        this.events.onEvent("hello", callback);
     }
 
-    onError(callback) {
-        this.onEvent("error", callback);
+    onError(callback: events.Callback<events.Error>) {
+        this.events.onError(callback);
     }
 
     // API:
@@ -274,35 +277,35 @@ export class Artichoke {
             // FIXME Adjust format on the backend.
             switch (m.type) {
             case "call_invitation":
-                _this._runCallbacks(m.type, {
+                _this.events.notify({
                     type: m.type,
                     sender: m.user,
                     call: createCall(m.call, _this)
-                });
+                } as events.Event);
                 break;
 
             case "room_created": // FIXME Rename to room_invitation.
-                _this._runCallbacks(m.type, {
+                _this.events.notify({
                     type: m.type,
                     room: createRoom(m.room, _this)
-                });
+                } as events.Event);
                 break;
 
             case "message":
-                _this._runCallbacks(m.type, createMessage(m, _this));
+                _this.events.notify(createMessage(m, _this));
                 break;
 
             case "presence":
-                _this._runCallbacks(m.type, {
+                _this.events.notify({
                     type: m.type,
                     user: m.sender,
                     status: m.status,
                     timestamp: m.timestamp
-                });
+                } as events.Event);
                 break;
 
             default:
-                _this._runCallbacks(m.type, m);
+                _this.events.notify(m as events.Event);
             }
         });
     }
@@ -371,22 +374,10 @@ export class Artichoke {
         return wrapPromise(promise, createRoom, [this]);
     }
 
-    _runCallbacks(type, m) {
-        if (type in this.callbacks) {
-            this.log("Running callbacks for message type: " + type);
-            return this.callbacks[type].forEach((cb) => cb(m));
-        } else {
-            this.log("Unhandled message " + type + ": " + JSON.stringify(m));
-            this._error("Unhandled message.", {
-                message: m
-            });
-        }
-    }
-
-    _error(reason, info) {
-        this._runCallbacks("error", merge({
-            type: "error",
-            reason
-        }, info));
+    _error(reason: string, error) {
+        error = error || {};
+        error.type = "error";
+        error.reason = reason;
+        this.events.notify(error);
     }
 }
