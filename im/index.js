@@ -538,11 +538,11 @@ $(document).ready(function() {
 
         if(call.direct) {
             input = makeDiv();
-
+        } else {
             call.onInvited(function(m) {
                 console.log(m.sender + " invited " + m.user + " to join the call: ", m);
             });
-        } else {
+
             input = makeInputField("Invite!", function(user) {
                 call.invite(user);
             }, function() {});
