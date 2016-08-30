@@ -1,4 +1,4 @@
-import { nop } from "./utils";
+import { Logger } from "./logger";
 
 export type Type = string;
 export type ID = string;
@@ -18,15 +18,20 @@ export interface Error extends Event {
 type Callback<T> = (T) => void;
 
 export class EventHandler {
+    private log: Logger;
     private perType: { [type: string]: Array<Callback<Event>> } = {};
     private perId: { [type: string]: { [id: string]: Callback<Event> } } = {};
 
-    constructor() {
-        this.onError(nop); // NOTE By default do nothing.
+    constructor(log: Logger) {
+        this.log = log;
+        this.onError(function(Error) {
+            // NOTE By default do nothing.
+        });
     }
 
     notify(event: Event) {
         if ([this.notifyById(event as EventWithId), this.notifyByType(event)].every((r) => !r)) {
+            this.log("Unhandled event " + event.type + ": " + JSON.stringify(event));
             this.perType["error"].forEach(function(cb) {
                 cb({
                     type: "error",
@@ -39,6 +44,7 @@ export class EventHandler {
 
     private notifyByType(event: Event): boolean {
         if (event.type in this.perType) {
+            this.log("Running callbacks for event type " + event.type);
             this.perType[event.type].forEach(function(cb) {
                 cb(event);
             });
@@ -49,6 +55,7 @@ export class EventHandler {
 
     private notifyById(event: EventWithId): boolean {
         if (event.type in this.perId && event.id in this.perId[event.type]) {
+            this.log("Running callbacks for event type " + event.type + ", id " + event.id);
             this.perId[event.type][event.id](event);
             return true;
         }
@@ -60,6 +67,8 @@ export class EventHandler {
     }
 
     onEvent(type: Type, callback: Callback<Event>) {
+        this.log("Registered callback for event type " + type);
+
         if (!(type in this.perType)) {
             this.perType[type] = [];
         }
@@ -67,6 +76,8 @@ export class EventHandler {
     }
 
     onConcreteEvent(type: Type, id: ID, callback: Callback<Event>) {
+        this.log("Registered callback for event type " + type + ", id " + id);
+
         if (!(type in this.perId)) {
             this.perId[type] = {};
         }

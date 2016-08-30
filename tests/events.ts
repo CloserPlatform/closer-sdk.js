@@ -1,4 +1,5 @@
 import { Error, Event, EventHandler } from "../src/events";
+import { log } from "./fixtures";
 
 interface ErrorWithStatus extends Error {
     status: boolean;
@@ -12,7 +13,7 @@ interface Message extends Event {
 
 describe("Event Handler", () => {
     it("should allow defining error handlers", () => {
-        let eh = new EventHandler();
+        let eh = new EventHandler(log);
         let ok = false;
 
         eh.onError((error: ErrorWithStatus) => ok = error.status);
@@ -28,7 +29,7 @@ describe("Event Handler", () => {
     });
 
     it("should run error handler on unhandled message", () => {
-        let eh = new EventHandler();
+        let eh = new EventHandler(log);
         let ok = false;
 
         eh.onError((error: Error) => ok = true);
@@ -38,7 +39,7 @@ describe("Event Handler", () => {
     });
 
     it("should allow defining event handlers", () => {
-        let eh = new EventHandler();
+        let eh = new EventHandler(log);
         let ok = 0;
 
         eh.onEvent("message", (msg: Message) => ok++);
@@ -57,7 +58,7 @@ describe("Event Handler", () => {
     });
 
     it("should allow defining multiple event handlers and run them all", () => {
-        let eh = new EventHandler();
+        let eh = new EventHandler(log);
         let first = 0;
         let second = 0;
 
@@ -78,7 +79,7 @@ describe("Event Handler", () => {
     });
 
     it("should allow defining concrete event handlers", () => {
-        let eh = new EventHandler();
+        let eh = new EventHandler(log);
         let ok = "0";
 
         eh.onConcreteEvent("message", "3", (msg: Message) => ok = msg.id);
@@ -96,7 +97,7 @@ describe("Event Handler", () => {
     });
 
     it("should allow defining multiple concrete event handlers and run them all", () => {
-        let eh = new EventHandler();
+        let eh = new EventHandler(log);
         let first = false;
         let second = false;
 
@@ -117,7 +118,7 @@ describe("Event Handler", () => {
     });
 
     it("should run regular event handlers even if concrete event handlers are defined", () => {
-        let eh = new EventHandler();
+        let eh = new EventHandler(log);
         let first = false;
         let second = 0;
 

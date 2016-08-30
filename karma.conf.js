@@ -19,6 +19,7 @@ module.exports = function(config) {
 
     // list of files to exclude
     exclude: [
+      'tests/fixtures.ts'
     ],
 
     // preprocess matching files before serving them to the browser
