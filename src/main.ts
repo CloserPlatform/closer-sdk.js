@@ -3,7 +3,6 @@ import { merge } from "./utils";
 
 const defaultConfig = {
     "rtc": {
-        "iceTransportPolicy": "relay",
         "iceServers": [{
             "urls": ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
             "username": "test123",
