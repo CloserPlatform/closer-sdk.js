@@ -311,7 +311,7 @@ $(document).ready(function() {
                     users.add(msg.originator);
                 }
                 break;
-            case "left": users.add(msg.originator); break;
+            case "left": users.remove(msg.originator); break;
             }
             receiveAction(msg);
         });
