@@ -108,11 +108,11 @@ $(document).ready(function() {
 
     function makeReceiver(room, text) {
         return function(msg) {
-            if(msg.timestamp > (room.currMark || 0)) {
+            if(msg.timestamp > (room.mark || 0)) {
                 if(!chatboxes[room.id].isActive()) {
                     chatboxes[room.id].bumpUnread();
                 } else {
-                    room.mark(msg.timestamp);
+                    room.mark = msg.timestamp; // FIXME Should be a function.
                 }
             }
 
@@ -189,7 +189,7 @@ $(document).ready(function() {
             activate: function() {
                 chatbox.show();
                 controls.show();
-                room.mark(Date.now());
+                room.mark = Date.now(); // FIXME Should be a function.
                 switcher.resetUnread();
                 switcher.activate();
             },
@@ -382,7 +382,7 @@ $(document).ready(function() {
             activate: function() {
                 chatbox.show();
                 controls.show();
-                room.mark(Date.now());
+                room.mark = Date.now(); // FIXME Should be a function.
                 switcher.resetUnread();
                 switcher.activate();
             },

@@ -296,7 +296,7 @@ export class Artichoke {
             case "room_created": // FIXME Rename to room_invitation.
                 _this.events.notify({
                     type: m.type,
-                    room: createRoom(m.room, _this)
+                    room: createRoom(m.room, _this.events, _this)
                 } as proto.Event);
                 break;
 
@@ -380,7 +380,7 @@ export class Artichoke {
     }
 
     _wrapRoom(promise) {
-        return wrapPromise(promise, createRoom, [this]);
+        return wrapPromise(promise, createRoom, [this.events, this]);
     }
 
     _error(reason: string, error) {

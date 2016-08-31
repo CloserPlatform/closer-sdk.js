@@ -1,10 +1,21 @@
-// Artichoke protocol messages:
-
+// Common types:
 export type Type = string;
 export type ID = string;
 export type Ref = string;
 export type Timestamp = number;
 
+// Datatypes:
+export interface Room {
+    id: ID;
+    name: string;
+    direct: boolean;
+
+    // FIXME Get rid of these:
+    mark?: number;
+    unread?: number;
+}
+
+// JSON Events:
 export interface Event {
     type: Type;
     id?: ID;
@@ -45,11 +56,13 @@ export interface Presence extends Event {
     timestamp: Timestamp;
 }
 
-export type SDP = RTCSessionDescription;
+export type Action = "joined" | "left" | "invited";
 
-export interface RTCDescription extends Event {
-    peer: ID;
-    description: SDP;
+export interface RoomAction extends Event {
+    originator: ID;
+    action: Action;
+    subject?: ID;
+    timestamp: Timestamp;
 }
 
 export type Candidate = RTCIceCandidateEvent;
@@ -57,6 +70,13 @@ export type Candidate = RTCIceCandidateEvent;
 export interface RTCCandidate extends Event {
     peer: ID;
     candidate: Candidate;
+}
+
+export type SDP = RTCSessionDescription;
+
+export interface RTCDescription extends Event {
+    peer: ID;
+    description: SDP;
 }
 
 export interface Typing extends Event {
