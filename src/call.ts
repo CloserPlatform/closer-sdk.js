@@ -1,7 +1,7 @@
 import { Artichoke } from "./artichoke";
-import { Callback } from "./events";
+import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { Call as ProtoCall, CallInvited, CallJoined, CallLeft, Event, ID, Type as EventType } from "./protocol";
+import { Call as ProtoCall, CallInvited, CallJoined, CallLeft, ID } from "./protocol";
 import { RTCPool } from "./rtc";
 
 export interface RemoteStreamCallback {
@@ -14,23 +14,33 @@ class BaseCall implements ProtoCall {
     public direct: boolean;
 
     protected artichoke: Artichoke;
+    protected events: EventHandler;
 
     private log: Logger;
     private pool: RTCPool;
     private onRemoteStreamCallback: RemoteStreamCallback;
+    private onLeftCallback: Callback<CallLeft>;
+    private onJoinedCallback: Callback<CallJoined>;
 
-    constructor(call: ProtoCall, artichoke: Artichoke) {
+    constructor(call: ProtoCall, events: EventHandler, artichoke: Artichoke) {
         this.id = call.id;
         this.users = call.users;
         this.direct = call.direct;
 
         this.log = artichoke.log;
+        this.events = events;
         this.artichoke = artichoke;
 
         this.pool = new RTCPool(this.id, artichoke);
 
         // By default do nothing:
-        this.onRemoteStreamCallback = function(peer, stream) {
+        this.onRemoteStreamCallback = (peer, stream) => {
+            // Do nothing.
+        };
+        this.onLeftCallback = (msg) => {
+            // Do nothing.
+        };
+        this.onJoinedCallback = (msg) => {
             // Do nothing.
         };
 
@@ -42,14 +52,16 @@ class BaseCall implements ProtoCall {
         });
 
         // Signaling callbacks:
-        this._defineCallback("call_left", function(msg: CallLeft) {
+        this.events.onConcreteEvent("call_left", this.id, function(msg: CallLeft) {
             _this.users = _this.users.filter((u) => u === msg.user);
             _this.pool.destroy(msg.user);
+            _this.onLeftCallback(msg);
         });
 
-        this._defineCallback("call_joined", function(msg: CallJoined) {
+        this.events.onConcreteEvent("call_joined", this.id, function(msg: CallJoined) {
             _this.users.push(msg.user);
-            _this._createRTC(msg.user);
+            _this.pool.create(msg.user).onRemoteStream((stream) => _this.onRemoteStreamCallback(msg.user, stream));
+            _this.onJoinedCallback(msg);
         });
     }
 
@@ -80,34 +92,15 @@ class BaseCall implements ProtoCall {
     }
 
     onLeft(callback: Callback<CallLeft>) {
-        this._defineCallback("call_left", callback);
+        this.onLeftCallback = callback;
     }
 
     onJoined(callback: Callback<CallJoined>) {
-        this._defineCallback("call_joined", callback);
+        this.onJoinedCallback = callback;
     }
 
     onRemoteStream(callback: RemoteStreamCallback) {
         this.onRemoteStreamCallback = callback;
-    }
-
-    _createRTC(user) {
-        let rtc = this.pool.create(user);
-        let _this = this;
-        rtc.onRemoteStream(function(stream) {
-            return _this.onRemoteStreamCallback(user, stream);
-        });
-    }
-
-    _defineCallback(type: EventType, callback: Callback<Event>) {
-        // FIXME It would be way better to store a hash of rooms and pick the relevant callback directly.
-        let _this = this;
-        this.artichoke.onEvent(type, function(msg) {
-            if (msg.id === _this.id) {
-                _this.log("Running callback " + type + " for call: " + _this.id);
-                callback(msg);
-            }
-        });
     }
 }
 
@@ -119,14 +112,14 @@ export class Call extends BaseCall {
     }
 
     onInvited(callback: Callback<CallInvited>) {
-        this._defineCallback("call_invited", callback);
+        this.events.onConcreteEvent("call_invited", this.id, callback);
     }
 }
 
-export function createCall(call: ProtoCall, artichoke: Artichoke): DirectCall | Call {
+export function createCall(call: ProtoCall, events: EventHandler, artichoke: Artichoke): DirectCall | Call {
     if (call.direct) {
-        return new DirectCall(call, artichoke);
+        return new DirectCall(call, events, artichoke);
     } else {
-        return new Call(call, artichoke);
+        return new Call(call, events, artichoke);
     }
 }
