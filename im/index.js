@@ -108,13 +108,17 @@ $(document).ready(function() {
 
     function makeReceiver(room, text) {
         return function(msg) {
-            if(msg.timestamp > (room.mark || 0)) {
-                if(!chatboxes[room.id].isActive()) {
-                    chatboxes[room.id].bumpUnread();
-                } else {
-                    room.mark = msg.timestamp; // FIXME Should be a function.
+            room.getMark().then(function(mark) {
+                if(msg.timestamp > mark) {
+                    if(!chatboxes[room.id].isActive()) {
+                        chatboxes[room.id].bumpUnread();
+                    } else {
+                        room.mark(msg.timestamp);
+                    }
                 }
-            }
+            }).catch(function(error) {
+                console.log("Could not retrieve the mark: ", error);
+            });
 
             var className = msg.delivered ? "delivered" : "";
             var line = makeTextLine(msg.id, className, msg.timestamp, " " + msg.sender + ": " + msg.body);
@@ -189,7 +193,7 @@ $(document).ready(function() {
             activate: function() {
                 chatbox.show();
                 controls.show();
-                room.mark = Date.now(); // FIXME Should be a function.
+                room.mark(Date.now());
                 switcher.resetUnread();
                 switcher.activate();
             },
@@ -382,7 +386,7 @@ $(document).ready(function() {
             activate: function() {
                 chatbox.show();
                 controls.show();
-                room.mark = Date.now(); // FIXME Should be a function.
+                room.mark(Date.now());
                 switcher.resetUnread();
                 switcher.activate();
             },

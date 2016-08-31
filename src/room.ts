@@ -2,26 +2,23 @@ import { Artichoke } from "./artichoke";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage } from "./message";
-import { Event, ID, Message, Room as ProtoRoom, RoomAction, Type as EventType, Typing } from "./protocol";
+import { Event, ID, Message, Room as ProtoRoom, RoomAction, RosterRoom, Type as EventType, Typing } from "./protocol";
 import { wrapPromise } from "./utils";
 
 class BaseRoom implements ProtoRoom {
     public id: ID;
     public name: string;
     public direct: boolean;
-    public unread: number;
 
     private currMark: number;
     private log: Logger;
     protected artichoke: Artichoke;
 
-    constructor(room: ProtoRoom, events: EventHandler, artichoke: Artichoke) {
+    constructor(room: RosterRoom, events: EventHandler, artichoke: Artichoke) {
         this.id = room.id;
         this.name = room.name;
         this.direct = room.direct;
-        this.unread = room.unread;
-        this.currMark = room.mark;
-
+        this.currMark = room.mark || 0;
         this.log = artichoke.log;
         this.artichoke = artichoke;
     }
@@ -34,18 +31,21 @@ class BaseRoom implements ProtoRoom {
         return this.artichoke.rest.getUsers(this.id);
     }
 
+    getMark() {
+        let _this = this;
+        return new Promise(function(resolve, reject) {
+            // NOTE No need to retrieve the mark if it's cached here.
+            resolve(_this.currMark);
+        });
+    }
+
     send(message) {
         return this._wrapMessage(this.artichoke.socket.sendMessage(this.id, message));
     }
 
-    // FIXME This should be just mark() instead of a property.
-    get mark() {
-        return this.currMark;
-    }
-
-    set mark(timestamp) {
+    mark(timestamp) {
         this.currMark = timestamp;
-        this.artichoke.socket.setMark(this.id, timestamp);
+        return this.artichoke.socket.setMark(this.id, timestamp);
     }
 
     indicateTyping() {

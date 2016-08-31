@@ -9,8 +9,9 @@ export interface Room {
     id: ID;
     name: string;
     direct: boolean;
+}
 
-    // FIXME Get rid of these:
+export interface RosterRoom extends Room {
     mark?: number;
     unread?: number;
 }
