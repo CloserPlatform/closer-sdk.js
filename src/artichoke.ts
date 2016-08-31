@@ -229,11 +229,11 @@ class ArtichokeWS extends JSONWebSocket {
 }
 
 export class Artichoke {
+    private log: Logger;
     private events: EventHandler;
 
     // FIXME Make these private.
     public config: Config;
-    public log: Logger;
     public rest;
     public socket;
 
@@ -284,19 +284,19 @@ export class Artichoke {
                 _this.events.notify({
                     type: m.type,
                     sender: m.user,
-                    call: createCall(m.call, _this.events, _this)
+                    call: createCall(m.call, _this.log, _this.events, _this)
                 } as proto.Event);
                 break;
 
             case "room_created": // FIXME Rename to room_invitation.
                 _this.events.notify({
                     type: m.type,
-                    room: createRoom(m.room, _this.events, _this)
+                    room: createRoom(m.room, _this.log, _this.events, _this)
                 } as proto.Event);
                 break;
 
             case "message":
-                _this.events.notify(createMessage(m, _this.events, _this));
+                _this.events.notify(createMessage(m, _this.log, _this.events, _this));
                 break;
 
             case "presence":
@@ -371,10 +371,10 @@ export class Artichoke {
 
     // Utils:
     _wrapCall(promise) {
-        return wrapPromise(promise, createCall, [this.events, this]);
+        return wrapPromise(promise, createCall, [this.log, this.events, this]);
     }
 
     _wrapRoom(promise) {
-        return wrapPromise(promise, createRoom, [this.events, this]);
+        return wrapPromise(promise, createRoom, [this.log, this.events, this]);
     }
 }

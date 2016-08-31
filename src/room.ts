@@ -15,12 +15,12 @@ class BaseRoom implements ProtoRoom {
     private events: EventHandler;
     protected artichoke: Artichoke;
 
-    constructor(room: RosterRoom, events: EventHandler, artichoke: Artichoke) {
+    constructor(room: RosterRoom, log: Logger, events: EventHandler, artichoke: Artichoke) {
         this.id = room.id;
         this.name = room.name;
         this.direct = room.direct;
         this.currMark = room.mark || 0;
-        this.log = artichoke.log;
+        this.log = log;
         this.events = events;
         this.artichoke = artichoke;
     }
@@ -73,7 +73,7 @@ class BaseRoom implements ProtoRoom {
     }
 
     _wrapMessage(promise) {
-        return wrapPromise(promise, createMessage, [this.events, this.artichoke]);
+        return wrapPromise(promise, createMessage, [this.log, this.events, this.artichoke]);
     }
 }
 
@@ -93,10 +93,10 @@ class Room extends BaseRoom {
     }
 }
 
-export function createRoom(room: ProtoRoom, events: EventHandler, artichoke: Artichoke): DirectRoom | Room {
+export function createRoom(room: ProtoRoom, log: Logger, events: EventHandler, api: Artichoke): DirectRoom | Room {
     if (room.direct) {
-        return new DirectRoom(room, events, artichoke);
+        return new DirectRoom(room, log, events, api);
     } else {
-        return new Room(room, events, artichoke);
+        return new Room(room, log, events, api);
     }
 }

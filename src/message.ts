@@ -18,7 +18,7 @@ class Message implements MSG {
     private events: EventHandler;
     private artichoke: Artichoke;
 
-    constructor(message: MSG, events: EventHandler, artichoke: Artichoke) {
+    constructor(message: MSG, log: Logger, events: EventHandler, artichoke: Artichoke) {
         this.id = message.id;
         this.body = message.body;
         this.sender = message.sender;
@@ -26,7 +26,7 @@ class Message implements MSG {
         this.timestamp = message.timestamp;
         this.delivered = message.delivered;
 
-        this.log = artichoke.log;
+        this.log = log;
         this.events = events;
         this.artichoke = artichoke;
 
@@ -51,6 +51,6 @@ class Message implements MSG {
     }
 }
 
-export function createMessage(message: MSG, events: EventHandler, artichoke: Artichoke): Message {
-    return new Message(message, events, artichoke);
+export function createMessage(message: MSG, log: Logger, events: EventHandler, api: Artichoke): Message {
+    return new Message(message, log, events, api);
 }

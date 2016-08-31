@@ -22,16 +22,16 @@ class BaseCall implements ProtoCall {
     private onLeftCallback: Callback<CallLeft>;
     private onJoinedCallback: Callback<CallJoined>;
 
-    constructor(call: ProtoCall, events: EventHandler, artichoke: Artichoke) {
+    constructor(call: ProtoCall, log: Logger, events: EventHandler, artichoke: Artichoke) {
         this.id = call.id;
         this.users = call.users;
         this.direct = call.direct;
 
-        this.log = artichoke.log;
+        this.log = log;
         this.events = events;
         this.artichoke = artichoke;
 
-        this.pool = new RTCPool(this.id, events, artichoke);
+        this.pool = new RTCPool(this.id, log, events, artichoke);
 
         // By default do nothing:
         this.onRemoteStreamCallback = (peer, stream) => {
@@ -114,10 +114,10 @@ export class Call extends BaseCall {
     }
 }
 
-export function createCall(call: ProtoCall, events: EventHandler, artichoke: Artichoke): DirectCall | Call {
+export function createCall(call: ProtoCall, log: Logger, events: EventHandler, api: Artichoke): DirectCall | Call {
     if (call.direct) {
-        return new DirectCall(call, events, artichoke);
+        return new DirectCall(call, log, events, api);
     } else {
-        return new Call(call, events, artichoke);
+        return new Call(call, log, events, api);
     }
 }

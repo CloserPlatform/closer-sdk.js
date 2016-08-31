@@ -31,10 +31,10 @@ export class RTCConnection {
     private conn: RTCPeerConnection;
     private onRemoteStreamCallback: RemoteStreamCallback;
 
-    constructor(stream: MediaStream, config: RTCConfiguration, artichoke: Artichoke) {
+    constructor(stream: MediaStream, config: RTCConfiguration, log: Logger, artichoke: Artichoke) {
+        log("Connecting an RTC connection.");
         this.artichoke = artichoke;
-        this.log = artichoke.log;
-        this.log("Connecting an RTC connection.");
+        this.log = log;
         this.conn = newRTCPeerConnection(config);
         this.conn.addStream(stream);
         this.initOnRemoteStream();
@@ -131,10 +131,10 @@ export class RTCPool {
     private connections: { [user: string]: RTCConnection };
     private onConnectionCallback: ConnectionCallback;
 
-    constructor(callId: ID, events: EventHandler, artichoke: Artichoke) {
+    constructor(callId: ID, log: Logger, events: EventHandler, artichoke: Artichoke) {
         this.artichoke = artichoke;
         this.events = events;
-        this.log = artichoke.log;
+        this.log = log;
 
         this.callId = callId;
         this.config = artichoke.config.rtc;
@@ -190,7 +190,7 @@ export class RTCPool {
     }
 
     _create(peer: ID): RTCConnection {
-        let rtc = new RTCConnection(this.localStream, this.config, this.artichoke);
+        let rtc = new RTCConnection(this.localStream, this.config, this.log, this.artichoke);
         this.connections[peer] = rtc;
         return rtc;
     }
