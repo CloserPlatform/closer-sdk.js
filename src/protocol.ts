@@ -26,6 +26,7 @@ export interface Error extends Event {
     reason: string;
 }
 
+// FIXME This shouldn't be an event.
 export interface Message extends Event {
     body: string;
     sender: ID;

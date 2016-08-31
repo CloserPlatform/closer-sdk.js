@@ -301,7 +301,7 @@ export class Artichoke {
                 break;
 
             case "message":
-                _this.events.notify(createMessage(m, _this));
+                _this.events.notify(createMessage(m, _this.events, _this));
                 break;
 
             case "presence":

@@ -1,9 +1,10 @@
 import { Artichoke } from "./artichoke";
-import { Callback } from "./events";
+import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { ID, Message as MSG, MessageDelivered, Timestamp }  from "./protocol";
 
-class Message implements MSG { // FIXME A message shouldn't be an Event...
+// FIXME A message shouldn't be an Event...
+class Message implements MSG {
     public type: string = "message";
 
     public id: ID;
@@ -14,9 +15,10 @@ class Message implements MSG { // FIXME A message shouldn't be an Event...
     public delivered: Timestamp;
 
     private log: Logger;
+    private events: EventHandler;
     private artichoke: Artichoke;
 
-    constructor(message: MSG, artichoke: Artichoke) {
+    constructor(message: MSG, events: EventHandler, artichoke: Artichoke) {
         this.id = message.id;
         this.body = message.body;
         this.sender = message.sender;
@@ -25,6 +27,7 @@ class Message implements MSG { // FIXME A message shouldn't be an Event...
         this.delivered = message.delivered;
 
         this.log = artichoke.log;
+        this.events = events;
         this.artichoke = artichoke;
 
         if (!(this.sender === artichoke.sessionId || this.delivered)) {
@@ -33,14 +36,10 @@ class Message implements MSG { // FIXME A message shouldn't be an Event...
     }
 
     onDelivery(callback: Callback<MessageDelivered>) {
-        // FIXME This registers a callback for EVERY message ever created. Nope.
         let _this = this;
-        this.artichoke.onEvent("msg_delivered", function(msg: MessageDelivered) {
-            if (msg.id === _this.id) {
-                _this.log("Running callback msg_delivered for message: " + _this.id);
-                _this.delivered = msg.timestamp;
-                callback(_this);
-            }
+        this.events.onConcreteEvent("msg_delivered", this.id, function(msg: MessageDelivered) {
+            _this.delivered = msg.timestamp;
+            callback(_this);
         });
     }
 
@@ -52,6 +51,6 @@ class Message implements MSG { // FIXME A message shouldn't be an Event...
     }
 }
 
-export function createMessage(message: MSG, artichoke: Artichoke): Message {
-    return new Message(message, artichoke);
+export function createMessage(message: MSG, events: EventHandler, artichoke: Artichoke): Message {
+    return new Message(message, events, artichoke);
 }

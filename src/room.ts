@@ -73,7 +73,7 @@ class BaseRoom implements ProtoRoom {
     }
 
     _wrapMessage(promise) {
-        return wrapPromise(promise, createMessage, [this.artichoke]);
+        return wrapPromise(promise, createMessage, [this.events, this.artichoke]);
     }
 }
 
