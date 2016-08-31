@@ -17,16 +17,20 @@ export class EventHandler {
         });
     }
 
+    raise(reason: string, cause?) {
+        this.perType["error"].forEach(function(cb) {
+            cb({
+                type: "error",
+                reason,
+                cause
+            } as Event);
+        });
+    }
+
     notify(event: Event) {
         if ([this.notifyById(event), this.notifyByType(event)].every((r) => !r)) {
             this.log("Unhandled event " + event.type + ": " + JSON.stringify(event));
-            this.perType["error"].forEach(function(cb) {
-                cb({
-                    type: "error",
-                    reason: "Unhandled event: " + event.type,
-                    event
-                } as Event);
-            });
+            this.raise("Unhandled event: " + event.type, event);
         }
     }
 

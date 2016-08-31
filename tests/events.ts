@@ -2,24 +2,20 @@ import { EventHandler } from "../src/events";
 import { log } from "./fixtures";
 import { Error, Event, Message} from "../src/protocol";
 
-interface ErrorWithStatus extends Error {
-    status: boolean;
+interface ErrorWithCause extends Error {
+    cause: boolean;
 }
 
 describe("Event Handler", () => {
-    it("should allow defining error handlers", () => {
+    it("should allow defining & invoking error handlers", () => {
         let eh = new EventHandler(log);
-        let ok = false;
+        let ok = true;
 
-        eh.onError((error: ErrorWithStatus) => ok = error.status);
+        eh.onError((error: ErrorWithCause) => ok = error.cause);
+        expect(ok).toBe(true);
+        eh.raise("Dun goofed", false);
         expect(ok).toBe(false);
-
-        eh.notify({
-            type: "error",
-            reason: "Dun goofed",
-            status: true
-        } as Error);
-
+        eh.raise("j/k", true);
         expect(ok).toBe(true);
     });
 

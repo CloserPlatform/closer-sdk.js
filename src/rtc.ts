@@ -1,7 +1,7 @@
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
-import { Candidate, Error, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
+import { Candidate, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
 
 // Cross-browser support:
 function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {
@@ -154,11 +154,7 @@ export class RTCPool {
                 rtc.answer(_this.callId, msg.peer, msg.description).then(function(answer) {
                     _this.log("Sent an RTC description: " + answer.sdp);
                 }).catch(function(error) {
-                    events.notify({
-                        type: "error",
-                        reason: "Could not create an RTC answer.",
-                        error
-                    } as Error);
+                    events.raise("Could not create an RTC answer.", error);
                 });
                 _this.onConnectionCallback(msg.peer, rtc);
             }
@@ -169,10 +165,7 @@ export class RTCPool {
             if (msg.peer in _this.connections) {
                 _this.connections[msg.peer].addCandidate(msg.candidate);
             } else {
-                events.notify({
-                    type: "error",
-                    reason: "Received an invalid RTC candidate. " +  msg.peer + " is not currently in this call."
-                } as Error);
+                events.raise("Received an invalid RTC candidate. " +  msg.peer + " is not currently in this call.");
             }
         });
     }
@@ -191,11 +184,7 @@ export class RTCPool {
         rtc.offer(this.callId, peer).then(function(offer) {
             _this.log("Sent an RTC description: " + offer.sdp);
         }).catch(function(error) {
-            _this.events.notify({
-                type: "error",
-                reason: "Could not create an RTC offer.",
-                error
-            } as Error);
+            _this.events.raise("Could not create an RTC offer.", error);
         });
         return rtc;
     }
