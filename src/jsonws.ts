@@ -1,9 +1,13 @@
-export class JSONWebSocket {
-    log;
-    url;
-    socket;
+import { Callback } from "./events";
+import { Logger } from "./logger";
+import { Event } from "./protocol";
 
-    constructor(url, log) {
+export class JSONWebSocket {
+    private log: Logger;
+    private url: string;
+    private socket: WebSocket;
+
+    constructor(url: string, log: Logger) {
         this.log = log;
         this.url = url;
 
@@ -14,16 +18,16 @@ export class JSONWebSocket {
         };
     }
 
-    onMessage(callback) {
+    onEvent(callback: Callback<Event>) {
         let _this = this;
         this.socket.onmessage = function(event) {
             _this.log("WS received: " + event.data);
-            callback(JSON.parse(event.data));
+            callback(JSON.parse(event.data) as Event);
         };
     }
 
-    send(obj) {
-        let json = JSON.stringify(obj);
+    send(event: Event) {
+        let json = JSON.stringify(event);
         this.log("WS sent: " + json);
         this.socket.send(json);
     }

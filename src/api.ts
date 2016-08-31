@@ -45,7 +45,7 @@ export class API {
 
     onEvent(callback: Callback<proto.Event>) {
         let _this = this;
-        this.socket.onMessage(function(e: proto.Event) {
+        this.socket.onEvent(function(e: proto.Event) {
             if (e.type === "error") {
                 _this.reject(e.ref, e as proto.Error);
             } else if (e.type === "msg_received") {
