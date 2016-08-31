@@ -5,6 +5,12 @@ export type Ref = string;
 export type Timestamp = number;
 
 // Datatypes:
+export interface Call {
+    id: ID;
+    users: Array<ID>;
+    direct: boolean;
+}
+
 export interface Room {
     id: ID;
     name: string;
@@ -17,6 +23,20 @@ export interface RosterRoom extends Room {
 }
 
 // JSON Events:
+export interface CallInvited extends Event {
+    sender: ID;
+    user: ID;
+}
+
+export interface CallJoined extends Event {
+    user: ID;
+}
+
+export interface CallLeft extends Event {
+    user: ID;
+    reason: string;
+}
+
 export interface Event {
     type: Type;
     id?: ID;

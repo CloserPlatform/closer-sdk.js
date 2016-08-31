@@ -1,17 +1,25 @@
+import { Artichoke } from "./artichoke";
+import { Callback } from "./events";
+import { Logger } from "./logger";
+import { Call as ProtoCall, CallInvited, CallJoined, CallLeft, Event, ID, Type as EventType } from "./protocol";
 import { RTCPool } from "./rtc";
-import { nop } from "./utils";
 
-class BaseCall {
-    id;
-    users;
-    direct;
+export interface RemoteStreamCallback {
+    (peer: ID, stream: MediaStream): void;
+}
 
-    log;
-    artichoke;
-    pool;
-    onRemoteStreamCallback;
+class BaseCall implements ProtoCall {
+    public id: ID;
+    public users: Array<ID>;
+    public direct: boolean;
 
-    constructor(call, artichoke) {
+    protected artichoke: Artichoke;
+
+    private log: Logger;
+    private pool: RTCPool;
+    private onRemoteStreamCallback: RemoteStreamCallback;
+
+    constructor(call: ProtoCall, artichoke: Artichoke) {
         this.id = call.id;
         this.users = call.users;
         this.direct = call.direct;
@@ -22,7 +30,9 @@ class BaseCall {
         this.pool = new RTCPool(this.id, artichoke);
 
         // By default do nothing:
-        this.onRemoteStreamCallback = nop;
+        this.onRemoteStreamCallback = function(peer, stream) {
+            // Do nothing.
+        };
 
         let _this = this;
         this.pool.onConnection(function(peer, rtc) {
@@ -32,12 +42,12 @@ class BaseCall {
         });
 
         // Signaling callbacks:
-        this._defineCallback("call_left", function(msg) {
+        this._defineCallback("call_left", function(msg: CallLeft) {
             _this.users = _this.users.filter((u) => u === msg.user);
             _this.pool.destroy(msg.user);
         });
 
-        this._defineCallback("call_joined", function(msg) {
+        this._defineCallback("call_joined", function(msg: CallJoined) {
             _this.users.push(msg.user);
             _this._createRTC(msg.user);
         });
@@ -69,15 +79,15 @@ class BaseCall {
         this.pool.destroyAll();
     }
 
-    onLeft(callback) {
+    onLeft(callback: Callback<CallLeft>) {
         this._defineCallback("call_left", callback);
     }
 
-    onJoined(callback) {
+    onJoined(callback: Callback<CallJoined>) {
         this._defineCallback("call_joined", callback);
     }
 
-    onRemoteStream(callback) {
+    onRemoteStream(callback: RemoteStreamCallback) {
         this.onRemoteStreamCallback = callback;
     }
 
@@ -89,7 +99,7 @@ class BaseCall {
         });
     }
 
-    _defineCallback(type, callback) {
+    _defineCallback(type: EventType, callback: Callback<Event>) {
         // FIXME It would be way better to store a hash of rooms and pick the relevant callback directly.
         let _this = this;
         this.artichoke.onEvent(type, function(msg) {
@@ -108,12 +118,12 @@ export class Call extends BaseCall {
         this.artichoke.rest.inviteToCall(this.id, user);
     }
 
-    onInvited(callback) {
+    onInvited(callback: Callback<CallInvited>) {
         this._defineCallback("call_invited", callback);
     }
 }
 
-export function createCall(call, artichoke) {
+export function createCall(call: ProtoCall, artichoke: Artichoke): DirectCall | Call {
     if (call.direct) {
         return new DirectCall(call, artichoke);
     } else {
