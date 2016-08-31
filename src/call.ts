@@ -31,7 +31,7 @@ class BaseCall implements ProtoCall {
         this.events = events;
         this.artichoke = artichoke;
 
-        this.pool = new RTCPool(this.id, artichoke);
+        this.pool = new RTCPool(this.id, events, artichoke);
 
         // By default do nothing:
         this.onRemoteStreamCallback = (peer, stream) => {

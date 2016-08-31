@@ -1,4 +1,5 @@
 import { Artichoke } from "./artichoke";
+import { EventHandler } from "./events";
 import { Logger } from "./logger";
 import { Candidate, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
 
@@ -122,50 +123,47 @@ export interface ConnectionCallback {
 }
 
 export class RTCPool {
-    private callId: ID;
-    private localStream: MediaStream;
     private artichoke: Artichoke;
     private log: Logger;
+
+    private callId: ID;
+    private localStream: MediaStream;
     private config: RTCConfiguration;
     private connections: { [user: string]: RTCConnection };
     private onConnectionCallback: ConnectionCallback;
 
-    constructor(callId: ID, artichoke: Artichoke) {
-        this.callId = callId;
+    constructor(callId: ID, events: EventHandler, artichoke: Artichoke) {
         this.artichoke = artichoke;
         this.log = artichoke.log;
+
+        this.callId = callId;
         this.config = artichoke.config.rtc;
         this.connections = {};
-
         this.localStream = undefined;
         this.onConnectionCallback = (peer, conn) => {
             // Do Nothing.
         };
 
         let _this = this;
-        artichoke.onEvent("rtc_description", function(msg: RTCDescription) {
-            if (msg.id === callId) {
-                _this.log("Received an RTC description: " + msg.description.sdp);
-                if (msg.peer in _this.connections) {
-                    _this.connections[msg.peer].setRemoteDescription(msg.description);
-                } else {
-                    let rtc = _this._create(msg.peer);
-                    rtc.answer(_this.callId, msg.peer, msg.description);
-                    _this.onConnectionCallback(msg.peer, rtc);
-                }
+        events.onConcreteEvent("rtc_description", callId, function(msg: RTCDescription) {
+            _this.log("Received an RTC description: " + msg.description.sdp);
+            if (msg.peer in _this.connections) {
+                _this.connections[msg.peer].setRemoteDescription(msg.description);
+            } else {
+                let rtc = _this._create(msg.peer);
+                rtc.answer(_this.callId, msg.peer, msg.description);
+                _this.onConnectionCallback(msg.peer, rtc);
             }
         });
 
-        artichoke.onEvent("rtc_candidate", function(msg: RTCCandidate) {
-            if (msg.id === callId) {
-                _this.log("Received an RTC candidate: " + msg.candidate);
-                if (msg.peer in _this.connections) {
-                    _this.connections[msg.peer].addCandidate(msg.candidate);
-                } else {
-                    _this.artichoke._error("Received an invalid RTC candidate.", {
-                        error: msg.peer + " is not currently in this call."
-                    });
-                }
+        events.onConcreteEvent("rtc_candidate", callId, function(msg: RTCCandidate) {
+            _this.log("Received an RTC candidate: " + msg.candidate);
+            if (msg.peer in _this.connections) {
+                _this.connections[msg.peer].addCandidate(msg.candidate);
+            } else {
+                _this.artichoke._error("Received an invalid RTC candidate.", {
+                    error: msg.peer + " is not currently in this call."
+                });
             }
         });
     }
