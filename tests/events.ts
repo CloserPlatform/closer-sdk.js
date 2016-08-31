@@ -142,4 +142,31 @@ describe("Event Handler", () => {
         expect(first).toBe(true);
         expect(second).toBe(5);
     });
+
+    it("onConcreteEvent() should be equivalent to onEvent() with id assertion", () => {
+        let eh = new EventHandler(log);
+        let first = undefined;
+        let second = undefined;
+
+        eh.onConcreteEvent("message", "3", (msg: Message) => first = msg);
+        eh.onEvent("message", (msg: Message) => {
+            if(msg.id === "3") {
+                second = msg;
+            }
+        });
+
+        [1, 2, 3, 4, 5].forEach((i) => {
+            eh.notify({
+                type: "message",
+                id: i.toString(),
+                room: "room",
+                body: "Hi bob",
+                sender: "alice",
+                timestamp: Date.now()
+            } as Message);
+        });
+
+        expect(first).toBe(second);
+        expect(first.id).toBe("3");
+    });
 });

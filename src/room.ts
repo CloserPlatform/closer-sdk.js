@@ -2,7 +2,7 @@ import { Artichoke } from "./artichoke";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage } from "./message";
-import { Event, ID, Message, Room as ProtoRoom, RoomAction, RosterRoom, Type as EventType, Typing } from "./protocol";
+import { ID, Message, Room as ProtoRoom, RoomAction, RosterRoom, Typing } from "./protocol";
 import { wrapPromise } from "./utils";
 
 class BaseRoom implements ProtoRoom {
@@ -12,6 +12,7 @@ class BaseRoom implements ProtoRoom {
 
     private currMark: number;
     private log: Logger;
+    private events: EventHandler;
     protected artichoke: Artichoke;
 
     constructor(room: RosterRoom, events: EventHandler, artichoke: Artichoke) {
@@ -20,6 +21,7 @@ class BaseRoom implements ProtoRoom {
         this.direct = room.direct;
         this.currMark = room.mark || 0;
         this.log = artichoke.log;
+        this.events = events;
         this.artichoke = artichoke;
     }
 
@@ -53,36 +55,25 @@ class BaseRoom implements ProtoRoom {
     }
 
     onMessage(callback: Callback<Message>) {
-        this._defineCallback("message", callback);
+        // FIXME This ought to be a onContreceEvent() call.
+        let _this = this;
+        this.events.onEvent("message", function(msg: Message) {
+            if (msg.room === _this.id) {
+                callback(msg);
+            }
+        });
     }
 
     onAction(callback: Callback<RoomAction>) {
-        this._defineCallback("room_action", callback);
+        this.events.onConcreteEvent("room_action", this.id, callback);
     }
 
     onTyping(callback: Callback<Typing>) {
-        this._defineCallback("typing", callback);
+        this.events.onConcreteEvent("typing", this.id, callback);
     }
 
     _wrapMessage(promise) {
         return wrapPromise(promise, createMessage, [this.artichoke]);
-    }
-
-    _defineCallback(type: EventType, callback: Callback<Event>) {
-        // FIXME It would be way better to store a hash of rooms and pick the relevant callback directly.
-        let _this = this;
-        this.artichoke.onEvent(type, function(msg) {
-            let id: ID = undefined;
-            if (msg.type === "message") {
-                id = (msg as Message).room;
-            } else {
-                id = msg.id;
-            }
-            if (id === _this.id) {
-                _this.log("Running callback " + type + " for room: " + _this.id);
-                callback(msg);
-            }
-        });
     }
 }
 
