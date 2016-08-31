@@ -1,11 +1,11 @@
 import { API } from "./api";
-import { createCall } from "./call";
+import { Call, createCall, DirectCall } from "./call";
 import { Config } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage } from "./message";
-import { CallInvitation, Error, Event, Message, Presence, RoomCreated } from "./protocol";
-import { createRoom } from "./room";
+import { CallInvitation, Error, Event, ID, Message, Presence, RoomCreated, Status } from "./protocol";
+import { createRoom, DirectRoom, Room } from "./room";
 import { nop, wrapPromise } from "./utils";
 
 export class Artichoke {
@@ -80,57 +80,57 @@ export class Artichoke {
     }
 
     // Misc API:
-    onStatusChange(callback) {
+    onStatusChange(callback: Callback<Presence>) {
         this.events.onEvent("presence", callback);
     }
 
-    setStatus(status) {
+    setStatus(status: Status) {
         this.api.setStatus(status, Date.now());
     }
 
     // Call API:
-    onCall(callback) {
+    onCall(callback: Callback<CallInvitation>) {
         this.events.onEvent("call_invitation", callback);
     }
 
-    createDirectCall(peer) {
+    createDirectCall(peer: ID): Promise<DirectCall> {
         return this._wrapCall(this.api.createDirectCall(peer));
     }
 
-    createCall(users) {
+    createCall(users: Array<ID>): Promise<Call> {
         return this._wrapCall(this.api.createCall(users));
     }
 
-    getCall(call) {
+    getCall(call: ID): Promise<Call | DirectCall> {
         return this._wrapCall(this.api.getCall(call));
     }
 
-    getCalls() {
+    getCalls(): Promise<Array<Call | DirectCall>> {
         return this._wrapCall(this.api.getCalls());
     }
 
     // Chat room API:
-    onRoom(callback) {
+    onRoom(callback: Callback<RoomCreated>) {
         this.events.onEvent("room_created", callback);
     }
 
-    createRoom(name) {
+    createRoom(name: string): Promise<Room> {
         return this._wrapRoom(this.api.createRoom(name));
     }
 
-    createDirectRoom(peer) {
+    createDirectRoom(peer: ID): Promise<DirectRoom> {
         return this._wrapRoom(this.api.createDirectRoom(peer));
     }
 
-    getRoom(room) {
+    getRoom(room: ID): Promise<Room | DirectRoom> {
         return this._wrapRoom(this.api.getRoom(room));
     }
 
-    getRooms() {
+    getRooms(): Promise<Array<Room | DirectRoom>> {
         return this._wrapRoom(this.api.getRooms());
     }
 
-    getRoster() {
+    getRoster(): Promise<Array<Room | DirectRoom>> {
         return this._wrapRoom(this.api.getRoster());
     }
 

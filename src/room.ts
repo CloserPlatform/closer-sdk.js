@@ -77,9 +77,9 @@ class BaseRoom implements ProtoRoom {
     }
 }
 
-class DirectRoom extends BaseRoom {}
+export class DirectRoom extends BaseRoom {}
 
-class Room extends BaseRoom {
+export class Room extends BaseRoom {
     join() {
         return this.api.joinRoom(this.id);
     }
