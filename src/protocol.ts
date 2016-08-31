@@ -23,8 +23,13 @@ export interface RosterRoom extends Room {
 }
 
 // JSON Events:
+export interface CallInvitation extends Event {
+    call: Call;
+    user: ID; // FIXME Should be sender/inviter.
+}
+
 export interface CallInvited extends Event {
-    sender: ID;
+    sender: ID; // FIXME Should be inviter.
     user: ID;
 }
 
@@ -39,6 +44,7 @@ export interface CallLeft extends Event {
 
 export interface Event {
     type: Type;
+    ref?: Ref;
     id?: ID;
 }
 
@@ -59,10 +65,13 @@ export interface MessageDelivered extends Event {
     timestamp: Timestamp;
 }
 
+export interface MessageReceived extends Event {
+    message: Message;
+}
+
 export interface MessageRequest extends Event {
     body: string;
     room: ID;
-    ref: Ref;
 }
 
 export interface Mark extends Event {
@@ -85,6 +94,10 @@ export interface RoomAction extends Event {
     action: Action;
     subject?: ID;
     timestamp: Timestamp;
+}
+
+export interface RoomCreated extends Event {
+    room: Room;
 }
 
 export type Candidate = string;
