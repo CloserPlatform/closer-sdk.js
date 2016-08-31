@@ -1,7 +1,6 @@
 import { Artichoke } from "./artichoke";
 import { Logger } from "./logger";
-import { Candidate, ID, SDP } from "./protocol";
-import { nop } from "./utils";
+import { Candidate, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
 
 // Cross-browser support:
 function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {
@@ -118,27 +117,33 @@ export class RTCConnection {
     }
 }
 
-export class RTCPool {
-    callId;
-    localStream;
-    artichoke;
-    log;
-    config;
-    connections;
-    onConnectionCallback;
+export interface ConnectionCallback {
+    (peer: ID, connection: RTCConnection): void;
+}
 
-    constructor(callId, artichoke) {
+export class RTCPool {
+    private callId: ID;
+    private localStream: MediaStream;
+    private artichoke: Artichoke;
+    private log: Logger;
+    private config: RTCConfiguration;
+    private connections: { [user: string]: RTCConnection };
+    private onConnectionCallback: ConnectionCallback;
+
+    constructor(callId: ID, artichoke: Artichoke) {
         this.callId = callId;
         this.artichoke = artichoke;
         this.log = artichoke.log;
-        this.config = artichoke.config;
+        this.config = artichoke.config.rtc;
         this.connections = {};
 
         this.localStream = undefined;
-        this.onConnectionCallback = nop;
+        this.onConnectionCallback = (peer, conn) => {
+            // Do Nothing.
+        };
 
         let _this = this;
-        artichoke.onEvent("rtc_description", function(msg) {
+        artichoke.onEvent("rtc_description", function(msg: RTCDescription) {
             if (msg.id === callId) {
                 _this.log("Received an RTC description: " + msg.description.sdp);
                 if (msg.peer in _this.connections) {
@@ -151,7 +156,7 @@ export class RTCPool {
             }
         });
 
-        artichoke.onEvent("rtc_candidate", function(msg) {
+        artichoke.onEvent("rtc_candidate", function(msg: RTCCandidate) {
             if (msg.id === callId) {
                 _this.log("Received an RTC candidate: " + msg.candidate);
                 if (msg.peer in _this.connections) {
@@ -165,27 +170,27 @@ export class RTCPool {
         });
     }
 
-    onConnection(callback) {
+    onConnection(callback: ConnectionCallback) {
         this.onConnectionCallback = callback;
     }
 
-    addLocalStream(stream) {
+    addLocalStream(stream: MediaStream) {
         this.localStream = stream;
     }
 
-    create(peer) {
+    create(peer: ID): RTCConnection {
         let rtc = this._create(peer);
         rtc.offer(this.callId, peer);
         return rtc;
     }
 
-    _create(peer) {
-        let rtc = new RTCConnection(this.localStream, this.config.rtc, this.artichoke);
+    _create(peer: ID): RTCConnection {
+        let rtc = new RTCConnection(this.localStream, this.config, this.artichoke);
         this.connections[peer] = rtc;
         return rtc;
     }
 
-    destroy(peer) {
+    destroy(peer: ID) {
         if (peer in this.connections) {
             this.connections[peer].disconnect();
             delete this.connections[peer];

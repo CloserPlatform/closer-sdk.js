@@ -229,10 +229,10 @@ class ArtichokeWS extends JSONWebSocket {
 }
 
 export class Artichoke {
-    private config: Config;
     private events: EventHandler;
 
     // FIXME Make these private.
+    public config: Config;
     public log: Logger;
     public rest;
     public socket;
