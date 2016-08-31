@@ -11,6 +11,8 @@ export class Session {
     constructor(conf: config.Config) {
         let log = conf.debug ? logger.debugConsole : logger.devNull;
 
+        log("Configuration: " + JSON.stringify(conf));
+
         this.id = conf.sessionId;
         this.events = new EventHandler(log);
         this.chat = new Artichoke(conf, log, this.events);

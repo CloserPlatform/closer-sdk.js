@@ -153,15 +153,17 @@ interface PromiseFunctions {
 
 class ArtichokeWS extends JSONWebSocket {
     private promises: { [ref: string]: PromiseFunctions };
+    private sessionId: proto.ID;
 
     constructor(config: Config, log: Logger) {
         super("wss://" + pathcat([config.url, "ws", config.apiKey]), log);
+        this.sessionId = config.sessionId;
         this.promises = {};
     }
 
     // Misc API:
-    setStatus(sessionId, status, timestamp) {
-        this.send(proto.presence(sessionId, status, timestamp));
+    setStatus(status, timestamp) {
+        this.send(proto.presence(this.sessionId, status, timestamp));
     }
 
     // Call API:
@@ -229,11 +231,11 @@ class ArtichokeWS extends JSONWebSocket {
 }
 
 export class Artichoke {
+    private config: Config;
     private log: Logger;
     private events: EventHandler;
 
     // FIXME Make these private.
-    public config: Config;
     public rest;
     public socket;
 
@@ -245,9 +247,6 @@ export class Artichoke {
         this.config = config;
         this.log = log;
         this.events = eh;
-
-        this.log("this.config: " + JSON.stringify(this.config));
-
         this.rest = new ArtichokeREST(config, log);
 
         // User config:
@@ -284,7 +283,7 @@ export class Artichoke {
                 _this.events.notify({
                     type: m.type,
                     sender: m.user,
-                    call: createCall(m.call, _this.log, _this.events, _this)
+                    call: createCall(m.call, _this.config.rtc, _this.log, _this.events, _this)
                 } as proto.Event);
                 break;
 
@@ -320,7 +319,7 @@ export class Artichoke {
     }
 
     setStatus(status) {
-        this.socket.setStatus(this.sessionId, status, Date.now());
+        this.socket.setStatus(status, Date.now());
     }
 
     // Call API:
@@ -371,7 +370,7 @@ export class Artichoke {
 
     // Utils:
     _wrapCall(promise) {
-        return wrapPromise(promise, createCall, [this.log, this.events, this]);
+        return wrapPromise(promise, createCall, [this.config.rtc, this.log, this.events, this]);
     }
 
     _wrapRoom(promise) {

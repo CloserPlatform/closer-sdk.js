@@ -131,13 +131,14 @@ export class RTCPool {
     private connections: { [user: string]: RTCConnection };
     private onConnectionCallback: ConnectionCallback;
 
-    constructor(callId: ID, log: Logger, events: EventHandler, artichoke: Artichoke) {
+    constructor(callId: ID, config: RTCConfiguration, log: Logger, events: EventHandler, artichoke: Artichoke) {
         this.artichoke = artichoke;
         this.events = events;
         this.log = log;
 
         this.callId = callId;
-        this.config = artichoke.config.rtc;
+        this.config = config;
+
         this.connections = {};
         this.localStream = undefined;
         this.onConnectionCallback = (peer, conn) => {
