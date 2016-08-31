@@ -26,7 +26,7 @@ class BaseRoom implements ProtoRoom {
     }
 
     getHistory() {
-        return this._wrapMessage(this.artichoke.rest.getChatHistory(this.id));
+        return this._wrapMessage(this.artichoke.rest.getHistory(this.id));
     }
 
     getUsers() {

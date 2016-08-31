@@ -61,7 +61,7 @@ export class RTCConnection {
             _this.conn.createOffer(function(offer) {
                 _this.conn.setLocalDescription(offer);
                 _this.initOnICECandidate(callId, peer);
-                _this.artichoke.socket.sendDescription(callId, peer, offer);
+                _this.artichoke.socket.sendDescription(callId, peer, offer as SDP);
                 resolve(offer);
             }, reject);
         });
@@ -76,7 +76,7 @@ export class RTCConnection {
             _this.conn.createAnswer(function(answer) {
                 _this.conn.setLocalDescription(answer);
                 _this.initOnICECandidate(callId, peer);
-                _this.artichoke.socket.sendDescription(callId, peer, answer);
+                _this.artichoke.socket.sendDescription(callId, peer, answer as SDP);
                 resolve(answer);
             }, reject);
         });
@@ -95,7 +95,7 @@ export class RTCConnection {
         this.conn.onicecandidate = function(event) {
             if (event.candidate) {
                 _this.log("Created ICE candidate: " + event.candidate.candidate);
-                _this.artichoke.socket.sendCandidate(callId, peer, event.candidate.candidate);
+                _this.artichoke.socket.sendCandidate(callId, peer, event.candidate.candidate as Candidate);
             }
         };
     }
