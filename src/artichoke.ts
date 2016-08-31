@@ -14,15 +14,16 @@ export class Artichoke {
     private log: Logger;
     private events: EventHandler;
 
-    constructor(config: Config, log: Logger, eh: EventHandler) {
+    constructor(config: Config, log: Logger, events: EventHandler, api: API) {
+        this.api = api;
         this.config = config;
         this.log = log;
-        this.events = eh;
+        this.events = events;
 
-        // NOTE By default do nothing.
-        this.events.onEvent("error", nop);
-        this.events.onEvent("msg_received", nop);
-        this.events.onEvent("msg_delivered", nop);
+        // NOTE Disable some events by default.
+        events.onEvent("error", nop);
+        events.onEvent("msg_received", nop);
+        events.onEvent("msg_delivered", nop);
     }
 
     // Callbacks:
@@ -36,7 +37,7 @@ export class Artichoke {
 
     // API:
     connect() {
-        this.api = new API(this.config, this.log);
+        this.api.connect();
 
         let _this = this;
         this.api.onEvent(function(e: Event) {

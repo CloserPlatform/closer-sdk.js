@@ -25,6 +25,7 @@ export class API {
     private chatPath = "chat";
     private roomPath = "rooms";
 
+    private wsUrl: string;
     private socket: JSONWebSocket;
     private promises: { [ref: string]: PromiseFunctions };
 
@@ -34,9 +35,12 @@ export class API {
         this.apiKey = config.apiKey;
 
         this.url = "//" + pathcat([config.url, "api"]);
-
-        this.socket = new JSONWebSocket("wss://" + pathcat([config.url, "ws", config.apiKey]), log);
+        this.wsUrl = "wss://" + pathcat([config.url, "ws", config.apiKey]);
         this.promises = {};
+    }
+
+    connect() {
+        this.socket = new JSONWebSocket(this.wsUrl, this.log);
     }
 
     onEvent(callback: Callback<proto.Event>) {
