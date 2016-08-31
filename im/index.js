@@ -655,7 +655,7 @@ $(document).ready(function() {
             newRoom = roomBuilder(session);
 
             session.chat.onError(function(error) {
-                console.log("An error has occured: ", error.reason);
+                console.log("An error has occured: ", error);
                 alert("Session disconnected!");
             });
 

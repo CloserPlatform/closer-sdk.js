@@ -46,9 +46,7 @@ class BaseCall implements ProtoCall {
 
         let _this = this;
         this.pool.onConnection(function(peer, rtc) {
-            rtc.onRemoteStream(function(stream) {
-                return _this.onRemoteStreamCallback(peer, stream);
-            });
+            rtc.onRemoteStream((stream) => _this.onRemoteStreamCallback(peer, stream));
         });
 
         // Signaling callbacks:
