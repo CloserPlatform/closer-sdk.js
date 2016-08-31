@@ -17,7 +17,7 @@ type RESTResult = RESTResultElement | Array<RESTResultElement> | void;
 export class API {
     private log: Logger;
 
-    private sessionId: proto.ID;
+    public sessionId: proto.ID; // FIXME Make this private.
     private apiKey: ApiKey;
 
     private url: string;

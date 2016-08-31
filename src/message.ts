@@ -1,4 +1,4 @@
-import { Artichoke } from "./artichoke";
+import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { ID, Message as MSG, MessageDelivered, Timestamp }  from "./protocol";
@@ -16,9 +16,9 @@ class Message implements MSG {
 
     private log: Logger;
     private events: EventHandler;
-    private artichoke: Artichoke;
+    private api: API;
 
-    constructor(message: MSG, log: Logger, events: EventHandler, artichoke: Artichoke) {
+    constructor(message: MSG, log: Logger, events: EventHandler, api: API) {
         this.id = message.id;
         this.body = message.body;
         this.sender = message.sender;
@@ -28,9 +28,9 @@ class Message implements MSG {
 
         this.log = log;
         this.events = events;
-        this.artichoke = artichoke;
+        this.api = api;
 
-        if (!(this.sender === artichoke.sessionId || this.delivered)) {
+        if (!(this.sender === api.sessionId || this.delivered)) {
             this.markDelivered();
         }
     }
@@ -47,10 +47,10 @@ class Message implements MSG {
 
     private markDelivered() {
         this.delivered = Date.now();
-        this.artichoke.socket.setDelivered(this.id, this.delivered);
+        this.api.setDelivered(this.id, this.delivered);
     }
 }
 
-export function createMessage(message: MSG, log: Logger, events: EventHandler, api: Artichoke): Message {
+export function createMessage(message: MSG, log: Logger, events: EventHandler, api: API): Message {
     return new Message(message, log, events, api);
 }

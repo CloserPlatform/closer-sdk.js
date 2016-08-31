@@ -1,4 +1,4 @@
-import { Artichoke } from "./artichoke";
+import { API } from "./api";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
 import { Candidate, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
@@ -26,14 +26,14 @@ export interface RemoteStreamCallback {
 }
 
 export class RTCConnection {
-    private artichoke: Artichoke;
+    private api: API;
     private log: Logger;
     private conn: RTCPeerConnection;
     private onRemoteStreamCallback: RemoteStreamCallback;
 
-    constructor(stream: MediaStream, config: RTCConfiguration, log: Logger, artichoke: Artichoke) {
+    constructor(stream: MediaStream, config: RTCConfiguration, log: Logger, api: API) {
         log("Connecting an RTC connection.");
-        this.artichoke = artichoke;
+        this.api = api;
         this.log = log;
         this.conn = newRTCPeerConnection(config);
         this.conn.addStream(stream);
@@ -61,7 +61,7 @@ export class RTCConnection {
             _this.conn.createOffer(function(offer) {
                 _this.conn.setLocalDescription(offer);
                 _this.initOnICECandidate(callId, peer);
-                _this.artichoke.socket.sendDescription(callId, peer, offer as SDP);
+                _this.api.sendDescription(callId, peer, offer as SDP);
                 resolve(offer);
             }, reject);
         });
@@ -76,7 +76,7 @@ export class RTCConnection {
             _this.conn.createAnswer(function(answer) {
                 _this.conn.setLocalDescription(answer);
                 _this.initOnICECandidate(callId, peer);
-                _this.artichoke.socket.sendDescription(callId, peer, answer as SDP);
+                _this.api.sendDescription(callId, peer, answer as SDP);
                 resolve(answer);
             }, reject);
         });
@@ -95,7 +95,7 @@ export class RTCConnection {
         this.conn.onicecandidate = function(event) {
             if (event.candidate) {
                 _this.log("Created ICE candidate: " + event.candidate.candidate);
-                _this.artichoke.socket.sendCandidate(callId, peer, event.candidate.candidate as Candidate);
+                _this.api.sendCandidate(callId, peer, event.candidate.candidate as Candidate);
             }
         };
     }
@@ -121,7 +121,7 @@ export interface ConnectionCallback {
 }
 
 export class RTCPool {
-    private artichoke: Artichoke;
+    private api: API;
     private events: EventHandler;
     private log: Logger;
 
@@ -131,8 +131,8 @@ export class RTCPool {
     private connections: { [user: string]: RTCConnection };
     private onConnectionCallback: ConnectionCallback;
 
-    constructor(callId: ID, config: RTCConfiguration, log: Logger, events: EventHandler, artichoke: Artichoke) {
-        this.artichoke = artichoke;
+    constructor(callId: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: API) {
+        this.api = api;
         this.events = events;
         this.log = log;
 
@@ -191,7 +191,7 @@ export class RTCPool {
     }
 
     _create(peer: ID): RTCConnection {
-        let rtc = new RTCConnection(this.localStream, this.config, this.log, this.artichoke);
+        let rtc = new RTCConnection(this.localStream, this.config, this.log, this.api);
         this.connections[peer] = rtc;
         return rtc;
     }

@@ -1,4 +1,4 @@
-import { Artichoke } from "./artichoke";
+import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage } from "./message";
@@ -13,24 +13,24 @@ class BaseRoom implements ProtoRoom {
     private currMark: number;
     private log: Logger;
     private events: EventHandler;
-    protected artichoke: Artichoke;
+    protected api: API;
 
-    constructor(room: RosterRoom, log: Logger, events: EventHandler, artichoke: Artichoke) {
+    constructor(room: RosterRoom, log: Logger, events: EventHandler, api: API) {
         this.id = room.id;
         this.name = room.name;
         this.direct = room.direct;
         this.currMark = room.mark || 0;
         this.log = log;
         this.events = events;
-        this.artichoke = artichoke;
+        this.api = api;
     }
 
     getHistory() {
-        return this._wrapMessage(this.artichoke.rest.getHistory(this.id));
+        return this._wrapMessage(this.api.getHistory(this.id));
     }
 
     getUsers() {
-        return this.artichoke.rest.getUsers(this.id);
+        return this.api.getUsers(this.id);
     }
 
     getMark() {
@@ -42,16 +42,16 @@ class BaseRoom implements ProtoRoom {
     }
 
     send(message) {
-        return this._wrapMessage(this.artichoke.socket.sendMessage(this.id, message));
+        return this._wrapMessage(this.api.sendMessage(this.id, message));
     }
 
     mark(timestamp) {
         this.currMark = timestamp;
-        return this.artichoke.socket.setMark(this.id, timestamp);
+        return this.api.setMark(this.id, timestamp);
     }
 
     indicateTyping() {
-        return this.artichoke.socket.sendTyping(this.id);
+        return this.api.sendTyping(this.id);
     }
 
     onMessage(callback: Callback<Message>) {
@@ -73,7 +73,7 @@ class BaseRoom implements ProtoRoom {
     }
 
     _wrapMessage(promise) {
-        return wrapPromise(promise, createMessage, [this.log, this.events, this.artichoke]);
+        return wrapPromise(promise, createMessage, [this.log, this.events, this.api]);
     }
 }
 
@@ -81,19 +81,19 @@ class DirectRoom extends BaseRoom {}
 
 class Room extends BaseRoom {
     join() {
-        return this.artichoke.rest.joinRoom(this.id);
+        return this.api.joinRoom(this.id);
     }
 
     leave() {
-        return this.artichoke.rest.leaveRoom(this.id);
+        return this.api.leaveRoom(this.id);
     }
 
     invite(user) {
-        return this.artichoke.rest.inviteToRoom(this.id, user);
+        return this.api.inviteToRoom(this.id, user);
     }
 }
 
-export function createRoom(room: ProtoRoom, log: Logger, events: EventHandler, api: Artichoke): DirectRoom | Room {
+export function createRoom(room: ProtoRoom, log: Logger, events: EventHandler, api: API): DirectRoom | Room {
     if (room.direct) {
         return new DirectRoom(room, log, events, api);
     } else {

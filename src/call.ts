@@ -1,4 +1,4 @@
-import { Artichoke } from "./artichoke";
+import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { Call as ProtoCall, CallInvited, CallJoined, CallLeft, ID } from "./protocol";
@@ -13,7 +13,7 @@ class BaseCall implements ProtoCall {
     public users: Array<ID>;
     public direct: boolean;
 
-    protected artichoke: Artichoke;
+    protected api: API;
     protected events: EventHandler;
 
     private log: Logger;
@@ -22,16 +22,16 @@ class BaseCall implements ProtoCall {
     private onLeftCallback: Callback<CallLeft>;
     private onJoinedCallback: Callback<CallJoined>;
 
-    constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler, artichoke: Artichoke) {
+    constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler, api: API) {
         this.id = call.id;
         this.users = call.users;
         this.direct = call.direct;
 
         this.log = log;
         this.events = events;
-        this.artichoke = artichoke;
+        this.api = api;
 
-        this.pool = new RTCPool(this.id, config, log, events, artichoke);
+        this.pool = new RTCPool(this.id, config, log, events, api);
 
         // By default do nothing:
         this.onRemoteStreamCallback = (peer, stream) => {
@@ -81,11 +81,11 @@ class BaseCall implements ProtoCall {
 
     join(stream) {
         this.addLocalStream(stream);
-        this.artichoke.rest.joinCall(this.id);
+        this.api.joinCall(this.id);
     }
 
     leave(reason) {
-        this.artichoke.rest.leaveCall(this.id, reason);
+        this.api.leaveCall(this.id, reason);
         this.pool.destroyAll();
     }
 
@@ -106,7 +106,7 @@ export class DirectCall extends BaseCall {}
 
 export class Call extends BaseCall {
     invite(user) {
-        this.artichoke.rest.inviteToCall(this.id, user);
+        this.api.inviteToCall(this.id, user);
     }
 
     onInvited(callback: Callback<CallInvited>) {
@@ -115,7 +115,7 @@ export class Call extends BaseCall {
 }
 
 export function createCall(call: ProtoCall, config: RTCConfiguration,
-                           log: Logger, events: EventHandler, api: Artichoke): DirectCall | Call {
+                           log: Logger, events: EventHandler, api: API): DirectCall | Call {
     if (call.direct) {
         return new DirectCall(call, config, log, events, api);
     } else {
