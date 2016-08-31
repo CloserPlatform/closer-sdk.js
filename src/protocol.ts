@@ -87,14 +87,14 @@ export interface RoomAction extends Event {
     timestamp: Timestamp;
 }
 
-export type Candidate = RTCIceCandidateEvent;
+export type Candidate = string;
 
 export interface RTCCandidate extends Event {
     peer: ID;
     candidate: Candidate;
 }
 
-export type SDP = RTCSessionDescription;
+export type SDP = RTCSessionDescriptionInit;
 
 export interface RTCDescription extends Event {
     peer: ID;
