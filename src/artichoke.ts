@@ -264,11 +264,6 @@ export class Artichoke {
     }
 
     // Callbacks:
-    // FIXME Remove this.
-    onEvent(type: string, callback: Callback<proto.Event>) {
-        this.events.onEvent(type, callback);
-    }
-
     onConnect(callback: Callback<proto.Event>) {
         this.events.onEvent("hello", callback);
     }
@@ -321,7 +316,7 @@ export class Artichoke {
 
     // Misc API:
     onStatusChange(callback) {
-        this.onEvent("presence", callback);
+        this.events.onEvent("presence", callback);
     }
 
     setStatus(status) {
@@ -330,7 +325,7 @@ export class Artichoke {
 
     // Call API:
     onCall(callback) {
-        this.onEvent("call_invitation", callback);
+        this.events.onEvent("call_invitation", callback);
     }
 
     createDirectCall(peer) {
@@ -351,7 +346,7 @@ export class Artichoke {
 
     // Chat room API:
     onRoom(callback) {
-        this.onEvent("room_created", callback);
+        this.events.onEvent("room_created", callback);
     }
 
     createRoom(name) {
@@ -381,12 +376,5 @@ export class Artichoke {
 
     _wrapRoom(promise) {
         return wrapPromise(promise, createRoom, [this.events, this]);
-    }
-
-    _error(reason: string, error) {
-        error = error || {};
-        error.type = "error";
-        error.reason = reason;
-        this.events.notify(error);
     }
 }

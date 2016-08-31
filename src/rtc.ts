@@ -1,7 +1,7 @@
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
-import { Candidate, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
+import { Candidate, Error, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
 
 // Cross-browser support:
 function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {
@@ -53,34 +53,32 @@ export class RTCConnection {
         }));
     }
 
-    offer(callId: ID, peer: ID) {
+    offer(callId: ID, peer: ID): Promise<SDP> {
         this.log("Creating RTC offer.");
 
         let _this = this;
-        this.conn.createOffer(function(offer) {
-            _this.conn.setLocalDescription(offer);
-            _this.initOnICECandidate(callId, peer);
-            _this.artichoke.socket.sendDescription(callId, peer, offer);
-        }, function(error) {
-            _this.artichoke._error("Could not create an RTC offer.", {
-                error
-            });
+        return new Promise(function(resolve, reject) {
+            _this.conn.createOffer(function(offer) {
+                _this.conn.setLocalDescription(offer);
+                _this.initOnICECandidate(callId, peer);
+                _this.artichoke.socket.sendDescription(callId, peer, offer);
+                resolve(offer);
+            }, reject);
         });
     }
 
-    answer(callId: ID, peer: ID, remoteDescription: SDP) {
+    answer(callId: ID, peer: ID, remoteDescription: SDP): Promise<SDP> {
         this.log("Creating RTC answer.");
         this.setRemoteDescription(remoteDescription);
 
         let _this = this;
-        this.conn.createAnswer(function(answer) {
-            _this.conn.setLocalDescription(answer);
-            _this.initOnICECandidate(callId, peer);
-            _this.artichoke.socket.sendDescription(callId, peer, answer);
-        }, function(error) {
-            _this.artichoke._error("Could not create an RTC answer.", {
-                error
-            });
+        return new Promise(function(resolve, reject) {
+            _this.conn.createAnswer(function(answer) {
+                _this.conn.setLocalDescription(answer);
+                _this.initOnICECandidate(callId, peer);
+                _this.artichoke.socket.sendDescription(callId, peer, answer);
+                resolve(answer);
+            }, reject);
         });
     }
 
@@ -124,6 +122,7 @@ export interface ConnectionCallback {
 
 export class RTCPool {
     private artichoke: Artichoke;
+    private events: EventHandler;
     private log: Logger;
 
     private callId: ID;
@@ -134,6 +133,7 @@ export class RTCPool {
 
     constructor(callId: ID, events: EventHandler, artichoke: Artichoke) {
         this.artichoke = artichoke;
+        this.events = events;
         this.log = artichoke.log;
 
         this.callId = callId;
@@ -151,7 +151,15 @@ export class RTCPool {
                 _this.connections[msg.peer].setRemoteDescription(msg.description);
             } else {
                 let rtc = _this._create(msg.peer);
-                rtc.answer(_this.callId, msg.peer, msg.description);
+                rtc.answer(_this.callId, msg.peer, msg.description).then(function(answer) {
+                    _this.log("Sent an RTC description: " + answer.sdp);
+                }).catch(function(error) {
+                    events.notify({
+                        type: "error",
+                        reason: "Could not create an RTC answer.",
+                        error
+                    } as Error);
+                });
                 _this.onConnectionCallback(msg.peer, rtc);
             }
         });
@@ -161,9 +169,10 @@ export class RTCPool {
             if (msg.peer in _this.connections) {
                 _this.connections[msg.peer].addCandidate(msg.candidate);
             } else {
-                _this.artichoke._error("Received an invalid RTC candidate.", {
-                    error: msg.peer + " is not currently in this call."
-                });
+                events.notify({
+                    type: "error",
+                    reason: "Received an invalid RTC candidate. " +  msg.peer + " is not currently in this call."
+                } as Error);
             }
         });
     }
@@ -178,7 +187,16 @@ export class RTCPool {
 
     create(peer: ID): RTCConnection {
         let rtc = this._create(peer);
-        rtc.offer(this.callId, peer);
+        let _this = this;
+        rtc.offer(this.callId, peer).then(function(offer) {
+            _this.log("Sent an RTC description: " + offer.sdp);
+        }).catch(function(error) {
+            _this.events.notify({
+                type: "error",
+                reason: "Could not create an RTC offer.",
+                error
+            } as Error);
+        });
         return rtc;
     }
 
