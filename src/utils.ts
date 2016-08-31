@@ -1,10 +1,6 @@
 // Various utilities.
 
-export function nop() {
-    // NOTE Don't do anything.
-}
-
-export function pathcat(parts) {
+export function pathcat(parts: Array<string>): string {
     let output = [];
     for (let i = 0; i < parts.length; i++) {
         output.push(parts[i]);
@@ -12,13 +8,17 @@ export function pathcat(parts) {
     return output.join("/");
 }
 
-export function wrapPromise(promise, fun, args) {
-    return new Promise(function(resolve, reject) {
+interface TransferFunction<T, U> {
+    (arg: T): U;
+}
+
+export function wrapPromise<T, U>(promise: Promise<T | Array<T>>, fun: TransferFunction<T, U>): Promise<U | Array<U>> {
+    return new Promise<U | Array<U>>(function(resolve, reject) {
         promise.then(function(obj) {
             if (Array.isArray(obj)) {
-                resolve(obj.map((o) => fun.apply(fun, [o].concat(args))));
+                resolve((obj as Array<T>).map(fun));
             } else {
-                resolve(fun.apply(fun, [obj].concat(args)));
+                resolve(fun(obj as T));
             }
         }).catch(reject);
     });

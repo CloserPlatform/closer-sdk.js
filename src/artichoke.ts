@@ -4,9 +4,9 @@ import { Config } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage } from "./message";
-import { CallInvitation, Error, Event, ID, Message, Presence, RoomCreated, Status } from "./protocol";
+import * as proto from "./protocol";
 import { createRoom, DirectRoom, Room } from "./room";
-import { nop, wrapPromise } from "./utils";
+import { wrapPromise } from "./utils";
 
 export class Artichoke {
     private api: API;
@@ -21,17 +21,20 @@ export class Artichoke {
         this.events = events;
 
         // NOTE Disable some events by default.
+        let nop = (e: proto.Event) => {
+            // Do nothing.
+        };
         events.onEvent("error", nop);
         events.onEvent("msg_received", nop);
         events.onEvent("msg_delivered", nop);
     }
 
     // Callbacks:
-    onConnect(callback: Callback<Event>) {
+    onConnect(callback: Callback<proto.Event>) {
         this.events.onEvent("hello", callback);
     }
 
-    onError(callback: Callback<Error>) {
+    onError(callback: Callback<proto.Error>) {
         this.events.onError(callback);
     }
 
@@ -40,37 +43,37 @@ export class Artichoke {
         this.api.connect();
 
         let _this = this;
-        this.api.onEvent(function(e: Event) {
+        this.api.onEvent(function(e: proto.Event) {
             // FIXME Adjust format on the backend.
             switch (e.type) {
             case "call_invitation":
-                let c = e as CallInvitation;
+                let c = e as proto.CallInvitation;
                 _this.events.notify({
                     type: c.type,
                     sender: c.user,
                     call: createCall(c.call, _this.config.rtc, _this.log, _this.events, _this.api)
-                } as Event);
+                } as proto.Event);
                 break;
 
             case "room_created": // FIXME Rename to room_invitation.
                 _this.events.notify({
                     type: e.type,
-                    room: createRoom((e as RoomCreated).room, _this.log, _this.events, _this.api)
-                } as Event);
+                    room: createRoom((e as proto.RoomCreated).room, _this.log, _this.events, _this.api)
+                } as proto.Event);
                 break;
 
             case "message":
-                _this.events.notify(createMessage(e as Message, _this.log, _this.events, _this.api));
+                _this.events.notify(createMessage(e as proto.Message, _this.log, _this.events, _this.api));
                 break;
 
             case "presence":
-                let p = e as Presence;
+                let p = e as proto.Presence;
                 _this.events.notify({
                     type: p.type,
                     user: p.sender,
                     status: p.status,
                     timestamp: p.timestamp
-                } as Event);
+                } as proto.Event);
                 break;
 
             default:
@@ -80,66 +83,66 @@ export class Artichoke {
     }
 
     // Misc API:
-    onStatusChange(callback: Callback<Presence>) {
+    onStatusChange(callback: Callback<proto.Presence>) {
         this.events.onEvent("presence", callback);
     }
 
-    setStatus(status: Status) {
+    setStatus(status: proto.Status) {
         this.api.setStatus(status, Date.now());
     }
 
     // Call API:
-    onCall(callback: Callback<CallInvitation>) {
+    onCall(callback: Callback<proto.CallInvitation>) {
         this.events.onEvent("call_invitation", callback);
     }
 
-    createDirectCall(peer: ID): Promise<DirectCall> {
-        return this._wrapCall(this.api.createDirectCall(peer));
+    createDirectCall(peer: proto.ID): Promise<DirectCall> {
+        return this.wrapCall(this.api.createDirectCall(peer));
     }
 
-    createCall(users: Array<ID>): Promise<Call> {
-        return this._wrapCall(this.api.createCall(users));
+    createCall(users: Array<proto.ID>): Promise<Call> {
+        return this.wrapCall(this.api.createCall(users));
     }
 
-    getCall(call: ID): Promise<Call | DirectCall> {
-        return this._wrapCall(this.api.getCall(call));
+    getCall(call: proto.ID): Promise<Call | DirectCall> {
+        return this.wrapCall(this.api.getCall(call));
     }
 
     getCalls(): Promise<Array<Call | DirectCall>> {
-        return this._wrapCall(this.api.getCalls());
+        return this.wrapCall(this.api.getCalls());
     }
 
     // Chat room API:
-    onRoom(callback: Callback<RoomCreated>) {
+    onRoom(callback: Callback<proto.RoomCreated>) {
         this.events.onEvent("room_created", callback);
     }
 
     createRoom(name: string): Promise<Room> {
-        return this._wrapRoom(this.api.createRoom(name));
+        return this.wrapRoom(this.api.createRoom(name));
     }
 
-    createDirectRoom(peer: ID): Promise<DirectRoom> {
-        return this._wrapRoom(this.api.createDirectRoom(peer));
+    createDirectRoom(peer: proto.ID): Promise<DirectRoom> {
+        return this.wrapRoom(this.api.createDirectRoom(peer));
     }
 
-    getRoom(room: ID): Promise<Room | DirectRoom> {
-        return this._wrapRoom(this.api.getRoom(room));
+    getRoom(room: proto.ID): Promise<Room | DirectRoom> {
+        return this.wrapRoom(this.api.getRoom(room));
     }
 
     getRooms(): Promise<Array<Room | DirectRoom>> {
-        return this._wrapRoom(this.api.getRooms());
+        return this.wrapRoom(this.api.getRooms());
     }
 
     getRoster(): Promise<Array<Room | DirectRoom>> {
-        return this._wrapRoom(this.api.getRoster());
+        return this.wrapRoom(this.api.getRoster());
     }
 
     // Utils:
-    _wrapCall(promise) {
-        return wrapPromise(promise, createCall, [this.config.rtc, this.log, this.events, this.api]);
+    private wrapCall(promise: Promise<proto.Call | Array<proto.Call>>) {
+        return wrapPromise(promise, (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
     }
 
-    _wrapRoom(promise) {
-        return wrapPromise(promise, createRoom, [this.log, this.events, this.api]);
+    private wrapRoom(promise: Promise<proto.Room | Array<proto.Room>>) {
+        return wrapPromise(promise, (room: proto.Room) => createRoom(room, this.log, this.events, this.api));
     }
 }

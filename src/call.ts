@@ -63,7 +63,7 @@ class BaseCall implements ProtoCall {
         });
     }
 
-    getUsers() {
+    getUsers(): Promise<Array<ID>> {
         let _this = this;
         return new Promise(function(resolve, reject) {
             // NOTE No need to retrieve the list if it's cached here.
@@ -71,22 +71,22 @@ class BaseCall implements ProtoCall {
         });
     }
 
-    addLocalStream(stream) {
+    addLocalStream(stream: MediaStream) {
         this.pool.addLocalStream(stream);
     }
 
     reject() {
-        this.leave("rejected");
+        return this.leave("rejected");
     }
 
-    join(stream) {
+    join(stream: MediaStream): Promise<void> {
         this.addLocalStream(stream);
-        this.api.joinCall(this.id);
+        return this.api.joinCall(this.id);
     }
 
-    leave(reason) {
-        this.api.leaveCall(this.id, reason);
+    leave(reason: string): Promise<void> {
         this.pool.destroyAll();
+        return this.api.leaveCall(this.id, reason);
     }
 
     onLeft(callback: Callback<CallLeft>) {
@@ -105,8 +105,8 @@ class BaseCall implements ProtoCall {
 export class DirectCall extends BaseCall {}
 
 export class Call extends BaseCall {
-    invite(user) {
-        this.api.inviteToCall(this.id, user);
+    invite(user: ID): Promise<void> {
+        return this.api.inviteToCall(this.id, user);
     }
 
     onInvited(callback: Callback<CallInvited>) {

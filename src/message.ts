@@ -4,7 +4,7 @@ import { Logger } from "./logger";
 import { ID, Message as MSG, MessageDelivered, Timestamp }  from "./protocol";
 
 // FIXME A message shouldn't be an Event...
-class Message implements MSG {
+export class Message implements MSG {
     public type: string = "message";
 
     public id: ID;

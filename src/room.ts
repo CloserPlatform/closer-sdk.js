@@ -1,8 +1,8 @@
 import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { createMessage } from "./message";
-import { ID, Message, Room as ProtoRoom, RoomAction, RosterRoom, Typing } from "./protocol";
+import { createMessage, Message } from "./message";
+import { ID, Message as MSG, Room as ProtoRoom, RoomAction, RosterRoom, Timestamp, Typing } from "./protocol";
 import { wrapPromise } from "./utils";
 
 class BaseRoom implements ProtoRoom {
@@ -25,15 +25,15 @@ class BaseRoom implements ProtoRoom {
         this.api = api;
     }
 
-    getHistory() {
-        return this._wrapMessage(this.api.getHistory(this.id));
+    getHistory(): Promise<Array<Message>> {
+        return this.wrapMessage(this.api.getHistory(this.id));
     }
 
-    getUsers() {
+    getUsers(): Promise<Array<ID>> {
         return this.api.getUsers(this.id);
     }
 
-    getMark() {
+    getMark(): Promise<number> {
         let _this = this;
         return new Promise(function(resolve, reject) {
             // NOTE No need to retrieve the mark if it's cached here.
@@ -41,23 +41,23 @@ class BaseRoom implements ProtoRoom {
         });
     }
 
-    send(message) {
-        return this._wrapMessage(this.api.sendMessage(this.id, message));
+    send(message: string): Promise<Message> {
+        return this.wrapMessage(this.api.sendMessage(this.id, message));
     }
 
-    mark(timestamp) {
+    mark(timestamp: Timestamp) {
         this.currMark = timestamp;
-        return this.api.setMark(this.id, timestamp);
+        this.api.setMark(this.id, timestamp);
     }
 
     indicateTyping() {
-        return this.api.sendTyping(this.id);
+        this.api.sendTyping(this.id);
     }
 
-    onMessage(callback: Callback<Message>) {
+    onMessage(callback: Callback<MSG>) {
         // FIXME This ought to be a onContreceEvent() call.
         let _this = this;
-        this.events.onEvent("message", function(msg: Message) {
+        this.events.onEvent("message", function(msg: MSG) {
             if (msg.room === _this.id) {
                 callback(msg);
             }
@@ -72,23 +72,23 @@ class BaseRoom implements ProtoRoom {
         this.events.onConcreteEvent("typing", this.id, callback);
     }
 
-    _wrapMessage(promise) {
-        return wrapPromise(promise, createMessage, [this.log, this.events, this.api]);
+    private wrapMessage(promise: Promise<MSG | Array<MSG>>) {
+        return wrapPromise(promise, (msg) => createMessage(msg, this.log, this.events, this.api));
     }
 }
 
 export class DirectRoom extends BaseRoom {}
 
 export class Room extends BaseRoom {
-    join() {
+    join(): Promise<void> {
         return this.api.joinRoom(this.id);
     }
 
-    leave() {
+    leave(): Promise<void> {
         return this.api.leaveRoom(this.id);
     }
 
-    invite(user) {
+    invite(user: ID): Promise<void> {
         return this.api.inviteToRoom(this.id, user);
     }
 }
