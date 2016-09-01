@@ -21,7 +21,7 @@ interface Thunk {
 export class API {
     private log: Logger;
 
-    public sessionId: proto.ID; // FIXME Make this private.
+    private sessionId: proto.ID;
     private apiKey: ApiKey;
 
     private url: string;

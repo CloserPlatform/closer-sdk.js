@@ -135,7 +135,10 @@ $(document).ready(function() {
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
 
-        room.onMessage(receive);
+        room.onMessage(function(msg) {
+            msg.markDelivered();
+            receive(msg);
+        });
 
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (msg) {
@@ -323,6 +326,7 @@ $(document).ready(function() {
 
         var receive = makeReceiver(room, text);
         room.onMessage(function(msg) {
+            msg.markDelivered();
             receive(msg);
             users.deactivate(msg.sender);
         });

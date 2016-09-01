@@ -29,10 +29,11 @@ export class Message implements MSG {
         this.log = log;
         this.events = events;
         this.api = api;
+    }
 
-        if (!(this.sender === api.sessionId || this.delivered)) {
-            this.markDelivered();
-        }
+    markDelivered() {
+        this.delivered = Date.now();
+        this.api.setDelivered(this.id, this.delivered);
     }
 
     onDelivery(callback: Callback<MessageDelivered>) {
@@ -44,11 +45,6 @@ export class Message implements MSG {
     }
 
     // TODO markRead, onRead, edit & onEdit
-
-    private markDelivered() {
-        this.delivered = Date.now();
-        this.api.setDelivered(this.id, this.delivered);
-    }
 }
 
 export function createMessage(message: MSG, log: Logger, events: EventHandler, api: API): Message {
