@@ -12,12 +12,12 @@ export class EventHandler {
 
     constructor(log: Logger) {
         this.log = log;
-        this.onError(function(Error) {
-            // NOTE By default do nothing.
+        this.onError((e: Error) => {
+            // Do nothing.
         });
     }
 
-    raise(reason: string, cause?) {
+    raise(reason: string, cause?) { // FIXME Cause needs typing.
         this.perType["error"].forEach(function(cb) {
             cb({
                 type: "error",

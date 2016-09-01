@@ -75,7 +75,7 @@ class BaseCall implements ProtoCall {
         this.pool.addLocalStream(stream);
     }
 
-    reject() {
+    reject(): Promise<void> {
         return this.leave("rejected");
     }
 
