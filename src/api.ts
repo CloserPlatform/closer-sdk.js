@@ -4,7 +4,6 @@ import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
 import * as proto from "./protocol";
-import { pathcat } from "./utils";
 
 interface PromiseResolve<T> extends Callback<T> {}
 interface PromiseReject extends Callback<proto.Error> {}
@@ -38,8 +37,8 @@ export class API {
         this.sessionId = config.sessionId;
         this.apiKey = config.apiKey;
 
-        this.url = "//" + pathcat([config.url, "api"]);
-        this.wsUrl = "wss://" + pathcat([config.url, "ws", config.apiKey]);
+        this.url = ["/", config.url, "api"].join("/");
+        this.wsUrl = ["wss:/", config.url, "ws", config.apiKey].join("/");
         this.promises = {};
     }
 
@@ -197,7 +196,7 @@ export class API {
         let _this = this;
         return new Promise<Result>(function(resolve, reject) {
             let xhttp = new XMLHttpRequest();
-            let url = pathcat(path);
+            let url = path.join("/");
             xhttp.onreadystatechange = _this.responseCallback<Result>(xhttp, resolve, reject);
             _this.log("GET " + url);
             xhttp.open("GET", url, true);
@@ -211,7 +210,7 @@ export class API {
         return new Promise<Result>(function(resolve, reject) {
             let json = JSON.stringify(obj);
             let xhttp = new XMLHttpRequest();
-            let url = pathcat(path);
+            let url = path.join("/");
             xhttp.onreadystatechange = _this.responseCallback<Result>(xhttp, resolve, reject);
             _this.log("POST " + url + " " + json);
             xhttp.open("POST", url, true);
