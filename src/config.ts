@@ -1,7 +1,5 @@
-// SDK configuration shenanigans.
-
-export type ApiKey = string;
-export type ID = string;
+import { ApiKey } from "./auth";
+import { ID } from "./protocol";
 
 export interface Config {
     rtc?: RTCConfiguration;

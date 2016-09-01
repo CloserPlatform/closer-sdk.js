@@ -1,4 +1,5 @@
-import { ApiKey, Config } from "./config";
+import { ApiKey } from "./auth";
+import { Config } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
