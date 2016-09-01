@@ -32,8 +32,10 @@ export class Message implements MSG {
     }
 
     markDelivered() {
-        this.delivered = Date.now();
-        this.api.setDelivered(this.id, this.delivered);
+        if (!this.delivered) {
+            this.delivered = Date.now();
+            this.api.setDelivered(this.id, this.delivered);
+        }
     }
 
     onDelivery(callback: Callback<MessageDelivered>) {
