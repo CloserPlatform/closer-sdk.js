@@ -1,392 +1,148 @@
-import { createCall } from "./call";
-import { JSONWebSocket } from "./jsonws";
+import { API } from "./api";
+import { Call, createCall, DirectCall } from "./call";
+import { Config } from "./config";
+import { Callback, EventHandler } from "./events";
+import { Logger } from "./logger";
 import { createMessage } from "./message";
 import * as proto from "./protocol";
-import { createRoom } from "./room";
-import { merge, nop, pathcat, wrapPromise } from "./utils";
-
-class ArtichokeREST {
-    log;
-    apiKey;
-    url;
-    callPath;
-    chatPath;
-    roomPath;
-
-    constructor(config) {
-        this.log = config.log;
-        this.apiKey = config.apiKey;
-        this.url = "//" + pathcat([config.url, "api"]);
-
-        this.callPath = "calls";
-        this.chatPath = "chat";
-        this.roomPath = "rooms";
-    }
-
-    createCall(sessions) {
-        return this._post(pathcat([this.url, this.callPath]), proto.CallCreate(sessions));
-    }
-
-    createDirectCall(sessionId) {
-        return this._post(pathcat([this.url, this.callPath]), proto.CallCreateDirect(sessionId));
-    }
-
-    getCall(callId) {
-        return this._get(pathcat([this.url, this.callPath, callId]));
-    }
-
-    getCalls() {
-        return this._get(pathcat([this.url, this.callPath]));
-    }
-
-    joinCall(callId) {
-        return this._post(pathcat([this.url, this.callPath, callId, "join"]), "");
-    }
-
-    leaveCall(callId, reason) {
-        return this._post(pathcat([this.url, this.callPath, callId, "leave"]), proto.LeaveReason(reason));
-    }
-
-    inviteToCall(callId, sessionId) {
-        return this._post(pathcat([this.url, this.callPath, callId, "invite", sessionId]), "");
-    }
-
-    // Chat API:
-    getChatHistory(roomId) {
-        return this._get(pathcat([this.url, this.chatPath, roomId]));
-    }
-
-    // Chat room API:
-    createRoom(name) {
-        return this._post(pathcat([this.url, this.roomPath]), proto.RoomCreate(name));
-    }
-
-    createDirectRoom(sessionId) {
-        return this._post(pathcat([this.url, this.roomPath]), proto.RoomCreateDirect(sessionId));
-    }
-
-    getRoom(roomId) {
-        return this._get(pathcat([this.url, this.roomPath, roomId]));
-    }
-
-    getRooms() {
-        return this._get(pathcat([this.url, this.roomPath]));
-    }
-
-    getRoster() {
-        return this._get(pathcat([this.url, this.roomPath, "unread"]));
-    }
-
-    getUsers(roomId) {
-        return this._get(pathcat([this.url, this.roomPath, roomId, "users"]));
-    }
-
-    joinRoom(roomId) {
-        return this._post(pathcat([this.url, this.roomPath, roomId, "join"]), "");
-    }
-
-    leaveRoom(roomId) {
-        return this._post(pathcat([this.url, this.roomPath, roomId, "leave"]), "");
-    }
-
-    inviteToRoom(roomId, sessionId) {
-        return this._post(pathcat([this.url, this.roomPath, roomId, "invite", sessionId]), "");
-    }
-
-    _responseCallback(xhttp, resolve, reject) {
-        let _this = this;
-        return function() {
-            if (xhttp.readyState === 4 && xhttp.status === 200) {
-                _this.log("OK response: " + xhttp.responseText);
-                resolve(JSON.parse(xhttp.responseText));
-            } else if (xhttp.readyState === 4 && xhttp.status === 204) {
-                _this.log("NoContent response.");
-                resolve(undefined);
-            } else if (xhttp.readyState === 4) {
-                _this.log("Error response: " + xhttp.responseText);
-                try {
-                    reject(JSON.parse(xhttp.responseText));
-                } catch (error) {
-                    reject(undefined); // FIXME Make sure that this never happens.
-                }
-            }
-        };
-    }
-
-    _get(url) {
-        let _this = this;
-        return new Promise(function(resolve, reject) {
-            let xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = _this._responseCallback(xhttp, resolve, reject);
-            _this.log("GET " + url);
-            xhttp.open("GET", url, true);
-            xhttp.setRequestHeader("X-Api-Key", _this.apiKey);
-            xhttp.send();
-        });
-    }
-
-    _post(url, obj) {
-        let _this = this;
-        return new Promise(function(resolve, reject) {
-            let json = JSON.stringify(obj);
-            let xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = _this._responseCallback(xhttp, resolve, reject);
-            _this.log("POST " + url + " " + json);
-            xhttp.open("POST", url, true);
-            xhttp.setRequestHeader("Content-Type", "application/json");
-            xhttp.setRequestHeader("X-Api-Key", _this.apiKey);
-            xhttp.send(json);
-        });
-    }
-}
-
-class ArtichokeWS extends JSONWebSocket {
-    promises;
-    constructor(config) {
-        super("wss://" + pathcat([config.url, "ws", config.apiKey]), config);
-        this.promises = {};
-    }
-
-    // Misc API:
-    setStatus(sessionId, status, timestamp) {
-        this.send(proto.Presence(sessionId, status, timestamp));
-    }
-
-    // Call API:
-    sendDescription(callId, sessionId, description) {
-        this.send(proto.RTCDescription(callId, sessionId, description));
-    }
-
-    sendCandidate(callId, sessionId, candidate) {
-        this.send(proto.RTCCandidate(callId, sessionId, candidate));
-    }
-
-    // Chat API:
-    setDelivered(messageId, timestamp) {
-        this.send(proto.ChatDelivered(messageId, timestamp));
-    }
-
-    // Room API:
-    sendMessage(roomId, body) {
-        let _this = this;
-        return new Promise(function(resolve, reject) {
-            let ref = "ref" + Date.now(); // FIXME Use UUID instead.
-            _this.promises[ref] = {
-                resolve, // FIXME This should createMessage().
-                reject
-            };
-            _this.send(proto.ChatRequest(roomId, body, ref));
-        });
-    }
-
-    sendTyping(roomId) {
-        this.send(proto.Typing(roomId));
-    }
-
-    onMessage(callback) {
-        let _this = this;
-        super.onMessage(function(msg) {
-            if (msg.type === "error" && msg.ref) {
-                _this._reject(msg.ref, msg);
-            } else if (msg.type === "msg_received" && msg.ref) {
-                _this._resolve(msg.ref, msg.message); // FIXME Don't rely on this.
-            } else if (msg.ref) {
-                _this._resolve(msg.ref, msg);
-            }
-            callback(msg);
-        });
-    }
-
-    _resolve(ref, value) {
-        if (ref in this.promises) {
-            this.promises[ref].resolve(value);
-            delete this.promises[ref];
-        }
-    }
-
-    _reject(ref, error) {
-        if (ref in this.promises) {
-            this.promises[ref].reject(error);
-            delete this.promises[ref];
-        }
-    }
-
-    setMark(roomId, timestamp) {
-        this.send(proto.Mark(roomId, timestamp));
-    }
-}
+import { createRoom, DirectRoom, Room } from "./room";
+import { wrapPromise } from "./utils";
 
 export class Artichoke {
-    config;
-    log;
-    rest;
-    sessionId;
-    apiKey;
-    socket;
-    callbacks;
-    constructor(config) {
+    private api: API;
+    private config: Config;
+    private log: Logger;
+    private events: EventHandler;
+
+    constructor(config: Config, log: Logger, events: EventHandler, api: API) {
+        this.api = api;
         this.config = config;
-        this.log = config.log;
+        this.log = log;
+        this.events = events;
 
-        this.log("this.config: " + JSON.stringify(this.config));
-
-        this.rest = new ArtichokeREST(config);
-
-        // User config:
-        this.sessionId = config.sessionId;
-        this.apiKey = config.apiKey;
-
-        // Connection state:
-        this.socket = undefined;
-
-        this.callbacks = {};
-
-        // NOTE By default do nothing.
-        this.onEvent("error", nop);
-        this.onEvent("msg_received", nop);
-        this.onEvent("msg_delivered", nop);
-        this.onEvent("call_candidate", nop);
+        // NOTE Disable some events by default.
+        let nop = (e: proto.Event) => {
+            // Do nothing.
+        };
+        events.onEvent("error", nop);
+        events.onEvent("msg_received", nop);
+        events.onEvent("msg_delivered", nop);
     }
 
     // Callbacks:
-    onEvent(type, callback) {
-        this.log("Registered callback for message type: " + type);
-        if (!(type in this.callbacks)) {
-            this.callbacks[type] = [];
-        }
-        this.callbacks[type].push(callback);
+    onConnect(callback: Callback<proto.Event>) {
+        this.events.onEvent("hello", callback);
     }
 
-    onConnect(callback) {
-        this.onEvent("hello", callback);
-    }
-
-    onError(callback) {
-        this.onEvent("error", callback);
+    onError(callback: Callback<proto.Error>) {
+        this.events.onError(callback);
     }
 
     // API:
     connect() {
-        this.socket = new ArtichokeWS(this.config);
+        this.api.connect();
 
         let _this = this;
-        this.socket.onMessage(function(m) {
+        this.api.onEvent(function(e: proto.Event) {
             // FIXME Adjust format on the backend.
-            switch (m.type) {
+            switch (e.type) {
             case "call_invitation":
-                _this._runCallbacks(m.type, {
-                    type: m.type,
-                    sender: m.user,
-                    call: createCall(m.call, _this)
-                });
+                let c = e as proto.CallInvitation;
+                _this.events.notify({
+                    type: c.type,
+                    sender: c.user,
+                    call: createCall(c.call, _this.config.rtc, _this.log, _this.events, _this.api)
+                } as proto.Event);
                 break;
 
             case "room_created": // FIXME Rename to room_invitation.
-                _this._runCallbacks(m.type, {
-                    type: m.type,
-                    room: createRoom(m.room, _this)
-                });
+                _this.events.notify({
+                    type: e.type,
+                    room: createRoom((e as proto.RoomCreated).room, _this.log, _this.events, _this.api)
+                } as proto.Event);
                 break;
 
             case "message":
-                _this._runCallbacks(m.type, createMessage(m, _this));
+                _this.events.notify(createMessage(e as proto.Message, _this.log, _this.events, _this.api));
                 break;
 
             case "presence":
-                _this._runCallbacks(m.type, {
-                    type: m.type,
-                    user: m.sender,
-                    status: m.status,
-                    timestamp: m.timestamp
-                });
+                let p = e as proto.Presence;
+                _this.events.notify({
+                    type: p.type,
+                    user: p.sender,
+                    status: p.status,
+                    timestamp: p.timestamp
+                } as proto.Event);
                 break;
 
             default:
-                _this._runCallbacks(m.type, m);
+                _this.events.notify(e);
             }
         });
     }
 
     // Misc API:
-    onStatusChange(callback) {
-        this.onEvent("presence", callback);
+    onStatusChange(callback: Callback<proto.Presence>) {
+        this.events.onEvent("presence", callback);
     }
 
-    setStatus(status) {
-        this.socket.setStatus(this.sessionId, status, Date.now());
+    setStatus(status: proto.Status) {
+        this.api.setStatus(status, Date.now());
     }
 
     // Call API:
-    onCall(callback) {
-        this.onEvent("call_invitation", callback);
+    onCall(callback: Callback<proto.CallInvitation>) {
+        this.events.onEvent("call_invitation", callback);
     }
 
-    createDirectCall(peer) {
-        return this._wrapCall(this.rest.createDirectCall(peer));
+    createDirectCall(peer: proto.ID): Promise<DirectCall> {
+        return this.wrapCall(this.api.createDirectCall(peer));
     }
 
-    createCall(users) {
-        return this._wrapCall(this.rest.createCall(users));
+    createCall(users: Array<proto.ID>): Promise<Call> {
+        return this.wrapCall(this.api.createCall(users));
     }
 
-    getCall(call) {
-        return this._wrapCall(this.rest.getCall(call));
+    getCall(call: proto.ID): Promise<Call | DirectCall> {
+        return this.wrapCall(this.api.getCall(call));
     }
 
-    getCalls() {
-        return this._wrapCall(this.rest.getCalls());
+    getCalls(): Promise<Array<Call | DirectCall>> {
+        return this.wrapCall(this.api.getCalls());
     }
 
     // Chat room API:
-    onRoom(callback) {
-        this.onEvent("room_created", callback);
+    onRoom(callback: Callback<proto.RoomCreated>) {
+        this.events.onEvent("room_created", callback);
     }
 
-    createRoom(name) {
-        return this._wrapRoom(this.rest.createRoom(name));
+    createRoom(name: string): Promise<Room> {
+        return this.wrapRoom(this.api.createRoom(name));
     }
 
-    createDirectRoom(peer) {
-        return this._wrapRoom(this.rest.createDirectRoom(peer));
+    createDirectRoom(peer: proto.ID): Promise<DirectRoom> {
+        return this.wrapRoom(this.api.createDirectRoom(peer));
     }
 
-    getRoom(room) {
-        return this._wrapRoom(this.rest.getRoom(room));
+    getRoom(room: proto.ID): Promise<Room | DirectRoom> {
+        return this.wrapRoom(this.api.getRoom(room));
     }
 
-    getRooms() {
-        return this._wrapRoom(this.rest.getRooms());
+    getRooms(): Promise<Array<Room | DirectRoom>> {
+        return this.wrapRoom(this.api.getRooms());
     }
 
-    getRoster() {
-        return this._wrapRoom(this.rest.getRoster());
+    getRoster(): Promise<Array<Room | DirectRoom>> {
+        return this.wrapRoom(this.api.getRoster());
     }
 
     // Utils:
-    _wrapCall(promise) {
-        return wrapPromise(promise, createCall, [this]);
+    private wrapCall(promise: Promise<proto.Call | Array<proto.Call>>) {
+        return wrapPromise(promise, (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
     }
 
-    _wrapRoom(promise) {
-        return wrapPromise(promise, createRoom, [this]);
-    }
-
-    _runCallbacks(type, m) {
-        if (type in this.callbacks) {
-            this.log("Running callbacks for message type: " + type);
-            return this.callbacks[type].forEach((cb) => cb(m));
-        } else {
-            this.log("Unhandled message " + type + ": " + JSON.stringify(m));
-            this._error("Unhandled message.", {
-                message: m
-            });
-        }
-    }
-
-    _error(reason, info) {
-        this._runCallbacks("error", merge({
-            type: "error",
-            reason
-        }, info));
+    private wrapRoom(promise: Promise<proto.Room | Array<proto.Room>>) {
+        return wrapPromise(promise, (room: proto.Room) => createRoom(room, this.log, this.events, this.api));
     }
 }

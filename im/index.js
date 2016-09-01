@@ -108,13 +108,17 @@ $(document).ready(function() {
 
     function makeReceiver(room, text) {
         return function(msg) {
-            if(msg.timestamp > (room.currMark || 0)) {
-                if(!chatboxes[room.id].isActive()) {
-                    chatboxes[room.id].bumpUnread();
-                } else {
-                    room.mark(msg.timestamp);
+            room.getMark().then(function(mark) {
+                if(msg.timestamp > mark) {
+                    if(!chatboxes[room.id].isActive()) {
+                        chatboxes[room.id].bumpUnread();
+                    } else {
+                        room.mark(msg.timestamp);
+                    }
                 }
-            }
+            }).catch(function(error) {
+                console.log("Could not retrieve the mark: ", error);
+            });
 
             var className = msg.delivered ? "delivered" : "";
             var line = makeTextLine(msg.id, className, msg.timestamp, " " + msg.sender + ": " + msg.body);
@@ -131,7 +135,10 @@ $(document).ready(function() {
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
 
-        room.onMessage(receive);
+        room.onMessage(function(msg) {
+            msg.markDelivered();
+            receive(msg);
+        });
 
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (msg) {
@@ -319,6 +326,7 @@ $(document).ready(function() {
 
         var receive = makeReceiver(room, text);
         room.onMessage(function(msg) {
+            msg.markDelivered();
             receive(msg);
             users.deactivate(msg.sender);
         });
@@ -651,7 +659,7 @@ $(document).ready(function() {
             newRoom = roomBuilder(session);
 
             session.chat.onError(function(error) {
-                console.log("An error has occured: ", error.reason);
+                console.log("An error has occured: ", error);
                 alert("Session disconnected!");
             });
 
@@ -660,7 +668,7 @@ $(document).ready(function() {
 
                 killSwitch.click(function() {
                     // NOTE Kills the client session.
-                    session.chat.socket.leaveCall(null, null);
+                    session.api.sendCandidate(null, null, null);
                 });
 
                 statusSwitch.click(function() {

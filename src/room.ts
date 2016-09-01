@@ -1,91 +1,102 @@
-import { createMessage } from "./message";
+import { API } from "./api";
+import { Callback, EventHandler } from "./events";
+import { Logger } from "./logger";
+import { createMessage, Message } from "./message";
+import { ID, Message as MSG, Room as ProtoRoom, RoomAction, RosterRoom, Timestamp, Typing } from "./protocol";
 import { wrapPromise } from "./utils";
 
-class BaseRoom {
-    id;
-    name;
-    currMark;
-    direct;
-    log;
-    artichoke;
-    constructor(room, artichoke) {
+class BaseRoom implements ProtoRoom {
+    public id: ID;
+    public name: string;
+    public direct: boolean;
+
+    private currMark: number;
+    private log: Logger;
+    private events: EventHandler;
+    protected api: API;
+
+    constructor(room: RosterRoom, log: Logger, events: EventHandler, api: API) {
         this.id = room.id;
         this.name = room.name;
-        this.currMark = room.mark;
         this.direct = room.direct;
-        this.log = artichoke.log;
-        this.artichoke = artichoke;
+        this.currMark = room.mark || 0;
+        this.log = log;
+        this.events = events;
+        this.api = api;
     }
 
-    getHistory() {
-        return this._wrapMessage(this.artichoke.rest.getChatHistory(this.id));
+    getHistory(): Promise<Array<Message>> {
+        return this.wrapMessage(this.api.getRoomHistory(this.id));
     }
 
-    getUsers() {
-        return this.artichoke.rest.getUsers(this.id);
+    getUsers(): Promise<Array<ID>> {
+        return this.api.getRoomUsers(this.id);
     }
 
-    send(message) {
-        return this._wrapMessage(this.artichoke.socket.sendMessage(this.id, message));
+    getMark(): Promise<number> {
+        let _this = this;
+        return new Promise(function(resolve, reject) {
+            // NOTE No need to retrieve the mark if it's cached here.
+            resolve(_this.currMark);
+        });
     }
 
-    mark(timestamp) {
+    send(message: string): Promise<Message> {
+        return this.wrapMessage(this.api.sendMessage(this.id, message));
+    }
+
+    mark(timestamp: Timestamp) {
         this.currMark = timestamp;
-        return this.artichoke.socket.setMark(this.id, timestamp);
+        this.api.setMark(this.id, timestamp);
     }
 
     indicateTyping() {
-        return this.artichoke.socket.sendTyping(this.id);
+        this.api.sendTyping(this.id);
     }
 
-    onMessage(callback) {
-        this._defineCallback("message", callback);
-    }
-
-    onAction(callback) {
-        this._defineCallback("room_action", callback);
-    }
-
-    onTyping(callback) {
-        this._defineCallback("typing", callback);
-    }
-
-    _wrapMessage(promise) {
-        return wrapPromise(promise, createMessage, [this.artichoke]);
-    }
-
-    _defineCallback(type, callback) {
-        // FIXME It would be way better to store a hash of rooms and pick the relevant callback directly.
+    onMessage(callback: Callback<MSG>) {
+        // FIXME This ought to be a onContreceEvent() call.
         let _this = this;
-        this.artichoke.onEvent(type, function(msg) {
-            if (msg.room === _this.id || msg.id === _this.id) {
-                _this.log("Running callback " + type + " for room: " + _this.id);
+        this.events.onEvent("message", function(msg: MSG) {
+            if (msg.room === _this.id) {
                 callback(msg);
             }
         });
     }
-}
 
-class DirectRoom extends BaseRoom {}
-
-class Room extends BaseRoom {
-    join() {
-        return this.artichoke.rest.joinRoom(this.id);
+    onAction(callback: Callback<RoomAction>) {
+        this.events.onConcreteEvent("room_action", this.id, callback);
     }
 
-    leave() {
-        return this.artichoke.rest.leaveRoom(this.id);
+    onTyping(callback: Callback<Typing>) {
+        this.events.onConcreteEvent("typing", this.id, callback);
     }
 
-    invite(user) {
-        return this.artichoke.rest.inviteToRoom(this.id, user);
+    private wrapMessage(promise: Promise<MSG | Array<MSG>>) {
+        return wrapPromise(promise, (msg) => createMessage(msg, this.log, this.events, this.api));
     }
 }
 
-export function createRoom(room, artichoke) {
+export class DirectRoom extends BaseRoom {}
+
+export class Room extends BaseRoom {
+    join(): Promise<void> {
+        return this.api.joinRoom(this.id);
+    }
+
+    leave(): Promise<void> {
+        return this.api.leaveRoom(this.id);
+    }
+
+    invite(user: ID): Promise<void> {
+        return this.api.inviteToRoom(this.id, user);
+    }
+}
+
+export function createRoom(room: ProtoRoom, log: Logger, events: EventHandler, api: API): DirectRoom | Room {
     if (room.direct) {
-        return new DirectRoom(room, artichoke);
+        return new DirectRoom(room, log, events, api);
     } else {
-        return new Room(room, artichoke);
+        return new Room(room, log, events, api);
     }
 }

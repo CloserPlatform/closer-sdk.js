@@ -1,7 +1,10 @@
-import { nop } from "./utils";
+import { API } from "./api";
+import { EventHandler } from "./events";
+import { Logger } from "./logger";
+import { Candidate, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
 
 // Cross-browser support:
-function newRTCPeerConnection(config) {
+function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {
     if (typeof RTCPeerConnection !== "undefined") {
         return new RTCPeerConnection(config);
     } else if (typeof webkitRTCPeerConnection !== "undefined") {
@@ -10,23 +13,31 @@ function newRTCPeerConnection(config) {
         return new mozRTCPeerConnection(config);
     } else {
         // FIXME Add support for more browsers.
+        throw Error("Browser not supported!");
     };
 }
 
-export class RTCConnection {
-    artichoke;
-    log;
-    conn;
-    onRemoteStreamCallback;
+interface RTCPeerConnectionWithOnTrack extends RTCPeerConnection {
+    ontrack?: (event: RTCMediaStreamEvent) => void; // NOTE Hackaround for unstable API.
+}
 
-    constructor(stream, config, artichoke) {
-        this.artichoke = artichoke;
-        this.log = artichoke.log;
-        this.log("Connecting an RTC connection.");
+export interface RemoteStreamCallback {
+    (stream: MediaStream): void;
+}
+
+export class RTCConnection {
+    private api: API;
+    private log: Logger;
+    private conn: RTCPeerConnection;
+    private onRemoteStreamCallback: RemoteStreamCallback;
+
+    constructor(stream: MediaStream, config: RTCConfiguration, log: Logger, api: API) {
+        log("Connecting an RTC connection.");
+        this.api = api;
+        this.log = log;
         this.conn = newRTCPeerConnection(config);
         this.conn.addStream(stream);
-        this.onRemoteStreamCallback = undefined;
-        this._initOnRemoteStream();
+        this.initOnRemoteStream();
     }
 
     disconnect() {
@@ -34,7 +45,7 @@ export class RTCConnection {
         this.conn.close();
     }
 
-    addCandidate(candidate) {
+    addCandidate(candidate: Candidate) {
         this.conn.addIceCandidate(new RTCIceCandidate({
             "candidate": candidate,
             "sdpMid": "",
@@ -42,138 +53,150 @@ export class RTCConnection {
         }));
     }
 
-    offer(callId, peer) {
+    offer(callId: ID, peer: ID): Promise<SDP> {
         this.log("Creating RTC offer.");
 
         let _this = this;
-        this.conn.createOffer(function(offer) {
-            _this.conn.setLocalDescription(offer);
-            _this._initOnICECandidate(callId, peer);
-            _this.artichoke.socket.sendDescription(callId, peer, offer);
-        }, function(error) {
-            _this.artichoke._error("Could not create an RTC offer.", {
-                error
-            });
+        return new Promise(function(resolve, reject) {
+            _this.conn.createOffer(function(offer) {
+                _this.conn.setLocalDescription(offer);
+                _this.initOnICECandidate(callId, peer);
+                _this.api.sendDescription(callId, peer, offer as SDP);
+                resolve(offer);
+            }, reject);
         });
     }
 
-    answer(callId, peer, remoteDescription) {
+    answer(callId: ID, peer: ID, remoteDescription: SDP): Promise<SDP> {
         this.log("Creating RTC answer.");
         this.setRemoteDescription(remoteDescription);
 
         let _this = this;
-        this.conn.createAnswer(function(answer) {
-            _this.conn.setLocalDescription(answer);
-            _this._initOnICECandidate(callId, peer);
-            _this.artichoke.socket.sendDescription(callId, peer, answer);
-        }, function(error) {
-            _this.artichoke._error("Could not create an RTC answer.", {
-                error
-            });
+        return new Promise(function(resolve, reject) {
+            _this.conn.createAnswer(function(answer) {
+                _this.conn.setLocalDescription(answer);
+                _this.initOnICECandidate(callId, peer);
+                _this.api.sendDescription(callId, peer, answer as SDP);
+                resolve(answer);
+            }, reject);
         });
     }
 
-    onRemoteStream(callback) {
+    onRemoteStream(callback: RemoteStreamCallback) {
         this.onRemoteStreamCallback = callback;
     }
 
-    setRemoteDescription(remoteDescription) {
+    setRemoteDescription(remoteDescription: SDP) {
         this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription));
     }
 
-    _initOnICECandidate(callId, peer) {
+    private initOnICECandidate(callId: ID, peer: ID) {
         let _this = this;
         this.conn.onicecandidate = function(event) {
             if (event.candidate) {
                 _this.log("Created ICE candidate: " + event.candidate.candidate);
-                _this.artichoke.socket.sendCandidate(callId, peer, event.candidate.candidate);
+                _this.api.sendCandidate(callId, peer, event.candidate.candidate as Candidate);
             }
         };
     }
 
-    _initOnRemoteStream() {
+    private initOnRemoteStream() {
         let _this = this;
         let onstream = function(event) {
             _this.log("Received a remote stream.");
             _this.onRemoteStreamCallback(event.stream || event.streams[0]);
         };
 
-        if (typeof this.conn.ontrack !== "undefined") {
-            this.conn.ontrack = onstream;
+        let hackedConn = (this.conn as RTCPeerConnectionWithOnTrack);
+        if (typeof hackedConn.ontrack !== "undefined") {
+            hackedConn.ontrack = onstream;
         } else {
             this.conn.onaddstream = onstream;
         }
     }
 }
 
+export interface ConnectionCallback {
+    (peer: ID, connection: RTCConnection): void;
+}
+
 export class RTCPool {
-    callId;
-    localStream;
-    artichoke;
-    log;
-    config;
-    connections;
-    onConnectionCallback;
+    private api: API;
+    private events: EventHandler;
+    private log: Logger;
 
-    constructor(callId, artichoke) {
+    private callId: ID;
+    private localStream: MediaStream;
+    private config: RTCConfiguration;
+    private connections: { [user: string]: RTCConnection };
+    private onConnectionCallback: ConnectionCallback;
+
+    constructor(callId: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: API) {
+        this.api = api;
+        this.events = events;
+        this.log = log;
+
         this.callId = callId;
-        this.artichoke = artichoke;
-        this.log = artichoke.log;
-        this.config = artichoke.config;
-        this.connections = {};
+        this.config = config;
 
+        this.connections = {};
         this.localStream = undefined;
-        this.onConnectionCallback = nop;
+        this.onConnectionCallback = (peer, conn) => {
+            // Do Nothing.
+        };
 
         let _this = this;
-        artichoke.onEvent("rtc_description", function(msg) {
-            if (msg.id === callId) {
-                _this.log("Received an RTC description: " + msg.description.sdp);
-                if (msg.peer in _this.connections) {
-                    _this.connections[msg.peer].setRemoteDescription(msg.description);
-                } else {
-                    let rtc = _this._create(msg.peer);
-                    rtc.answer(_this.callId, msg.peer, msg.description);
-                    _this.onConnectionCallback(msg.peer, rtc);
-                }
+        events.onConcreteEvent("rtc_description", callId, function(msg: RTCDescription) {
+            _this.log("Received an RTC description: " + msg.description.sdp);
+            if (msg.peer in _this.connections) {
+                _this.connections[msg.peer].setRemoteDescription(msg.description);
+            } else {
+                let rtc = _this._create(msg.peer);
+                rtc.answer(_this.callId, msg.peer, msg.description).then(function(answer) {
+                    _this.log("Sent an RTC description: " + answer.sdp);
+                }).catch(function(error) {
+                    events.raise("Could not create an RTC answer.", error);
+                });
+                _this.onConnectionCallback(msg.peer, rtc);
             }
         });
 
-        artichoke.onEvent("rtc_candidate", function(msg) {
-            if (msg.id === callId) {
-                _this.log("Received an RTC candidate: " + msg.candidate);
-                if (msg.peer in _this.connections) {
-                    _this.connections[msg.peer].addCandidate(msg.candidate);
-                } else {
-                    _this.artichoke._error("Received an invalid RTC candidate.", {
-                        error: msg.peer + " is not currently in this call."
-                    });
-                }
+        events.onConcreteEvent("rtc_candidate", callId, function(msg: RTCCandidate) {
+            _this.log("Received an RTC candidate: " + msg.candidate);
+            if (msg.peer in _this.connections) {
+                _this.connections[msg.peer].addCandidate(msg.candidate);
+            } else {
+                events.raise("Received an invalid RTC candidate. " +  msg.peer + " is not currently in this call.");
             }
         });
     }
 
-    onConnection(callback) {
+    onConnection(callback: ConnectionCallback) {
         this.onConnectionCallback = callback;
     }
 
-    addLocalStream(stream) {
+    addLocalStream(stream: MediaStream) {
         this.localStream = stream;
     }
 
-    create(peer) {
+    create(peer: ID): RTCConnection {
         let rtc = this._create(peer);
-        rtc.offer(this.callId, peer);
+        let _this = this;
+        rtc.offer(this.callId, peer).then(function(offer) {
+            _this.log("Sent an RTC description: " + offer.sdp);
+        }).catch(function(error) {
+            _this.events.raise("Could not create an RTC offer.", error);
+        });
         return rtc;
     }
 
-    _create(peer) {
-        let rtc = new RTCConnection(this.localStream, this.config.rtc, this.artichoke);
+    _create(peer: ID): RTCConnection {
+        let rtc = new RTCConnection(this.localStream, this.config, this.log, this.api);
         this.connections[peer] = rtc;
         return rtc;
     }
 
-    destroy(peer) {
+    destroy(peer: ID) {
         if (peer in this.connections) {
             this.connections[peer].disconnect();
             delete this.connections[peer];

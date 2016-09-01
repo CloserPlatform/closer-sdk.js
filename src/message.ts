@@ -1,14 +1,24 @@
-class Message {
-    id;
-    body;
-    sender;
-    room;
-    timestamp;
-    delivered;
-    log;
-    artichoke;
+import { API } from "./api";
+import { Callback, EventHandler } from "./events";
+import { Logger } from "./logger";
+import { ID, Message as MSG, MessageDelivered, Timestamp }  from "./protocol";
 
-    constructor(message, artichoke) {
+// FIXME A message shouldn't be an Event...
+export class Message implements MSG {
+    public type: string = "message";
+
+    public id: ID;
+    public body: string;
+    public sender: ID;
+    public room: ID;
+    public timestamp: Timestamp;
+    public delivered: Timestamp;
+
+    private log: Logger;
+    private events: EventHandler;
+    private api: API;
+
+    constructor(message: MSG, log: Logger, events: EventHandler, api: API) {
         this.id = message.id;
         this.body = message.body;
         this.sender = message.sender;
@@ -16,34 +26,27 @@ class Message {
         this.timestamp = message.timestamp;
         this.delivered = message.delivered;
 
-        this.log = artichoke.log;
-        this.artichoke = artichoke;
-
-        if (!(this.sender === artichoke.sessionId || this.delivered)) {
-            this._markDelivered();
-        }
+        this.log = log;
+        this.events = events;
+        this.api = api;
     }
 
-    onDelivery(callback) {
-        // FIXME This registers a callback for EVERY message ever created. Nope.
+    markDelivered() {
+        this.delivered = Date.now();
+        this.api.setDelivered(this.id, this.delivered);
+    }
+
+    onDelivery(callback: Callback<MessageDelivered>) {
         let _this = this;
-        this.artichoke.onEvent("msg_delivered", function(msg) {
-            if (msg.id === _this.id) {
-                _this.log("Running callback msg_delivered for message: " + _this.id);
-                _this.delivered = msg.timestamp;
-                callback(_this);
-            }
+        this.events.onConcreteEvent("msg_delivered", this.id, function(msg: MessageDelivered) {
+            _this.delivered = msg.timestamp;
+            callback(_this);
         });
     }
 
     // TODO markRead, onRead, edit & onEdit
-
-    _markDelivered() {
-        this.delivered = Date.now();
-        this.artichoke.socket.setDelivered(this.id, this.delivered);
-    }
 }
 
-export function createMessage(message, artichoke) {
-    return new Message(message, artichoke);
+export function createMessage(message: MSG, log: Logger, events: EventHandler, api: API): Message {
+    return new Message(message, log, events, api);
 }

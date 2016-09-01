@@ -1,49 +1,69 @@
+import { API } from "./api";
+import { Callback, EventHandler } from "./events";
+import { Logger } from "./logger";
+import { Call as ProtoCall, CallInvited, CallJoined, CallLeft, ID } from "./protocol";
 import { RTCPool } from "./rtc";
-import { nop } from "./utils";
 
-class BaseCall {
-    id;
-    users;
-    direct;
+export interface RemoteStreamCallback {
+    (peer: ID, stream: MediaStream): void;
+}
 
-    log;
-    artichoke;
-    pool;
-    onRemoteStreamCallback;
+class BaseCall implements ProtoCall {
+    public id: ID;
+    public users: Array<ID>;
+    public direct: boolean;
 
-    constructor(call, artichoke) {
+    protected api: API;
+    protected events: EventHandler;
+
+    private log: Logger;
+    private pool: RTCPool;
+    private onRemoteStreamCallback: RemoteStreamCallback;
+    private onLeftCallback: Callback<CallLeft>;
+    private onJoinedCallback: Callback<CallJoined>;
+
+    constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler, api: API) {
         this.id = call.id;
         this.users = call.users;
         this.direct = call.direct;
 
-        this.log = artichoke.log;
-        this.artichoke = artichoke;
+        this.log = log;
+        this.events = events;
+        this.api = api;
 
-        this.pool = new RTCPool(this.id, artichoke);
+        this.pool = new RTCPool(this.id, config, log, events, api);
 
         // By default do nothing:
-        this.onRemoteStreamCallback = nop;
+        this.onRemoteStreamCallback = (peer, stream) => {
+            // Do nothing.
+        };
+        this.onLeftCallback = (msg) => {
+            // Do nothing.
+        };
+        this.onJoinedCallback = (msg) => {
+            // Do nothing.
+        };
 
         let _this = this;
         this.pool.onConnection(function(peer, rtc) {
-            rtc.onRemoteStream(function(stream) {
-                return _this.onRemoteStreamCallback(peer, stream);
-            });
+            rtc.onRemoteStream((stream) => _this.onRemoteStreamCallback(peer, stream));
         });
 
         // Signaling callbacks:
-        this._defineCallback("call_left", function(msg) {
+        this.events.onConcreteEvent("call_left", this.id, function(msg: CallLeft) {
             _this.users = _this.users.filter((u) => u === msg.user);
             _this.pool.destroy(msg.user);
+            _this.onLeftCallback(msg);
         });
 
-        this._defineCallback("call_joined", function(msg) {
+        this.events.onConcreteEvent("call_joined", this.id, function(msg: CallJoined) {
             _this.users.push(msg.user);
-            _this._createRTC(msg.user);
+            _this.pool.create(msg.user).onRemoteStream((stream) => _this.onRemoteStreamCallback(msg.user, stream));
+            _this.onJoinedCallback(msg);
         });
     }
 
-    getUsers() {
+    getUsers(): Promise<Array<ID>> {
         let _this = this;
         return new Promise(function(resolve, reject) {
             // NOTE No need to retrieve the list if it's cached here.
@@ -51,72 +71,54 @@ class BaseCall {
         });
     }
 
-    addLocalStream(stream) {
+    addLocalStream(stream: MediaStream) {
         this.pool.addLocalStream(stream);
     }
 
-    reject() {
-        this.leave("rejected");
+    reject(): Promise<void> {
+        return this.leave("rejected");
     }
 
-    join(stream) {
+    join(stream: MediaStream): Promise<void> {
         this.addLocalStream(stream);
-        this.artichoke.rest.joinCall(this.id);
+        return this.api.joinCall(this.id);
     }
 
-    leave(reason) {
-        this.artichoke.rest.leaveCall(this.id, reason);
+    leave(reason: string): Promise<void> {
         this.pool.destroyAll();
+        return this.api.leaveCall(this.id, reason);
     }
 
-    onLeft(callback) {
-        this._defineCallback("call_left", callback);
+    onLeft(callback: Callback<CallLeft>) {
+        this.onLeftCallback = callback;
     }
 
-    onJoined(callback) {
-        this._defineCallback("call_joined", callback);
+    onJoined(callback: Callback<CallJoined>) {
+        this.onJoinedCallback = callback;
     }
 
-    onRemoteStream(callback) {
+    onRemoteStream(callback: RemoteStreamCallback) {
         this.onRemoteStreamCallback = callback;
-    }
-
-    _createRTC(user) {
-        let rtc = this.pool.create(user);
-        let _this = this;
-        rtc.onRemoteStream(function(stream) {
-            return _this.onRemoteStreamCallback(user, stream);
-        });
-    }
-
-    _defineCallback(type, callback) {
-        // FIXME It would be way better to store a hash of rooms and pick the relevant callback directly.
-        let _this = this;
-        this.artichoke.onEvent(type, function(msg) {
-            if (msg.id === _this.id) {
-                _this.log("Running callback " + type + " for call: " + _this.id);
-                callback(msg);
-            }
-        });
     }
 }
 
 export class DirectCall extends BaseCall {}
 
 export class Call extends BaseCall {
-    invite(user) {
-        this.artichoke.rest.inviteToCall(this.id, user);
+    invite(user: ID): Promise<void> {
+        return this.api.inviteToCall(this.id, user);
     }
 
-    onInvited(callback) {
-        this._defineCallback("call_invited", callback);
+    onInvited(callback: Callback<CallInvited>) {
+        this.events.onConcreteEvent("call_invited", this.id, callback);
     }
 }
 
-export function createCall(call, artichoke) {
+export function createCall(call: ProtoCall, config: RTCConfiguration,
+                           log: Logger, events: EventHandler, api: API): DirectCall | Call {
     if (call.direct) {
-        return new DirectCall(call, artichoke);
+        return new DirectCall(call, config, log, events, api);
     } else {
-        return new Call(call, artichoke);
+        return new Call(call, config, log, events, api);
     }
 }

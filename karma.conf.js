@@ -14,11 +14,13 @@ module.exports = function(config) {
 
     // list of files / patterns to load in the browser
     files: [
+      './node_modules/es6-promise/dist/es6-promise.js',
       'tests/*.ts'
     ],
 
     // list of files to exclude
     exclude: [
+      'tests/fixtures.ts'
     ],
 
     // preprocess matching files before serving them to the browser
