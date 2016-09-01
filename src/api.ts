@@ -5,14 +5,23 @@ import { Logger } from "./logger";
 import * as proto from "./protocol";
 import { pathcat } from "./utils";
 
+interface PromiseResolve<T> extends Callback<T> {}
+interface PromiseReject extends Callback<proto.Error> {}
+
 interface PromiseFunctions {
-    resolve: Callback<proto.Event>;
-    reject: Callback<proto.Error>;
+    resolve: PromiseResolve<proto.Event>;
+    reject: PromiseReject;
+}
+
+interface Thunk {
+    (): void;
 }
 
 // FIXME Unhack this shit:
 type RESTResultElement = proto.Room | proto.RosterRoom | proto.Call | proto.Message | string;
 type RESTResult = RESTResultElement | Array<RESTResultElement> | void;
+type RESTData = proto.CreateCall | proto.CreateDirectCall | proto.CreateDirectRoom
+    | proto.CreateRoom | proto.LeaveReason | string;
 
 export class API {
     private log: Logger;
@@ -165,7 +174,7 @@ export class API {
         this.socket.send(proto.presence(this.sessionId, status, timestamp));
     }
 
-    private responseCallback(xhttp, resolve, reject) {
+    private responseCallback(xhttp: XMLHttpRequest, resolve: PromiseResolve<RESTResult>, reject: PromiseReject): Thunk {
         let _this = this;
         return function() {
             if (xhttp.readyState === 4 && xhttp.status === 200) {
@@ -198,7 +207,7 @@ export class API {
         });
     }
 
-    private post(path: Array<string>, obj): Promise<RESTResult> {
+    private post(path: Array<string>, obj: RESTData): Promise<RESTResult> {
         let _this = this;
         return new Promise<RESTResult>(function(resolve, reject) {
             let json = JSON.stringify(obj);

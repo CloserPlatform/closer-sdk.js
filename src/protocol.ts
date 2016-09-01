@@ -179,32 +179,51 @@ export function typing(id: ID): Typing {
 }
 
 // REST API:
-// FIXME Type the return values.
-export function createCall(users: Array<ID>) {
+export interface CreateCall {
+    users: Array<ID>;
+}
+
+export interface CreateDirectCall extends CreateDirectEntity {};
+
+export interface CreateDirectEntity {
+    peer: ID;
+}
+
+export interface CreateDirectRoom extends CreateDirectEntity {};
+
+export interface CreateRoom {
+    name: string;
+}
+
+export interface LeaveReason {
+    reason: string;
+}
+
+export function createCall(users: Array<ID>): CreateCall {
     return {
         users
     };
 }
 
-export function createDirectCall(peer: ID) {
+export function createDirectCall(peer: ID): CreateDirectRoom {
     return {
         peer
     };
 }
 
-export function leaveReason(reason: string) {
+export function leaveReason(reason: string): LeaveReason {
     return {
         reason
     };
 }
 
-export function createRoom(name: string) {
+export function createRoom(name: string): CreateRoom {
     return {
         name
     };
 }
 
-export function createDirectRoom(peer: ID) {
+export function createDirectRoom(peer: ID): CreateDirectRoom {
     return {
         peer
     };
