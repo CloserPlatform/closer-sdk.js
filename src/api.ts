@@ -115,11 +115,11 @@ export class API {
         return this.get([this.url, this.roomPath, "unread"]);
     }
 
-    getUsers(roomId: proto.ID): Promise<Array<proto.ID>> {
+    getRoomUsers(roomId: proto.ID): Promise<Array<proto.ID>> {
         return this.get([this.url, this.roomPath, roomId, "users"]);
     }
 
-    getHistory(roomId: proto.ID): Promise<Array<proto.Message>> {
+    getRoomHistory(roomId: proto.ID): Promise<Array<proto.Message>> {
         return this.get([this.url, this.chatPath, roomId]);
     }
 

@@ -26,11 +26,11 @@ class BaseRoom implements ProtoRoom {
     }
 
     getHistory(): Promise<Array<Message>> {
-        return this.wrapMessage(this.api.getHistory(this.id));
+        return this.wrapMessage(this.api.getRoomHistory(this.id));
     }
 
     getUsers(): Promise<Array<ID>> {
-        return this.api.getUsers(this.id);
+        return this.api.getRoomUsers(this.id);
     }
 
     getMark(): Promise<number> {
