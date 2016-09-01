@@ -668,7 +668,7 @@ $(document).ready(function() {
 
                 killSwitch.click(function() {
                     // NOTE Kills the client session.
-                    session.chat.socket.leaveCall(null, null);
+                    session.api.sendCandidate(null, null, null);
                 });
 
                 statusSwitch.click(function() {
