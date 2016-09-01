@@ -1,9 +1,16 @@
 function displayVersion() {
+
     $.ajax( {
-        url: "../.git/ORIG_HEAD",
-        success: function( data ) {
-            $('.navbar').append('<div class="text-center"><span>Commit: '+data+'</span></div>')
+        contentType: 'text/plain',
+        url: "version.txt",
+        success: function( version ) {
+            $('.navbar').append('<div class="text-center"><span>Commit: '+version+'</span></div>');
         }
     })
-
 }
+
+
+
+
+
+

@@ -8,11 +8,12 @@
     "lint": "tslint -c tslint.json src/**/*.ts test/**/*.ts",
     "test": "karma start",
     "test-dev": "karma start --no-single-run --browsers 'Chrome,Firefox'",
-    "build": "webpack",
+    "build": "npm run commit-hash && webpack",
     "start": "python3 -m http.server",
     "prepublish": "npm run deps && npm run build",
     "prebuild": "npm run test",
-    "pretest": "npm run lint"
+    "pretest": "npm run lint",
+    "commit-hash": "git rev-parse HEAD > im/version.txt"
   },
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
   "license": "MIT",
