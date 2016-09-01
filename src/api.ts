@@ -17,12 +17,6 @@ interface Thunk {
     (): void;
 }
 
-// FIXME Unhack this shit:
-type RESTResultElement = proto.Room | proto.RosterRoom | proto.Call | proto.Message | string;
-type RESTResult = RESTResultElement | Array<RESTResultElement> | void;
-type RESTData = proto.CreateCall | proto.CreateDirectCall | proto.CreateDirectRoom
-    | proto.CreateRoom | proto.LeaveReason | string;
-
 export class API {
     private log: Logger;
 
@@ -76,72 +70,75 @@ export class API {
     }
 
     createCall(sessionIds: Array<proto.ID>): Promise<proto.Call> {
-        return this.post([this.url, this.callPath], proto.createCall(sessionIds));
+        return this.post<proto.CreateCall, proto.Call>([this.url, this.callPath], proto.createCall(sessionIds));
     }
 
     createDirectCall(sessionId: proto.ID): Promise<proto.Call> {
-        return this.post([this.url, this.callPath], proto.createDirectCall(sessionId));
+        return this.post<proto.CreateDirectCall, proto.Call>([this.url, this.callPath],
+                                                             proto.createDirectCall(sessionId));
     }
 
     getCall(callId: proto.ID): Promise<proto.Call> {
-        return this.get([this.url, this.callPath, callId]);
+        return this.get<proto.Call>([this.url, this.callPath, callId]);
     }
 
     getCalls(): Promise<Array<proto.Call>> {
-        return this.get([this.url, this.callPath]);
+        return this.get<Array<proto.Call>>([this.url, this.callPath]);
     }
 
     joinCall(callId: proto.ID): Promise<void> {
-        return this.post([this.url, this.callPath, callId, "join"], "");
+        return this.post<string, void>([this.url, this.callPath, callId, "join"], "");
     }
 
     leaveCall(callId: proto.ID, reason: string): Promise<void> {
-        return this.post([this.url, this.callPath, callId, "leave"], proto.leaveReason(reason));
+        return this.post<proto.LeaveReason, void>([this.url, this.callPath, callId, "leave"],
+                                                  proto.leaveReason(reason));
     }
 
     inviteToCall(callId: proto.ID, sessionId: proto.ID): Promise<void> {
-        return this.post([this.url, this.callPath, callId, "invite", sessionId], "");
+        return this.post<string, void>([this.url, this.callPath, callId, "invite", sessionId], "");
     }
 
     // Room API:
     createRoom(name: string): Promise<proto.Room> {
-        return this.post([this.url, this.roomPath], proto.createRoom(name));
+        return this.post<proto.CreateRoom, proto.Room>([this.url, this.roomPath], proto.createRoom(name));
     }
 
     createDirectRoom(sessionId: proto.ID): Promise<proto.Room> {
-        return this.post([this.url, this.roomPath], proto.createDirectRoom(sessionId));
+        return this.post<proto.CreateDirectRoom, proto.Room>([this.url, this.roomPath],
+                                                             proto.createDirectRoom(sessionId));
     }
 
     getRoom(roomId: proto.ID): Promise<proto.Room> {
-        return this.get([this.url, this.roomPath, roomId]);
+        return this.get<proto.Room>([this.url, this.roomPath, roomId]);
     }
 
     getRooms(): Promise<Array<proto.Room>> {
-        return this.get([this.url, this.roomPath]);
+        return this.get<Array<proto.Room>>([this.url, this.roomPath]);
     }
 
     getRoster(): Promise<Array<proto.RosterRoom>> {
-        return this.get([this.url, this.roomPath, "unread"]);
+        return this.get<Array<proto.RosterRoom>>([this.url, this.roomPath, "unread"]);
     }
 
     getRoomUsers(roomId: proto.ID): Promise<Array<proto.ID>> {
-        return this.get([this.url, this.roomPath, roomId, "users"]);
+        return this.get<Array<proto.ID>>([this.url, this.roomPath, roomId, "users"]);
     }
 
     getRoomHistory(roomId: proto.ID): Promise<Array<proto.Message>> {
-        return this.get([this.url, this.chatPath, roomId]);
+        return this.get<Array<proto.Message>>([this.url, this.chatPath, roomId]);
     }
 
     joinRoom(roomId: proto.ID): Promise<void> {
-        return this.post([this.url, this.roomPath, roomId, "join"], "");
+        return this.post<string, void>([this.url, this.roomPath, roomId, "join"], "");
     }
 
     leaveRoom(roomId: proto.ID): Promise<void> {
-        return this.post([this.url, this.roomPath, roomId, "leave"], "");
+        return this.post<string, void>([this.url, this.roomPath, roomId, "leave"], "");
     }
 
     inviteToRoom(roomId: proto.ID, sessionId: proto.ID): Promise<void> {
-        return this.post([this.url, this.roomPath, roomId, "invite", sessionId], "");
+        return this.post<string, void>([this.url, this.roomPath, roomId, "invite", sessionId], "");
     }
 
     sendMessage(roomId: proto.ID, body: string): Promise<proto.Message> {
@@ -174,7 +171,8 @@ export class API {
         this.socket.send(proto.presence(this.sessionId, status, timestamp));
     }
 
-    private responseCallback(xhttp: XMLHttpRequest, resolve: PromiseResolve<RESTResult>, reject: PromiseReject): Thunk {
+    private responseCallback<Result>(xhttp: XMLHttpRequest, resolve: PromiseResolve<Result>,
+                                     reject: PromiseReject): Thunk {
         let _this = this;
         return function() {
             if (xhttp.readyState === 4 && xhttp.status === 200) {
@@ -194,12 +192,12 @@ export class API {
         };
     }
 
-    private get(path: Array<string>): Promise<RESTResult> {
+    private get<Result>(path: Array<string>): Promise<Result> {
         let _this = this;
-        return new Promise<RESTResult>(function(resolve, reject) {
+        return new Promise<Result>(function(resolve, reject) {
             let xhttp = new XMLHttpRequest();
             let url = pathcat(path);
-            xhttp.onreadystatechange = _this.responseCallback(xhttp, resolve, reject);
+            xhttp.onreadystatechange = _this.responseCallback<Result>(xhttp, resolve, reject);
             _this.log("GET " + url);
             xhttp.open("GET", url, true);
             xhttp.setRequestHeader("X-Api-Key", _this.apiKey);
@@ -207,13 +205,13 @@ export class API {
         });
     }
 
-    private post(path: Array<string>, obj: RESTData): Promise<RESTResult> {
+    private post<Arg, Result>(path: Array<string>, obj: Arg): Promise<Result> {
         let _this = this;
-        return new Promise<RESTResult>(function(resolve, reject) {
+        return new Promise<Result>(function(resolve, reject) {
             let json = JSON.stringify(obj);
             let xhttp = new XMLHttpRequest();
             let url = pathcat(path);
-            xhttp.onreadystatechange = _this.responseCallback(xhttp, resolve, reject);
+            xhttp.onreadystatechange = _this.responseCallback<Result>(xhttp, resolve, reject);
             _this.log("POST " + url + " " + json);
             xhttp.open("POST", url, true);
             xhttp.setRequestHeader("Content-Type", "application/json");
