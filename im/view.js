@@ -1,11 +1,15 @@
 function makeLoginForm(id, onClick) {
-    var form = $('<form>')
+    var form = $('<form id="login_form">')
         .append([makeInput('server', 'Server:', 'Server', 'artichoke.ratel.io'),
                  makeInput('session-id', 'Name:', 'Nickname')]);
 
+     var button = $('<button class="btn btn-primary" form="login_form">')
+        .append('Login!')
+        .click(onClick);
+
     return $('<div>')
         .prop('id', id)
-        .append([form, makeButton('btn-primary', 'Login!', onClick)])
+        .append([form, button])
         .hide();
 }
 
