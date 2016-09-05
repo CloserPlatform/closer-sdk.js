@@ -34,7 +34,8 @@ $(document).ready(function() {
 
     function makeLoginBox() {
         console.log("Building the login box!");
-        var form = makeLoginForm("login-box", function() {
+        var form = makeLoginForm("login-box", function(event) {
+            event.preventDefault();
             loginBox.element.hide();
             chat.element.show();
             sessionId = $('#session-id').val();
