@@ -1,6 +1,6 @@
 import { Callback } from "./events";
 import { Logger } from "./logger";
-import { Event } from "./protocol";
+import { Event, read, write } from "./protocol";
 
 export class JSONWebSocket {
     private log: Logger;
@@ -22,12 +22,12 @@ export class JSONWebSocket {
         let _this = this;
         this.socket.onmessage = function(event) {
             _this.log("WS received: " + event.data);
-            callback(JSON.parse(event.data) as Event);
+            callback(read(event.data) as Event);
         };
     }
 
     send(event: Event) {
-        let json = JSON.stringify(event);
+        let json = write(event);
         this.log("WS sent: " + json);
         this.socket.send(json);
     }
