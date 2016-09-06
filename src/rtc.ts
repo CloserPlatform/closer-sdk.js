@@ -151,7 +151,7 @@ export class RTCPool {
             if (msg.peer in _this.connections) {
                 _this.connections[msg.peer].setRemoteDescription(msg.description);
             } else {
-                let rtc = _this._create(msg.peer);
+                let rtc = _this.createRTC(msg.peer);
                 rtc.answer(_this.callId, msg.peer, msg.description).then(function(answer) {
                     _this.log("Sent an RTC description: " + answer.sdp);
                 }).catch(function(error) {
@@ -180,19 +180,13 @@ export class RTCPool {
     }
 
     create(peer: ID): RTCConnection {
-        let rtc = this._create(peer);
+        let rtc = this.createRTC(peer);
         let _this = this;
         rtc.offer(this.callId, peer).then(function(offer) {
             _this.log("Sent an RTC description: " + offer.sdp);
         }).catch(function(error) {
             _this.events.raise("Could not create an RTC offer.", error);
         });
-        return rtc;
-    }
-
-    _create(peer: ID): RTCConnection {
-        let rtc = createRTCConnection(this.localStream, this.config, this.log, this.api);
-        this.connections[peer] = rtc;
         return rtc;
     }
 
@@ -207,9 +201,20 @@ export class RTCPool {
         let _this = this;
         Object.keys(this.connections).forEach((key) => _this.destroy(key));
     }
+
+    private createRTC(peer: ID): RTCConnection {
+        let rtc = createRTCConnection(this.localStream, this.config, this.log, this.api);
+        this.connections[peer] = rtc;
+        return rtc;
+    }
 }
 
 export function createRTCConnection(stream: MediaStream, config: RTCConfiguration,
                                     log: Logger, api: API): RTCConnection {
     return new RTCConnection(stream, config, log, api);
+}
+
+export function createRTCPool(callId: ID, config: RTCConfiguration, log: Logger,
+                              events: EventHandler, api: API): RTCPool {
+    return new RTCPool(callId, config, log, events, api);
 }
