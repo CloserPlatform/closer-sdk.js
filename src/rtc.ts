@@ -191,7 +191,7 @@ export class RTCPool {
     }
 
     _create(peer: ID): RTCConnection {
-        let rtc = new RTCConnection(this.localStream, this.config, this.log, this.api);
+        let rtc = createRTCConnection(this.localStream, this.config, this.log, this.api);
         this.connections[peer] = rtc;
         return rtc;
     }
@@ -207,4 +207,9 @@ export class RTCPool {
         let _this = this;
         Object.keys(this.connections).forEach((key) => _this.destroy(key));
     }
+}
+
+export function createRTCConnection(stream: MediaStream, config: RTCConfiguration,
+                                    log: Logger, api: API): RTCConnection {
+    return new RTCConnection(stream, config, log, api);
 }
