@@ -12,7 +12,7 @@ class BaseRoom implements ProtoRoom {
 
     private currMark: number;
     private log: Logger;
-    private events: EventHandler;
+    protected events: EventHandler;
     protected api: API;
 
     constructor(room: RosterRoom, log: Logger, events: EventHandler, api: API) {
@@ -64,10 +64,6 @@ class BaseRoom implements ProtoRoom {
         });
     }
 
-    onAction(callback: Callback<RoomAction>) {
-        this.events.onConcreteEvent("room_action", this.id, callback);
-    }
-
     onTyping(callback: Callback<Typing>) {
         this.events.onConcreteEvent("typing", this.id, callback);
     }
@@ -90,6 +86,10 @@ export class Room extends BaseRoom {
 
     invite(user: ID): Promise<void> {
         return this.api.inviteToRoom(this.id, user);
+    }
+
+    onAction(callback: Callback<RoomAction>) {
+        this.events.onConcreteEvent("room_action", this.id, callback);
     }
 }
 
