@@ -66,6 +66,12 @@ module.exports = function(config) {
     // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
     browsers: ['PhantomJS'],
 
+    customLaunchers: {
+      ChromeWithFakeUserMedia: {
+        base: 'Chrome',
+        flags: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream']
+      }
+    },
 
     // Continuous Integration mode
     // if true, Karma captures browsers, runs the tests and exits
