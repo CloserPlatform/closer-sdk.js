@@ -12,8 +12,8 @@ export const config: Config = load({
     debug: true
 } as Config);
 
-export function sleep(time) {
-    return new Promise(function(resolve, reject) {
+export function sleep(time: number): Promise<void> {
+    return new Promise<void>(function(resolve, reject) {
         setTimeout(resolve, time);
     });
 }
