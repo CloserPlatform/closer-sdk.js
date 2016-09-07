@@ -60,7 +60,7 @@ class APIMock extends API {
     }
 }
 
-function room(direct = false) {
+function makeRoom(direct = false) {
     return {
         id: "123",
         name: "room",
@@ -70,12 +70,58 @@ function room(direct = false) {
 
 ["DirectRoom", "Room"].forEach((d) => {
     describe(d, () => {
-        it("should retrieve history", (done) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let r = createRoom(room(d === "DirectRoom"), log, events, api);
+        let events, api, room;
 
-            r.getHistory().then((msgs) => {
+        beforeEach(() => {
+            events = new EventHandler(log);
+            api = new APIMock(config, log);
+            room = createRoom(makeRoom(d === "DirectRoom"), log, events, api);
+        });
+
+        it("should maintain a high water mark", (done) => {
+            room.getMark().then((hwm) => {
+                expect(hwm).toBe(0);
+
+                let t = Date.now();
+                room.mark(t);
+
+                expect(api.marked).toBe(true);
+
+                room.getMark().then((newHwm) => {
+                    expect(newHwm).toBe(t);
+                    done();
+                });
+            });
+        });
+
+        it("should run a callback on typing indication", (done) => {
+            room.onTyping((msg) => {
+                expect(msg.user).toBe("987");
+                done();
+            });
+
+            events.notify({
+                type: "typing",
+                id: room.id,
+                user: "987"
+            } as Event);
+        });
+
+        it("should run a callback on incoming message", (done) => {
+            room.onMessage((msg) => {
+                expect(msg.sender).toBe("987");
+                done();
+            });
+
+            let m = msg("123");
+            m.room = room.id;
+            m.sender = "987";
+            events.notify(m as Event);
+        });
+
+        // FIXME These should be moved to integration tests:
+        it("should retrieve history", (done) => {
+            room.getHistory().then((msgs) => {
                 let ids = msgs.map((m) => m.id);
                 expect(ids).toContain("123");
                 expect(ids).toContain("321");
@@ -84,129 +130,38 @@ function room(direct = false) {
         });
 
         it("should retrieve users", (done) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let r = createRoom(room(d === "DirectRoom"), log, events, api);
-
-            r.getUsers().then((users) => {
+            room.getUsers().then((users) => {
                 expect(users).toContain("456");
                 done();
             });
         });
 
         it("should allow typing indication", () => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let r = createRoom(room(d === "DirectRoom"), log, events, api);
-
-            r.indicateTyping();
+            room.indicateTyping();
 
             expect(api.sentTyping).toBe(true);
         });
 
         it("should allow sending messages", (done) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let r = createRoom(room(d === "DirectRoom"), log, events, api);
-
-            r.send("hello").then((msg) => {
+            room.send("hello").then((msg) => {
                 expect(msg.body).toBe("hello");
                 done();
             });
-        });
-
-        it("should maintain a high water mark", (done) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let r = createRoom(room(d === "DirectRoom"), log, events, api);
-
-            r.getMark().then((hwm) => {
-                expect(hwm).toBe(0);
-
-                let t = Date.now();
-                r.mark(t);
-
-                expect(api.marked).toBe(true);
-
-                r.getMark().then((newHwm) => {
-                    expect(newHwm).toBe(t);
-                    done();
-                });
-            });
-        });
-
-        it("should run a callback on typing indication", (done) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let r = createRoom(room(d === "DirectRoom"), log, events, api);
-
-            r.onTyping((msg) => {
-                expect(msg.user).toBe("987");
-                done();
-            });
-
-            events.notify({
-                type: "typing",
-                id: r.id,
-                user: "987"
-            } as Event);
-        });
-
-        it("should run a callback on incoming message", (done) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let r = createRoom(room(d === "DirectRoom"), log, events, api);
-
-            r.onMessage((msg) => {
-                expect(msg.sender).toBe("987");
-                done();
-            });
-
-            let m = msg("123");
-            m.room = r.id;
-            m.sender = "987";
-            events.notify(m as Event);
         });
     });
 });
 
 describe("Room", () => {
-    it("should allow joining", () => {
-        let events = new EventHandler(log);
-        let api = new APIMock(config, log);
-        let r = createRoom(room(), log, events, api) as Room;
+    let events, api, room;
 
-        r.join();
-
-        expect(api.joined).toBe(true);
-    });
-
-    it("should allow leaving", () => {
-        let events = new EventHandler(log);
-        let api = new APIMock(config, log);
-        let r = createRoom(room(), log, events, api) as Room;
-
-        r.leave();
-
-        expect(api.left).toBe(true);
-    });
-
-    it("should allow inviting others", () => {
-        let events = new EventHandler(log);
-        let api = new APIMock(config, log);
-        let r = createRoom(room(), log, events, api) as Room;
-
-        r.invite("567");
-
-        expect(api.invited).toBe("567");
+    beforeEach(() => {
+        events = new EventHandler(log);
+        api = new APIMock(config, log);
+        room = createRoom(makeRoom(), log, events, api) as Room;
     });
 
     it("should run callback on room actions", (done) => {
-        let events = new EventHandler(log);
-        let api = new APIMock(config, log);
-        let r = createRoom(room(), log, events, api) as Room;
-
-        r.onAction((msg) => {
+        room.onAction((msg) => {
             expect(msg.originator).toBe("333");
             done();
         });
@@ -214,9 +169,25 @@ describe("Room", () => {
         events.notify({
             type: "room_action",
             originator: "333",
-            id: r.id,
+            id: room.id,
             action: "left",
             timestamp: Date.now()
         } as Event);
+    });
+
+    // FIXME These should be moved to integration tests:
+    it("should allow joining", () => {
+        room.join();
+        expect(api.joined).toBe(true);
+    });
+
+    it("should allow leaving", () => {
+        room.leave();
+        expect(api.left).toBe(true);
+    });
+
+    it("should allow inviting others", () => {
+        room.invite("567");
+        expect(api.invited).toBe("567");
     });
 });

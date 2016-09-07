@@ -26,9 +26,14 @@ function nop(stream: MediaStream) {
 
 // FIXME Unfuck whenever WebRTC is standarized.
 describe("RTCConnection", () => {
+    let api;
+
+    beforeEach(() => {
+        api = new APIMock(config, log);
+    });
+
     whenever(isWebRTCSupported())("should create SDP offers", (done) => {
         getStream((stream) => {
-            let api = new APIMock(config, log);
             let rtc = createRTCConnection(stream, config.rtc, log, api);
             rtc.onRemoteStream(nop);
 
@@ -47,7 +52,6 @@ describe("RTCConnection", () => {
                 type: "offer",
                 sdp: validSDP
             };
-            let api = new APIMock(config, log);
             let rtc = createRTCConnection(stream, config.rtc, log, api);
             rtc.onRemoteStream(nop);
 
@@ -66,7 +70,6 @@ describe("RTCConnection", () => {
                 type: "offer",
                 sdp: invalidSDP
             };
-            let api = new APIMock(config, log);
             let rtc = createRTCConnection(stream, config.rtc, log, api);
             rtc.onRemoteStream(nop);
 
@@ -81,12 +84,16 @@ describe("RTCConnection", () => {
 });
 
 describe("RTCPool", () => {
+    let events, api, pool;
+
+    beforeEach(() => {
+        events = new EventHandler(log);
+        api = new APIMock(config, log);
+        pool = createRTCPool("123", config.rtc, log, events, api);
+    });
+
     whenever(isWebRTCSupported())("should create an RTC connection", (done) => {
         getStream((stream) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let pool = createRTCPool("123", config.rtc, log, events, api);
-
             api.onDescription = function(id, peer, sdp) {
                 expect(api.descriptionSent).toBe(true);
                 expect(id).toBe("123");
@@ -104,10 +111,6 @@ describe("RTCPool", () => {
 
     whenever(isWebRTCSupported())("should spawn an RTC connection on session description", (done) => {
         getStream((stream) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let pool = createRTCPool("123", config.rtc, log, events, api);
-
             api.onDescription = function(id, peer, sdp) {
                 expect(api.descriptionSent).toBe(true);
                 expect(id).toBe("123");
@@ -138,11 +141,7 @@ describe("RTCPool", () => {
 
     whenever(!isChrome() && isWebRTCSupported())("should error on invalid session description", (done) => {
         getStream((stream) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let pool = createRTCPool("123", config.rtc, log, events, api);
             pool.addLocalStream(stream);
-
             events.onError((error) => done());
 
             events.notify({
@@ -161,10 +160,6 @@ describe("RTCPool", () => {
 
     whenever(isWebRTCSupported())("should not send session description on peer answer", (done) => {
         getStream((stream) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let pool = createRTCPool("123", config.rtc, log, events, api);
-
             events.onError((error) => done.fail());
 
             api.onDescription = function(id, peer, sdp) {
@@ -196,13 +191,8 @@ describe("RTCPool", () => {
 
     whenever(isWebRTCSupported())("should error on invalid RTC signaling", (done) => {
         getStream((stream) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let pool = createRTCPool("123", config.rtc, log, events, api);
             pool.addLocalStream(stream);
-
             events.onError((error) => done());
-
             api.onDescription = (id, peer, sdp) => done.fail();
 
             events.notify({

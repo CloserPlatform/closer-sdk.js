@@ -34,7 +34,7 @@ class APIMock extends API {
     }
 }
 
-function call(direct = false) {
+function makeCall(direct = false) {
     return {
         id: "123",
         users: ["321"],
@@ -44,42 +44,18 @@ function call(direct = false) {
 
 ["DirectCall", "Call"].forEach((d) => {
     describe(d, () => {
-        whenever(isWebRTCSupported())("should allow joining", (done) => {
-            getStream((stream) => {
-                let events = new EventHandler(log);
-                let api = new APIMock(config, log);
-                let c = createCall(call(d === "DirectCall"), config.rtc, log, events, api);
+        let events, api, call;
 
-                events.onError((error) => done.fail());
-
-                c.join(stream).then(() => {
-                    expect(api.joined).toBe(true);
-                    done();
-                });
-            }, (error) => done.fail());
-        });
-
-        it("should allow leaving", (done) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let c = createCall(call(d === "DirectCall"), config.rtc, log, events, api);
-
-            events.onError((error) => done.fail());
-
-            c.leave("reason").then(() => {
-                expect(api.left).toBe("reason");
-                done();
-            });
+        beforeEach(() => {
+            events = new EventHandler(log);
+            api = new APIMock(config, log);
+            call = createCall(makeCall(d === "DirectCall"), config.rtc, log, events, api);
         });
 
         it("should allow rejecting", (done) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let c = createCall(call(d === "DirectCall"), config.rtc, log, events, api);
-
             events.onError((error) => done.fail());
 
-            c.reject().then(() => {
+            call.reject().then(() => {
                 expect(api.left).toBe("rejected");
                 done();
             });
@@ -87,65 +63,55 @@ function call(direct = false) {
 
         whenever(isWebRTCSupported())("should run a callback on join", (done) => {
             getStream((stream) => {
-                let events = new EventHandler(log);
-                let api = new APIMock(config, log);
-                let c = createCall(call(d === "DirectCall"), config.rtc, log, events, api);
-                c.addLocalStream(stream);
+                call.addLocalStream(stream);
 
                 events.onError((error) => done.fail());
 
-                c.onJoined((msg) => {
+                call.onJoined((msg) => {
                     expect(msg.user).toBe("987");
                     done();
                 });
 
                 events.notify({
                     type: "call_joined",
-                    id: "123",
+                    id: call.id,
                     user: "987"
                 } as Event);
             }, (error) => done.fail());
         });
 
         it("should run a callback on leave", (done) => {
-            let events = new EventHandler(log);
-            let api = new APIMock(config, log);
-            let c = createCall(call(d === "DirectCall"), config.rtc, log, events, api);
-
             events.onError((error) => done.fail());
 
-            c.onLeft((msg) => {
+            call.onLeft((msg) => {
                 expect(msg.user).toBe("321");
                 done();
             });
 
             events.notify({
                 type: "call_left",
-                id: "123",
+                id: call.id,
                 user: "321"
             } as Event);
         });
 
         whenever(isWebRTCSupported())("should maintain the user list", (done) => {
             getStream((stream) => {
-                let events = new EventHandler(log);
-                let api = new APIMock(config, log);
-                let c = createCall(call(d === "DirectCall"), config.rtc, log, events, api);
-                c.addLocalStream(stream);
+                call.addLocalStream(stream);
 
                 events.onError((error) => done.fail());
 
-                c.onJoined((msg) => {
+                call.onJoined((msg) => {
                     expect(msg.user).toBe("456");
 
-                    c.getUsers().then((users) => {
+                    call.getUsers().then((users) => {
                         expect(users).toContain("456");
                         expect(users).toContain("321");
 
-                        c.onLeft((msg) => {
+                        call.onLeft((msg) => {
                             expect(msg.user).toBe("321");
 
-                            c.getUsers().then((users) => {
+                            call.getUsers().then((users) => {
                                 expect(users).toContain("456");
                                 expect(users).not.toContain("321");
                                 done();
@@ -154,7 +120,7 @@ function call(direct = false) {
 
                         events.notify({
                             type: "call_left",
-                            id: "123",
+                            id: call.id,
                             user: "321"
                         } as Event);
                     });
@@ -162,36 +128,48 @@ function call(direct = false) {
 
                 events.notify({
                     type: "call_joined",
-                    id: "123",
+                    id: call.id,
                     user: "456"
                 } as Event);
             }, (error) => done.fail());
+        });
+
+        // FIXME These should be moved to integration tests:
+        whenever(isWebRTCSupported())("should allow joining", (done) => {
+            getStream((stream) => {
+                events.onError((error) => done.fail());
+
+                call.join(stream).then(() => {
+                    expect(api.joined).toBe(true);
+                    done();
+                });
+            }, (error) => done.fail());
+        });
+
+        it("should allow leaving", (done) => {
+            events.onError((error) => done.fail());
+
+            call.leave("reason").then(() => {
+                expect(api.left).toBe("reason");
+                done();
+            });
         });
     });
 });
 
 describe("Call", () => {
-    it("should allow inviting users", (done) => {
-        let events = new EventHandler(log);
-        let api = new APIMock(config, log);
-        let c = createCall(call(), config.rtc, log, events, api) as Call;
+    let events, api, call;
 
-        events.onError((error) => done.fail());
-
-        c.invite("456").then(() => {
-            expect(api.invited).toBe("456");
-            done();
-        });
+    beforeEach(() => {
+        events = new EventHandler(log);
+        api = new APIMock(config, log);
+        call = createCall(makeCall(), config.rtc, log, events, api) as Call;
     });
 
     it("should run a callback on invitation", (done) => {
-        let events = new EventHandler(log);
-        let api = new APIMock(config, log);
-        let c = createCall(call(), config.rtc, log, events, api) as Call;
-
         events.onError((error) => done.fail());
 
-        c.onInvited((msg) => {
+        call.onInvited((msg) => {
             expect(msg.sender).toBe("321");
             expect(msg.user).toBe("987");
             done();
@@ -199,9 +177,19 @@ describe("Call", () => {
 
         events.notify({
             type: "call_invited",
-            id: "123",
+            id: call.id,
             sender: "321",
             user: "987"
         } as Event);
+    });
+
+    // FIXME These should be moved to integration tests:
+    it("should allow inviting users", (done) => {
+        events.onError((error) => done.fail());
+
+        call.invite("456").then(() => {
+            expect(api.invited).toBe("456");
+            done();
+        });
     });
 });

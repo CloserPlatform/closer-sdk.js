@@ -19,14 +19,18 @@ class APIMock extends API {
 }
 
 describe("Artichoke", () => {
-    it("should notify on a new event", (done) => {
-        let events = new EventHandler(log);
-        let api = new APIMock(config, log);
-        let a = new Artichoke(config, log, events, api);
+    let events, api, manager;
 
+    beforeEach(() => {
+        events = new EventHandler(log);
+        api = new APIMock(config, log);
+        manager = new Artichoke(config, log, events, api);
+    });
+
+    it("should notify on a new event", (done) => {
         events.onEvent("hello", (msg) => done());
 
-        a.connect();
+        manager.connect();
 
         api.cb({
             type: "hello"
@@ -34,13 +38,8 @@ describe("Artichoke", () => {
     });
 
     it("should call a callback on server connection", (done) => {
-        let events = new EventHandler(log);
-        let api = new APIMock(config, log);
-        let a = new Artichoke(config, log, events, api);
-
-        a.onConnect((msg) => done());
-
-        a.connect();
+        manager.onConnect((msg) => done());
+        manager.connect();
 
         api.cb({
             type: "hello"
@@ -48,13 +47,8 @@ describe("Artichoke", () => {
     });
 
     it("should call a callback on server error", (done) => {
-        let events = new EventHandler(log);
-        let api = new APIMock(config, log);
-        let a = new Artichoke(config, log, events, api);
-
-        a.onError((error) => done());
-
-        a.connect();
+        manager.onError((error) => done());
+        manager.connect();
 
         api.cb({
             type: "error",

@@ -12,7 +12,7 @@ class APIMock extends API {
     }
 }
 
-function msg(delivered?: number): Message {
+function makeMsg(delivered?: number): Message {
     return {
         type: "message",
         id: "1234",
@@ -21,76 +21,70 @@ function msg(delivered?: number): Message {
         room: "dm-alice-bob",
         timestamp: 123,
         delivered
-    }
+    };
 }
 
 describe("Message", () => {
-    let events = new EventHandler(log);
+    let events, api, msg;
+
+    beforeEach(() => {
+        events = new EventHandler(log);
+        api = new APIMock(config, log);
+        msg = createMessage(makeMsg(), log, events, api);
+    });
 
     it("should allow marking as delivered", () => {
-        let api = new APIMock(config, log);
-        let m = createMessage(msg(), log, events, api);
-
-        expect(m.delivered).not.toBeDefined();
-        m.markDelivered();
+        expect(msg.delivered).not.toBeDefined();
+        msg.markDelivered();
         expect(api.setDelivery).toBe(true);
-        expect(m.delivered).toBeDefined();
+        expect(msg.delivered).toBeDefined();
     });
 
     it("should not mark delivered msgs as delivered", () => {
-        let api = new APIMock(config, log);
-        let m = createMessage(msg(987), log, events, api);
-        let d = m.delivered;
+        msg = createMessage(makeMsg(987), log, events, api);
+        let d = msg.delivered;
 
-        m.markDelivered();
+        msg.markDelivered();
         expect(api.setDelivery).toBe(false);
-        expect(m.delivered).toBe(d);
+        expect(msg.delivered).toBe(d);
     });
 
     it("should not mark as delivered twice", (done) => {
-        let api = new APIMock(config, log);
-        let m = createMessage(msg(), log, events, api);
-
-        expect(m.delivered).not.toBeDefined();
-        m.markDelivered();
+        expect(msg.delivered).not.toBeDefined();
+        msg.markDelivered();
         expect(api.setDelivery).toBe(true);
         api.setDelivery = false;
 
-        let d = m.delivered;
+        let d = msg.delivered;
 
         sleep(100).then(() => {
-            m.markDelivered();
+            msg.markDelivered();
             expect(api.setDelivery).toBe(false);
-            expect(m.delivered).toBe(d);
+            expect(msg.delivered).toBe(d);
             done();
         });
     });
 
     it("should run a callback on delivery", (done) => {
-        let api = new APIMock(config, log);
-        let m = createMessage(msg(), log, events, api);
-
-        expect(m.delivered).not.toBeDefined();
-        m.onDelivery((delivery) => {
+        expect(msg.delivered).not.toBeDefined();
+        msg.onDelivery((delivery) => {
             expect(api.setDelivery).toBe(false);
-            expect(m.delivered).toBe(12345);
+            expect(msg.delivered).toBe(12345);
             done();
         });
 
         events.notify({
             type: "msg_delivered",
-            id: m.id,
+            id: msg.id,
             timestamp: 12345
         } as MessageDelivered);
     });
 
     it("should run a callback on each delivery", (done) => {
-        let api = new APIMock(config, log);
-        let m = createMessage(msg(), log, events, api);
         let count = 0;
 
-        expect(m.delivered).not.toBeDefined();
-        m.onDelivery((m) => {
+        expect(msg.delivered).not.toBeDefined();
+        msg.onDelivery((m) => {
             count++;
             if (count === 2) {
                 done();
@@ -99,7 +93,7 @@ describe("Message", () => {
 
         [123, 456].forEach((t) => events.notify({
             type: "msg_delivered",
-            id: m.id,
+            id: msg.id,
             timestamp: t
         } as MessageDelivered));
     });
