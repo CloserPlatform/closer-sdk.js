@@ -21,3 +21,34 @@ export function sleep(time: number): Promise<void> {
 export function whenever(condition: boolean) {
     return condition ? it : xit;
 }
+
+export function isChrome() {
+    return typeof window["chrome"] !== "undefined";
+}
+
+export function isFirefox() {
+    return navigator.userAgent.indexOf("Firefox") != -1;
+}
+
+export function isWebRTCSupported(): boolean {
+    return [typeof RTCPeerConnection,
+            typeof webkitRTCPeerConnection,
+            typeof mozRTCPeerConnection].some((t) => t !== "undefined");
+}
+
+export function getStream(onStream, onError) {
+    let constraints = {
+        fake: true, // NOTE For FireFox.
+        video: true,
+        audio: true
+    };
+    if (typeof navigator.getUserMedia !== "undefined") {
+        navigator.getUserMedia(constraints, onStream, onError);
+    } else if (typeof navigator.mediaDevices.getUserMedia !== "undefined") {
+        navigator.mediaDevices.getUserMedia(constraints).then(onStream).catch(onError);
+    } else if (typeof navigator.mozGetUserMedia !== "undefined") {
+        navigator.mozGetUserMedia(constraints, onStream, onError);
+    } else if (typeof navigator.webkitGetUserMedia !== "undefined") {
+        navigator.webkitGetUserMedia(constraints, onStream, onError);
+    }
+}

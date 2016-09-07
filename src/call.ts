@@ -51,7 +51,7 @@ class BaseCall implements ProtoCall {
 
         // Signaling callbacks:
         this.events.onConcreteEvent("call_left", this.id, function(msg: CallLeft) {
-            _this.users = _this.users.filter((u) => u === msg.user);
+            _this.users = _this.users.filter((u) => u !== msg.user);
             _this.pool.destroy(msg.user);
             _this.onLeftCallback(msg);
         });

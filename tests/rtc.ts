@@ -1,6 +1,6 @@
 import { API } from "../src/api";
 import { EventHandler } from "../src/events";
-import { config, invalidSDP, log, validSDP, whenever } from "./fixtures";
+import { config, getStream, invalidSDP, isChrome, isWebRTCSupported, log, validSDP, whenever } from "./fixtures";
 import { Candidate, Event, ID, SDP } from "../src/protocol";
 import { createRTCConnection, createRTCPool } from "../src/rtc";
 
@@ -23,37 +23,6 @@ class APIMock extends API {
 function nop(stream: MediaStream) {
     // Do nothing.
 };
-
-function isChrome() {
-    return typeof window["chrome"] !== "undefined";
-}
-
-function isFirefox() {
-    return navigator.userAgent.indexOf("Firefox") != -1;
-}
-
-function isWebRTCSupported() {
-    return [typeof RTCPeerConnection,
-            typeof webkitRTCPeerConnection,
-            typeof mozRTCPeerConnection].some((t) => t !== "undefined");
-}
-
-function getStream(onStream, onError) {
-    let constraints = {
-        fake: true, // NOTE For FireFox.
-        video: true,
-        audio: true
-    };
-    if (typeof navigator.getUserMedia !== "undefined") {
-        navigator.getUserMedia(constraints, onStream, onError);
-    } else if (typeof navigator.mediaDevices.getUserMedia !== "undefined") {
-        navigator.mediaDevices.getUserMedia(constraints).then(onStream).catch(onError);
-    } else if (typeof navigator.mozGetUserMedia !== "undefined") {
-        navigator.mozGetUserMedia(constraints, onStream, onError);
-    } else if (typeof navigator.webkitGetUserMedia !== "undefined") {
-        navigator.webkitGetUserMedia(constraints, onStream, onError);
-    }
-}
 
 // FIXME Unfuck whenever WebRTC is standarized.
 describe("RTCConnection", () => {
