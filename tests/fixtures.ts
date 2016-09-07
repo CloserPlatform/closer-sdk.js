@@ -5,7 +5,7 @@ export const validSDP = "v=0\r\no=mozilla...THIS_IS_SDPARTA-48.0.2 7349388552458
 
 export const invalidSDP = "v=0\r\no=- 9212849432138844847 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=msid-semantic: WMS\r\n";
 
-export const log = logger.devNull;
+export const log = logger.debugConsole;
 
 export const config: Config = load({
     url: "localhost:5431",
