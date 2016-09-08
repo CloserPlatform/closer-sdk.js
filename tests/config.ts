@@ -5,11 +5,12 @@ describe("Config", () => {
         let d = load({} as Config);
 
         let c = load({
-            url: "localhost",
+            hostname: "localhost",
             debug: !d.debug
         } as Config);
 
-        expect(c.url).toBe("localhost");
+        expect(c.hostname).toBe("localhost");
+        expect(c.port).toBe(d.port);
         expect(c.debug).toBe(!d.debug);
         expect(c.rtc).toBeDefined();
     });

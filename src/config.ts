@@ -3,7 +3,11 @@ import { ID } from "./protocol";
 
 export interface Config {
     rtc?: RTCConfiguration;
-    url?: string;
+
+    protocol?: string;
+    hostname?: string;
+    port?: string;
+
     debug?: boolean;
 
     apiKey?: ApiKey;
@@ -18,7 +22,9 @@ const defaultConfig: Config = {
             credential: "test456"
         }]
     },
-    url: "artichoke.ratel.io",
+    protocol: "https:",
+    hostname: "artichoke.ratel.io",
+    port: "",
     debug: false
 };
 
