@@ -435,6 +435,7 @@ $(document).ready(function() {
 
             room.getHistory().then(function(msgs) {
                 msgs.forEach(function(msg) {
+                    msg.markDelivered();
                     chatbox.receive(msg);
                 });
             }).catch(function(error) {
