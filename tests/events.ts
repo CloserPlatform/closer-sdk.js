@@ -2,8 +2,22 @@ import { EventHandler } from "../src/events";
 import { log } from "./fixtures";
 import { Error, Event, Message} from "../src/protocol";
 
+const roomId = "123";
+const alice = "321";
+
 interface ErrorWithCause extends Error {
     cause: boolean;
+}
+
+function msg(id: string): Message {
+    return {
+        type: "message",
+        id,
+        room: roomId,
+        body: "Oh hi",
+        sender: alice,
+        timestamp: Date.now()
+    };
 }
 
 describe("Event Handler", () => {
@@ -40,15 +54,7 @@ describe("Event Handler", () => {
         expect(ok).toBe(0);
 
         [1, 2, 3, 4, 5].forEach((i) => {
-            events.notify({
-                type: "message",
-                id: i.toString(),
-                room: "room",
-                body: "Oh hi",
-                sender: "bob",
-                timestamp: Date.now()
-            } as Message);
-
+            events.notify(msg(i.toString()));
             expect(ok).toBe(i);
         });
     });
@@ -60,16 +66,7 @@ describe("Event Handler", () => {
         events.onEvent("message", (msg: Message) => first++);
         events.onEvent("message", (msg: Message) => second++);
 
-        [1, 2, 3, 4, 5].forEach((i) => {
-            events.notify({
-                type: "message",
-                id: i.toString(),
-                room: "room",
-                body: "Oh hi",
-                sender: "bob",
-                timestamp: Date.now()
-            } as Message);
-        });
+        [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
         expect(first).toBe(5);
         expect(second).toBe(5);
@@ -80,16 +77,7 @@ describe("Event Handler", () => {
 
         events.onConcreteEvent("message", "3", (msg: Message) => ok = msg.id);
 
-        [1, 2, 3, 4, 5].forEach((i) => {
-            events.notify({
-                type: "message",
-                id: i.toString(),
-                room: "room",
-                body: "Hi bob",
-                sender: "alice",
-                timestamp: Date.now()
-            } as Message);
-        });
+        [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
         expect(ok).toBe("3");
     });
@@ -101,16 +89,7 @@ describe("Event Handler", () => {
         events.onConcreteEvent("message", "3", (msg: Message) => first = true);
         events.onConcreteEvent("message", "1", (msg: Message) => second = true);
 
-        [1, 2, 3, 4, 5].forEach((i) => {
-            events.notify({
-                type: "message",
-                id: i.toString(),
-                room: "room",
-                body: "Hi bob",
-                sender: "alice",
-                timestamp: Date.now()
-            } as Message);
-        });
+        [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
         expect(first).toBe(true);
         expect(second).toBe(true);
@@ -123,16 +102,7 @@ describe("Event Handler", () => {
         events.onConcreteEvent("message", "3", (msg: Message) => first = true);
         events.onEvent("message", (msg: Message) => second++);
 
-        [1, 2, 3, 4, 5].forEach((i) => {
-            events.notify({
-                type: "message",
-                id: i.toString(),
-                room: "room",
-                body: "Hi bob",
-                sender: "alice",
-                timestamp: Date.now()
-            } as Message);
-        });
+        [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
         expect(first).toBe(true);
         expect(second).toBe(5);
@@ -149,16 +119,7 @@ describe("Event Handler", () => {
             }
         });
 
-        [1, 2, 3, 4, 5].forEach((i) => {
-            events.notify({
-                type: "message",
-                id: i.toString(),
-                room: "room",
-                body: "Hi bob",
-                sender: "alice",
-                timestamp: Date.now()
-            } as Message);
-        });
+        [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
         expect(first).toBe(second);
         expect(first.id).toBe("3");

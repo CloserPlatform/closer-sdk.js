@@ -5,6 +5,11 @@ import { config, getStream, isWebRTCSupported, log, validSDP, whenever } from ".
 import { Call as ProtoCall, Event } from "../src/protocol";
 import { createRTCPool, RTCPool } from "../src/rtc";
 
+const callId = "123";
+const alice = "321";
+const bob = "456";
+const chad = "987";
+
 class APIMock extends API {
     joined = false;
     left: string;
@@ -36,8 +41,8 @@ class APIMock extends API {
 
 function makeCall(direct = false) {
     return {
-        id: "123",
-        users: ["321"],
+        id: callId,
+        users: [alice],
         direct: direct
     } as ProtoCall;
 }
@@ -68,14 +73,14 @@ function makeCall(direct = false) {
                 events.onError((error) => done.fail());
 
                 call.onJoined((msg) => {
-                    expect(msg.user).toBe("987");
+                    expect(msg.user).toBe(chad);
                     done();
                 });
 
                 events.notify({
                     type: "call_joined",
                     id: call.id,
-                    user: "987"
+                    user: chad
                 } as Event);
             }, (error) => done.fail());
         });
@@ -84,14 +89,14 @@ function makeCall(direct = false) {
             events.onError((error) => done.fail());
 
             call.onLeft((msg) => {
-                expect(msg.user).toBe("321");
+                expect(msg.user).toBe(alice);
                 done();
             });
 
             events.notify({
                 type: "call_left",
                 id: call.id,
-                user: "321"
+                user: alice
             } as Event);
         });
 
@@ -102,18 +107,18 @@ function makeCall(direct = false) {
                 events.onError((error) => done.fail());
 
                 call.onJoined((msg) => {
-                    expect(msg.user).toBe("456");
+                    expect(msg.user).toBe(bob);
 
                     call.getUsers().then((users) => {
-                        expect(users).toContain("456");
-                        expect(users).toContain("321");
+                        expect(users).toContain(bob);
+                        expect(users).toContain(alice);
 
                         call.onLeft((msg) => {
-                            expect(msg.user).toBe("321");
+                            expect(msg.user).toBe(alice);
 
                             call.getUsers().then((users) => {
-                                expect(users).toContain("456");
-                                expect(users).not.toContain("321");
+                                expect(users).toContain(bob);
+                                expect(users).not.toContain(alice);
                                 done();
                             });
                         });
@@ -121,7 +126,7 @@ function makeCall(direct = false) {
                         events.notify({
                             type: "call_left",
                             id: call.id,
-                            user: "321"
+                            user: alice
                         } as Event);
                     });
                 });
@@ -129,7 +134,7 @@ function makeCall(direct = false) {
                 events.notify({
                     type: "call_joined",
                     id: call.id,
-                    user: "456"
+                    user: bob
                 } as Event);
             }, (error) => done.fail());
         });
@@ -170,16 +175,16 @@ describe("Call", () => {
         events.onError((error) => done.fail());
 
         call.onInvited((msg) => {
-            expect(msg.sender).toBe("321");
-            expect(msg.user).toBe("987");
+            expect(msg.sender).toBe(alice);
+            expect(msg.user).toBe(chad);
             done();
         });
 
         events.notify({
             type: "call_invited",
             id: call.id,
-            sender: "321",
-            user: "987"
+            sender: alice,
+            user: chad
         } as Event);
     });
 
@@ -187,8 +192,8 @@ describe("Call", () => {
     it("should allow inviting users", (done) => {
         events.onError((error) => done.fail());
 
-        call.invite("456").then(() => {
-            expect(api.invited).toBe("456");
+        call.invite(bob).then(() => {
+            expect(api.invited).toBe(bob);
             done();
         });
     });

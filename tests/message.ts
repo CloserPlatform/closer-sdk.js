@@ -4,6 +4,10 @@ import { config, log, sleep } from "./fixtures";
 import { createMessage } from "../src/message";
 import { Message, MessageDelivered } from "../src/protocol";
 
+const roomId = "123";
+const bob = "456";
+const msg1 = "2323";
+
 class APIMock extends API {
     setDelivery = false;
 
@@ -15,10 +19,10 @@ class APIMock extends API {
 function makeMsg(delivered?: number): Message {
     return {
         type: "message",
-        id: "1234",
+        id: msg1,
         body: "Hi!",
-        sender: "bob",
-        room: "dm-alice-bob",
+        sender: bob,
+        room: roomId,
         timestamp: 123,
         delivered
     };

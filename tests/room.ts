@@ -4,13 +4,21 @@ import { config, log } from "./fixtures";
 import { Event, Message, Room as ProtoRoom } from "../src/protocol";
 import { createRoom, Room } from "../src/room";
 
+const roomId = "123";
+const alice = "321";
+const bob = "456";
+const chad = "987";
+const msg1 = "2323";
+const msg2 = "1313";
+const msg3 = "4545";
+
 function msg(id: string): Message {
     return {
         type: "message",
         id,
         body: "Hi!",
-        sender: "bob",
-        room: "123",
+        sender: alice,
+        room: roomId,
         timestamp: 123,
     };
 }
@@ -38,11 +46,11 @@ class APIMock extends API {
     }
 
     getRoomHistory(id) {
-        return Promise.resolve([msg("123"), msg("321")]);
+        return Promise.resolve([msg(msg1), msg(msg2)]);
     }
 
     getRoomUsers(id) {
-        return Promise.resolve(["456"]);
+        return Promise.resolve([bob]);
     }
 
     sendTyping(id) {
@@ -50,7 +58,7 @@ class APIMock extends API {
     }
 
     sendMessage(id, body) {
-        let m = msg("987");
+        let m = msg(msg3);
         m.body = body;
         return Promise.resolve(m);
     }
@@ -62,7 +70,7 @@ class APIMock extends API {
 
 function makeRoom(direct = false) {
     return {
-        id: "123",
+        id: roomId,
         name: "room",
         direct: direct
     } as ProtoRoom;
@@ -96,26 +104,26 @@ function makeRoom(direct = false) {
 
         it("should run a callback on typing indication", (done) => {
             room.onTyping((msg) => {
-                expect(msg.user).toBe("987");
+                expect(msg.user).toBe(chad);
                 done();
             });
 
             events.notify({
                 type: "typing",
                 id: room.id,
-                user: "987"
+                user: chad
             } as Event);
         });
 
         it("should run a callback on incoming message", (done) => {
             room.onMessage((msg) => {
-                expect(msg.sender).toBe("987");
+                expect(msg.sender).toBe(chad);
                 done();
             });
 
-            let m = msg("123");
+            let m = msg(msg1);
             m.room = room.id;
-            m.sender = "987";
+            m.sender = chad;
             events.notify(m as Event);
         });
 
@@ -123,15 +131,15 @@ function makeRoom(direct = false) {
         it("should retrieve history", (done) => {
             room.getHistory().then((msgs) => {
                 let ids = msgs.map((m) => m.id);
-                expect(ids).toContain("123");
-                expect(ids).toContain("321");
+                expect(ids).toContain(msg1);
+                expect(ids).toContain(msg2);
                 done();
             });
         });
 
         it("should retrieve users", (done) => {
             room.getUsers().then((users) => {
-                expect(users).toContain("456");
+                expect(users).toContain(bob);
                 done();
             });
         });
@@ -162,13 +170,13 @@ describe("Room", () => {
 
     it("should run callback on room actions", (done) => {
         room.onAction((msg) => {
-            expect(msg.originator).toBe("333");
+            expect(msg.originator).toBe(chad);
             done();
         });
 
         events.notify({
             type: "room_action",
-            originator: "333",
+            originator: chad,
             id: room.id,
             action: "left",
             timestamp: Date.now()
@@ -187,7 +195,7 @@ describe("Room", () => {
     });
 
     it("should allow inviting others", () => {
-        room.invite("567");
-        expect(api.invited).toBe("567");
+        room.invite(chad);
+        expect(api.invited).toBe(chad);
     });
 });
