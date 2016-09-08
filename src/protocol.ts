@@ -228,3 +228,12 @@ export function createDirectRoom(peer: ID): CreateDirectRoom {
         peer
     };
 }
+
+// Reading & writing:
+export function read(bytes: string): Event {
+    return JSON.parse(bytes);
+}
+
+export function write(event: Event): string {
+    return JSON.stringify(event);
+}

@@ -1,5 +1,5 @@
 import { Logger } from "./logger";
-import { Error, Event, ID, Type } from "./protocol";
+import { Error, Event, ID, Type, write } from "./protocol";
 
 export interface Callback<T> {
     (arg: T): void;
@@ -29,7 +29,7 @@ export class EventHandler {
 
     notify(event: Event) {
         if ([this.notifyById(event), this.notifyByType(event)].every((r) => !r)) {
-            this.log("Unhandled event " + event.type + ": " + JSON.stringify(event));
+            this.log("Unhandled event " + event.type + ": " + write(event));
             this.raise("Unhandled event: " + event.type, event);
         }
     }

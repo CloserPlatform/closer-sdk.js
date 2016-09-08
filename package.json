@@ -7,7 +7,7 @@
     "deps": "typings install",
     "lint": "tslint -c tslint.json src/**/*.ts test/**/*.ts",
     "test": "karma start",
-    "test-dev": "karma start --no-single-run --browsers 'Chrome,Firefox,PhantomJS'",
+    "test-dev": "karma start --no-single-run --browsers 'ChromeWithFakeUserMedia,Firefox,PhantomJS'",
     "build": "npm run commit-hash && webpack",
     "start": "python3 -m http.server",
     "prepublish": "npm run deps && npm run build",

@@ -2,7 +2,7 @@ import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { Call as ProtoCall, CallInvited, CallJoined, CallLeft, ID } from "./protocol";
-import { RTCPool } from "./rtc";
+import { createRTCPool, RTCPool } from "./rtc";
 
 export interface RemoteStreamCallback {
     (peer: ID, stream: MediaStream): void;
@@ -31,7 +31,7 @@ class BaseCall implements ProtoCall {
         this.events = events;
         this.api = api;
 
-        this.pool = new RTCPool(this.id, config, log, events, api);
+        this.pool = createRTCPool(this.id, config, log, events, api);
 
         // By default do nothing:
         this.onRemoteStreamCallback = (peer, stream) => {
@@ -51,7 +51,7 @@ class BaseCall implements ProtoCall {
 
         // Signaling callbacks:
         this.events.onConcreteEvent("call_left", this.id, function(msg: CallLeft) {
-            _this.users = _this.users.filter((u) => u === msg.user);
+            _this.users = _this.users.filter((u) => u !== msg.user);
             _this.pool.destroy(msg.user);
             _this.onLeftCallback(msg);
         });
