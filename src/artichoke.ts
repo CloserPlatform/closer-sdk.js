@@ -48,11 +48,8 @@ export class Artichoke {
             switch (e.type) {
             case "call_invitation":
                 let c = e as proto.CallInvitation;
-                _this.events.notify({
-                    type: c.type,
-                    sender: c.user,
-                    call: createCall(c.call, _this.config.rtc, _this.log, _this.events, _this.api)
-                } as proto.Event);
+                c.call = createCall(c.call, _this.config.rtc, _this.log, _this.events, _this.api);
+                _this.events.notify(c);
                 break;
 
             case "room_action":
@@ -72,24 +69,13 @@ export class Artichoke {
                 break;
 
             case "room_created": // FIXME Rename to room_invitation.
-                _this.events.notify({
-                    type: e.type,
-                    room: createRoom((e as proto.RoomCreated).room, _this.log, _this.events, _this.api)
-                } as proto.Event);
+                let r = e as proto.RoomCreated;
+                r.room = createRoom(r.room, _this.log, _this.events, _this.api);
+                _this.events.notify(r);
                 break;
 
             case "message":
                 _this.events.notify(createMessage(e as proto.Message, _this.log, _this.events, _this.api));
-                break;
-
-            case "presence":
-                let p = e as proto.Presence;
-                _this.events.notify({
-                    type: p.type,
-                    user: p.sender,
-                    status: p.status,
-                    timestamp: p.timestamp
-                } as proto.Event);
                 break;
 
             default:

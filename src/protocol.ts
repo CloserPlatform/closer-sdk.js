@@ -25,11 +25,12 @@ export interface RosterRoom extends Room {
 // JSON Events:
 export interface CallInvitation extends Event {
     call: Call;
-    user: ID; // FIXME Should be sender/inviter.
+    user?: ID;   // FIXME Remove this.
+    sender?: ID; // FIXME Should be "inviter"
 }
 
 export interface CallInvited extends Event {
-    sender: ID; // FIXME Should be inviter.
+    sender: ID; // FIXME Should be "inviter".
     user: ID;
 }
 
@@ -82,7 +83,8 @@ export interface Mark extends Event {
 export type Status = "away" | "available" | "unavailable";
 
 export interface Presence extends Event {
-    sender: ID; // FIXME Should be "user".
+    sender?: ID; // FIXME Remove.
+    user?: ID;
     status: Status;
     timestamp: Timestamp;
 }
@@ -236,4 +238,54 @@ export function read(bytes: string): Event {
 
 export function write(event: Event): string {
     return JSON.stringify(event);
+}
+
+// Backend fixer-uppers:
+export function fix(e: Event): Event {
+    console.log("fix:", e);
+    switch (e.type) {
+    case "call_invitation":
+        let c = e as CallInvitation;
+        return {
+            type: c.type,
+            sender: c.user,
+            call: c.call
+        } as Event;
+
+    case "presence":
+        let p = e as Presence;
+        return {
+            type: p.type,
+            user: p.sender,
+            status: p.status,
+            timestamp: p.timestamp,
+        } as Event;
+
+    default:
+        return e;
+    }
+}
+
+export function unfix(e: Event): Event {
+    switch (e.type) {
+    case "call_invitation":
+        let c = e as CallInvitation;
+        return {
+            type: c.type,
+            user: c.sender,
+            call: c.call
+        } as Event;
+
+    case "presence":
+        let p = e as Presence;
+        return {
+            type: p.type,
+            sender: p.user,
+            status: p.status,
+            timestamp: p.timestamp,
+        } as Event;
+
+    default:
+        return e;
+    }
 }
