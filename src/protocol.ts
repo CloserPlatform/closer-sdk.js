@@ -26,7 +26,7 @@ export interface RosterRoom extends Room {
 export interface CallInvitation extends Event {
     call: Call;
     user?: ID;   // FIXME Remove this.
-    sender?: ID; // FIXME Should be "inviter"
+    inviter?: ID;
 }
 
 interface CallAction extends Event {
@@ -35,7 +35,8 @@ interface CallAction extends Event {
 }
 
 export interface CallInvited extends CallAction {
-    sender: ID; // FIXME Should be "inviter".
+    sender?: ID; // FIXME Remove this.
+    inviter?: ID;
 }
 
 export interface CallJoined extends CallAction { }
@@ -300,7 +301,7 @@ export function fix(e: Event): Event {
     switch (e.type) {
     case "call_invitation":
         let c = clone(e) as CallInvitation;
-        c.sender = c.user;
+        c.inviter = c.user;
         delete c.user;
         return c;
 
@@ -316,6 +317,8 @@ export function fix(e: Event): Event {
 
     case "call_invited":
         let ci = clone(e) as CallInvited;
+        ci.inviter = ci.sender;
+        delete ci.sender;
         ci.timestamp = Date.now();
         return ci;
 
@@ -358,12 +361,14 @@ export function unfix(e: Event): Event {
     switch (e.type) {
     case "call_invitation":
         let c = clone(e) as CallInvitation;
-        c.user = c.sender;
-        delete c.sender;
+        c.user = c.inviter;
+        delete c.inviter;
         return c;
 
     case "call_invited":
         let ci = e as CallInvited;
+        ci.sender = ci.inviter;
+        delete ci.inviter;
         delete ci.timestamp;
         return ci;
 

@@ -556,7 +556,7 @@ $(document).ready(function() {
             input = makeDiv();
         } else {
             call.onInvited(function(m) {
-                console.log(m.sender + " invited " + m.user + " to join the call: ", m);
+                console.log(m.inviter + " invited " + m.user + " to join the call: ", m);
             });
 
             input = makeInputField("Invite!", function(user) {
@@ -721,9 +721,9 @@ $(document).ready(function() {
                     console.log("Received call offer: ", m);
                     var line = "";
                     if(m.call.direct) {
-                        line = m.sender + " is calling, answer?";
+                        line = m.inviter + " is calling, answer?";
                     } else {
-                        line = m.sender + " invites you to join a conference call with " + m.call.users.toString();
+                        line = m.inviter + " invites you to join a conference call with " + m.call.users.toString();
                     }
                     if(confirm(line)) {
                         createStream(function(stream) {
