@@ -168,17 +168,48 @@ describe("Room", () => {
         room = createRoom(makeRoom(), log, events, api) as Room;
     });
 
-    it("should run callback on room actions", (done) => {
-        room.onAction((msg) => {
-            expect(msg.originator).toBe(chad);
+    it("should run callback on room joined", (done) => {
+        room.onJoined((msg) => {
+            expect(msg.user).toBe(alice);
             done();
         });
 
         events.notify({
-            type: "room_action",
-            originator: chad,
+            type: "room_joined",
             id: room.id,
-            action: "left",
+            user: alice,
+            timestamp: Date.now()
+        } as Event);
+    });
+
+    it("should run callback on room left", (done) => {
+        room.onLeft((msg) => {
+            expect(msg.user).toBe(alice);
+            expect(msg.reason).toBe("reason");
+            done();
+        });
+
+        events.notify({
+            type: "room_left",
+            id: room.id,
+            user: alice,
+            reason: "reason",
+            timestamp: Date.now()
+        } as Event);
+    });
+
+    it("should run callback on room invite", (done) => {
+        room.onInvited((msg) => {
+            expect(msg.user).toBe(bob);
+            expect(msg.inviter).toBe(alice);
+            done();
+        });
+
+        events.notify({
+            type: "room_invited",
+            id: room.id,
+            inviter: alice,
+            user: bob,
             timestamp: Date.now()
         } as Event);
     });

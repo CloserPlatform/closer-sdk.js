@@ -306,24 +306,26 @@ $(document).ready(function() {
 
         var text = makeTextArea("chatbox-textarea");
 
-        function receiveAction(action) {
-            var s = action.subject || "the room";
-            var line = " User " + action.originator + " " + action.action + " " + s + ".";
-            text.append(makeTextLine("", "info", action.timestamp, line));
+        function receiveAction(timestamp, line) {
+            text.append(makeTextLine("", "info", timestamp, line));
             text.trigger('scroll-to-bottom');
         }
 
-        room.onAction(function(msg) {
-            switch(msg.action) {
-            case "joined":
-                if(msg.originator != sessionId) { // FIXME Don't use sessionId.
-                    users.add(msg.originator);
-                }
-                break;
-            case "left": users.remove(msg.originator); break;
+        room.onJoined(function(msg) {
+            if(msg.user != sessionId) { // FIXME Don't use sessionId.
+                users.add(msg.user);
             }
-            receiveAction(msg);
+            receiveAction(msg.timestamp, " User " + msg.user + " joined the room.");
         });
+
+        room.onLeft(function(msg) {
+            users.remove(msg.user);
+            receiveAction(msg.timestamp, " User " + msg.user + " left the room, reason: " + msg.reason + ".");
+        });
+
+        room.onInvited(function(msg) {
+            receiveAction(msg.timestamp, " User " + msg.inviter + " invited user " + msg.user + " to join the room.");
+        })
 
         var receive = makeReceiver(room, text);
         room.onMessage(function(msg) {

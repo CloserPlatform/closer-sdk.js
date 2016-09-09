@@ -2,11 +2,11 @@ import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage, Message } from "./message";
-import { ID, Message as MSG, Room as ProtoRoom, RoomAction, RosterRoom, Timestamp, Typing } from "./protocol";
+import * as proto from "./protocol";
 import { wrapPromise } from "./utils";
 
-class BaseRoom implements ProtoRoom {
-    public id: ID;
+class BaseRoom implements proto.Room {
+    public id: proto.ID;
     public name: string;
     public direct: boolean;
 
@@ -15,7 +15,7 @@ class BaseRoom implements ProtoRoom {
     protected events: EventHandler;
     protected api: API;
 
-    constructor(room: RosterRoom, log: Logger, events: EventHandler, api: API) {
+    constructor(room: proto.RosterRoom, log: Logger, events: EventHandler, api: API) {
         this.id = room.id;
         this.name = room.name;
         this.direct = room.direct;
@@ -29,7 +29,7 @@ class BaseRoom implements ProtoRoom {
         return this.wrapMessage(this.api.getRoomHistory(this.id));
     }
 
-    getUsers(): Promise<Array<ID>> {
+    getUsers(): Promise<Array<proto.ID>> {
         return this.api.getRoomUsers(this.id);
     }
 
@@ -45,7 +45,7 @@ class BaseRoom implements ProtoRoom {
         return this.wrapMessage(this.api.sendMessage(this.id, message));
     }
 
-    mark(timestamp: Timestamp) {
+    mark(timestamp: proto.Timestamp) {
         this.currMark = timestamp;
         this.api.setMark(this.id, timestamp);
     }
@@ -54,21 +54,21 @@ class BaseRoom implements ProtoRoom {
         this.api.sendTyping(this.id);
     }
 
-    onMessage(callback: Callback<MSG>) {
+    onMessage(callback: Callback<proto.Message>) {
         // FIXME This ought to be a onContreceEvent() call.
         let _this = this;
-        this.events.onEvent("message", function(msg: MSG) {
+        this.events.onEvent("message", function(msg: proto.Message) {
             if (msg.room === _this.id) {
                 callback(msg);
             }
         });
     }
 
-    onTyping(callback: Callback<Typing>) {
+    onTyping(callback: Callback<proto.Typing>) {
         this.events.onConcreteEvent("typing", this.id, callback);
     }
 
-    private wrapMessage(promise: Promise<MSG | Array<MSG>>) {
+    private wrapMessage(promise: Promise<proto.Message | Array<proto.Message>>) {
         return wrapPromise(promise, (msg) => createMessage(msg, this.log, this.events, this.api));
     }
 }
@@ -84,16 +84,24 @@ export class Room extends BaseRoom {
         return this.api.leaveRoom(this.id);
     }
 
-    invite(user: ID): Promise<void> {
+    invite(user: proto.ID): Promise<void> {
         return this.api.inviteToRoom(this.id, user);
     }
 
-    onAction(callback: Callback<RoomAction>) {
-        this.events.onConcreteEvent("room_action", this.id, callback);
+    onJoined(callback: Callback<proto.RoomJoined>) {
+        this.events.onConcreteEvent("room_joined", this.id, callback);
+    }
+
+    onLeft(callback: Callback<proto.RoomLeft>) {
+        this.events.onConcreteEvent("room_left", this.id, callback);
+    }
+
+    onInvited(callback: Callback<proto.RoomInvited>) {
+        this.events.onConcreteEvent("room_invited", this.id, callback);
     }
 }
 
-export function createRoom(room: ProtoRoom, log: Logger, events: EventHandler, api: API): DirectRoom | Room {
+export function createRoom(room: proto.Room, log: Logger, events: EventHandler, api: API): DirectRoom | Room {
     if (room.direct) {
         return new DirectRoom(room, log, events, api);
     } else {
