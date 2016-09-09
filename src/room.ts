@@ -55,13 +55,7 @@ class BaseRoom implements proto.Room {
     }
 
     onMessage(callback: Callback<proto.Message>) {
-        // FIXME This ought to be a onContreceEvent() call.
-        let _this = this;
-        this.events.onEvent("message", function(msg: proto.Message) {
-            if (msg.room === _this.id) {
-                callback(msg);
-            }
-        });
+        this.events.onConcreteEvent("room_message", this.id, (msg: proto.RoomMessage) => callback(msg.message));
     }
 
     onTyping(callback: Callback<proto.Typing>) {

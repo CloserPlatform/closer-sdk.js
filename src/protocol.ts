@@ -110,6 +110,10 @@ export interface RoomLeft extends RoomAction {
     reason: string;
 }
 
+export interface RoomMessage extends Event {
+    message: Message;
+}
+
 export type Candidate = string;
 
 export interface RTCCandidate extends Event {
@@ -248,7 +252,7 @@ export function write(event: Event): string {
     return JSON.stringify(event);
 }
 
-// Backend fixer-uppers:
+// Backend fixer-uppers: // FIXME Adjust format on the backend.
 export type Action = "joined" | "left" | "invited";
 
 export interface LegacyRoomAction extends Event {
@@ -336,6 +340,14 @@ export function fix(e: Event): Event {
     case "room_action":
         return fixRoomAction(e as LegacyRoomAction);
 
+    case "message":
+        let m = e as Message;
+        return {
+            type: "room_message",
+            id: m.room,
+            message: m
+        } as RoomMessage;
+
     default:
         return e;
     }
@@ -405,6 +417,9 @@ export function unfix(e: Event): Event {
     case "room_left":
         let rl = e as RoomLeft;
         return roomAction(rl, rl.user, "left");
+
+    case "room_message":
+        return (e as RoomMessage).message;
 
     default:
         return e;

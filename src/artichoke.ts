@@ -44,7 +44,6 @@ export class Artichoke {
 
         let _this = this;
         this.api.onEvent(function(e: proto.Event) {
-            // FIXME Adjust format on the backend.
             switch (e.type) {
             case "call_invitation":
                 let c = e as proto.CallInvitation;
@@ -74,8 +73,10 @@ export class Artichoke {
                 _this.events.notify(i);
                 break;
 
-            case "message":
-                _this.events.notify(createMessage(e as proto.Message, _this.log, _this.events, _this.api));
+            case "room_message":
+                let m = e as proto.RoomMessage;
+                m.message = createMessage(m.message, _this.log, _this.events, _this.api);
+                _this.events.notify(m);
                 break;
 
             default:

@@ -124,7 +124,11 @@ function makeRoom(direct = false) {
             let m = msg(msg1);
             m.room = room.id;
             m.sender = chad;
-            events.notify(m as Event);
+            events.notify({
+                type: "room_message",
+                id: room.id,
+                message: m
+            } as Event);
         });
 
         // FIXME These should be moved to integration tests:
