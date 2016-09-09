@@ -330,6 +330,7 @@ export function fix(e: Event): Event {
     case "room_created":
         let r = clone(e) as RoomInvitation;
         r.type = "room_invitation";
+        r.inviter = "unknown";
         return r;
 
     case "room_action":

@@ -713,8 +713,12 @@ $(document).ready(function() {
                     });
                 });
 
-                session.chat.onRoom(function (msg) {
-                    addRoom(msg.room, session);
+                session.chat.onRoom(function (m) {
+                    console.log("Received room invitation: ", m);
+                    var r = addRoom(m.room, session);
+                    alert(m.inviter + " forcefully added you to room " + m.room.name,
+                          "You can't do much about it until backend is patched.");
+                    r.switchTo();
                 });
 
                 session.chat.onCall(function(m) {
