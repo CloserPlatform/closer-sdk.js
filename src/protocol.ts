@@ -76,11 +76,6 @@ export interface MessageRequest extends Event {
     room: ID;
 }
 
-export interface Mark extends Event {
-    room: ID;
-    timestamp: Timestamp;
-}
-
 export type Status = "away" | "available" | "unavailable";
 
 export interface Presence extends Event {
@@ -108,6 +103,11 @@ export interface RoomJoined extends RoomAction { }
 
 export interface RoomLeft extends RoomAction {
     reason: string;
+}
+
+export interface RoomMark extends Event {
+    room?: ID; // FIXME Remove.
+    timestamp: Timestamp;
 }
 
 export interface RoomMessage extends Event {
@@ -150,10 +150,10 @@ export function messageDelivered(id: ID, timestamp: Timestamp): MessageDelivered
     };
 }
 
-export function mark(room: ID, timestamp: Timestamp): Mark {
+export function mark(id: ID, timestamp: Timestamp): RoomMark {
     return {
-        type: "mark",
-        room,
+        type: "room_mark",
+        id,
         timestamp
     };
 }
@@ -353,6 +353,13 @@ export function fix(e: Event): Event {
         t.type = "room_typing";
         return t;
 
+    case "mark":
+        let mark = clone(e) as RoomMark;
+        mark.type = "room_mark";
+        mark.id = mark.room;
+        delete mark.room;
+        return mark;
+
     default:
         return e;
     }
@@ -422,6 +429,13 @@ export function unfix(e: Event): Event {
     case "room_left":
         let rl = e as RoomLeft;
         return roomAction(rl, rl.user, "left");
+
+    case "room_mark":
+        let mark = clone(e) as RoomMark;
+        mark.type = "mark";
+        mark.room = mark.id;
+        delete mark.id;
+        return mark;
 
     case "room_message":
         return (e as RoomMessage).message;

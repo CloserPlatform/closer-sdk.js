@@ -43,7 +43,11 @@ const brokenEvents: Array<proto.Event> = [{
 } as proto.CallJoined, {
     type: "typing",
     user: alice
-} as proto.RoomTyping];
+} as proto.RoomTyping, {
+    type: "mark",
+    room: roomId,
+    timestamp: Date.now()
+} as proto.RoomMark];
 
 const events: Array<proto.Event> = [{
     type: "room_action",
