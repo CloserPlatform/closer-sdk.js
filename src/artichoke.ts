@@ -52,15 +52,15 @@ export class Artichoke {
                 _this.events.notify(c);
                 break;
 
-            case "room_action":
-                let a = e as proto.RoomAction;
-                if (a.action === "invited" && a.subject === _this.config.sessionId) {
-                    _this.getRoom(a.id).then(function(room) {
+            case "room_invited":
+                let r = e as proto.RoomInvited;
+                if (r.user === _this.config.sessionId) {
+                    _this.getRoom(r.id).then(function(room) {
                         _this.events.notify({
                             type: "room_invitation",
-                            inviter: a.originator,
+                            inviter: r.inviter,
                             room
-                        } as proto.Event);
+                        } as proto.RoomInvitation);
                         _this.events.notify(e);
                     }).catch((error) => _this.events.notify(error));
                 } else {
@@ -69,9 +69,9 @@ export class Artichoke {
                 break;
 
             case "room_invitation":
-                let r = e as proto.RoomInvitation;
-                r.room = createRoom(r.room, _this.log, _this.events, _this.api);
-                _this.events.notify(r);
+                let i = e as proto.RoomInvitation;
+                i.room = createRoom(i.room, _this.log, _this.events, _this.api);
+                _this.events.notify(i);
                 break;
 
             case "message":

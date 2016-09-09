@@ -1,8 +1,14 @@
 import * as proto from "../src/protocol";
 
+const roomId = "123";
+const callId = "234";
+const msgId = "345";
+const alice = "321";
+const bob = "987";
+
 const presence: proto.Presence = {
     type: "presence",
-    sender: "Bob",
+    sender: alice,
     status: "away",
     timestamp: Date.now(),
 };
@@ -12,17 +18,17 @@ describe("Protocol", () => {
         let events: Array<proto.Event> = [
             presence, {
                 type: "message",
-                id: "1234",
+                id: msgId,
                 body: "Oi papi!",
-                sender: "Bob",
-                room: "1234",
+                sender: alice,
+                room: roomId,
                 timestamp: Date.now(),
             } as proto.Message, {
                 type: "room_action",
-                id: "123",
-                originator: "Bob",
+                id: roomId,
+                originator: alice,
                 action: "invited",
-                subject: "Alice",
+                subject: bob,
                 timestamp: Date.now()
             } as proto.RoomAction, {
                 type: "error",
@@ -39,15 +45,15 @@ describe("Protocol", () => {
             presence, {
                 type: "call_invitation",
                 call: {
-                    id: "123",
+                    id: callId,
                     users: [],
                     direct: false
                 },
-                user: "321"
+                user: alice
             } as proto.CallInvitation, {
                 type: "room_created",
                 room: {
-                    id: "123",
+                    id: roomId,
                     name: "room",
                     direct: false
                 }
@@ -61,5 +67,51 @@ describe("Protocol", () => {
             expect(fixed).not.toEqual(e);
             expect(proto.unfix(fixed)).toEqual(e);
         });
+    });
+
+    it("backend fixers should correctly handle RoomActions", () => {
+        let invited: proto.RoomAction = {
+            type: "room_action",
+            id: roomId,
+            action: "invited",
+            originator: alice,
+            subject: bob,
+            timestamp: Date.now()
+        };
+
+        let roomInvited = proto.fix(invited) as proto.RoomInvited;
+
+        expect(roomInvited.id).toBe(invited.id);
+        expect(roomInvited.inviter).toBe(invited.originator);
+        expect(roomInvited.user).toBe(invited.subject);
+        expect(proto.unfix(roomInvited)).toEqual(invited);
+
+        let joined: proto.RoomAction = {
+            type: "room_action",
+            id: roomId,
+            action: "joined",
+            originator: alice,
+            timestamp: Date.now()
+        };
+
+        let roomJoined = proto.fix(joined) as proto.RoomJoined;
+
+        expect(roomJoined.id).toBe(joined.id);
+        expect(roomJoined.user).toBe(joined.originator);
+        expect(proto.unfix(roomJoined)).toEqual(joined);
+
+        let left: proto.RoomAction = {
+            type: "room_action",
+            id: roomId,
+            action: "left",
+            originator: alice,
+            timestamp: Date.now()
+        };
+
+        let roomLeft = proto.fix(left) as proto.RoomLeft;
+
+        expect(roomLeft.id).toBe(left.id);
+        expect(roomLeft.user).toBe(left.originator);
+        expect(proto.unfix(roomLeft)).toEqual(left);
     });
 });

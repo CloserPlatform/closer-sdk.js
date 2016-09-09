@@ -91,7 +91,7 @@ export interface Presence extends Event {
 
 export type Action = "joined" | "left" | "invited";
 
-export interface RoomAction extends Event {
+export interface RoomAction extends Event { // FIXME Remove this.
     originator: ID;
     action: Action;
     subject?: ID;
@@ -101,6 +101,21 @@ export interface RoomAction extends Event {
 export interface RoomInvitation extends Event {
     inviter?: ID; // FIXME Make not optional.
     room: Room;
+}
+
+interface NewRoomAction extends Event {
+    timestamp: Timestamp;
+    user: ID;
+}
+
+export interface RoomInvited extends NewRoomAction {
+    inviter: ID;
+}
+
+export interface RoomJoined extends NewRoomAction { }
+
+export interface RoomLeft extends NewRoomAction {
+    reason: string;
 }
 
 export type Candidate = string;
@@ -242,6 +257,39 @@ export function write(event: Event): string {
 }
 
 // Backend fixer-uppers:
+function fixRoomAction(a: RoomAction) {
+    switch (a.action) {
+    case "invited":
+        return {
+            type: "room_invited",
+            id: a.id,
+            inviter: a.originator,
+            user: a.subject,
+            timestamp: a.timestamp
+        } as RoomInvited;
+
+    case "joined":
+        return {
+            type: "room_joined",
+            id: a.id,
+            user: a.originator,
+            timestamp: a.timestamp
+        } as RoomJoined;
+
+    case "left":
+        return {
+            type: "room_left",
+            id: a.id,
+            user: a.originator,
+            reason: "no reason",
+            timestamp: a.timestamp
+        } as RoomLeft;
+
+    default:
+        throw new Error("Unimplemented RoomAction type: " + a.action);
+    }
+}
+
 export function fix(e: Event): Event {
     console.log("fix:", e);
     switch (e.type) {
@@ -269,6 +317,9 @@ export function fix(e: Event): Event {
             inviter: r.inviter,
             room: r.room
         } as RoomInvitation;
+
+    case "room_action":
+        return fixRoomAction(e as RoomAction);
 
     default:
         return e;
@@ -300,6 +351,37 @@ export function unfix(e: Event): Event {
             type: "room_created",
             room: r.room
         } as RoomInvitation;
+
+    case "room_invited":
+        let ri = e as RoomInvited;
+        return {
+            type: "room_action",
+            id: ri.id,
+            action: "invited",
+            originator: ri.inviter,
+            subject: ri.user,
+            timestamp: ri.timestamp
+        } as RoomAction;
+
+    case "room_joined":
+        let rj = e as RoomJoined;
+        return {
+            type: "room_action",
+            id: rj.id,
+            action: "joined",
+            originator: rj.user,
+            timestamp: rj.timestamp
+        } as RoomAction;
+
+    case "room_left":
+        let rl = e as RoomLeft;
+        return {
+            type: "room_action",
+            id: rl.id,
+            action: "left",
+            originator: rl.user,
+            timestamp: rl.timestamp
+        } as RoomAction;
 
     default:
         return e;
