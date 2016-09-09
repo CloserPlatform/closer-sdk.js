@@ -25,7 +25,7 @@ export interface RosterRoom extends Room {
 // JSON Events:
 export interface CallInvitation extends Event {
     call: Call;
-    user?: ID;   // FIXME Remove this.
+    user?: ID; // FIXME Remove this.
     inviter?: ID;
 }
 
@@ -55,8 +55,7 @@ export interface Error extends Event {
     reason: string;
 }
 
-// FIXME This shouldn't be an event.
-export interface Message extends Event {
+export interface Message extends Event { // FIXME This shouldn't be an event.
     body: string;
     sender: ID;
     room: ID;
@@ -91,32 +90,23 @@ export interface Presence extends Event {
     timestamp: Timestamp;
 }
 
-export type Action = "joined" | "left" | "invited";
-
-export interface RoomAction extends Event { // FIXME Remove this.
-    originator: ID;
-    action: Action;
-    subject?: ID;
-    timestamp: Timestamp;
-}
-
 export interface RoomInvitation extends Event {
-    inviter?: ID; // FIXME Make not optional.
+    inviter?: ID; // FIXME Shouldn't be optional.
     room: Room;
 }
 
-interface NewRoomAction extends Event {
+interface RoomAction extends Event {
     timestamp: Timestamp;
     user: ID;
 }
 
-export interface RoomInvited extends NewRoomAction {
+export interface RoomInvited extends RoomAction {
     inviter: ID;
 }
 
-export interface RoomJoined extends NewRoomAction { }
+export interface RoomJoined extends RoomAction { }
 
-export interface RoomLeft extends NewRoomAction {
+export interface RoomLeft extends RoomAction {
     reason: string;
 }
 
@@ -259,11 +249,20 @@ export function write(event: Event): string {
 }
 
 // Backend fixer-uppers:
+export type Action = "joined" | "left" | "invited";
+
+export interface LegacyRoomAction extends Event {
+    originator: ID;
+    action: Action;
+    subject?: ID;
+    timestamp: Timestamp;
+}
+
 function clone(event: Event): Event {
     return read(write(event));
 }
 
-function fixRoomAction(a: RoomAction): NewRoomAction {
+function fixRoomAction(a: LegacyRoomAction): RoomAction {
     switch (a.action) {
     case "invited":
         return {
@@ -334,21 +333,21 @@ export function fix(e: Event): Event {
         return r;
 
     case "room_action":
-        return fixRoomAction(e as RoomAction);
+        return fixRoomAction(e as LegacyRoomAction);
 
     default:
         return e;
     }
 }
 
-function roomAction(a: NewRoomAction, originator: ID, action: Action, subject?: ID): RoomAction {
+function roomAction(a: RoomAction, originator: ID, action: Action, subject?: ID): LegacyRoomAction {
     let result = {
         type: "room_action",
         id: a.id,
         originator,
         action,
         timestamp: a.timestamp
-    } as RoomAction;
+    } as LegacyRoomAction;
 
     if (subject) {
         result.subject = subject;

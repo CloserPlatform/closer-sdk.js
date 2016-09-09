@@ -56,7 +56,7 @@ const events: Array<proto.Event> = [{
     action: "invited",
     subject: bob,
     timestamp: Date.now()
-} as proto.RoomAction, {
+} as proto.LegacyRoomAction, {
     type: "error",
     ref: "23425",
     reason: "Because!"
@@ -77,8 +77,8 @@ describe("Protocol", () => {
         });
     });
 
-    it("backend fixers should correctly handle RoomActions", () => {
-        let invited: proto.RoomAction = {
+    it("backend fixers should correctly handle LegacyRoomActions", () => {
+        let invited: proto.LegacyRoomAction = {
             type: "room_action",
             id: roomId,
             action: "invited",
@@ -94,7 +94,7 @@ describe("Protocol", () => {
         expect(roomInvited.user).toBe(invited.subject);
         expect(proto.unfix(roomInvited)).toEqual(invited);
 
-        let joined: proto.RoomAction = {
+        let joined: proto.LegacyRoomAction = {
             type: "room_action",
             id: roomId,
             action: "joined",
@@ -108,7 +108,7 @@ describe("Protocol", () => {
         expect(roomJoined.user).toBe(joined.originator);
         expect(proto.unfix(roomJoined)).toEqual(joined);
 
-        let left: proto.RoomAction = {
+        let left: proto.LegacyRoomAction = {
             type: "room_action",
             id: roomId,
             action: "left",
