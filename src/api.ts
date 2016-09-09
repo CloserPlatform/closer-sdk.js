@@ -37,8 +37,11 @@ export class API {
         this.sessionId = config.sessionId;
         this.apiKey = config.apiKey;
 
-        this.url = ["/", config.url, "api"].join("/");
-        this.wsUrl = ["wss:/", config.url, "ws", config.apiKey].join("/");
+        let host = config.hostname + ":" + config.port;
+        this.url = [config.protocol, "//", host, "/api"].join("");
+        let wsProtocol = config.protocol === "https:" ? "wss:" : "ws:";
+        this.wsUrl = [wsProtocol, "//", host, "/ws/", config.apiKey].join("");
+
         this.promises = {};
     }
 

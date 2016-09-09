@@ -634,8 +634,14 @@ $(document).ready(function() {
         }
     }
 
+    function getURL(server) {
+        return new URL((server.startsWith("http") ? "" : window.location.protocol) + server);
+    }
+
     function run(server, sessionId) {
-        console.log("Connecting to " + server + " as: " + sessionId);
+        var url = getURL(server);
+
+        console.log("Connecting to " + url + " as: " + sessionId);
 
         RatelSDK.withSignedAuth({
             "organizationId": "12345",
@@ -651,7 +657,9 @@ $(document).ready(function() {
                     "credential": "test456"
                 }]
             },
-            "url": server,
+            "protocol": url.protocol,
+            "hostname": url.hostname,
+            "port": url.port,
             "debug": true
         }).then(function(session) {
             $('#demo-name').html("Ratel IM - " + sessionId);
