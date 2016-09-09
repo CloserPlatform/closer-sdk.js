@@ -1,7 +1,7 @@
 import { API } from "../src/api";
 import { EventHandler } from "../src/events";
 import { config, log } from "./fixtures";
-import { Event, Message, Room as ProtoRoom } from "../src/protocol";
+import { Event, mark, Message, Room as ProtoRoom } from "../src/protocol";
 import { createRoom, Room } from "../src/room";
 
 const roomId = "123";
@@ -129,6 +129,20 @@ function makeRoom(direct = false) {
                 id: room.id,
                 message: m
             } as Event);
+        });
+
+        it("should run a callback on incoming mark", (done) => {
+            let t = Date.now();
+
+            room.onMark((msg) => {
+                expect(msg.timestamp).toBe(t);
+                room.getMark().then((mark) => {
+                    expect(mark).toBe(t);
+                    done();
+                });
+            });
+
+            events.notify(mark(room.id, t));
         });
 
         // FIXME These should be moved to integration tests:

@@ -54,6 +54,14 @@ class BaseRoom implements proto.Room {
         this.api.sendTyping(this.id);
     }
 
+    onMark(callback: Callback<proto.RoomMark>) {
+        let _this = this;
+        this.events.onConcreteEvent("room_mark", this.id, function(mark: proto.RoomMark) {
+            _this.currMark = mark.timestamp;
+            callback(mark);
+        });
+    }
+
     onMessage(callback: Callback<proto.Message>) {
         this.events.onConcreteEvent("room_message", this.id, (msg: proto.RoomMessage) => callback(msg.message));
     }
