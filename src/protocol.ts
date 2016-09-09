@@ -29,17 +29,18 @@ export interface CallInvitation extends Event {
     sender?: ID; // FIXME Should be "inviter"
 }
 
-export interface CallInvited extends Event {
+interface CallAction extends Event {
+    user: ID;
+    timestamp?: Timestamp; // FIXME Shouldn't be optional.
+}
+
+export interface CallInvited extends CallAction {
     sender: ID; // FIXME Should be "inviter".
-    user: ID;
 }
 
-export interface CallJoined extends Event {
-    user: ID;
-}
+export interface CallJoined extends CallAction { }
 
-export interface CallLeft extends Event {
-    user: ID;
+export interface CallLeft extends CallAction {
     reason: string;
 }
 
@@ -257,7 +258,11 @@ export function write(event: Event): string {
 }
 
 // Backend fixer-uppers:
-function fixRoomAction(a: RoomAction) {
+function clone(event: Event): Event {
+    return read(write(event));
+}
+
+function fixRoomAction(a: RoomAction): NewRoomAction {
     switch (a.action) {
     case "invited":
         return {
@@ -294,29 +299,36 @@ export function fix(e: Event): Event {
     console.log("fix:", e);
     switch (e.type) {
     case "call_invitation":
-        let c = e as CallInvitation;
-        return {
-            type: c.type,
-            sender: c.user,
-            call: c.call
-        } as CallInvitation;
+        let c = clone(e) as CallInvitation;
+        c.sender = c.user;
+        delete c.user;
+        return c;
+
+    case "call_joined":
+        let cj = clone(e) as CallJoined;
+        cj.timestamp = Date.now();
+        return cj;
+
+    case "call_left":
+        let cl = clone(e) as CallLeft;
+        cl.timestamp = Date.now();
+        return cl;
+
+    case "call_invited":
+        let ci = clone(e) as CallInvited;
+        ci.timestamp = Date.now();
+        return ci;
 
     case "presence":
-        let p = e as Presence;
-        return {
-            type: p.type,
-            user: p.sender,
-            status: p.status,
-            timestamp: p.timestamp,
-        } as Presence;
+        let p = clone(e) as Presence;
+        p.user = p.sender;
+        delete p.sender;
+        return p;
 
     case "room_created":
-        let r = e as RoomInvitation;
-        return {
-            type: "room_invitation",
-            inviter: r.inviter,
-            room: r.room
-        } as RoomInvitation;
+        let r = clone(e) as RoomInvitation;
+        r.type = "room_invitation";
+        return r;
 
     case "room_action":
         return fixRoomAction(e as RoomAction);
@@ -326,62 +338,68 @@ export function fix(e: Event): Event {
     }
 }
 
+function roomAction(a: NewRoomAction, originator: ID, action: Action, subject?: ID): RoomAction {
+    let result = {
+        type: "room_action",
+        id: a.id,
+        originator,
+        action,
+        timestamp: a.timestamp
+    } as RoomAction;
+
+    if (subject) {
+        result.subject = subject;
+    }
+
+    return result;
+}
+
 export function unfix(e: Event): Event {
     switch (e.type) {
     case "call_invitation":
-        let c = e as CallInvitation;
-        return {
-            type: c.type,
-            user: c.sender,
-            call: c.call
-        } as CallInvitation;
+        let c = clone(e) as CallInvitation;
+        c.user = c.sender;
+        delete c.sender;
+        return c;
+
+    case "call_invited":
+        let ci = e as CallInvited;
+        delete ci.timestamp;
+        return ci;
+
+    case "call_joined":
+        let cj = e as CallJoined;
+        delete cj.timestamp;
+        return cj;
+
+    case "call_left":
+        let cl = e as CallLeft;
+        delete cl.timestamp;
+        return cl;
 
     case "presence":
-        let p = e as Presence;
-        return {
-            type: p.type,
-            sender: p.user,
-            status: p.status,
-            timestamp: p.timestamp,
-        } as Presence;
+        let p = clone(e) as Presence;
+        p.sender = p.user;
+        delete p.user;
+        return p;
 
     case "room_invitation":
-        let r = e as RoomInvitation;
-        return {
-            type: "room_created",
-            room: r.room
-        } as RoomInvitation;
+        let r = clone(e) as RoomInvitation;
+        delete r.inviter;
+        r.type = "room_created";
+        return r;
 
     case "room_invited":
         let ri = e as RoomInvited;
-        return {
-            type: "room_action",
-            id: ri.id,
-            action: "invited",
-            originator: ri.inviter,
-            subject: ri.user,
-            timestamp: ri.timestamp
-        } as RoomAction;
+        return roomAction(ri, ri.inviter, "invited", ri.user);
 
     case "room_joined":
         let rj = e as RoomJoined;
-        return {
-            type: "room_action",
-            id: rj.id,
-            action: "joined",
-            originator: rj.user,
-            timestamp: rj.timestamp
-        } as RoomAction;
+        return roomAction(rj, rj.user, "joined");
 
     case "room_left":
         let rl = e as RoomLeft;
-        return {
-            type: "room_action",
-            id: rl.id,
-            action: "left",
-            originator: rl.user,
-            timestamp: rl.timestamp
-        } as RoomAction;
+        return roomAction(rl, rl.user, "left");
 
     default:
         return e;

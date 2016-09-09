@@ -6,61 +6,69 @@ const msgId = "345";
 const alice = "321";
 const bob = "987";
 
-const presence: proto.Presence = {
+const brokenEvents: Array<proto.Event> = [{
     type: "presence",
     sender: alice,
     status: "away",
     timestamp: Date.now(),
-};
+} as proto.Presence, {
+    type: "call_invitation",
+    call: {
+        id: callId,
+        users: [],
+        direct: false
+    },
+    user: alice
+} as proto.CallInvitation, {
+    type: "room_created",
+    room: {
+        id: roomId,
+        name: "room",
+        direct: false
+    }
+} as proto.RoomInvitation, {
+    type: "call_invited",
+    id: callId,
+    user: alice,
+    sender: bob
+} as proto.CallInvited, {
+    type: "call_left",
+    id: callId,
+    user: alice,
+    reason: "no reason"
+} as proto.CallLeft, {
+    type: "call_joined",
+    id: callId,
+    user: alice
+} as proto.CallJoined];
+
+const events: Array<proto.Event> = [{
+    type: "message",
+    id: msgId,
+    body: "Oi papi!",
+    sender: alice,
+    room: roomId,
+    timestamp: Date.now(),
+} as proto.Message, {
+    type: "room_action",
+    id: roomId,
+    originator: alice,
+    action: "invited",
+    subject: bob,
+    timestamp: Date.now()
+} as proto.RoomAction, {
+    type: "error",
+    ref: "23425",
+    reason: "Because!"
+} as proto.Error];
 
 describe("Protocol", () => {
     it("should be reversible", () => {
-        let events: Array<proto.Event> = [
-            presence, {
-                type: "message",
-                id: msgId,
-                body: "Oi papi!",
-                sender: alice,
-                room: roomId,
-                timestamp: Date.now(),
-            } as proto.Message, {
-                type: "room_action",
-                id: roomId,
-                originator: alice,
-                action: "invited",
-                subject: bob,
-                timestamp: Date.now()
-            } as proto.RoomAction, {
-                type: "error",
-                ref: "23425",
-                reason: "Because!"
-            } as proto.Error
-        ];
-
-        events.forEach((e) => expect(proto.read(proto.write(e))).toEqual(e));
+        events.concat(brokenEvents).forEach((e) => expect(proto.read(proto.write(e))).toEqual(e));
     });
 
     it("backend fixers should be reversible", () => {
-        let events: Array<proto.Event> = [
-            presence, {
-                type: "call_invitation",
-                call: {
-                    id: callId,
-                    users: [],
-                    direct: false
-                },
-                user: alice
-            } as proto.CallInvitation, {
-                type: "room_created",
-                room: {
-                    id: roomId,
-                    name: "room",
-                    direct: false
-                }
-            } as proto.RoomInvitation
-        ];
-
-        events.forEach((e) => {
+        brokenEvents.forEach((e) => {
             let fixed = proto.fix(e);
             console.log("test:", e);
             console.log("test:", fixed);
