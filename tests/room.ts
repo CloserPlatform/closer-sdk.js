@@ -109,7 +109,7 @@ function makeRoom(direct = false) {
             });
 
             events.notify({
-                type: "typing",
+                type: "room_typing",
                 id: room.id,
                 user: chad
             } as Event);

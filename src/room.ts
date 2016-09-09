@@ -58,8 +58,8 @@ class BaseRoom implements proto.Room {
         this.events.onConcreteEvent("room_message", this.id, (msg: proto.RoomMessage) => callback(msg.message));
     }
 
-    onTyping(callback: Callback<proto.Typing>) {
-        this.events.onConcreteEvent("typing", this.id, callback);
+    onTyping(callback: Callback<proto.RoomTyping>) {
+        this.events.onConcreteEvent("room_typing", this.id, callback);
     }
 
     private wrapMessage(promise: Promise<proto.Message | Array<proto.Message>>) {

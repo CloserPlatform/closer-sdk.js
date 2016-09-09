@@ -114,6 +114,10 @@ export interface RoomMessage extends Event {
     message: Message;
 }
 
+export interface RoomTyping extends Event {
+    user?: ID;
+}
+
 export type Candidate = string;
 
 export interface RTCCandidate extends Event {
@@ -126,10 +130,6 @@ export type SDP = RTCSessionDescriptionInit;
 export interface RTCDescription extends Event {
     peer: ID;
     description: SDP;
-}
-
-export interface Typing extends Event {
-    user?: ID;
 }
 
 // WS API:
@@ -185,9 +185,9 @@ export function rtcCandidate(id: ID, peer: ID, candidate: Candidate): RTCCandida
     };
 }
 
-export function typing(id: ID): Typing {
+export function typing(id: ID): RoomTyping {
     return {
-        type: "typing",
+        type: "room_typing",
         id
     };
 }
@@ -348,6 +348,11 @@ export function fix(e: Event): Event {
             message: m
         } as RoomMessage;
 
+    case "typing":
+        let t = clone(e) as RoomTyping;
+        t.type = "room_typing";
+        return t;
+
     default:
         return e;
     }
@@ -420,6 +425,11 @@ export function unfix(e: Event): Event {
 
     case "room_message":
         return (e as RoomMessage).message;
+
+    case "room_typing":
+        let t = clone(e) as RoomTyping;
+        t.type = "typing";
+        return t;
 
     default:
         return e;
