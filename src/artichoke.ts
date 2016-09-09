@@ -55,6 +55,22 @@ export class Artichoke {
                 } as proto.Event);
                 break;
 
+            case "room_action":
+                let a = e as proto.RoomAction;
+                if (a.action === "invited" && a.subject === _this.config.sessionId) {
+                    _this.getRoom(a.id).then(function(room) {
+                        _this.events.notify({
+                            type: "room_created",
+                            room
+                        } as proto.Event);
+                        _this.events.notify(e);
+                    }).catch((error) => _this.events.notify(error));
+
+                } else {
+                    _this.events.notify(e);
+                }
+                break;
+
             case "room_created": // FIXME Rename to room_invitation.
                 _this.events.notify({
                     type: e.type,

@@ -361,6 +361,10 @@ $(document).ready(function() {
             chat.remove(room.id);
         });
 
+        var invite = makeInputField("Invite!", function(user) {
+            room.invite(user);
+        }, function() {});
+
         var call = makeButton("btn-success", "Conference!", function() {
             if(!call.hasClass("disabled")) {
                 call.addClass("disabled");
@@ -370,7 +374,7 @@ $(document).ready(function() {
 
         var buttons = makeButtonGroup().append(call);
         var panel = makePanel(users.element).addClass('controls-wrapper');
-        var controls = makeControls(room.id, [panel, buttons]).addClass('text-center').hide();
+        var controls = makeControls(room.id, [panel, invite, buttons]).addClass('text-center').hide();
 
         return {
             element: chatbox,
@@ -432,6 +436,7 @@ $(document).ready(function() {
 
             room.getHistory().then(function(msgs) {
                 msgs.forEach(function(msg) {
+                    msg.markDelivered();
                     chatbox.receive(msg);
                 });
             }).catch(function(error) {
