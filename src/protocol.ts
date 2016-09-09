@@ -98,7 +98,8 @@ export interface RoomAction extends Event {
     timestamp: Timestamp;
 }
 
-export interface RoomCreated extends Event {
+export interface RoomInvitation extends Event {
+    inviter?: ID; // FIXME Make not optional.
     room: Room;
 }
 
@@ -250,7 +251,7 @@ export function fix(e: Event): Event {
             type: c.type,
             sender: c.user,
             call: c.call
-        } as Event;
+        } as CallInvitation;
 
     case "presence":
         let p = e as Presence;
@@ -259,7 +260,15 @@ export function fix(e: Event): Event {
             user: p.sender,
             status: p.status,
             timestamp: p.timestamp,
-        } as Event;
+        } as Presence;
+
+    case "room_created":
+        let r = e as RoomInvitation;
+        return {
+            type: "room_invitation",
+            inviter: r.inviter,
+            room: r.room
+        } as RoomInvitation;
 
     default:
         return e;
@@ -274,7 +283,7 @@ export function unfix(e: Event): Event {
             type: c.type,
             user: c.sender,
             call: c.call
-        } as Event;
+        } as CallInvitation;
 
     case "presence":
         let p = e as Presence;
@@ -283,7 +292,14 @@ export function unfix(e: Event): Event {
             sender: p.user,
             status: p.status,
             timestamp: p.timestamp,
-        } as Event;
+        } as Presence;
+
+    case "room_invitation":
+        let r = e as RoomInvitation;
+        return {
+            type: "room_created",
+            room: r.room
+        } as RoomInvitation;
 
     default:
         return e;

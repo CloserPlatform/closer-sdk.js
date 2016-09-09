@@ -57,19 +57,19 @@ export class Artichoke {
                 if (a.action === "invited" && a.subject === _this.config.sessionId) {
                     _this.getRoom(a.id).then(function(room) {
                         _this.events.notify({
-                            type: "room_created",
+                            type: "room_invitation",
+                            inviter: a.originator,
                             room
                         } as proto.Event);
                         _this.events.notify(e);
                     }).catch((error) => _this.events.notify(error));
-
                 } else {
                     _this.events.notify(e);
                 }
                 break;
 
-            case "room_created": // FIXME Rename to room_invitation.
-                let r = e as proto.RoomCreated;
+            case "room_invitation":
+                let r = e as proto.RoomInvitation;
                 r.room = createRoom(r.room, _this.log, _this.events, _this.api);
                 _this.events.notify(r);
                 break;
@@ -115,8 +115,8 @@ export class Artichoke {
     }
 
     // Chat room API:
-    onRoom(callback: Callback<proto.RoomCreated>) {
-        this.events.onEvent("room_created", callback);
+    onRoom(callback: Callback<proto.RoomInvitation>) {
+        this.events.onEvent("room_invitation", callback);
     }
 
     createRoom(name: string): Promise<Room> {

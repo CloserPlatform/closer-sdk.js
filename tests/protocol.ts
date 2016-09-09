@@ -44,7 +44,14 @@ describe("Protocol", () => {
                     direct: false
                 },
                 user: "321"
-            } as proto.CallInvitation
+            } as proto.CallInvitation, {
+                type: "room_created",
+                room: {
+                    id: "123",
+                    name: "room",
+                    direct: false
+                }
+            } as proto.RoomInvitation
         ];
 
         events.forEach((e) => {
