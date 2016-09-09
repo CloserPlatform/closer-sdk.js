@@ -1,7 +1,7 @@
 import { API } from "../src/api";
 import { EventHandler } from "../src/events";
 import { config, log } from "./fixtures";
-import { Event, mark, Message, Room as ProtoRoom } from "../src/protocol";
+import { Event, mark, Message, Room as ProtoRoom, typing } from "../src/protocol";
 import { createRoom, Room } from "../src/room";
 
 const roomId = "123";
@@ -108,11 +108,7 @@ function makeRoom(direct = false) {
                 done();
             });
 
-            events.notify({
-                type: "room_typing",
-                id: room.id,
-                user: chad
-            } as Event);
+            events.notify(typing(room.id, chad));
         });
 
         it("should run a callback on incoming message", (done) => {

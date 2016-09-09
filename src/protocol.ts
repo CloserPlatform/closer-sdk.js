@@ -85,14 +85,14 @@ export interface Presence extends Event {
     timestamp: Timestamp;
 }
 
-export interface RoomInvitation extends Event {
-    inviter?: ID; // FIXME Shouldn't be optional.
-    room: Room;
-}
-
 interface RoomAction extends Event {
     timestamp: Timestamp;
     user: ID;
+}
+
+export interface RoomInvitation extends Event {
+    inviter?: ID; // FIXME Shouldn't be optional.
+    room: Room;
 }
 
 export interface RoomInvited extends RoomAction {
@@ -185,10 +185,11 @@ export function rtcCandidate(id: ID, peer: ID, candidate: Candidate): RTCCandida
     };
 }
 
-export function typing(id: ID): RoomTyping {
+export function typing(id: ID, user?: ID): RoomTyping {
     return {
         type: "room_typing",
-        id
+        id,
+        user
     };
 }
 
@@ -300,7 +301,6 @@ function fixRoomAction(a: LegacyRoomAction): RoomAction {
 }
 
 export function fix(e: Event): Event {
-    console.log("fix:", e);
     switch (e.type) {
     case "call_invitation":
         let c = clone(e) as CallInvitation;

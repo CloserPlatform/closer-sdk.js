@@ -70,8 +70,6 @@ describe("Protocol", () => {
     it("backend fixers should be reversible", () => {
         brokenEvents.forEach((e) => {
             let fixed = proto.fix(e);
-            console.log("test:", e);
-            console.log("test:", fixed);
             expect(fixed).not.toEqual(e);
             expect(proto.unfix(fixed)).toEqual(e);
         });
