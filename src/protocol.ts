@@ -330,11 +330,6 @@ export function fix(e: Event): Event {
             message: m
         } as RoomMessage;
 
-    case "typing":
-        let t = clone(e) as RoomTyping;
-        t.type = "room_typing";
-        return t;
-
     default:
         return e;
     }
@@ -393,11 +388,6 @@ export function unfix(e: Event): Event {
 
     case "room_message":
         return (e as RoomMessage).message;
-
-    case "room_typing":
-        let t = clone(e) as RoomTyping;
-        t.type = "typing";
-        return t;
 
     default:
         return e;

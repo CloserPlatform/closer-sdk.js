@@ -27,12 +27,13 @@ const brokenEvents: Array<proto.Event> = [{
     type: "call_joined",
     id: callId,
     user: alice
-} as proto.CallJoined, {
-    type: "typing",
-    user: alice
-} as proto.RoomTyping];
+} as proto.CallJoined];
 
 const events: Array<proto.Event> = [{
+    type: "room_typing",
+    id: roomId,
+    user: alice
+} as proto.RoomTyping, {
     type: "presence",
     user: alice,
     status: "away",
