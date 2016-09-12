@@ -25,7 +25,6 @@ export class API {
 
     private url: string;
     private callPath = "calls";
-    private chatPath = "chat";
     private roomPath = "rooms";
 
     private wsUrl: string;
@@ -128,7 +127,7 @@ export class API {
     }
 
     getRoomHistory(roomId: proto.ID): Promise<Array<proto.Message>> {
-        return this.get<Array<proto.Message>>([this.url, this.chatPath, roomId]);
+        return this.get<Array<proto.Message>>([this.url, this.roomPath, roomId, "history"]);
     }
 
     joinRoom(roomId: proto.ID): Promise<void> {
