@@ -30,7 +30,7 @@ export interface CallInvitation extends Event {
 
 interface CallAction extends Event {
     user: ID;
-    timestamp?: Timestamp; // FIXME Shouldn't be optional.
+    timestamp: Timestamp;
 }
 
 export interface CallInvited extends CallAction {
@@ -259,10 +259,6 @@ export interface LegacyRoomAction extends Event {
     timestamp: Timestamp;
 }
 
-function clone(event: Event): Event {
-    return read(write(event));
-}
-
 function fixRoomAction(a: LegacyRoomAction): RoomAction {
     switch (a.action) {
     case "invited":
@@ -298,21 +294,6 @@ function fixRoomAction(a: LegacyRoomAction): RoomAction {
 
 export function fix(e: Event): Event {
     switch (e.type) {
-    case "call_joined":
-        let cj = clone(e) as CallJoined;
-        cj.timestamp = Date.now();
-        return cj;
-
-    case "call_left":
-        let cl = clone(e) as CallLeft;
-        cl.timestamp = Date.now();
-        return cl;
-
-    case "call_invited":
-        let ci = clone(e) as CallInvited;
-        ci.timestamp = Date.now();
-        return ci;
-
     case "room_action":
         return fixRoomAction(e as LegacyRoomAction);
 
@@ -347,21 +328,6 @@ function roomAction(a: RoomAction, originator: ID, action: Action, subject?: ID)
 
 export function unfix(e: Event): Event {
     switch (e.type) {
-    case "call_invited":
-        let ci = e as CallInvited;
-        delete ci.timestamp;
-        return ci;
-
-    case "call_joined":
-        let cj = e as CallJoined;
-        delete cj.timestamp;
-        return cj;
-
-    case "call_left":
-        let cl = e as CallLeft;
-        delete cl.timestamp;
-        return cl;
-
     case "room_invited":
         let ri = e as RoomInvited;
         return roomAction(ri, ri.inviter, "invited", ri.user);

@@ -6,23 +6,24 @@ const msgId = "345";
 const alice = "321";
 const bob = "987";
 
-const brokenEvents: Array<proto.Event> = [{
+const events: Array<proto.Event> = [{
     type: "call_invited",
     id: callId,
     user: alice,
-    inviter: bob
+    inviter: bob,
+    timestamp: Date.now()
 } as proto.CallInvited, {
     type: "call_left",
     id: callId,
     user: alice,
-    reason: "no reason"
+    reason: "no reason",
+    timestamp: Date.now()
 } as proto.CallLeft, {
     type: "call_joined",
     id: callId,
-    user: alice
-} as proto.CallJoined];
-
-const events: Array<proto.Event> = [{
+    user: alice,
+    timestamp: Date.now()
+} as proto.CallJoined, {
     type: "room_invitation",
     inviter: bob,
     room: {
@@ -58,15 +59,7 @@ const events: Array<proto.Event> = [{
 
 describe("Protocol", () => {
     it("should be reversible", () => {
-        events.concat(brokenEvents).forEach((e) => expect(proto.read(proto.write(e))).toEqual(e));
-    });
-
-    it("backend fixers should be reversible", () => {
-        brokenEvents.forEach((e) => {
-            let fixed = proto.fix(e);
-            expect(fixed).not.toEqual(e);
-            expect(proto.unfix(fixed)).toEqual(e);
-        });
+        events.forEach((e) => expect(proto.read(proto.write(e))).toEqual(e));
     });
 
     it("backend fixers should correctly handle LegacyRoomActions", () => {
