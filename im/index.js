@@ -295,7 +295,7 @@ $(document).ready(function() {
         });
 
         room.getUsers().then(function(list) {
-            list.users.filter(function(u) {
+            list.filter(function(u) {
                 return u != sessionId; // FIXME Don't use sessionId.
             }).forEach(function(u) {
                 users.add(u);
