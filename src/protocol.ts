@@ -250,90 +250,13 @@ export function write(event: Event): string {
     return JSON.stringify(event);
 }
 
-// Backend fixer-uppers: // FIXME Adjust format on the backend.
-export type Action = "joined" | "left" | "invited";
-
-export interface LegacyRoomAction extends Event {
-    originator: ID;
-    action: Action;
-    subject?: ID;
-    timestamp: Timestamp;
-}
-
-function fixRoomAction(a: LegacyRoomAction): RoomAction {
-    switch (a.action) {
-    case "invited":
-        return {
-            type: "room_invited",
-            id: a.id,
-            inviter: a.originator,
-            user: a.subject,
-            timestamp: a.timestamp
-        } as RoomInvited;
-
-    case "joined":
-        return {
-            type: "room_joined",
-            id: a.id,
-            user: a.originator,
-            timestamp: a.timestamp
-        } as RoomJoined;
-
-    case "left":
-        return {
-            type: "room_left",
-            id: a.id,
-            user: a.originator,
-            reason: "no reason",
-            timestamp: a.timestamp
-        } as RoomLeft;
-
-    default:
-        throw new Error("Unimplemented RoomAction type: " + a.action);
-    }
-}
-
+// Backend fixer-uppers:
 export function fix(e: Event): Event {
-    switch (e.type) {
-    case "room_action":
-        return fixRoomAction(e as LegacyRoomAction);
-
-    default:
-        return e;
-    }
-}
-
-function roomAction(a: RoomAction, originator: ID, action: Action, subject?: ID): LegacyRoomAction {
-    let result = {
-        type: "room_action",
-        id: a.id,
-        originator,
-        action,
-        timestamp: a.timestamp
-    } as LegacyRoomAction;
-
-    if (subject) {
-        result.subject = subject;
-    }
-
-    return result;
+    // NOTE Use this function to fix any backend crap.
+    return e;
 }
 
 export function unfix(e: Event): Event {
-    switch (e.type) {
-    case "room_invited":
-        let ri = e as RoomInvited;
-        return roomAction(ri, ri.inviter, "invited", ri.user);
-
-    case "room_joined":
-        let rj = e as RoomJoined;
-        return roomAction(rj, rj.user, "joined");
-
-    case "room_left":
-        let rl = e as RoomLeft;
-        return roomAction(rl, rl.user, "left");
-
-    default:
-        return e;
-    }
+    // NOTE Use this function to reverse fix(e).
+    return e;
 }

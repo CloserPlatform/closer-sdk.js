@@ -41,13 +41,6 @@ const events: Array<proto.Event> = [{
     status: "away",
     timestamp: Date.now(),
 } as proto.Presence, {
-    type: "room_action",
-    id: roomId,
-    originator: alice,
-    action: "invited",
-    subject: bob,
-    timestamp: Date.now()
-} as proto.LegacyRoomAction, {
     type: "error",
     ref: "23425",
     reason: "Because!"
@@ -65,56 +58,27 @@ const events: Array<proto.Event> = [{
         room: roomId,
         timestamp: Date.now(),
     }
-} as proto.RoomMessage];
+} as proto.RoomMessage, {
+    type: "room_joined",
+    id: roomId,
+    user: alice,
+    timestamp: Date.now()
+} as proto.RoomJoined, {
+    type: "room_invited",
+    id: roomId,
+    inviter: alice,
+    user: bob,
+    timestamp: Date.now()
+} as proto.RoomInvited, {
+    type: "room_left",
+    id: roomId,
+    user: alice,
+    reason: "nope",
+    timestamp: Date.now()
+} as proto.RoomLeft];
 
 describe("Protocol", () => {
     it("should be reversible", () => {
         events.forEach((e) => expect(proto.read(proto.write(e))).toEqual(e));
-    });
-
-    it("backend fixers should correctly handle LegacyRoomActions", () => {
-        let invited: proto.LegacyRoomAction = {
-            type: "room_action",
-            id: roomId,
-            action: "invited",
-            originator: alice,
-            subject: bob,
-            timestamp: Date.now()
-        };
-
-        let roomInvited = proto.fix(invited) as proto.RoomInvited;
-
-        expect(roomInvited.id).toBe(invited.id);
-        expect(roomInvited.inviter).toBe(invited.originator);
-        expect(roomInvited.user).toBe(invited.subject);
-        expect(proto.unfix(roomInvited)).toEqual(invited);
-
-        let joined: proto.LegacyRoomAction = {
-            type: "room_action",
-            id: roomId,
-            action: "joined",
-            originator: alice,
-            timestamp: Date.now()
-        };
-
-        let roomJoined = proto.fix(joined) as proto.RoomJoined;
-
-        expect(roomJoined.id).toBe(joined.id);
-        expect(roomJoined.user).toBe(joined.originator);
-        expect(proto.unfix(roomJoined)).toEqual(joined);
-
-        let left: proto.LegacyRoomAction = {
-            type: "room_action",
-            id: roomId,
-            action: "left",
-            originator: alice,
-            timestamp: Date.now()
-        };
-
-        let roomLeft = proto.fix(left) as proto.RoomLeft;
-
-        expect(roomLeft.id).toBe(left.id);
-        expect(roomLeft.user).toBe(left.originator);
-        expect(proto.unfix(roomLeft)).toEqual(left);
     });
 });
