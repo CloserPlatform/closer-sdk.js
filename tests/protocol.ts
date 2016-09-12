@@ -12,14 +12,6 @@ const brokenEvents: Array<proto.Event> = [{
     status: "away",
     timestamp: Date.now(),
 } as proto.Presence, {
-    type: "call_invitation",
-    call: {
-        id: callId,
-        users: [],
-        direct: false
-    },
-    user: alice
-} as proto.CallInvitation, {
     type: "room_created",
     room: {
         id: roomId,
@@ -30,7 +22,7 @@ const brokenEvents: Array<proto.Event> = [{
     type: "call_invited",
     id: callId,
     user: alice,
-    sender: bob
+    inviter: bob
 } as proto.CallInvited, {
     type: "call_left",
     id: callId,
