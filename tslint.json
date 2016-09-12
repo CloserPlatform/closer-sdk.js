@@ -9,7 +9,7 @@
         "forin": true,
         "indent": [true, "spaces"],
         "max-line-length": [true, 120],
-        "max-file-line-count": [true, 400],
+        "max-file-line-count": [true, 500],
         "member-access": false,
         "member-ordering": false,
         "new-parens": true,

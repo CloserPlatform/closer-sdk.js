@@ -306,24 +306,26 @@ $(document).ready(function() {
 
         var text = makeTextArea("chatbox-textarea");
 
-        function receiveAction(action) {
-            var s = action.subject || "the room";
-            var line = " User " + action.originator + " " + action.action + " " + s + ".";
-            text.append(makeTextLine("", "info", action.timestamp, line));
+        function receiveAction(timestamp, line) {
+            text.append(makeTextLine("", "info", timestamp, line));
             text.trigger('scroll-to-bottom');
         }
 
-        room.onAction(function(msg) {
-            switch(msg.action) {
-            case "joined":
-                if(msg.originator != sessionId) { // FIXME Don't use sessionId.
-                    users.add(msg.originator);
-                }
-                break;
-            case "left": users.remove(msg.originator); break;
+        room.onJoined(function(msg) {
+            if(msg.user != sessionId) { // FIXME Don't use sessionId.
+                users.add(msg.user);
             }
-            receiveAction(msg);
+            receiveAction(msg.timestamp, " User " + msg.user + " joined the room.");
         });
+
+        room.onLeft(function(msg) {
+            users.remove(msg.user);
+            receiveAction(msg.timestamp, " User " + msg.user + " left the room, reason: " + msg.reason + ".");
+        });
+
+        room.onInvited(function(msg) {
+            receiveAction(msg.timestamp, " User " + msg.inviter + " invited user " + msg.user + " to join the room.");
+        })
 
         var receive = makeReceiver(room, text);
         room.onMessage(function(msg) {
@@ -554,7 +556,7 @@ $(document).ready(function() {
             input = makeDiv();
         } else {
             call.onInvited(function(m) {
-                console.log(m.sender + " invited " + m.user + " to join the call: ", m);
+                console.log(m.inviter + " invited " + m.user + " to join the call: ", m);
             });
 
             input = makeInputField("Invite!", function(user) {
@@ -711,17 +713,21 @@ $(document).ready(function() {
                     });
                 });
 
-                session.chat.onRoom(function (msg) {
-                    addRoom(msg.room, session);
+                session.chat.onRoom(function (m) {
+                    console.log("Received room invitation: ", m);
+                    var r = addRoom(m.room, session);
+                    alert(m.inviter + " forcefully added you to room " + m.room.name,
+                          "You can't do much about it until backend is patched.");
+                    r.switchTo();
                 });
 
                 session.chat.onCall(function(m) {
                     console.log("Received call offer: ", m);
                     var line = "";
                     if(m.call.direct) {
-                        line = m.sender + " is calling, answer?";
+                        line = m.inviter + " is calling, answer?";
                     } else {
-                        line = m.sender + " invites you to join a conference call with " + m.call.users.toString();
+                        line = m.inviter + " invites you to join a conference call with " + m.call.users.toString();
                     }
                     if(confirm(line)) {
                         createStream(function(stream) {

@@ -1,7 +1,7 @@
 import { API } from "../src/api";
 import { EventHandler } from "../src/events";
 import { config, log } from "./fixtures";
-import { Event, Message, Room as ProtoRoom } from "../src/protocol";
+import { Event, mark, Message, Room as ProtoRoom, typing } from "../src/protocol";
 import { createRoom, Room } from "../src/room";
 
 const roomId = "123";
@@ -108,11 +108,7 @@ function makeRoom(direct = false) {
                 done();
             });
 
-            events.notify({
-                type: "typing",
-                id: room.id,
-                user: chad
-            } as Event);
+            events.notify(typing(room.id, chad));
         });
 
         it("should run a callback on incoming message", (done) => {
@@ -124,7 +120,25 @@ function makeRoom(direct = false) {
             let m = msg(msg1);
             m.room = room.id;
             m.sender = chad;
-            events.notify(m as Event);
+            events.notify({
+                type: "room_message",
+                id: room.id,
+                message: m
+            } as Event);
+        });
+
+        it("should run a callback on incoming mark", (done) => {
+            let t = Date.now();
+
+            room.onMark((msg) => {
+                expect(msg.timestamp).toBe(t);
+                room.getMark().then((mark) => {
+                    expect(mark).toBe(t);
+                    done();
+                });
+            });
+
+            events.notify(mark(room.id, t));
         });
 
         // FIXME These should be moved to integration tests:
@@ -168,17 +182,48 @@ describe("Room", () => {
         room = createRoom(makeRoom(), log, events, api) as Room;
     });
 
-    it("should run callback on room actions", (done) => {
-        room.onAction((msg) => {
-            expect(msg.originator).toBe(chad);
+    it("should run callback on room joined", (done) => {
+        room.onJoined((msg) => {
+            expect(msg.user).toBe(alice);
             done();
         });
 
         events.notify({
-            type: "room_action",
-            originator: chad,
+            type: "room_joined",
             id: room.id,
-            action: "left",
+            user: alice,
+            timestamp: Date.now()
+        } as Event);
+    });
+
+    it("should run callback on room left", (done) => {
+        room.onLeft((msg) => {
+            expect(msg.user).toBe(alice);
+            expect(msg.reason).toBe("reason");
+            done();
+        });
+
+        events.notify({
+            type: "room_left",
+            id: room.id,
+            user: alice,
+            reason: "reason",
+            timestamp: Date.now()
+        } as Event);
+    });
+
+    it("should run callback on room invite", (done) => {
+        room.onInvited((msg) => {
+            expect(msg.user).toBe(bob);
+            expect(msg.inviter).toBe(alice);
+            done();
+        });
+
+        events.notify({
+            type: "room_invited",
+            id: room.id,
+            inviter: alice,
+            user: bob,
             timestamp: Date.now()
         } as Event);
     });

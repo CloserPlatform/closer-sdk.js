@@ -44,52 +44,39 @@ export class Artichoke {
 
         let _this = this;
         this.api.onEvent(function(e: proto.Event) {
-            // FIXME Adjust format on the backend.
             switch (e.type) {
             case "call_invitation":
                 let c = e as proto.CallInvitation;
-                _this.events.notify({
-                    type: c.type,
-                    sender: c.user,
-                    call: createCall(c.call, _this.config.rtc, _this.log, _this.events, _this.api)
-                } as proto.Event);
+                c.call = createCall(c.call, _this.config.rtc, _this.log, _this.events, _this.api);
+                _this.events.notify(c);
                 break;
 
-            case "room_action":
-                let a = e as proto.RoomAction;
-                if (a.action === "invited" && a.subject === _this.config.sessionId) {
-                    _this.getRoom(a.id).then(function(room) {
+            case "room_invited":
+                let r = e as proto.RoomInvited;
+                if (r.user === _this.config.sessionId) {
+                    _this.getRoom(r.id).then(function(room) {
                         _this.events.notify({
-                            type: "room_created",
+                            type: "room_invitation",
+                            inviter: r.inviter,
                             room
-                        } as proto.Event);
+                        } as proto.RoomInvitation);
                         _this.events.notify(e);
                     }).catch((error) => _this.events.notify(error));
-
                 } else {
                     _this.events.notify(e);
                 }
                 break;
 
-            case "room_created": // FIXME Rename to room_invitation.
-                _this.events.notify({
-                    type: e.type,
-                    room: createRoom((e as proto.RoomCreated).room, _this.log, _this.events, _this.api)
-                } as proto.Event);
+            case "room_invitation":
+                let i = e as proto.RoomInvitation;
+                i.room = createRoom(i.room, _this.log, _this.events, _this.api);
+                _this.events.notify(i);
                 break;
 
-            case "message":
-                _this.events.notify(createMessage(e as proto.Message, _this.log, _this.events, _this.api));
-                break;
-
-            case "presence":
-                let p = e as proto.Presence;
-                _this.events.notify({
-                    type: p.type,
-                    user: p.sender,
-                    status: p.status,
-                    timestamp: p.timestamp
-                } as proto.Event);
+            case "room_message":
+                let m = e as proto.RoomMessage;
+                m.message = createMessage(m.message, _this.log, _this.events, _this.api);
+                _this.events.notify(m);
                 break;
 
             default:
@@ -129,8 +116,8 @@ export class Artichoke {
     }
 
     // Chat room API:
-    onRoom(callback: Callback<proto.RoomCreated>) {
-        this.events.onEvent("room_created", callback);
+    onRoom(callback: Callback<proto.RoomInvitation>) {
+        this.events.onEvent("room_invitation", callback);
     }
 
     createRoom(name: string): Promise<Room> {

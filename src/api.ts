@@ -51,7 +51,8 @@ export class API {
 
     onEvent(callback: Callback<proto.Event>) {
         let _this = this;
-        this.socket.onEvent(function(e: proto.Event) {
+        this.socket.onEvent(function(event: proto.Event) {
+            let e = proto.fix(event);
             if (e.type === "error") {
                 _this.reject(e.ref, e as proto.Error);
             } else if (e.type === "msg_received") {
@@ -65,11 +66,11 @@ export class API {
 
     // Call API:
     sendDescription(callId: proto.ID, sessionId: proto.ID, description: proto.SDP) {
-        this.socket.send(proto.rtcDescription(callId, sessionId, description));
+        this.send(proto.rtcDescription(callId, sessionId, description));
     }
 
     sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: proto.Candidate) {
-        this.socket.send(proto.rtcCandidate(callId, sessionId, candidate));
+        this.send(proto.rtcCandidate(callId, sessionId, candidate));
     }
 
     createCall(sessionIds: Array<proto.ID>): Promise<proto.Call> {
@@ -152,26 +153,30 @@ export class API {
                 resolve, // FIXME This should createMessage().
                 reject
             };
-            _this.socket.send(proto.messageRequest(roomId, body, ref));
+            _this.send(proto.messageRequest(roomId, body, ref));
         });
     }
 
     sendTyping(roomId: proto.ID) {
-        this.socket.send(proto.typing(roomId));
+        this.send(proto.typing(roomId));
     }
 
     setMark(roomId: proto.ID, timestamp: proto.Timestamp) {
-        this.socket.send(proto.mark(roomId, timestamp));
+        this.send(proto.mark(roomId, timestamp));
     }
 
     // Message API:
     setDelivered(messageId: proto.ID, timestamp: proto.Timestamp) {
-        this.socket.send(proto.messageDelivered(messageId, timestamp));
+        this.send(proto.messageDelivered(messageId, timestamp));
     }
 
     // Presence API:
     setStatus(status: proto.Status, timestamp: proto.Timestamp) {
-        this.socket.send(proto.presence(this.sessionId, status, timestamp));
+        this.send(proto.presence(this.sessionId, status, timestamp));
+    }
+
+    private send(event: proto.Event) {
+        this.socket.send(proto.unfix(event));
     }
 
     private responseCallback<Result>(xhttp: XMLHttpRequest, resolve: PromiseResolve<Result>,
