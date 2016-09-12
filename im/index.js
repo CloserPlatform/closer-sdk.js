@@ -715,10 +715,17 @@ $(document).ready(function() {
 
                 session.chat.onRoom(function (m) {
                     console.log("Received room invitation: ", m);
-                    var r = addRoom(m.room, session);
-                    alert(m.inviter + " forcefully added you to room " + m.room.name,
-                          "You can't do much about it until backend is patched.");
-                    r.switchTo();
+                    if(!m.room.direct) {
+                        if(confirm(m.inviter + " invited you to join room " + m.room.name)) {
+                            console.log("Joining room " + m.room.name);
+                            m.room.join();
+                            addRoom(m.room, session).switchTo();
+                        } else {
+                            console.log("Rejecting invitation...");
+                        }
+                    } else {
+                        addRoom(m.room, session);
+                    }
                 });
 
                 session.chat.onCall(function(m) {

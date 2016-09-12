@@ -7,13 +7,6 @@ const alice = "321";
 const bob = "987";
 
 const brokenEvents: Array<proto.Event> = [{
-    type: "room_created",
-    room: {
-        id: roomId,
-        name: "room",
-        direct: false
-    }
-} as proto.RoomInvitation, {
     type: "call_invited",
     id: callId,
     user: alice,
@@ -30,6 +23,14 @@ const brokenEvents: Array<proto.Event> = [{
 } as proto.CallJoined];
 
 const events: Array<proto.Event> = [{
+    type: "room_invitation",
+    inviter: bob,
+    room: {
+        id: roomId,
+        name: "room",
+        direct: false
+    }
+} as proto.RoomInvitation, {
     type: "room_typing",
     id: roomId,
     user: alice

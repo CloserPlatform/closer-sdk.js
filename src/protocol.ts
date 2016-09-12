@@ -88,7 +88,7 @@ interface RoomAction extends Event {
 }
 
 export interface RoomInvitation extends Event {
-    inviter?: ID; // FIXME Shouldn't be optional.
+    inviter: ID;
     room: Room;
 }
 
@@ -313,12 +313,6 @@ export function fix(e: Event): Event {
         ci.timestamp = Date.now();
         return ci;
 
-    case "room_created":
-        let r = clone(e) as RoomInvitation;
-        r.type = "room_invitation";
-        r.inviter = "unknown";
-        return r;
-
     case "room_action":
         return fixRoomAction(e as LegacyRoomAction);
 
@@ -367,12 +361,6 @@ export function unfix(e: Event): Event {
         let cl = e as CallLeft;
         delete cl.timestamp;
         return cl;
-
-    case "room_invitation":
-        let r = clone(e) as RoomInvitation;
-        delete r.inviter;
-        r.type = "room_created";
-        return r;
 
     case "room_invited":
         let ri = e as RoomInvited;
