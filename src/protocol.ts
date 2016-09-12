@@ -103,7 +103,6 @@ export interface RoomLeft extends RoomAction {
 }
 
 export interface RoomMark extends Event {
-    room?: ID; // FIXME Remove.
     timestamp: Timestamp;
 }
 
@@ -336,13 +335,6 @@ export function fix(e: Event): Event {
         t.type = "room_typing";
         return t;
 
-    case "mark":
-        let mark = clone(e) as RoomMark;
-        mark.type = "room_mark";
-        mark.id = mark.room;
-        delete mark.room;
-        return mark;
-
     default:
         return e;
     }
@@ -398,13 +390,6 @@ export function unfix(e: Event): Event {
     case "room_left":
         let rl = e as RoomLeft;
         return roomAction(rl, rl.user, "left");
-
-    case "room_mark":
-        let mark = clone(e) as RoomMark;
-        mark.type = "mark";
-        mark.room = mark.id;
-        delete mark.id;
-        return mark;
 
     case "room_message":
         return (e as RoomMessage).message;

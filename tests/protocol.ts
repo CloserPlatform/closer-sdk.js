@@ -30,11 +30,7 @@ const brokenEvents: Array<proto.Event> = [{
 } as proto.CallJoined, {
     type: "typing",
     user: alice
-} as proto.RoomTyping, {
-    type: "mark",
-    room: roomId,
-    timestamp: Date.now()
-} as proto.RoomMark];
+} as proto.RoomTyping];
 
 const events: Array<proto.Event> = [{
     type: "presence",
@@ -52,7 +48,11 @@ const events: Array<proto.Event> = [{
     type: "error",
     ref: "23425",
     reason: "Because!"
-} as proto.Error];
+} as proto.Error, {
+    type: "room_mark",
+    id: roomId,
+    timestamp: Date.now()
+} as proto.RoomMark];
 
 describe("Protocol", () => {
     it("should be reversible", () => {
