@@ -198,7 +198,7 @@ export interface CreateCall {
 export interface CreateDirectCall extends CreateDirectEntity {};
 
 export interface CreateDirectEntity {
-    peer: ID;
+    user: ID;
 }
 
 export interface CreateDirectRoom extends CreateDirectEntity {};
@@ -211,15 +211,19 @@ export interface LeaveReason {
     reason: string;
 }
 
+export interface Invite {
+    user: ID;
+}
+
 export function createCall(users: Array<ID>): CreateCall {
     return {
         users
     };
 }
 
-export function createDirectCall(peer: ID): CreateDirectRoom {
+export function createDirectCall(user: ID): CreateDirectRoom {
     return {
-        peer
+        user
     };
 }
 
@@ -235,9 +239,15 @@ export function createRoom(name: string): CreateRoom {
     };
 }
 
-export function createDirectRoom(peer: ID): CreateDirectRoom {
+export function createDirectRoom(user: ID): CreateDirectRoom {
     return {
-        peer
+        user
+    };
+}
+
+export function invite(user): Invite {
+    return {
+        user
     };
 }
 

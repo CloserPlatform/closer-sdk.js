@@ -139,7 +139,7 @@ export class API {
     }
 
     inviteToRoom(roomId: proto.ID, sessionId: proto.ID): Promise<void> {
-        return this.post<string, void>([this.url, this.roomPath, roomId, "invite", sessionId], "");
+        return this.post<proto.Invite, void>([this.url, this.roomPath, roomId, "invite"], proto.invite(sessionId));
     }
 
     sendMessage(roomId: proto.ID, body: string): Promise<proto.Message> {
