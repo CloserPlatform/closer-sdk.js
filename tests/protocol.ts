@@ -7,11 +7,6 @@ const alice = "321";
 const bob = "987";
 
 const brokenEvents: Array<proto.Event> = [{
-    type: "presence",
-    sender: alice,
-    status: "away",
-    timestamp: Date.now(),
-} as proto.Presence, {
     type: "room_created",
     room: {
         id: roomId,
@@ -42,6 +37,11 @@ const brokenEvents: Array<proto.Event> = [{
 } as proto.RoomMark];
 
 const events: Array<proto.Event> = [{
+    type: "presence",
+    user: alice,
+    status: "away",
+    timestamp: Date.now(),
+} as proto.Presence, {
     type: "room_action",
     id: roomId,
     originator: alice,

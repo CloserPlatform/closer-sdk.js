@@ -77,8 +77,7 @@ export interface MessageRequest extends Event {
 export type Status = "away" | "available" | "unavailable";
 
 export interface Presence extends Event {
-    sender?: ID; // FIXME Remove.
-    user?: ID;
+    user: ID;
     status: Status;
     timestamp: Timestamp;
 }
@@ -159,7 +158,7 @@ export function mark(id: ID, timestamp: Timestamp): RoomMark {
 export function presence(user: ID, status: Status, timestamp: Timestamp): Presence {
     return {
         type: "presence",
-        sender: user,
+        user,
         status,
         timestamp
     };
@@ -315,12 +314,6 @@ export function fix(e: Event): Event {
         ci.timestamp = Date.now();
         return ci;
 
-    case "presence":
-        let p = clone(e) as Presence;
-        p.user = p.sender;
-        delete p.sender;
-        return p;
-
     case "room_created":
         let r = clone(e) as RoomInvitation;
         r.type = "room_invitation";
@@ -387,12 +380,6 @@ export function unfix(e: Event): Event {
         let cl = e as CallLeft;
         delete cl.timestamp;
         return cl;
-
-    case "presence":
-        let p = clone(e) as Presence;
-        p.sender = p.user;
-        delete p.user;
-        return p;
 
     case "room_invitation":
         let r = clone(e) as RoomInvitation;
