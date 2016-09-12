@@ -18,7 +18,6 @@ class APIMock extends API {
 
 function makeMsg(delivered?: number): Message {
     return {
-        type: "message",
         id: msg1,
         body: "Hi!",
         sender: bob,

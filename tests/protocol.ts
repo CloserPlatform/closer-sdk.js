@@ -55,7 +55,17 @@ const events: Array<proto.Event> = [{
     type: "room_mark",
     id: roomId,
     timestamp: Date.now()
-} as proto.RoomMark];
+} as proto.RoomMark, {
+    type: "room_message",
+    id: roomId,
+    message: {
+        id: msgId,
+        body: "Oi papi!",
+        sender: alice,
+        room: roomId,
+        timestamp: Date.now(),
+    }
+} as proto.RoomMessage];
 
 describe("Protocol", () => {
     it("should be reversible", () => {
@@ -106,22 +116,5 @@ describe("Protocol", () => {
         expect(roomLeft.id).toBe(left.id);
         expect(roomLeft.user).toBe(left.originator);
         expect(proto.unfix(roomLeft)).toEqual(left);
-    });
-
-    it("backend fixers should correctly wrap Message", () => {
-        let msg: proto.Message = {
-            type: "message",
-            id: msgId,
-            body: "Oi papi!",
-            sender: alice,
-            room: roomId,
-            timestamp: Date.now(),
-        };
-
-        let roomMsg = proto.fix(msg) as proto.RoomMessage;
-
-        expect(roomMsg.message).toBe(msg);
-        expect(roomMsg.id).toBe(msg.room);
-        expect(proto.unfix(roomMsg)).toEqual(msg);
     });
 });

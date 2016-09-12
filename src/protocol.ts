@@ -11,6 +11,15 @@ export interface Call {
     direct: boolean;
 }
 
+export interface Message {
+    id: ID;
+    sender: ID;
+    room: ID;
+    body: string;
+    timestamp: Timestamp;
+    delivered?: Timestamp;
+}
+
 export interface Room {
     id: ID;
     name: string;
@@ -51,14 +60,6 @@ export interface Event {
 
 export interface Error extends Event {
     reason: string;
-}
-
-export interface Message extends Event { // FIXME This shouldn't be an event.
-    body: string;
-    sender: ID;
-    room: ID;
-    timestamp: Timestamp;
-    delivered?: Timestamp;
 }
 
 export interface MessageDelivered extends Event {
@@ -297,14 +298,6 @@ export function fix(e: Event): Event {
     case "room_action":
         return fixRoomAction(e as LegacyRoomAction);
 
-    case "message":
-        let m = e as Message;
-        return {
-            type: "room_message",
-            id: m.room,
-            message: m
-        } as RoomMessage;
-
     default:
         return e;
     }
@@ -339,9 +332,6 @@ export function unfix(e: Event): Event {
     case "room_left":
         let rl = e as RoomLeft;
         return roomAction(rl, rl.user, "left");
-
-    case "room_message":
-        return (e as RoomMessage).message;
 
     default:
         return e;

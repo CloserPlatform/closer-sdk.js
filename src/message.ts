@@ -3,10 +3,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { ID, Message as MSG, MessageDelivered, Timestamp }  from "./protocol";
 
-// FIXME A message shouldn't be an Event...
 export class Message implements MSG {
-    public type: string = "message";
-
     public id: ID;
     public body: string;
     public sender: ID;
@@ -38,7 +35,7 @@ export class Message implements MSG {
         }
     }
 
-    onDelivery(callback: Callback<MessageDelivered>) {
+    onDelivery(callback: Callback<Message>) {
         let _this = this;
         this.events.onConcreteEvent("msg_delivered", this.id, function(msg: MessageDelivered) {
             _this.delivered = msg.timestamp;

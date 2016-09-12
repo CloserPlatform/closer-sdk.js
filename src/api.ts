@@ -55,8 +55,6 @@ export class API {
             let e = proto.fix(event);
             if (e.type === "error") {
                 _this.reject(e.ref, e as proto.Error);
-            } else if (e.type === "msg_received") {
-                _this.resolve(e.ref, (e as proto.MessageReceived).message); // FIXME Don't rely on this.
             } else {
                 _this.resolve(e.ref, e);
             }
@@ -150,7 +148,7 @@ export class API {
         return new Promise(function(resolve, reject) {
             let ref = "ref" + Date.now(); // FIXME Use UUID instead.
             _this.promises[ref] = {
-                resolve, // FIXME This should createMessage().
+                resolve: (ack: proto.MessageReceived) => resolve(ack.message),
                 reject
             };
             _this.send(proto.messageRequest(roomId, body, ref));

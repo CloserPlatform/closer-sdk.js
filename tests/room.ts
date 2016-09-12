@@ -14,7 +14,6 @@ const msg3 = "4545";
 
 function msg(id: string): Message {
     return {
-        type: "message",
         id,
         body: "Hi!",
         sender: alice,
