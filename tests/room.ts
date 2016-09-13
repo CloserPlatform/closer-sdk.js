@@ -90,7 +90,7 @@ function makeRoom(direct = false) {
                 expect(hwm).toBe(0);
 
                 let t = Date.now();
-                room.mark(t);
+                room.setMark(t);
 
                 expect(api.marked).toBe(true);
 

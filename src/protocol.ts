@@ -24,11 +24,7 @@ export interface Room {
     id: ID;
     name: string;
     direct: boolean;
-}
-
-export interface RosterRoom extends Room {
     mark?: number;
-    unread?: number;
 }
 
 // JSON Events:

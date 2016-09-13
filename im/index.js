@@ -114,7 +114,7 @@ $(document).ready(function() {
                     if(!chatboxes[room.id].isActive()) {
                         chatboxes[room.id].bumpUnread();
                     } else {
-                        room.mark(msg.timestamp);
+                        room.setMark(msg.timestamp);
                     }
                 }
             }).catch(function(error) {
@@ -197,7 +197,7 @@ $(document).ready(function() {
             activate: function() {
                 chatbox.show();
                 controls.show();
-                room.mark(Date.now());
+                room.setMark(Date.now());
                 switcher.resetUnread();
                 switcher.activate();
             },
@@ -397,7 +397,7 @@ $(document).ready(function() {
             activate: function() {
                 chatbox.show();
                 controls.show();
-                room.mark(Date.now());
+                room.setMark(Date.now());
                 switcher.resetUnread();
                 switcher.activate();
             },

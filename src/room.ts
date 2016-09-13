@@ -9,17 +9,17 @@ class BaseRoom implements proto.Room {
     public id: proto.ID;
     public name: string;
     public direct: boolean;
+    public mark: proto.Timestamp;
 
-    private currMark: number;
     private log: Logger;
     protected events: EventHandler;
     protected api: API;
 
-    constructor(room: proto.RosterRoom, log: Logger, events: EventHandler, api: API) {
+    constructor(room: proto.Room, log: Logger, events: EventHandler, api: API) {
         this.id = room.id;
         this.name = room.name;
         this.direct = room.direct;
-        this.currMark = room.mark || 0;
+        this.mark = room.mark || 0;
         this.log = log;
         this.events = events;
         this.api = api;
@@ -37,17 +37,17 @@ class BaseRoom implements proto.Room {
         let _this = this;
         return new Promise(function(resolve, reject) {
             // NOTE No need to retrieve the mark if it's cached here.
-            resolve(_this.currMark);
+            resolve(_this.mark);
         });
+    }
+
+    setMark(timestamp: proto.Timestamp) {
+        this.mark = timestamp;
+        this.api.setMark(this.id, timestamp);
     }
 
     send(message: string): Promise<Message> {
         return this.wrapMessage(this.api.sendMessage(this.id, message));
-    }
-
-    mark(timestamp: proto.Timestamp) {
-        this.currMark = timestamp;
-        this.api.setMark(this.id, timestamp);
     }
 
     indicateTyping() {
@@ -57,7 +57,7 @@ class BaseRoom implements proto.Room {
     onMark(callback: Callback<proto.RoomMark>) {
         let _this = this;
         this.events.onConcreteEvent("room_mark", this.id, function(mark: proto.RoomMark) {
-            _this.currMark = mark.timestamp;
+            _this.mark = mark.timestamp;
             callback(mark);
         });
     }

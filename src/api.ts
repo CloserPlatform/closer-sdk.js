@@ -118,8 +118,8 @@ export class API {
         return this.get<Array<proto.Room>>([this.url, this.roomPath]);
     }
 
-    getRoster(): Promise<Array<proto.RosterRoom>> {
-        return this.get<Array<proto.RosterRoom>>([this.url, this.roomPath, "unread"]);
+    getRoster(): Promise<Array<proto.Room>> {
+        return this.get<Array<proto.Room>>([this.url, this.roomPath, "roster"]);
     }
 
     getRoomUsers(roomId: proto.ID): Promise<Array<proto.ID>> {
