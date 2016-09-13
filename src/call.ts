@@ -1,7 +1,7 @@
 import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { Call as ProtoCall, CallInvited, CallJoined, CallLeft, ID } from "./protocol";
+import { Call as ProtoCall, CallInvited, CallJoined, CallLeft, ID, Timestamp } from "./protocol";
 import { createRTCPool, RTCPool } from "./rtc";
 
 export interface RemoteStreamCallback {
@@ -10,6 +10,7 @@ export interface RemoteStreamCallback {
 
 class BaseCall implements ProtoCall {
     public id: ID;
+    public created: Timestamp;
     public users: Array<ID>;
     public direct: boolean;
 
@@ -24,6 +25,7 @@ class BaseCall implements ProtoCall {
 
     constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler, api: API) {
         this.id = call.id;
+        this.created = call.created;
         this.users = call.users;
         this.direct = call.direct;
 

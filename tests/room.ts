@@ -2,7 +2,7 @@ import { API } from "../src/api";
 import { EventHandler } from "../src/events";
 import { config, log } from "./fixtures";
 import { Event, mark, Message, Room as ProtoRoom, typing } from "../src/protocol";
-import { createRoom, Room } from "../src/room";
+import { createRoom, DirectRoom, Room } from "../src/room";
 
 const roomId = "123";
 const alice = "321";
@@ -71,6 +71,8 @@ function makeRoom(direct = false) {
     return {
         id: roomId,
         name: "room",
+        created: 123,
+        users: [alice],
         direct: direct
     } as ProtoRoom;
 }
@@ -150,13 +152,6 @@ function makeRoom(direct = false) {
             });
         });
 
-        it("should retrieve users", (done) => {
-            room.getUsers().then((users) => {
-                expect(users).toContain(bob);
-                done();
-            });
-        });
-
         it("should allow typing indication", () => {
             room.indicateTyping();
 
@@ -172,6 +167,23 @@ function makeRoom(direct = false) {
     });
 });
 
+describe("DirectRoom", () => {
+    let events, api, room;
+
+    beforeEach(() => {
+        events = new EventHandler(log);
+        api = new APIMock(config, log);
+        room = createRoom(makeRoom(true), log, events, api) as DirectRoom;
+    });
+
+    it("should retrieve users", (done) => {
+        room.getUsers().then((users) => {
+            expect(users).toContain(bob);
+            done();
+        });
+    });
+});
+
 describe("Room", () => {
     let events, api, room;
 
@@ -179,6 +191,41 @@ describe("Room", () => {
         events = new EventHandler(log);
         api = new APIMock(config, log);
         room = createRoom(makeRoom(), log, events, api) as Room;
+    });
+
+    it("should maintain the user list", (done) => {
+        events.onError((error) => done.fail());
+
+        room.onJoined((msg) => {
+            expect(msg.user).toBe(bob);
+
+            room.getUsers().then((users) => {
+                expect(users).toContain(bob);
+                expect(users).toContain(alice);
+
+                room.onLeft((msg) => {
+                    expect(msg.user).toBe(alice);
+
+                    room.getUsers().then((users) => {
+                        expect(users).toContain(bob);
+                        expect(users).not.toContain(alice);
+                        done();
+                    });
+                });
+
+                events.notify({
+                    type: "room_left",
+                    id: room.id,
+                    user: alice
+                } as Event);
+            });
+        });
+
+        events.notify({
+            type: "room_joined",
+            id: room.id,
+            user: bob
+        } as Event);
     });
 
     it("should run callback on room joined", (done) => {

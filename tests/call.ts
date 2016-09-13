@@ -42,6 +42,7 @@ class APIMock extends API {
 function makeCall(direct = false) {
     return {
         id: callId,
+        created: 123,
         users: [alice],
         direct: direct
     } as ProtoCall;

@@ -8,6 +8,8 @@ import { wrapPromise } from "./utils";
 class BaseRoom implements proto.Room {
     public id: proto.ID;
     public name: string;
+    public created: proto.Timestamp;
+    public users: Array<proto.ID>;
     public direct: boolean;
     public mark: proto.Timestamp;
 
@@ -18,6 +20,8 @@ class BaseRoom implements proto.Room {
     constructor(room: proto.Room, log: Logger, events: EventHandler, api: API) {
         this.id = room.id;
         this.name = room.name;
+        this.created = room.created;
+        this.users = room.users;
         this.direct = room.direct;
         this.mark = room.mark || 0;
         this.log = log;
@@ -78,6 +82,39 @@ class BaseRoom implements proto.Room {
 export class DirectRoom extends BaseRoom {}
 
 export class Room extends BaseRoom {
+    private onJoinedCallback: Callback<proto.RoomJoined>;
+    private onLeftCallback: Callback<proto.RoomLeft>;
+
+    constructor(room: proto.Room, log: Logger, events: EventHandler, api: API) {
+        super(room, log, events, api);
+
+        this.onLeftCallback = (msg) => {
+            // Do nothing.
+        };
+        this.onJoinedCallback = (msg) => {
+            // Do nothing.
+        };
+
+        let _this = this;
+        this.events.onConcreteEvent("room_joined", this.id, function(msg: proto.RoomJoined) {
+            _this.users.push(msg.user);
+            _this.onJoinedCallback(msg);
+        });
+
+        this.events.onConcreteEvent("room_left", this.id, function(msg: proto.RoomLeft) {
+            _this.users = _this.users.filter((u) => u !== msg.user);
+            _this.onLeftCallback(msg);
+        });
+    }
+
+    getUsers(): Promise<Array<proto.ID>> {
+        let _this = this;
+        return new Promise(function(resolve, reject) {
+            // NOTE No need to retrieve the list if it's cached here.
+            resolve(_this.users);
+        });
+    }
+
     join(): Promise<void> {
         return this.api.joinRoom(this.id);
     }
@@ -91,11 +128,11 @@ export class Room extends BaseRoom {
     }
 
     onJoined(callback: Callback<proto.RoomJoined>) {
-        this.events.onConcreteEvent("room_joined", this.id, callback);
+        this.onJoinedCallback = callback;
     }
 
     onLeft(callback: Callback<proto.RoomLeft>) {
-        this.events.onConcreteEvent("room_left", this.id, callback);
+        this.onLeftCallback = callback;
     }
 
     onInvited(callback: Callback<proto.RoomInvited>) {

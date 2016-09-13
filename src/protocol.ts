@@ -7,6 +7,7 @@ export type Timestamp = number;
 // Datatypes:
 export interface Call {
     id: ID;
+    created: Timestamp;
     users: Array<ID>;
     direct: boolean;
 }
@@ -23,6 +24,8 @@ export interface Message {
 export interface Room {
     id: ID;
     name: string;
+    created: Timestamp;
+    users: Array<ID>;
     direct: boolean;
     mark?: number;
 }
