@@ -25,7 +25,6 @@ export class API {
 
     private url: string;
     private callPath = "calls";
-    private chatPath = "chat";
     private roomPath = "rooms";
 
     private wsUrl: string;
@@ -55,8 +54,6 @@ export class API {
             let e = proto.fix(event);
             if (e.type === "error") {
                 _this.reject(e.ref, e as proto.Error);
-            } else if (e.type === "msg_received") {
-                _this.resolve(e.ref, (e as proto.MessageReceived).message); // FIXME Don't rely on this.
             } else {
                 _this.resolve(e.ref, e);
             }
@@ -121,8 +118,8 @@ export class API {
         return this.get<Array<proto.Room>>([this.url, this.roomPath]);
     }
 
-    getRoster(): Promise<Array<proto.RosterRoom>> {
-        return this.get<Array<proto.RosterRoom>>([this.url, this.roomPath, "unread"]);
+    getRoster(): Promise<Array<proto.Room>> {
+        return this.get<Array<proto.Room>>([this.url, this.roomPath, "roster"]);
     }
 
     getRoomUsers(roomId: proto.ID): Promise<Array<proto.ID>> {
@@ -130,7 +127,7 @@ export class API {
     }
 
     getRoomHistory(roomId: proto.ID): Promise<Array<proto.Message>> {
-        return this.get<Array<proto.Message>>([this.url, this.chatPath, roomId]);
+        return this.get<Array<proto.Message>>([this.url, this.roomPath, roomId, "history"]);
     }
 
     joinRoom(roomId: proto.ID): Promise<void> {
@@ -142,7 +139,7 @@ export class API {
     }
 
     inviteToRoom(roomId: proto.ID, sessionId: proto.ID): Promise<void> {
-        return this.post<string, void>([this.url, this.roomPath, roomId, "invite", sessionId], "");
+        return this.post<proto.Invite, void>([this.url, this.roomPath, roomId, "invite"], proto.invite(sessionId));
     }
 
     sendMessage(roomId: proto.ID, body: string): Promise<proto.Message> {
@@ -150,7 +147,7 @@ export class API {
         return new Promise(function(resolve, reject) {
             let ref = "ref" + Date.now(); // FIXME Use UUID instead.
             _this.promises[ref] = {
-                resolve, // FIXME This should createMessage().
+                resolve: (ack: proto.MessageReceived) => resolve(ack.message),
                 reject
             };
             _this.send(proto.messageRequest(roomId, body, ref));

@@ -114,7 +114,7 @@ $(document).ready(function() {
                     if(!chatboxes[room.id].isActive()) {
                         chatboxes[room.id].bumpUnread();
                     } else {
-                        room.mark(msg.timestamp);
+                        room.setMark(msg.timestamp);
                     }
                 }
             }).catch(function(error) {
@@ -197,7 +197,7 @@ $(document).ready(function() {
             activate: function() {
                 chatbox.show();
                 controls.show();
-                room.mark(Date.now());
+                room.setMark(Date.now());
                 switcher.resetUnread();
                 switcher.activate();
             },
@@ -295,7 +295,7 @@ $(document).ready(function() {
         });
 
         room.getUsers().then(function(list) {
-            list.users.filter(function(u) {
+            list.filter(function(u) {
                 return u != sessionId; // FIXME Don't use sessionId.
             }).forEach(function(u) {
                 users.add(u);
@@ -397,7 +397,7 @@ $(document).ready(function() {
             activate: function() {
                 chatbox.show();
                 controls.show();
-                room.mark(Date.now());
+                room.setMark(Date.now());
                 switcher.resetUnread();
                 switcher.activate();
             },
@@ -715,10 +715,17 @@ $(document).ready(function() {
 
                 session.chat.onRoom(function (m) {
                     console.log("Received room invitation: ", m);
-                    var r = addRoom(m.room, session);
-                    alert(m.inviter + " forcefully added you to room " + m.room.name,
-                          "You can't do much about it until backend is patched.");
-                    r.switchTo();
+                    if(!m.room.direct) {
+                        if(confirm(m.inviter + " invited you to join room " + m.room.name)) {
+                            console.log("Joining room " + m.room.name);
+                            m.room.join();
+                            addRoom(m.room, session).switchTo();
+                        } else {
+                            console.log("Rejecting invitation...");
+                        }
+                    } else {
+                        addRoom(m.room, session);
+                    }
                 });
 
                 session.chat.onCall(function(m) {
