@@ -28,6 +28,14 @@ export interface Message {
     delivered?: Timestamp;
 }
 
+export interface Metadata {
+    id: ID;
+    sender: ID;
+    room: ID;
+    payload: any;
+    timestamp: Timestamp;
+}
+
 export interface Room {
     id: ID;
     name: string;
@@ -119,6 +127,12 @@ export interface RoomMark extends Event {
 
 export interface RoomMessage extends Event {
     message: Message;
+}
+
+export type Payload = any;
+
+export interface RoomMetadata extends Event {
+    metadata: Metadata;
 }
 
 export interface RoomTyping extends Event {

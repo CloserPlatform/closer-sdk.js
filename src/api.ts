@@ -198,6 +198,10 @@ export class API {
         });
     }
 
+    sendMetadata(roomId: proto.ID, payload: any): Promise<proto.Metadata> {
+        return this.post<any, proto.Metadata>([this.url, this.roomPath, roomId, "metadata"], payload);
+    }
+
     sendTyping(roomId: proto.ID) {
         this.send(proto.typing(roomId));
     }

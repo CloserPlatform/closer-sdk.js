@@ -1,7 +1,7 @@
 import { API } from "../src/api";
 import { EventHandler } from "../src/events";
 import { config, log } from "./fixtures";
-import { Event, mark, Message, Room as ProtoRoom, typing } from "../src/protocol";
+import { Event, mark, Message, Metadata, Room as ProtoRoom, typing } from "../src/protocol";
 import { createRoom, DirectRoom, Room } from "../src/room";
 
 const roomId = "123";
@@ -11,6 +11,7 @@ const chad = "987";
 const msg1 = "2323";
 const msg2 = "1313";
 const msg3 = "4545";
+const meta1 = "576";
 
 function msg(id: string): Message {
     return {
@@ -19,6 +20,16 @@ function msg(id: string): Message {
         sender: alice,
         room: roomId,
         timestamp: 123,
+    };
+}
+
+function meta(id: string, payload: any): Metadata {
+    return {
+        id,
+        room: roomId,
+        sender: alice,
+        payload,
+        timestamp: 123
     };
 }
 
@@ -60,6 +71,10 @@ class APIMock extends API {
         let m = msg(msg3);
         m.body = body;
         return Promise.resolve(m);
+    }
+
+    sendMetadata(id, payload) {
+        return Promise.resolve(meta(meta1, payload));
     }
 
     setMark(id, timestamp) {
@@ -128,6 +143,24 @@ function makeRoom(direct = false) {
             } as Event);
         });
 
+        it("should run a callback on incoming metadata", (done) => {
+            let payload = ["anything goes", 1, {
+                filter: "all"
+            }];
+
+            room.onMetadata((meta) => {
+                expect(meta.sender).toBe(alice);
+                expect(meta.payload).toBe(payload);
+                done();
+            });
+
+            events.notify({
+                type: "room_metadata",
+                id: room.id,
+                metadata: meta(meta1, payload)
+            } as Event);
+        });
+
         it("should run a callback on incoming mark", (done) => {
             let t = Date.now();
 
@@ -161,6 +194,17 @@ function makeRoom(direct = false) {
         it("should allow sending messages", (done) => {
             room.send("hello").then((msg) => {
                 expect(msg.body).toBe("hello");
+                done();
+            });
+        });
+
+        it("should allow sending metadata", (done) => {
+            let payload = {
+                img: "image",
+                src: "http://i.giphy.com/3o6ZtpxSZbQRRnwCKQ.gif"
+            };
+            room.sendMetadata(payload).then((meta) => {
+                expect(meta.payload).toBe(payload);
                 done();
             });
         });
