@@ -102,7 +102,7 @@ function makePills(className) {
     return $('<ul>').addClass('nav nav-pills ' + className);
 }
 
-function makeTextLine(id, className, timestamp, string) {
+function makeTextLine(id, className, timestamp, sender, line) {
     function time(timestamp) {
         var date = new Date(timestamp);
         var minutes = "0" + date.getMinutes();
@@ -110,12 +110,16 @@ function makeTextLine(id, className, timestamp, string) {
         return date.getHours() + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
     }
 
+    function spanify(item) {
+        return $('<span>').text(item);
+    }
+
     return $('<p>')
         .prop({
             id: id,
             class: className
         })
-        .text(time(timestamp) + string);
+        .append([time(timestamp), " ", sender, ": ", line].map(spanify));
 }
 
 function makeTextArea(className) {
@@ -269,4 +273,17 @@ function makeControls(id, contents) {
             class: 'controls'
         })
         .append(contents);
+}
+
+function makeEmbed(object) {
+    switch(object.type) {
+    case "gif":
+        return $('<img>').prop('src', object.url);
+
+    case "agent":
+        return $('<span>').text('User agent: ' + object.agent);
+
+    default:
+        return "";
+    }
 }

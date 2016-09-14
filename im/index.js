@@ -128,8 +128,7 @@ $(document).ready(function() {
             });
 
             var className = msg.delivered ? "delivered" : "";
-            var line = makeTextLine(msg.id, className, msg.timestamp, " " + getUserNickname(msg.sender) +
-                                    ": " + msg.body);
+            var line = makeTextLine(msg.id, className, msg.timestamp, getUserNickname(msg.sender), msg.body);
             text.append(line);
             text.trigger('scroll-to-bottom');
         }
@@ -147,6 +146,11 @@ $(document).ready(function() {
         room.onMessage(function(msg) {
             msg.markDelivered();
             receive(msg);
+        });
+
+        room.onMetadata(function(meta) {
+            meta.body = makeEmbed(meta.payload);
+            receive(meta);
         });
 
         var input = makeInputField("Send!", function(input) {
@@ -343,6 +347,13 @@ $(document).ready(function() {
             users.deactivate(msg.sender);
         });
 
+        function receiveMeta(meta) {
+            meta.body = makeEmbed(meta.payload);
+            receive(meta);
+        }
+
+        room.onMetadata(receiveMeta);
+
         room.onTyping(function(msg) {
             console.log(msg.user + " is typing!");
             users.activate(msg.user, 5000);
@@ -387,7 +398,25 @@ $(document).ready(function() {
             }
         });
 
-        var buttons = makeButtonGroup().append(call);
+        var gif = makeButton("btn-info", "Gif!", function() {
+            room.sendMetadata({
+                type: "gif",
+                url: randomGif()
+            }).then(receiveMeta).catch(function(error) {
+                console.log("Could not send gif!: ", error);
+            });
+        });
+
+        var brag = makeButton("btn-warning", "Brag!", function() {
+            room.sendMetadata({
+                type: "agent",
+                agent: navigator.userAgent
+            }).then(receiveMeta).catch(function(error) {
+                console.log("Could not send gif!: ", error);
+            });
+        });
+
+        var buttons = makeButtonGroup().append([call, gif, brag]);
         var panel = makePanel(users.element).addClass('controls-wrapper');
         var controls = makeControls(room.id, [panel, invite, createBot, buttons]).addClass('text-center').hide();
 
@@ -673,6 +702,13 @@ $(document).ready(function() {
                 });
             });
         }
+    }
+
+    function randomGif() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", 'http://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC', false);
+        xhttp.send();
+        return JSON.parse(xhttp.responseText).data.image_original_url;
     }
 
     function getURL(server) {
