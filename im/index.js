@@ -645,30 +645,122 @@ $(document).ready(function() {
         return new URL((server.startsWith("http") ? "" : window.location.protocol) + server);
     }
 
+
+    function jwt_sign(data, secret) {
+        // Based on code by Jonathan Petitcolas
+        // https://www.jonathan-petitcolas.com/2014/11/27/creating-json-web-token-in-javascript.html
+        var CryptoJS = require('crypto-js');
+        var header = {
+            "alg": "HS256",
+            "typ": "JWT"
+        };
+
+        function base64url(source) {
+            // Encode in classical base64
+            let encodedSource = CryptoJS.enc.Base64.stringify(source);
+
+            // Remove padding equal characters
+            encodedSource = encodedSource.replace(/=+$/, "");
+
+            // Replace characters according to base64url specifications
+            encodedSource = encodedSource.replace(/\+/g, "-");
+            encodedSource = encodedSource.replace(/\//g, "_");
+
+            return encodedSource;
+        }
+
+        var stringifiedHeader = CryptoJS.enc.Utf8.parse(JSON.stringify(header));
+        var encodedHeader = base64url(stringifiedHeader);
+
+        var stringifiedData = CryptoJS.enc.Utf8.parse(JSON.stringify(data));
+        var encodedData = base64url(stringifiedData);
+
+        var signature = encodedHeader + "." + encodedData;
+        signature = CryptoJS.HmacSHA256(signature, secret);
+        signature = base64url(signature);
+
+        return encodedHeader + "." + encodedData + "." + signature;
+    }
+
     function run(server, sessionId) {
         var url = getURL(server);
 
         console.log("Connecting to " + url + " as: " + sessionId);
 
-        RatelSDK.withSignedAuth({
-            "organizationId": "12345",
-            "sessionId": sessionId,
-            "timestamp": Date.now(),
-            "signature": "FIXME"
-        }, {
-            "rtc": {
-                "iceTransportPolicy": "relay",
-                "iceServers": [{
-                    "urls": ["stun:turn.ratel.im:5349", "turn:turn.ratel.im:5349"],
-                    "username": "test123",
-                    "credential": "test456"
-                }]
-            },
-            "protocol": url.protocol,
-            "hostname": url.hostname,
-            "port": url.port,
-            "debug": true
-        }).then(function(session) {
+
+        var contactisId = 1;
+        var users = {
+            // email: { user id, organizationID }
+            "anna.rys@itelo.pl": {userId: 1, orgId: contactisId},
+            "artur.wedzicha@itelo.pl": {userId: 2, orgId: contactisId},
+            "bartosz.szmit@ratel.io": {userId: 3, orgId: contactisId},
+            "blazej.brudny@ratel.io": {userId: 4, orgId: contactisId},
+            "daniel.slavetskiy@contactis.pl": {userId: 5, orgId: contactisId},
+            "dariusz.baczynski@itelo.pl": {userId: 6, orgId: contactisId},
+            "elzbieta.wrobel@itelo.pl": {userId: 7, orgId: contactisId},
+            "filip.franczak@itelo.pl": {userId: 8, orgId: contactisId},
+            "jakub.peksa@itelo.pl": {userId: 9, orgId: contactisId},
+            "jakub.godyn@itelo.pl": {userId: 10, orgId: contactisId},
+            "jaroslaw.plocki@contactis.pl": {userId: 11, orgId: contactisId},
+            "kajetan.rzepecki@ratel.io": {userId: 12, orgId: contactisId},
+            "krzysztof.rutka@ratel.io": {userId: 13, orgId: contactisId},
+            "maciej.sypien@itelo.pl": {userId: 14, orgId: contactisId},
+            "marcin.put@itelo.pl": {userId: 15, orgId: contactisId},
+            "mariusz.beltowski@itelo.pl": {userId: 16, orgId: contactisId},
+            "marta.szafraniec@itelo.pl": {userId: 17, orgId: contactisId},
+            "mateusz.lugowski@itelo.pl": {userId: 18, orgId: contactisId},
+            "michalina.jodlowska@itelo.pl": {userId: 19, orgId: contactisId},
+            "michal.biernacki@itelo.pl": {userId: 20, orgId: contactisId},
+            "mikolaj.sikorski@itelo.pl": {userId: 21, orgId: contactisId},
+            "pawel.budzyk@itelo.pl": {userId: 22, orgId: contactisId},
+            "pawel.kaczorowski@itelo.pl": {userId: 23, orgId: contactisId},
+            "rafal.kulawiak@ratel.io": {userId: 24, orgId: contactisId}
+        };
+
+        var secretKeys = {
+            // organization: secretKey
+            1: "contactis_secret"
+        };
+
+        var currentUser = users[sessionId];
+        var payloadData;
+        if (currentUser) {
+            payloadData = {
+                organizationId: currentUser["orgId"],
+                sessionId: currentUser["userId"],
+                timestamp: Date.now()
+            };
+        }
+        else {
+            payloadData = {
+                organizationId: 2,
+                sessionId: -1,
+                timestamp: Date.now()
+            };
+
+        }
+
+        var sessionData = {
+            payload: payloadData,
+            signature: jwt_sign(payloadData, secretKeys[payloadData.organizationId] || "defaultKey")
+        };
+
+        RatelSDK.withSignedAuth(
+            sessionData,
+            {
+                "rtc": {
+                    "iceTransportPolicy": "relay",
+                    "iceServers": [{
+                        "urls": ["stun:turn.ratel.im:5349", "turn:turn.ratel.im:5349"],
+                        "username": "test123",
+                        "credential": "test456"
+                    }]
+                },
+                "protocol": url.protocol,
+                "hostname": url.hostname,
+                "port": url.port,
+                "debug": true
+            }).then(function (session) {
             $('#demo-name').html("Ratel IM - " + sessionId);
             statusSwitch.show();
 
