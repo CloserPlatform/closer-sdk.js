@@ -36,7 +36,9 @@ function post(url: string, obj) {
 export function withSignedAuth(sessionData: SessionData, config: Config): Promise<Session> {
     console.log(sessionData);
     console.log(config);
-    let response = post("http://localhost:8080/session/verifySig", sessionData); // TODO: can't be hardcoded
+    let ratelHost = config.ratel.hostname + ":" + config.ratel.port;
+    let ratelUrl = [config.ratel.protocol, "//", ratelHost, "/session/verifySig"].join("");
+    let response = post(ratelUrl, sessionData);
     let apiKey: ApiKey;
 
     switch (response.status) {

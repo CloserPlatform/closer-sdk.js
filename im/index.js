@@ -39,7 +39,7 @@ $(document).ready(function() {
             loginBox.element.hide();
             chat.element.show();
             sessionId = $('#session-id').val();
-            run($('#server').val(), sessionId);
+            run($('#server').val(), $('#ratel-server').val(), sessionId);
         });
         return {
             element: form
@@ -682,8 +682,9 @@ $(document).ready(function() {
         return encodedHeader + "." + encodedData + "." + signature;
     }
 
-    function run(server, sessionId) {
+    function run(server, ratelServer, sessionId) {
         var url = getURL(server);
+        var ratelUrl = getURL(ratelServer);
 
         console.log("Connecting to " + url + " as: " + sessionId);
 
@@ -759,7 +760,12 @@ $(document).ready(function() {
                 "protocol": url.protocol,
                 "hostname": url.hostname,
                 "port": url.port,
-                "debug": true
+                "debug": true,
+                ratel: {
+                    "protocol": ratelUrl.protocol,
+                    "hostname": ratelUrl.hostname,
+                    "port": ratelUrl.port,
+                }
             }).then(function (session) {
             $('#demo-name').html("Ratel IM - " + sessionId);
             statusSwitch.show();

@@ -12,6 +12,12 @@ export interface Config {
 
     apiKey?: ApiKey;
     sessionId?: ID;
+
+    ratel?: {
+        protocol?: string;
+        hostname?: string;
+        port?: string;
+    };
 }
 
 const defaultConfig: Config = {
@@ -25,7 +31,13 @@ const defaultConfig: Config = {
     protocol: "https:",
     hostname: "artichoke.ratel.io",
     port: "",
-    debug: false
+    debug: false,
+
+    ratel: {
+        protocol: "https:",
+        hostname: "api.dev.ratel.io",
+        port: ""
+    }
 };
 
 function merge(a: Config, b: Config): Config {
