@@ -788,11 +788,21 @@ $(document).ready(function() {
 
                     session.chat.getRoster().then(function(rooms) {
                         console.log("Roster: ", rooms);
+
+                        var general = undefined;
                         rooms.forEach(function(room) {
-                            addRoom(room, session);
+                            var r = addRoom(room, session);
+
+                            if(room.name === "#general") {
+                                general = r;
+                            }
                         });
 
-                        newRoom("general");
+                        if(general) {
+                            general.switchTo();
+                        } else {
+                            newRoom("general");
+                        }
                     }).catch(function(error) {
                         console.log("Fetching roster failed:", error);
                     });
