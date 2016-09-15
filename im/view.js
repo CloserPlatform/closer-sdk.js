@@ -111,15 +111,16 @@ function makeTextLine(id, className, timestamp, sender, line) {
     }
 
     function spanify(item) {
-        return $('<span>').text(item);
+        return (typeof item.jquery !== "undefined") ? item : $('<span>').text(item);
     }
 
+    var ts = time(timestamp);
     return $('<p>')
         .prop({
             id: id,
             class: className
         })
-        .append([time(timestamp), " ", sender, ": ", line].map(spanify));
+        .append(sender == "" ? [ts, spanify(line)] : [ts, " ", sender, ": ", spanify(line)]);
 }
 
 function makeTextArea(className) {

@@ -319,7 +319,7 @@ $(document).ready(function() {
         var text = makeTextArea("chatbox-textarea");
 
         function receiveAction(timestamp, line) {
-            text.append(makeTextLine("", "info", timestamp, line));
+            text.append(makeTextLine("", "info", timestamp, "", line));
             text.trigger('scroll-to-bottom');
         }
 
