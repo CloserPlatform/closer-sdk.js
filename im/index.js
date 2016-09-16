@@ -34,13 +34,19 @@ $(document).ready(function() {
 
     function makeLoginBox() {
         console.log("Building the login box!");
-        var form = makeLoginForm("login-box", function(event) {
+        var form = makeLoginForm("login-box", function (event) {
             event.preventDefault();
-            loginBox.element.hide();
-            chat.element.show();
             sessionId = $('#session-id').val();
-            run($('#server').val(), $('#ratel-server').val(), sessionId);
+            run($('#server').val(), $('#ratel-server').val(), sessionId).then(
+                function () {
+                    loginBox.element.hide();
+                    chat.element.show();
+                }, function (e) {
+                    console.error("Authorization failed (" + e + ")");
+                    alert("Authorization failed");
+                });
         });
+
         return {
             element: form
         };
@@ -746,7 +752,7 @@ $(document).ready(function() {
             signature: jwt_sign(payloadData, secretKeys[payloadData.organizationId] || "defaultKey")
         };
 
-        RatelSDK.withSignedAuth(
+        return RatelSDK.withSignedAuth(
             sessionData,
             {
                 "rtc": {
@@ -849,8 +855,6 @@ $(document).ready(function() {
             });
 
             session.chat.connect();
-        }).catch(function(error) {
-            console.log("An error occured while authorizing: ", error);
         });
     }
 });
