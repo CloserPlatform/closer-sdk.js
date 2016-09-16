@@ -3,7 +3,6 @@
     "es6-shim": "registry:dt/es6-shim#0.31.2+20160602141504"
   },
   "globalDependencies": {
-    "crypto-js": "registry:dt/crypto-js#3.1.4+20160708041433",
     "jasmine": "registry:dt/jasmine#2.2.0+20160621224255",
     "webrtc/mediastream": "registry:dt/webrtc/mediastream#0.0.0+20160317120654",
     "webrtc/rtcpeerconnection": "registry:dt/webrtc/rtcpeerconnection#0.0.0+20160719235950"
