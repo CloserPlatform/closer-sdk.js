@@ -694,41 +694,6 @@ $(document).ready(function() {
 
         console.log("Connecting to " + url + " as: " + sessionId);
 
-
-        var contactisId = 1;
-        var users = {
-            // email: { user id, organizationID }
-            "anna.rys@itelo.pl": {userId: 1, orgId: contactisId},
-            "artur.wedzicha@itelo.pl": {userId: 2, orgId: contactisId},
-            "bartosz.szmit@ratel.io": {userId: 3, orgId: contactisId},
-            "blazej.brudny@ratel.io": {userId: 4, orgId: contactisId},
-            "daniel.slavetskiy@contactis.pl": {userId: 5, orgId: contactisId},
-            "dariusz.baczynski@itelo.pl": {userId: 6, orgId: contactisId},
-            "elzbieta.wrobel@itelo.pl": {userId: 7, orgId: contactisId},
-            "filip.franczak@itelo.pl": {userId: 8, orgId: contactisId},
-            "jakub.peksa@itelo.pl": {userId: 9, orgId: contactisId},
-            "jakub.godyn@itelo.pl": {userId: 10, orgId: contactisId},
-            "jaroslaw.plocki@contactis.pl": {userId: 11, orgId: contactisId},
-            "kajetan.rzepecki@ratel.io": {userId: 12, orgId: contactisId},
-            "krzysztof.rutka@ratel.io": {userId: 13, orgId: contactisId},
-            "maciej.sypien@itelo.pl": {userId: 14, orgId: contactisId},
-            "marcin.put@itelo.pl": {userId: 15, orgId: contactisId},
-            "mariusz.beltowski@itelo.pl": {userId: 16, orgId: contactisId},
-            "marta.szafraniec@itelo.pl": {userId: 17, orgId: contactisId},
-            "mateusz.lugowski@itelo.pl": {userId: 18, orgId: contactisId},
-            "michalina.jodlowska@itelo.pl": {userId: 19, orgId: contactisId},
-            "michal.biernacki@itelo.pl": {userId: 20, orgId: contactisId},
-            "mikolaj.sikorski@itelo.pl": {userId: 21, orgId: contactisId},
-            "pawel.budzyk@itelo.pl": {userId: 22, orgId: contactisId},
-            "pawel.kaczorowski@itelo.pl": {userId: 23, orgId: contactisId},
-            "rafal.kulawiak@ratel.io": {userId: 24, orgId: contactisId}
-        };
-
-        var secretKeys = {
-            // organization: secretKey
-            1: "contactis_secret"
-        };
-
         var currentUser = users[sessionId];
         var payloadData;
         if (currentUser) {
