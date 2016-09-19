@@ -34,13 +34,19 @@ $(document).ready(function() {
 
     function makeLoginBox() {
         console.log("Building the login box!");
-        var form = makeLoginForm("login-box", function(event) {
+        var form = makeLoginForm("login-box", function (event) {
             event.preventDefault();
-            loginBox.element.hide();
-            chat.element.show();
             sessionId = $('#session-id').val();
-            run($('#server').val(), sessionId);
+            run($('#server').val(), $('#ratel-server').val(), sessionId).then(
+                function () {
+                    loginBox.element.hide();
+                    chat.element.show();
+                }, function (e) {
+                    console.error("Authorization failed (" + e + ")");
+                    alert("Authorization failed");
+                });
         });
+
         return {
             element: form
         };
@@ -645,30 +651,93 @@ $(document).ready(function() {
         return new URL((server.startsWith("http") ? "" : window.location.protocol) + server);
     }
 
-    function run(server, sessionId) {
+
+    function jwt_sign(data, secret) {
+        // Based on code by Jonathan Petitcolas
+        // https://www.jonathan-petitcolas.com/2014/11/27/creating-json-web-token-in-javascript.html
+        var CryptoJS = require('crypto-js');
+        var header = {
+            "alg": "HS256",
+            "typ": "JWT"
+        };
+
+        function base64url(source) {
+            // Encode in classical base64
+            let encodedSource = CryptoJS.enc.Base64.stringify(source);
+
+            // Remove padding equal characters
+            encodedSource = encodedSource.replace(/=+$/, "");
+
+            // Replace characters according to base64url specifications
+            encodedSource = encodedSource.replace(/\+/g, "-");
+            encodedSource = encodedSource.replace(/\//g, "_");
+
+            return encodedSource;
+        }
+
+        var stringifiedHeader = CryptoJS.enc.Utf8.parse(JSON.stringify(header));
+        var encodedHeader = base64url(stringifiedHeader);
+
+        var stringifiedData = CryptoJS.enc.Utf8.parse(JSON.stringify(data));
+        var encodedData = base64url(stringifiedData);
+
+        var signature = encodedHeader + "." + encodedData;
+        signature = CryptoJS.HmacSHA256(signature, secret);
+        signature = base64url(signature);
+
+        return encodedHeader + "." + encodedData + "." + signature;
+    }
+
+    function run(server, ratelServer, sessionId) {
         var url = getURL(server);
+        var ratelUrl = getURL(ratelServer);
 
         console.log("Connecting to " + url + " as: " + sessionId);
 
-        RatelSDK.withSignedAuth({
-            "organizationId": "12345",
-            "sessionId": sessionId,
-            "timestamp": Date.now(),
-            "signature": "FIXME"
-        }, {
-            "rtc": {
-                "iceTransportPolicy": "relay",
-                "iceServers": [{
-                    "urls": ["stun:turn.ratel.im:5349", "turn:turn.ratel.im:5349"],
-                    "username": "test123",
-                    "credential": "test456"
-                }]
-            },
-            "protocol": url.protocol,
-            "hostname": url.hostname,
-            "port": url.port,
-            "debug": true
-        }).then(function(session) {
+        var currentUser = users[sessionId];
+        var payloadData;
+        if (currentUser) {
+            payloadData = {
+                organizationId: currentUser["orgId"],
+                sessionId: currentUser["userId"],
+                timestamp: Date.now()
+            };
+        }
+        else {
+            payloadData = {
+                organizationId: 2,
+                sessionId: -1,
+                timestamp: Date.now()
+            };
+
+        }
+
+        var sessionData = {
+            payload: payloadData,
+            signature: jwt_sign(payloadData, secretKeys[payloadData.organizationId] || "defaultKey")
+        };
+
+        return RatelSDK.withSignedAuth(
+            sessionData,
+            {
+                "rtc": {
+                    "iceTransportPolicy": "relay",
+                    "iceServers": [{
+                        "urls": ["stun:turn.ratel.im:5349", "turn:turn.ratel.im:5349"],
+                        "username": "test123",
+                        "credential": "test456"
+                    }]
+                },
+                "protocol": url.protocol,
+                "hostname": url.hostname,
+                "port": url.port,
+                "debug": true,
+                ratel: {
+                    "protocol": ratelUrl.protocol,
+                    "hostname": ratelUrl.hostname,
+                    "port": ratelUrl.port,
+                }
+            }).then(function (session) {
             $('#demo-name').html("Ratel IM - " + sessionId);
             statusSwitch.show();
 
@@ -751,8 +820,6 @@ $(document).ready(function() {
             });
 
             session.chat.connect();
-        }).catch(function(error) {
-            console.log("An error occured while authorizing: ", error);
         });
     }
 });
