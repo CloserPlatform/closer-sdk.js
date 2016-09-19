@@ -1,3 +1,4 @@
+import {API, PromiseReject, PromiseResolve, Thunk} from "./api";
 import {Config, load} from "./config";
 import {Timestamp} from "./protocol";
 import {Session} from "./session";
@@ -17,17 +18,6 @@ export interface SessionData {
     signature: Signature;
 }
 
-function post(url: string, obj): XMLHttpRequest {
-    let json = JSON.stringify(obj);
-    let xhttp = new XMLHttpRequest();
-
-    xhttp.open("POST", url, true);
-    xhttp.setRequestHeader("Content-Type", "application/json");
-    xhttp.send(json);
-
-    return xhttp;
-}
-
 export function withApiKey(sessionId: RatelID, apiKey: ApiKey, config: Config): Promise<Session> {
     return new Promise<Session>(function (resolve, reject) {
         config.sessionId = sessionId.toString();
@@ -39,29 +29,26 @@ export function withApiKey(sessionId: RatelID, apiKey: ApiKey, config: Config): 
 
 export function withSignedAuth(sessionData: SessionData, config: Config): Promise<Session> {
 
-    let apiKeyRequest = new Promise<Session>(function (resolve, reject) {
+    console.log(sessionData);
+    console.log(config);
 
-        console.log(sessionData);
-        console.log(config);
+    let ratelHost = config.ratel.hostname + ":" + config.ratel.port;
+    let ratelUrl = [config.ratel.protocol, "//", ratelHost, "session/verifySig"];
 
-        let ratelHost = config.ratel.hostname + ":" + config.ratel.port;
-        let ratelUrl = [config.ratel.protocol, "//", ratelHost, "/session/verifySig"].join("");
-        let request = post(ratelUrl, sessionData);
-
-        request.onload = function () {
-            let apiKey: ApiKey;
-
-            switch (request.status) {
-                case 200:
-                    apiKey = request.responseText;
-                    withApiKey(sessionData.payload.sessionId, apiKey, config).then(resolve).catch(reject);
-                    break;
-                default:
-                    reject(request.status);
+    function callBack(xhttp: XMLHttpRequest, resolve: PromiseResolve<Session>, reject: PromiseReject): Thunk {
+        return function () {
+            if (xhttp.readyState === 4) {
+                switch (xhttp.status) {
+                    case 200:
+                        let apiKey: ApiKey = xhttp.responseText;
+                        withApiKey(sessionData.payload.sessionId, apiKey, config).then(resolve).catch(reject);
+                        break;
+                    default:
+                        reject(JSON.parse(xhttp.responseText));
+                }
             }
         };
+    }
 
-    });
-
-    return apiKeyRequest;
+    return API.getApiKeyPostRequest(callBack)(ratelUrl, sessionData);
 }

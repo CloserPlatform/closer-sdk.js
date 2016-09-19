@@ -11,7 +11,7 @@ $(document).ready(function() {
 
     var loginBox = makeLoginBox();
     var chat = makeChat();
-    var sessionId = undefined; // FIXME Get rid of it.
+    var userNickname = undefined;
     var chatboxes = {};
 
     var callIndex = 1;
@@ -36,8 +36,8 @@ $(document).ready(function() {
         console.log("Building the login box!");
         var form = makeLoginForm("login-box", function (event) {
             event.preventDefault();
-            sessionId = $('#session-id').val();
-            run($('#server').val(), $('#ratel-server').val(), sessionId).then(
+            userNickname = $('#user-nickname').val();
+            run($('#server').val(), $('#ratel-server').val(), userNickname).then(
                 function () {
                     loginBox.element.hide();
                     chat.element.show();
@@ -128,7 +128,8 @@ $(document).ready(function() {
             });
 
             var className = msg.delivered ? "delivered" : "";
-            var line = makeTextLine(msg.id, className, msg.timestamp, " " + msg.sender + ": " + msg.body);
+            var line = makeTextLine(msg.id, className, msg.timestamp, " " + getUserNickname(msg.sender) +
+                ": " + msg.body);
             text.append(line);
             text.trigger('scroll-to-bottom');
         }
@@ -138,7 +139,8 @@ $(document).ready(function() {
         console.log("Building direct chatbox: ", room);
 
         // FIXME 2hacky4me
-        var peer = room.name.slice(3).split("-").filter(function(e) { return e !== sessionId; })[0]; // FIXME Don't use sessionId.
+        var peer = room.name.slice(3).split("-")
+            .filter(function(e) { return e !== getSessionId(userNickname).toString(); })[0];
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
 
@@ -160,10 +162,10 @@ $(document).ready(function() {
         }, function() {});
 
         var chatbox = makeChatbox(room.id, "chatbox", text, input).hide();
-        var switcher = makeBoxSwitcher(room.id, peer);
+        var switcher = makeBoxSwitcher(room.id, getUserNickname(peer));
 
         var avatar = makeAvatar('avatar', "http://vignette2.wikia.nocookie.net/creepypasta/images/4/4b/1287666826226.png");
-        var label = makeLabel(room.id, "", peer);
+        var label = makeLabel(room.id, "", getUserNickname(peer));
 
         var call = makeButton("btn-success", "Call!", function() {
             if(!call.hasClass("disabled")) {
@@ -239,9 +241,10 @@ $(document).ready(function() {
                     "unavailable": 'label label-default',
                     "away": 'label label-info'
                 };
-                var pill = makePill(user, makeLabel(user, colors[list[user].status], user), function() {
-                    onClick(user);
-                });
+                var pill = makePill(user, makeLabel(user, colors[list[user].status], getUserNickname(user)),
+                    function () {
+                        onClick(user);
+                    });
                 if(list[user].isTyping) {
                     pill.addClass("active");
                 }
@@ -301,7 +304,7 @@ $(document).ready(function() {
 
         room.getUsers().then(function(list) {
             list.filter(function(u) {
-                return u != sessionId; // FIXME Don't use sessionId.
+                return u != getSessionId(userNickname);
             }).forEach(function(u) {
                 users.add(u);
             });
@@ -317,20 +320,21 @@ $(document).ready(function() {
         }
 
         room.onJoined(function(msg) {
-            if(msg.user != sessionId) { // FIXME Don't use sessionId.
+            if(msg.user != getSessionId(userNickname)) {
                 users.add(msg.user);
             }
-            receiveAction(msg.timestamp, " User " + msg.user + " joined the room.");
+            receiveAction(msg.timestamp, " User " + getUserNickname(msg.user) + " joined the room.");
         });
 
         room.onLeft(function(msg) {
             users.remove(msg.user);
-            receiveAction(msg.timestamp, " User " + msg.user + " left the room, reason: " + msg.reason + ".");
+            receiveAction(msg.timestamp, " User " + getUserNickname(msg.user) + " left the room, reason: " + msg.reason + ".");
         });
 
         room.onInvited(function(msg) {
-            receiveAction(msg.timestamp, " User " + msg.inviter + " invited user " + msg.user + " to join the room.");
-        })
+            receiveAction(msg.timestamp, " User " + getUserNickname(msg.inviter) + " invited user " +
+                getUserNickname(msg.user) + " to join the room.");
+        });
 
         var receive = makeReceiver(room, text);
         room.onMessage(function(msg) {
@@ -369,7 +373,7 @@ $(document).ready(function() {
         });
 
         var invite = makeInputField("Invite!", function(user) {
-            room.invite(user);
+            room.invite(getSessionId(user).toString());
         }, function() {});
 
         var call = makeButton("btn-success", "Conference!", function() {
@@ -533,7 +537,7 @@ $(document).ready(function() {
         function renderStreams() {
             callbox.empty();
             var grid = makeSplitGrid(Object.keys(streams).map(function(user) {
-                return makeStreamBox(user, user + ":", streams[user], user === "You");
+                return makeStreamBox(user, (getUserNickname(user) || "You") + ":", streams[user], user === "You");
             }));
             callbox.append(grid);
         }
@@ -561,11 +565,11 @@ $(document).ready(function() {
             input = makeDiv();
         } else {
             call.onInvited(function(m) {
-                console.log(m.inviter + " invited " + m.user + " to join the call: ", m);
+                console.log(getUserNickname(m.inviter) + " invited " + m.user + " to join the call: ", m);
             });
 
-            input = makeInputField("Invite!", function(user) {
-                call.invite(user);
+            input = makeInputField("Invite!", function(userNickname) {
+                call.invite(getSessionId(userNickname));
             }, function() {});
         }
 
@@ -687,29 +691,17 @@ $(document).ready(function() {
         return encodedHeader + "." + encodedData + "." + signature;
     }
 
-    function run(server, ratelServer, sessionId) {
+    function run(server, ratelServer, userNickname) {
         var url = getURL(server);
         var ratelUrl = getURL(ratelServer);
 
-        console.log("Connecting to " + url + " as: " + sessionId);
+        console.log("Connecting to " + url + " as: " + userNickname);
 
-        var currentUser = users[sessionId];
-        var payloadData;
-        if (currentUser) {
-            payloadData = {
-                organizationId: currentUser["orgId"],
-                sessionId: currentUser["userId"],
-                timestamp: Date.now()
-            };
-        }
-        else {
-            payloadData = {
-                organizationId: 2,
-                sessionId: -1,
-                timestamp: Date.now()
-            };
-
-        }
+        var payloadData = {
+            organizationId: getOrganizationId(userNickname),
+            sessionId: getSessionId(userNickname),
+            timestamp: Date.now()
+        };
 
         var sessionData = {
             payload: payloadData,
@@ -737,7 +729,7 @@ $(document).ready(function() {
                     "port": ratelUrl.port,
                 }
             }).then(function (session) {
-            $('#demo-name').html("Ratel IM - " + sessionId);
+            $('#demo-name').html("Ratel IM - " + userNickname);
             statusSwitch.show();
 
             newRoom = roomBuilder(session);
@@ -784,7 +776,7 @@ $(document).ready(function() {
                 session.chat.onRoom(function (m) {
                     console.log("Received room invitation: ", m);
                     if(!m.room.direct) {
-                        if(confirm(m.inviter + " invited you to join room " + m.room.name)) {
+                        if(confirm(getUserNickname(m.inviter) + " invited you to join room " + m.room.name)) {
                             console.log("Joining room " + m.room.name);
                             m.room.join();
                             addRoom(m.room, session).switchTo();
@@ -800,9 +792,10 @@ $(document).ready(function() {
                     console.log("Received call offer: ", m);
                     var line = "";
                     if(m.call.direct) {
-                        line = m.inviter + " is calling, answer?";
+                        line = getUserNickname(m.inviter) + " is calling, answer?";
                     } else {
-                        line = m.inviter + " invites you to join a conference call with " + m.call.users.toString();
+                        line = getUserNickname(m.inviter) + " invites you to join a conference call with " +
+                            m.call.users.map(getUserNickname);
                     }
                     if(confirm(line)) {
                         createStream(function(stream) {
