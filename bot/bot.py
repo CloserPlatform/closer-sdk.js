@@ -7,7 +7,6 @@ import requests
 
 host = "localhost"
 port = "8080"
-bot = "exactly!"
 botId = ""
 backendURL = "http://localhost:5431"
 
@@ -31,14 +30,13 @@ class BotHandler(SimpleHTTPRequestHandler):
         return
 
 if __name__ == "__main__":
-    bot = sys.argv[1]
-    host = sys.argv[2]
-    port = sys.argv[3]
-    backendURL = sys.argv[4]
+    host = sys.argv[1]
+    port = sys.argv[2]
+    backendURL = sys.argv[3]
 
-    print("Starting bot", bot, "on:", host, port)
+    print("Starting bot on:", host, port)
     r = requests.post(backendURL + "/bot", json = {
-        'name': bot,
+        'name': 'exactlyBot',
         'callback': "http://" + host + ":"+ port + "/"
     })
 
