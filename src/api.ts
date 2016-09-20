@@ -1,21 +1,39 @@
-import { ApiKey } from "./auth";
-import { Config } from "./config";
-import { Callback } from "./events";
-import { JSONWebSocket } from "./jsonws";
-import { Logger } from "./logger";
+import {ApiKey} from "./auth";
+import {Config} from "./config";
+import {Callback} from "./events";
+import {JSONWebSocket} from "./jsonws";
+import {Logger} from "./logger";
 import * as proto from "./protocol";
 
-interface PromiseResolve<T> extends Callback<T> {}
-interface PromiseReject extends Callback<proto.Error> {}
+export interface PromiseResolve<T> extends Callback<T> {}
+export interface PromiseReject extends Callback<proto.Error> {}
 
 interface PromiseFunctions {
     resolve: PromiseResolve<proto.Event>;
     reject: PromiseReject;
 }
 
-interface Thunk {
+export interface Thunk {
     (): void;
 }
+
+class HeaderValue {
+    header: string;
+    value: string;
+
+    constructor(header: string, value: string) {
+        this.header = header;
+        this.value = value;
+    }
+}
+
+type ResolveCallbackType = <Result>(xhttp: XMLHttpRequest,
+                                    resolve: PromiseResolve<Result>,
+                                    reject: PromiseReject) => Thunk
+type PostRequestType =
+    <Arg, Result>(onload: ResolveCallbackType) => PostRequestWithHeadersType
+
+type PostRequestWithHeadersType = <Arg, Result>(path: Array<string>, obj: Arg) => Promise<Result>
 
 export class API {
     private log: Logger;
@@ -31,10 +49,35 @@ export class API {
     private socket: JSONWebSocket;
     private promises: { [ref: string]: PromiseFunctions };
 
+    private post: PostRequestWithHeadersType;
+
+    private static postFactory <Arg, Result>(headers: Array<HeaderValue>): PostRequestType {
+        return function (onloadCallback: ResolveCallbackType) {
+            return function (path: Array<string>, obj: Arg) {
+                return new Promise<Result>(function (resolve, reject) {
+                    let json = JSON.stringify(obj);
+                    let xhttp = new XMLHttpRequest();
+                    let url = path.join("/");
+                    xhttp.onreadystatechange = onloadCallback<Result>(xhttp, resolve, reject);
+                    console.log("POST " + url + " " + json);
+                    xhttp.open("POST", url, true);
+                    xhttp.setRequestHeader("Content-Type", "application/json");
+                    for (let header of headers) {
+                        xhttp.setRequestHeader(header.header, header.value);
+                    }
+                    xhttp.send(json);
+                });
+            };
+        };
+    }
+
+    static getApiKeyPostRequest = API.postFactory([]);
+
     constructor(config: Config, log: Logger) {
         this.log = log;
         this.sessionId = config.sessionId;
         this.apiKey = config.apiKey;
+        this.post = API.postFactory([new HeaderValue("X-Api-Key", this.apiKey)])(this.responseCallback);
 
         let host = config.hostname + ":" + config.port;
         this.url = [config.protocol, "//", host, "/api"].join("");
@@ -76,7 +119,7 @@ export class API {
 
     createDirectCall(sessionId: proto.ID): Promise<proto.Call> {
         return this.post<proto.CreateDirectCall, proto.Call>([this.url, this.callPath],
-                                                             proto.createDirectCall(sessionId));
+            proto.createDirectCall(sessionId));
     }
 
     getCall(callId: proto.ID): Promise<proto.Call> {
@@ -93,7 +136,7 @@ export class API {
 
     leaveCall(callId: proto.ID, reason: string): Promise<void> {
         return this.post<proto.LeaveReason, void>([this.url, this.callPath, callId, "leave"],
-                                                  proto.leaveReason(reason));
+            proto.leaveReason(reason));
     }
 
     inviteToCall(callId: proto.ID, sessionId: proto.ID): Promise<void> {
@@ -107,7 +150,7 @@ export class API {
 
     createDirectRoom(sessionId: proto.ID): Promise<proto.Room> {
         return this.post<proto.CreateDirectRoom, proto.Room>([this.url, this.roomPath],
-                                                             proto.createDirectRoom(sessionId));
+            proto.createDirectRoom(sessionId));
     }
 
     getRoom(roomId: proto.ID): Promise<proto.Room> {
@@ -178,7 +221,7 @@ export class API {
 
     private responseCallback<Result>(xhttp: XMLHttpRequest, resolve: PromiseResolve<Result>,
                                      reject: PromiseReject): Thunk {
-        let _this = this;
+        let _this = console;
         return function() {
             if (xhttp.readyState === 4 && xhttp.status === 200) {
                 _this.log("OK response: " + xhttp.responseText);
@@ -207,21 +250,6 @@ export class API {
             xhttp.open("GET", url, true);
             xhttp.setRequestHeader("X-Api-Key", _this.apiKey);
             xhttp.send();
-        });
-    }
-
-    private post<Arg, Result>(path: Array<string>, obj: Arg): Promise<Result> {
-        let _this = this;
-        return new Promise<Result>(function(resolve, reject) {
-            let json = JSON.stringify(obj);
-            let xhttp = new XMLHttpRequest();
-            let url = path.join("/");
-            xhttp.onreadystatechange = _this.responseCallback<Result>(xhttp, resolve, reject);
-            _this.log("POST " + url + " " + json);
-            xhttp.open("POST", url, true);
-            xhttp.setRequestHeader("Content-Type", "application/json");
-            xhttp.setRequestHeader("X-Api-Key", _this.apiKey);
-            xhttp.send(json);
         });
     }
 

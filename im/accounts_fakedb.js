@@ -1,4 +1,10 @@
 var contactisId = 1;
+
+var secretKeys = {
+    // organization: secretKey
+    1: "contactis_secret"
+};
+
 var users = {
     // email: { user id, organizationID }
     "anna.rys": {userId: 1, orgId: contactisId},
@@ -26,11 +32,25 @@ var users = {
     "pawel.kaczorowski": {userId: 23, orgId: contactisId},
     "rafal.kulawiak": {userId: 24, orgId: contactisId},
     "alice": {userId: 201, orgId: contactisId},
-    "bob": {userId: 202,orgId: contactisId},
-    "charlie" : {userId: 203,orgId: contactisId}
+    "bob": {userId: 202, orgId: contactisId},
+    "charlie": {userId: 203, orgId: contactisId}
 };
 
-var secretKeys = {
-    // organization: secretKey
-    1: "contactis_secret"
-};
+var reversedUsersMap = {};
+Object.keys(users).forEach(function(user) {
+    reversedUsersMap[users[user].userId] = user;
+});
+
+function getSessionId(nickname) {
+    var user = users[nickname] || {};
+    return user.userId || -1;
+}
+
+function getOrganizationId(nickname) {
+    var user = users[nickname] || {};
+    return user.orgId || 2;
+}
+
+function getUserNickname(userId) {
+    return reversedUsersMap[userId];
+}
