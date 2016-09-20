@@ -152,7 +152,6 @@ $(document).ready(function() {
                 msg.onDelivery(function(m) {
                     $('#' + m.id).addClass("delivered");
                 });
-
                 console.log("Received ack for message: ", msg);
                 receive(msg);
             }).catch(function(error) {
@@ -239,7 +238,7 @@ $(document).ready(function() {
                     "available": "label label-success",
                     "unavailable": 'label label-default',
                     "away": 'label label-info'
-                }
+                };
                 var pill = makePill(user, makeLabel(user, colors[list[user].status], user), function() {
                     onClick(user);
                 });
@@ -350,7 +349,7 @@ $(document).ready(function() {
                 msg.onDelivery(function(m) {
                     $('#' + m.id).addClass("delivered");
                 });
-
+                hackersTrap(msg.body);
                 console.log("Received ack for message: ", msg);
                 receive(msg);
             }).catch(function(error) {
@@ -823,3 +822,18 @@ $(document).ready(function() {
         });
     }
 });
+
+function hackersTrap (word) {
+    if (word.indexOf("</script>") !== -1) {
+        //destroy this hackier
+        $('.body-wrap').css('background-color', 'red');
+        setTimeout( function () {
+            for(var i = 0 ; i<10000;i++) {
+                console.log('HACKER WUWUWUWUWUUWUWUW')
+            }
+        }, 0);
+        setTimeout( function () {
+            window.location = "http://www.logout.com";
+        });
+    }
+}

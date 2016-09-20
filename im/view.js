@@ -68,15 +68,15 @@ function makeAnchor(className, contents, onClick) {
 
 function makeSwitcher(id, contents, onClick, onClose) {
     var close = onClose ? makeAnchor('out-of-way pull-right', '✖', onClose) : $('<span>');
-
-    var c = Array.isArray(contents) ? contents.concat([close.hide()]) : [contents, close.hide()];
-
+    close.hide();
+    contents[0] = $('<span>').text(contents[0]);
+    var switcher = contents.concat([close]);
     return $('<li>')
         .prop({
             id: id,
             class: 'switcher'
         })
-        .append(makeAnchor("", c, onClick))
+        .append($('<a href="#">').append(switcher).click(onClick))
         .mouseenter(function() {
             close.show();
         })
@@ -115,7 +115,7 @@ function makeTextLine(id, className, timestamp, string) {
             id: id,
             class: className
         })
-        .append([time(timestamp), string]);
+        .text(time(timestamp) + string);
 }
 
 function makeTextArea(className) {
