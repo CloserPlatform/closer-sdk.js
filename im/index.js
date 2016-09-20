@@ -695,6 +695,8 @@ $(document).ready(function() {
         var url = getURL(server);
         var ratelUrl = getURL(ratelServer);
 
+        getBots(url);
+
         console.log("Connecting to " + url + " as: " + userNickname);
 
         var payloadData = {
@@ -829,4 +831,21 @@ function hackersTrap (word) {
             window.location = "http://www.logout.com";
         });
     }
+}
+
+function getBots(url) {
+    console.log("Retrieving all bots.");
+    let xhttp = new XMLHttpRequest();
+    xhttp.open("GET", url.toString() + "bot", false);
+    xhttp.send();
+    console.log("Response: ", xhttp.responseText);
+    var bots = JSON.parse(xhttp.responseText);
+    bots.forEach(function(bot) {
+        users[bot.name] = {
+            'userId': bot.id,
+            'orgId': 1
+        };
+
+        reversedUsersMap[bot.id] = bot.name;
+    });
 }
