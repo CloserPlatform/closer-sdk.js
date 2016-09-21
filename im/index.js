@@ -129,7 +129,7 @@ $(document).ready(function() {
 
             var className = msg.delivered ? "delivered" : "";
             var line = makeTextLine(msg.id, className, msg.timestamp, " " + getUserNickname(msg.sender) +
-                ": " + msg.body);
+                                    ": " + msg.body);
             text.append(line);
             text.trigger('scroll-to-bottom');
         }
@@ -242,9 +242,9 @@ $(document).ready(function() {
                     "away": 'label label-info'
                 };
                 var pill = makePill(user, makeLabel(user, colors[list[user].status], getUserNickname(user)),
-                    function () {
-                        onClick(user);
-                    });
+                                    function () {
+                                        onClick(user);
+                                    });
                 if(list[user].isTyping) {
                     pill.addClass("active");
                 }
@@ -333,7 +333,7 @@ $(document).ready(function() {
 
         room.onInvited(function(msg) {
             receiveAction(msg.timestamp, " User " + getUserNickname(msg.inviter) + " invited user " +
-                getUserNickname(msg.user) + " to join the room.");
+                          getUserNickname(msg.user) + " to join the room.");
         });
 
         var receive = makeReceiver(room, text);
@@ -679,7 +679,6 @@ $(document).ready(function() {
         return new URL((server.startsWith("http") ? "" : window.location.protocol) + server);
     }
 
-
     function jwt_sign(data, secret) {
         // Based on code by Jonathan Petitcolas
         // https://www.jonathan-petitcolas.com/2014/11/27/creating-json-web-token-in-javascript.html
@@ -780,6 +779,13 @@ $(document).ready(function() {
                         session.chat.setStatus(status);
                     });
 
+                    session.chat.getBots().then(function(bots) {
+                        console.log("Bots: ", bots);
+                        bots.forEach(internBot);
+                    }).catch(function(error) {
+                        console.log("Fetching bots failed: ", error);
+                    });
+
                     session.chat.getRoster().then(function(rooms) {
                         console.log("Roster: ", rooms);
                         rooms.forEach(function(room) {
@@ -789,13 +795,6 @@ $(document).ready(function() {
                         newRoom("general");
                     }).catch(function(error) {
                         console.log("Fetching roster failed:", error);
-                    });
-
-                    session.chat.getBots().then(function(bots) {
-                        console.log("Bots: ", bots);
-                        bots.forEach(internBot);
-                    }).catch(function(error) {
-                        console.log("Fetching bots failed: ", error);
                     });
 
                     session.chat.onBotUpdate(function(m) {
