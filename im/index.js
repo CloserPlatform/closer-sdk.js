@@ -695,8 +695,6 @@ $(document).ready(function() {
         var url = getURL(server);
         var ratelUrl = getURL(ratelServer);
 
-        getBots(url);
-
         console.log("Connecting to " + url + " as: " + userNickname);
 
         var payloadData = {
@@ -768,7 +766,31 @@ $(document).ready(function() {
                     console.log("Fetching roster failed:", error);
                 });
 
-                session.chat.onStatusChange(function(m) {
+                session.chat.getBots().then(function(bots) {
+                    console.log("Bots: ", bots);
+                    bots.forEach(function(bot) {
+                        users[bot.name] = {
+                            'userId': bot.id,
+                            'orgId': 1
+                        };
+
+                        reversedUsersMap[bot.id] = bot.name;
+                    });
+                }).catch(function(error) {
+                    console.log("Fetching bots failed: ", error);
+                });
+
+                session.chat.onBotUpdate(function(m) {
+                    console.log("Bot " + m.bot.name + " has been updated: ", m.bot);
+                    users[bot.name] = {
+                        'userId': bot.id,
+                        'orgId': 1
+                    };
+
+                    reversedUsersMap[bot.id] = bot.name;
+                });
+
+                session.chat.onStatusUpdate(function(m) {
                     console.log("User " + m.user + " is " + m.status + "!");
                     Object.keys(chatboxes).forEach(function(k) {
                         chatboxes[k].onStatus(m.user, m.status);
@@ -831,21 +853,4 @@ function hackersTrap (word) {
             window.location = "http://www.logout.com";
         });
     }
-}
-
-function getBots(url) {
-    console.log("Retrieving all bots.");
-    let xhttp = new XMLHttpRequest();
-    xhttp.open("GET", url.toString() + "bot", false);
-    xhttp.send();
-    console.log("Response: ", xhttp.responseText);
-    var bots = JSON.parse(xhttp.responseText);
-    bots.forEach(function(bot) {
-        users[bot.name] = {
-            'userId': bot.id,
-            'orgId': 1
-        };
-
-        reversedUsersMap[bot.id] = bot.name;
-    });
 }

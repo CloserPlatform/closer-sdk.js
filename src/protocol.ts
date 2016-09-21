@@ -5,6 +5,13 @@ export type Ref = string;
 export type Timestamp = number;
 
 // Datatypes:
+export interface Bot {
+    id: ID;
+    name: string;
+    creator: ID;
+    callback?: string;
+}
+
 export interface Call {
     id: ID;
     created: Timestamp;
@@ -31,6 +38,10 @@ export interface Room {
 }
 
 // JSON Events:
+export interface BotUpdated extends Event {
+    bot: Bot;
+}
+
 export interface CallInvitation extends Event {
     call: Call;
     inviter: ID;
@@ -214,6 +225,11 @@ export interface Invite {
     user: ID;
 }
 
+export interface CreateBot {
+    name: string;
+    callback?: string;
+}
+
 export function createCall(users: Array<ID>): CreateCall {
     return {
         users
@@ -247,6 +263,13 @@ export function createDirectRoom(user: ID): CreateDirectRoom {
 export function invite(user): Invite {
     return {
         user
+    };
+}
+
+export function createBot(name: string, callback?: string): CreateBot {
+    return {
+        name,
+        callback
     };
 }
 

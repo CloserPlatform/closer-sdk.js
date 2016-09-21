@@ -85,13 +85,21 @@ export class Artichoke {
         });
     }
 
-    // Misc API:
-    onStatusChange(callback: Callback<proto.Presence>) {
-        this.events.onEvent("presence", callback);
+    // Bot API:
+    onBotUpdate(callback: Callback<proto.BotUpdated>) {
+        this.events.onEvent("bot_updated", callback);
     }
 
-    setStatus(status: proto.Status) {
-        this.api.setStatus(status, Date.now());
+    createBot(name: string, callback?: string): Promise<proto.Bot> {
+        return this.api.createBot(name, callback);
+    }
+
+    getBot(bot: proto.ID): Promise<proto.Bot> {
+        return this.api.getBot(bot);
+    }
+
+    getBots(): Promise<Array<proto.Bot>> {
+        return this.api.getBots();
     }
 
     // Call API:
@@ -138,6 +146,15 @@ export class Artichoke {
 
     getRoster(): Promise<Array<Room | DirectRoom>> {
         return this.wrapRoom(this.api.getRoster());
+    }
+
+    // Presence API:
+    onStatusUpdate(callback: Callback<proto.Presence>) {
+        this.events.onEvent("presence", callback);
+    }
+
+    setStatus(status: proto.Status) {
+        this.api.setStatus(status, Date.now());
     }
 
     // Utils:
