@@ -295,7 +295,7 @@ $(document).ready(function() {
         }
     }
 
-    function makeGroupChatbox(room, directRoomBuilder, callBuilder) {
+    function makeGroupChatbox(room, directRoomBuilder, callBuilder, botBuilder) {
         console.log("Building group chatbox for room: ", room);
 
         var users = makeUserList(function(user) {
@@ -376,6 +376,10 @@ $(document).ready(function() {
             room.invite(getSessionId(user).toString());
         }, function() {});
 
+        var createBot = makeNInputField(2, "Bot!", function(args) {
+            botBuilder(args[0], args[1], room);
+        });
+
         var call = makeButton("btn-success", "Conference!", function() {
             if(!call.hasClass("disabled")) {
                 call.addClass("disabled");
@@ -385,7 +389,7 @@ $(document).ready(function() {
 
         var buttons = makeButtonGroup().append(call);
         var panel = makePanel(users.element).addClass('controls-wrapper');
-        var controls = makeControls(room.id, [panel, invite, buttons]).addClass('text-center').hide();
+        var controls = makeControls(room.id, [panel, invite, createBot, buttons]).addClass('text-center').hide();
 
         return {
             element: chatbox,
@@ -442,7 +446,7 @@ $(document).ready(function() {
             if(room.direct) {
                 chatbox = makeDirectChatbox(room, directCallBuilder(session));
             } else {
-                chatbox = makeGroupChatbox(room, directRoomBuilder(session), callBuilder(session));
+                chatbox = makeGroupChatbox(room, directRoomBuilder(session), callBuilder(session), botBuilder(session));
             }
 
             room.getHistory().then(function(msgs) {
@@ -478,6 +482,27 @@ $(document).ready(function() {
                 console.log("Creating a room failed: ", error);
             });
         }
+    }
+
+    function botBuilder(session) {
+        return function(name, callback, room) {
+            return session.chat.createBot(name, callback).then(function(bot) {
+                internBot(bot);
+                room.invite(bot.id);
+                alert("Bot credentials: " + bot.id + " " + bot.apiKey);
+            }).catch(function(error) {
+                console.log("Creating a bot failed: ", error);
+            });
+        }
+    }
+
+    function internBot(bot) {
+        users[bot.name] = {
+            'userId': bot.id,
+            'orgId': 1
+        };
+
+        reversedUsersMap[bot.id] = bot.name;
     }
 
     function createStream(callback) {
@@ -729,114 +754,102 @@ $(document).ready(function() {
                     "port": ratelUrl.port,
                 }
             }).then(function (session) {
-            $('#demo-name').html("Ratel IM - " + userNickname);
-            statusSwitch.show();
+                $('#demo-name').html("Ratel IM - " + userNickname);
+                statusSwitch.show();
 
-            newRoom = roomBuilder(session);
+                newRoom = roomBuilder(session);
 
-            session.chat.onError(function(error) {
-                console.log("An error has occured: ", error);
-                alert("Session disconnected!");
-            });
-
-            session.chat.onConnect(function(m) {
-                console.log("Connected to Artichoke!");
-
-                killSwitch.click(function() {
-                    // NOTE Kills the client session.
-                    session.api.sendCandidate(null, null, null);
+                session.chat.onError(function(error) {
+                    console.log("An error has occured: ", error);
+                    alert("Session disconnected!");
                 });
 
-                statusSwitch.click(function() {
-                    statusSwitch.toggleClass(status === "available" ? "btn-success" : "btn-info");
-                    status = status === "available" ? "away" : "available";
-                    statusSwitch.toggleClass(status === "available" ? "btn-success" : "btn-info");
-                    statusSwitch.html("Status: " + status);
-                    session.chat.setStatus(status);
-                });
+                session.chat.onConnect(function(m) {
+                    console.log("Connected to Artichoke!");
 
-                session.chat.getRoster().then(function(rooms) {
-                    console.log("Roster: ", rooms);
-                    rooms.forEach(function(room) {
-                        addRoom(room, session);
+                    killSwitch.click(function() {
+                        // NOTE Kills the client session.
+                        session.api.sendCandidate(null, null, null);
                     });
 
-                    newRoom("general");
-                }).catch(function(error) {
-                    console.log("Fetching roster failed:", error);
-                });
-
-                session.chat.getBots().then(function(bots) {
-                    console.log("Bots: ", bots);
-                    bots.forEach(function(bot) {
-                        users[bot.name] = {
-                            'userId': bot.id,
-                            'orgId': 1
-                        };
-
-                        reversedUsersMap[bot.id] = bot.name;
+                    statusSwitch.click(function() {
+                        statusSwitch.toggleClass(status === "available" ? "btn-success" : "btn-info");
+                        status = status === "available" ? "away" : "available";
+                        statusSwitch.toggleClass(status === "available" ? "btn-success" : "btn-info");
+                        statusSwitch.html("Status: " + status);
+                        session.chat.setStatus(status);
                     });
-                }).catch(function(error) {
-                    console.log("Fetching bots failed: ", error);
-                });
 
-                session.chat.onBotUpdate(function(m) {
-                    console.log("Bot " + m.bot.name + " has been updated: ", m.bot);
-                    users[bot.name] = {
-                        'userId': bot.id,
-                        'orgId': 1
-                    };
-
-                    reversedUsersMap[bot.id] = bot.name;
-                });
-
-                session.chat.onStatusUpdate(function(m) {
-                    console.log("User " + m.user + " is " + m.status + "!");
-                    Object.keys(chatboxes).forEach(function(k) {
-                        chatboxes[k].onStatus(m.user, m.status);
-                    });
-                });
-
-                session.chat.onRoom(function (m) {
-                    console.log("Received room invitation: ", m);
-                    if(!m.room.direct) {
-                        if(confirm(getUserNickname(m.inviter) + " invited you to join room " + m.room.name)) {
-                            console.log("Joining room " + m.room.name);
-                            m.room.join();
-                            addRoom(m.room, session).switchTo();
-                        } else {
-                            console.log("Rejecting invitation...");
-                        }
-                    } else {
-                        addRoom(m.room, session);
-                    }
-                });
-
-                session.chat.onCall(function(m) {
-                    console.log("Received call offer: ", m);
-                    var line = "";
-                    if(m.call.direct) {
-                        line = getUserNickname(m.inviter) + " is calling, answer?";
-                    } else {
-                        line = getUserNickname(m.inviter) + " invites you to join a conference call with " +
-                            m.call.users.map(getUserNickname);
-                    }
-                    if(confirm(line)) {
-                        createStream(function(stream) {
-                            var callbox = addCall(m.call, stream);
-                            callbox.join();
-                            callbox.switchTo();
+                    session.chat.getRoster().then(function(rooms) {
+                        console.log("Roster: ", rooms);
+                        rooms.forEach(function(room) {
+                            addRoom(room, session);
                         });
-                    } else {
-                        console.log("Rejecting call...");
-                        m.call.reject(m);
-                    }
+
+                        newRoom("general");
+                    }).catch(function(error) {
+                        console.log("Fetching roster failed:", error);
+                    });
+
+                    session.chat.getBots().then(function(bots) {
+                        console.log("Bots: ", bots);
+                        bots.forEach(internBot);
+                    }).catch(function(error) {
+                        console.log("Fetching bots failed: ", error);
+                    });
+
+                    session.chat.onBotUpdate(function(m) {
+                        console.log("Bot " + m.bot.name + " has been updated: ", m.bot);
+                        internBot(m.bot);
+                    });
+
+                    session.chat.onStatusUpdate(function(m) {
+                        console.log("User " + m.user + " is " + m.status + "!");
+                        Object.keys(chatboxes).forEach(function(k) {
+                            chatboxes[k].onStatus(m.user, m.status);
+                        });
+                    });
+
+                    session.chat.onRoom(function (m) {
+                        console.log("Received room invitation: ", m);
+                        if(!m.room.direct) {
+                            if(confirm(getUserNickname(m.inviter) + " invited you to join room " + m.room.name)) {
+                                console.log("Joining room " + m.room.name);
+                                m.room.join();
+                                addRoom(m.room, session).switchTo();
+                            } else {
+                                console.log("Rejecting invitation...");
+                            }
+                        } else {
+                            addRoom(m.room, session);
+                        }
+                    });
+
+                    session.chat.onCall(function(m) {
+                        console.log("Received call offer: ", m);
+                        var line = "";
+                        if(m.call.direct) {
+                            line = getUserNickname(m.inviter) + " is calling, answer?";
+                        } else {
+                            line = getUserNickname(m.inviter) + " invites you to join a conference call with " +
+                                m.call.users.map(getUserNickname);
+                        }
+                        if(confirm(line)) {
+                            createStream(function(stream) {
+                                var callbox = addCall(m.call, stream);
+                                callbox.join();
+                                callbox.switchTo();
+                            });
+                        } else {
+                            console.log("Rejecting call...");
+                            m.call.reject(m);
+                        }
+                    });
+
                 });
 
+                session.chat.connect();
             });
-
-            session.chat.connect();
-        });
     }
 });
 

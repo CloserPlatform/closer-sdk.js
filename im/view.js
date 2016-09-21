@@ -158,6 +158,36 @@ function makeInputField(name, onClick, onKey) {
         .append($('<div>').addClass('input-group') .append([field, button]));
 }
 
+function makeNInputField(n, name, onClick) {
+    var fields = [];
+    for(var i = 0; i < n; i++) {
+        fields.push($('<input>')
+                    .prop({
+                        type: 'text',
+                        class: 'form-control form-group',
+                        style: 'width: ' + 100/n + '%'
+                    }));
+    }
+
+    var button = $('<span>')
+        .addClass('input-group-btn')
+        .append($('<button>')
+                .addClass('btn btn-primary')
+                .append(name)
+                .click(function() {
+                    onClick(fields.map(function(f) {
+                        return f.val();
+                    }));
+                    fields.forEach(function(f) {
+                        f.val("");
+                    });
+                }));
+
+    return $('<div>')
+        .addClass('form-group input-field')
+        .append($('<div>').addClass('input-group').append(fields).append(button));
+}
+
 function makeChatbox(id, className, text, input) {
     return $('<div>')
         .prop({
