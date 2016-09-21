@@ -5,10 +5,9 @@ from http.server import HTTPServer, SimpleHTTPRequestHandler
 import sys
 import requests
 
-host = "localhost"
-port = "8080"
+backendURL = ""
 botId = ""
-backendURL = "http://localhost:5431"
+botApiKey = ""
 
 class BotHandler(SimpleHTTPRequestHandler):
     def do_POST(self):
@@ -21,31 +20,18 @@ class BotHandler(SimpleHTTPRequestHandler):
 
         for msg in data:
             if ("exactly" in msg['body']) or ("Exactly" in msg['body']):
-                requests.post(backendURL + "/bot/sendMessage", json = {
+                requests.post(backendURL + "/api/bots/" + botId + "/sendMessage", json = {
                     'room': msg['room'],
                     'body': 'Exactly! http://i.giphy.com/MOf4i4FexFxhm.gif'
                 }, headers = {
-                    'X-Api-Key': botId
+                    'X-Api-Key': botApiKey
                 });
         return
 
 if __name__ == "__main__":
-    host = sys.argv[1]
-    port = sys.argv[2]
-    backendURL = sys.argv[3]
-
-    print("Starting bot on:", host, port)
-    r = requests.post(backendURL + "/bot", json = {
-        'name': 'exactlyBot',
-        'callback': "http://" + host + ":"+ port + "/"
-    })
-
-    if r.status_code == 200:
-        print("Bot created: ", r.json())
-        botId = r.json()['id']
-    else:
-        print("Bot already exists!", r.text)
-        exit(1)
-
+    port = sys.argv[1]
+    backendURL = sys.argv[2]
+    botId = sys.argv[3]
+    botApiKey = sys.argv[4]
     httpd = HTTPServer(('', int(port)), BotHandler)
     httpd.serve_forever()
