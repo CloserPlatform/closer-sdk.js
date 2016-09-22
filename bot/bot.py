@@ -19,7 +19,7 @@ class BotHandler(SimpleHTTPRequestHandler):
         print("Got request:", data)
 
         for msg in data:
-            if ("exactly" in msg['body']) or ("Exactly" in msg['body']):
+            if ("exactly" in msg['body'].lower()):
                 requests.post(backendURL + "/api/bots/" + botId + "/sendMessage", json = {
                     'room': msg['room'],
                     'body': 'Exactly! http://i.giphy.com/MOf4i4FexFxhm.gif'
