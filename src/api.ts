@@ -44,6 +44,7 @@ export class API {
     private url: string;
     private callPath = "calls";
     private roomPath = "rooms";
+    private botPath = "bots";
 
     private wsUrl: string;
     private socket: JSONWebSocket;
@@ -213,6 +214,19 @@ export class API {
     // Presence API:
     setStatus(status: proto.Status, timestamp: proto.Timestamp) {
         this.send(proto.presence(this.sessionId, status, timestamp));
+    }
+
+    // Bot API:
+    createBot(name: string, callback?: string): Promise<proto.Bot> {
+        return this.post<proto.CreateBot, proto.Bot>([this.url, this.botPath], proto.createBot(name, callback));
+    }
+
+    getBot(botId: proto.ID): Promise<proto.Bot> {
+        return this.get<proto.Bot>([this.url, this.botPath, botId]);
+    }
+
+    getBots(): Promise<Array<proto.Bot>> {
+        return this.get<Array<proto.Bot>>([this.url, this.botPath]);
     }
 
     private send(event: proto.Event) {
