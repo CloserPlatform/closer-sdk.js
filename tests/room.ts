@@ -1,7 +1,7 @@
 import { API } from "../src/api";
 import { EventHandler } from "../src/events";
 import { config, log } from "./fixtures";
-import { Event, mark, Message, Metadata, Room as ProtoRoom, typing } from "../src/protocol";
+import { Archivable, ArchivableWithType, Event, mark, Message, Metadata, Room as ProtoRoom, typing } from "../src/protocol";
 import { createRoom, DirectRoom, Room } from "../src/room";
 
 const actionId = "567";
@@ -57,7 +57,13 @@ class APIMock extends API {
     }
 
     getRoomHistory(id) {
-        return Promise.resolve([msg(msg1), msg(msg2)]);
+        let a1: Archivable = msg(msg1);
+        let a2: Archivable = msg(msg2);
+        let at1 = a1 as ArchivableWithType;
+        at1.type = "message";
+        let at2 = a2 as ArchivableWithType;
+        at2.type = "message";
+        return Promise.resolve([at1, at2]);
     }
 
     getRoomUsers(id) {

@@ -170,8 +170,8 @@ export class API {
         return this.get<Array<proto.ID>>([this.url, this.roomPath, roomId, "users"]);
     }
 
-    getRoomHistory(roomId: proto.ID): Promise<Array<proto.Message>> {
-        return this.get<Array<proto.Message>>([this.url, this.roomPath, roomId, "history"]);
+    getRoomHistory(roomId: proto.ID): Promise<Array<proto.ArchivableWithType>> {
+        return this.get<Array<proto.ArchivableWithType>>([this.url, this.roomPath, roomId, "history"]);
     }
 
     joinRoom(roomId: proto.ID): Promise<void> {

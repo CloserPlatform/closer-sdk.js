@@ -20,6 +20,10 @@ export interface Archivable {
     timestamp: Timestamp;
 }
 
+export interface ArchivableWithType extends Archivable {
+    type: Type;
+}
+
 export interface Bot {
     id: ID;
     name: string;

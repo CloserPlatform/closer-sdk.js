@@ -29,8 +29,16 @@ class BaseRoom implements proto.Room {
         this.api = api;
     }
 
-    getHistory(): Promise<Array<Message>> {
-        return this.wrapMessage(this.api.getRoomHistory(this.id));
+    getHistory(): Promise<Array<proto.Archivable>> {
+        let _this = this;
+        return wrapPromise(this.api.getRoomHistory(this.id), function(a: proto.ArchivableWithType) {
+            if (a.type === "message") {
+                let msg = (a as proto.Archivable) as proto.Message; // Delicious spaghetti.
+                return createMessage(msg, _this.log, _this.events, _this.api);
+            } else {
+                return a as proto.Archivable;
+            }
+        });
     }
 
     getUsers(): Promise<Array<proto.ID>> {
@@ -51,7 +59,9 @@ class BaseRoom implements proto.Room {
     }
 
     send(message: string): Promise<Message> {
-        return this.wrapMessage(this.api.sendMessage(this.id, message));
+        let _this = this;
+        return wrapPromise(this.api.sendMessage(this.id, message),
+                           (msg) => createMessage(msg, _this.log, _this.events, _this.api));
     }
 
     sendMetadata(payload: any): Promise<proto.Metadata> {
@@ -80,10 +90,6 @@ class BaseRoom implements proto.Room {
 
     onTyping(callback: Callback<proto.RoomTyping>) {
         this.events.onConcreteEvent("room_typing", this.id, callback);
-    }
-
-    private wrapMessage(promise: Promise<proto.Message | Array<proto.Message>>) {
-        return wrapPromise(promise, (msg) => createMessage(msg, this.log, this.events, this.api));
     }
 }
 
