@@ -120,7 +120,7 @@ function makeTextLine(id, className, timestamp, sender, line) {
             id: id,
             class: className
         })
-        .append(sender == "" ? [ts, spanify(line)] : [ts, " ", sender, ": ", spanify(line)]);
+        .append(sender == "" ? [ts, " ", spanify(line)] : [ts, " ", sender, ": ", spanify(line)]);
 }
 
 function makeTextArea(className) {
