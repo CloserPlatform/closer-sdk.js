@@ -5,6 +5,21 @@ export type Ref = string;
 export type Timestamp = number;
 
 // Datatypes:
+export type Verb = "joined" | "left" | "invited";
+
+export interface Action extends Archivable {
+    action: Verb;
+    reason?: string;
+    invitee?: ID;
+}
+
+export interface Archivable {
+    id: ID;
+    user: ID;
+    room: ID;
+    timestamp: Timestamp;
+}
+
 export interface Bot {
     id: ID;
     name: string;
@@ -19,21 +34,13 @@ export interface Call {
     direct: boolean;
 }
 
-export interface Message {
-    id: ID;
-    user: ID;
-    room: ID;
+export interface Message extends Archivable {
     body: string;
-    timestamp: Timestamp;
     delivered?: Timestamp;
 }
 
-export interface Metadata {
-    id: ID;
-    user: ID;
-    room: ID;
+export interface Metadata extends Archivable {
     payload: any;
-    timestamp: Timestamp;
 }
 
 export interface Room {
@@ -101,24 +108,13 @@ export interface Presence extends Event {
     timestamp: Timestamp;
 }
 
-interface RoomAction extends Event {
-    timestamp: Timestamp;
-    user: ID;
+export interface RoomAction extends Event {
+    action: Action;
 }
 
 export interface RoomInvitation extends Event {
     inviter: ID;
     room: Room;
-}
-
-export interface RoomInvited extends RoomAction {
-    inviter: ID;
-}
-
-export interface RoomJoined extends RoomAction { }
-
-export interface RoomLeft extends RoomAction {
-    reason: string;
 }
 
 export interface RoomMark extends Event {

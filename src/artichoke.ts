@@ -52,12 +52,12 @@ export class Artichoke {
                 break;
 
             case "room_invited":
-                let r = e as proto.RoomInvited;
-                if (r.user === _this.config.sessionId) {
+                let r = e as proto.RoomAction;
+                if (r.action.action === "invited" && r.action.invitee === _this.config.sessionId) {
                     _this.getRoom(r.id).then(function(room) {
                         _this.events.notify({
                             type: "room_invitation",
-                            inviter: r.inviter,
+                            inviter: r.action.user,
                             room
                         } as proto.RoomInvitation);
                         _this.events.notify(e);

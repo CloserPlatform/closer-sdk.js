@@ -1,5 +1,6 @@
 import * as proto from "../src/protocol";
 
+const actionId = "567";
 const roomId = "123";
 const callId = "234";
 const msgId = "345";
@@ -59,23 +60,38 @@ const events: Array<proto.Event> = [{
         timestamp: Date.now(),
     }
 } as proto.RoomMessage, {
-    type: "room_joined",
+    type: "room_action",
     id: roomId,
-    user: alice,
-    timestamp: Date.now()
-} as proto.RoomJoined, {
-    type: "room_invited",
+    action: {
+        action: "joined",
+        id: actionId,
+        room: roomId,
+        user: alice,
+        timestamp: Date.now()
+    }
+} as proto.RoomAction, {
+    type: "room_action",
     id: roomId,
-    inviter: alice,
-    user: bob,
-    timestamp: Date.now()
-} as proto.RoomInvited, {
-    type: "room_left",
+    action: {
+        action: "invited",
+        id: actionId,
+        room: roomId,
+        user: alice,
+        invitee: bob,
+        timestamp: Date.now()
+    }
+} as proto.RoomAction, {
+    type: "room_action",
     id: roomId,
-    user: alice,
-    reason: "nope",
-    timestamp: Date.now()
-} as proto.RoomLeft];
+    action: {
+        action: "left",
+        id: actionId,
+        room: roomId,
+        user: alice,
+        reason: "reason",
+        timestamp: Date.now()
+    }
+} as proto.RoomAction];
 
 describe("Protocol", () => {
     it("should be reversible", () => {

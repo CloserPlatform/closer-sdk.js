@@ -90,28 +90,40 @@ class BaseRoom implements proto.Room {
 export class DirectRoom extends BaseRoom {}
 
 export class Room extends BaseRoom {
-    private onJoinedCallback: Callback<proto.RoomJoined>;
-    private onLeftCallback: Callback<proto.RoomLeft>;
+    private onJoinedCallback: Callback<proto.Action>;
+    private onLeftCallback: Callback<proto.Action>;
+    private onInvitedCallback: Callback<proto.Action>;
 
     constructor(room: proto.Room, log: Logger, events: EventHandler, api: API) {
         super(room, log, events, api);
 
-        this.onLeftCallback = (msg) => {
+        let nop = (a: proto.Action) => {
             // Do nothing.
         };
-        this.onJoinedCallback = (msg) => {
-            // Do nothing.
-        };
+        this.onLeftCallback = nop;
+        this.onJoinedCallback = nop;
+        this.onInvitedCallback = nop;
 
         let _this = this;
-        this.events.onConcreteEvent("room_joined", this.id, function(msg: proto.RoomJoined) {
-            _this.users.push(msg.user);
-            _this.onJoinedCallback(msg);
-        });
+        this.events.onConcreteEvent("room_action", this.id, function(e: proto.RoomAction) {
+            switch (e.action.action) {
+            case "joined":
+                _this.users.push(e.action.user);
+                _this.onJoinedCallback(e.action);
+                break;
 
-        this.events.onConcreteEvent("room_left", this.id, function(msg: proto.RoomLeft) {
-            _this.users = _this.users.filter((u) => u !== msg.user);
-            _this.onLeftCallback(msg);
+            case "left":
+                _this.users = _this.users.filter((u) => u !== e.action.user);
+                _this.onLeftCallback(e.action);
+                break;
+
+            case "invited":
+                _this.onInvitedCallback(e.action);
+                break;
+
+            default:
+                _this.events.raise("Invalid room_action event", e);
+            }
         });
     }
 
@@ -135,16 +147,16 @@ export class Room extends BaseRoom {
         return this.api.inviteToRoom(this.id, user);
     }
 
-    onJoined(callback: Callback<proto.RoomJoined>) {
+    onJoined(callback: Callback<proto.Action>) {
         this.onJoinedCallback = callback;
     }
 
-    onLeft(callback: Callback<proto.RoomLeft>) {
+    onLeft(callback: Callback<proto.Action>) {
         this.onLeftCallback = callback;
     }
 
-    onInvited(callback: Callback<proto.RoomInvited>) {
-        this.events.onConcreteEvent("room_invited", this.id, callback);
+    onInvited(callback: Callback<proto.Action>) {
+        this.onInvitedCallback = callback;
     }
 }
 

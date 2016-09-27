@@ -4,6 +4,7 @@ import { config, log } from "./fixtures";
 import { Event, mark, Message, Metadata, Room as ProtoRoom, typing } from "../src/protocol";
 import { createRoom, DirectRoom, Room } from "../src/room";
 
+const actionId = "567";
 const roomId = "123";
 const alice = "321";
 const bob = "456";
@@ -258,17 +259,30 @@ describe("Room", () => {
                 });
 
                 events.notify({
-                    type: "room_left",
+                    type: "room_action",
                     id: room.id,
-                    user: alice
+                    action: {
+                        action: "left",
+                        id: actionId,
+                        room: room.id,
+                        user: alice,
+                        reason: "no reason",
+                        timestamp: Date.now()
+                    }
                 } as Event);
             });
         });
 
         events.notify({
-            type: "room_joined",
+            type: "room_action",
             id: room.id,
-            user: bob
+            action: {
+                action: "joined",
+                id: actionId,
+                room: room.id,
+                user: bob,
+                timestamp: Date.now()
+            }
         } as Event);
     });
 
@@ -279,10 +293,15 @@ describe("Room", () => {
         });
 
         events.notify({
-            type: "room_joined",
+            type: "room_action",
             id: room.id,
-            user: alice,
-            timestamp: Date.now()
+            action: {
+                action: "joined",
+                id: actionId,
+                room: room.id,
+                user: alice,
+                timestamp: Date.now()
+            }
         } as Event);
     });
 
@@ -294,27 +313,37 @@ describe("Room", () => {
         });
 
         events.notify({
-            type: "room_left",
+            type: "room_action",
             id: room.id,
-            user: alice,
-            reason: "reason",
-            timestamp: Date.now()
+            action: {
+                action: "left",
+                id: actionId,
+                room: room.id,
+                user: alice,
+                reason: "reason",
+                timestamp: Date.now()
+            }
         } as Event);
     });
 
     it("should run callback on room invite", (done) => {
         room.onInvited((msg) => {
-            expect(msg.user).toBe(bob);
-            expect(msg.inviter).toBe(alice);
+            expect(msg.user).toBe(alice);
+            expect(msg.invitee).toBe(bob);
             done();
         });
 
         events.notify({
-            type: "room_invited",
+            type: "room_action",
             id: room.id,
-            inviter: alice,
-            user: bob,
-            timestamp: Date.now()
+            action: {
+                action: "invited",
+                id: actionId,
+                room: room.id,
+                user: alice,
+                invitee: bob,
+                timestamp: Date.now()
+            }
         } as Event);
     });
 
