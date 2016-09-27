@@ -51,22 +51,6 @@ export class Artichoke {
                 _this.events.notify(c);
                 break;
 
-            case "room_invited":
-                let r = e as proto.RoomAction;
-                if (r.action.action === "invited" && r.action.invitee === _this.config.sessionId) {
-                    _this.getRoom(r.id).then(function(room) {
-                        _this.events.notify({
-                            type: "room_invitation",
-                            inviter: r.action.user,
-                            room
-                        } as proto.RoomInvitation);
-                        _this.events.notify(e);
-                    }).catch((error) => _this.events.notify(error));
-                } else {
-                    _this.events.notify(e);
-                }
-                break;
-
             case "room_invitation":
                 let i = e as proto.RoomInvitation;
                 i.room = createRoom(i.room, _this.log, _this.events, _this.api);
