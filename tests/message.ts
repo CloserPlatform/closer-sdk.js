@@ -20,7 +20,7 @@ function makeMsg(delivered?: number): Message {
     return {
         id: msg1,
         body: "Hi!",
-        sender: bob,
+        user: bob,
         room: roomId,
         timestamp: 123,
         delivered

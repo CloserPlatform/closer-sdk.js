@@ -17,7 +17,7 @@ function msg(id: string): Message {
     return {
         id,
         body: "Hi!",
-        sender: alice,
+        user: alice,
         room: roomId,
         timestamp: 123,
     };
@@ -27,7 +27,7 @@ function meta(id: string, payload: any): Metadata {
     return {
         id,
         room: roomId,
-        sender: alice,
+        user: alice,
         payload,
         timestamp: 123
     };
@@ -129,13 +129,13 @@ function makeRoom(direct = false) {
 
         it("should run a callback on incoming message", (done) => {
             room.onMessage((msg) => {
-                expect(msg.sender).toBe(chad);
+                expect(msg.user).toBe(chad);
                 done();
             });
 
             let m = msg(msg1);
             m.room = room.id;
-            m.sender = chad;
+            m.user = chad;
             events.notify({
                 type: "room_message",
                 id: room.id,
@@ -149,7 +149,7 @@ function makeRoom(direct = false) {
             }];
 
             room.onMetadata((meta) => {
-                expect(meta.sender).toBe(alice);
+                expect(meta.user).toBe(alice);
                 expect(meta.payload).toBe(payload);
                 done();
             });

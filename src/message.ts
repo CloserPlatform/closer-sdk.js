@@ -6,7 +6,7 @@ import { ID, Message as MSG, MessageDelivered, Timestamp }  from "./protocol";
 export class Message implements MSG {
     public id: ID;
     public body: string;
-    public sender: ID;
+    public user: ID;
     public room: ID;
     public timestamp: Timestamp;
     public delivered: Timestamp;
@@ -18,7 +18,7 @@ export class Message implements MSG {
     constructor(message: MSG, log: Logger, events: EventHandler, api: API) {
         this.id = message.id;
         this.body = message.body;
-        this.sender = message.sender;
+        this.user = message.user;
         this.room = message.room;
         this.timestamp = message.timestamp;
         this.delivered = message.delivered;

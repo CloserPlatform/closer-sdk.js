@@ -21,7 +21,7 @@ export interface Call {
 
 export interface Message {
     id: ID;
-    sender: ID;
+    user: ID;
     room: ID;
     body: string;
     timestamp: Timestamp;
@@ -30,7 +30,7 @@ export interface Message {
 
 export interface Metadata {
     id: ID;
-    sender: ID;
+    user: ID;
     room: ID;
     payload: any;
     timestamp: Timestamp;

@@ -54,7 +54,7 @@ const events: Array<proto.Event> = [{
     message: {
         id: msgId,
         body: "Oi papi!",
-        sender: alice,
+        user: alice,
         room: roomId,
         timestamp: Date.now(),
     }
