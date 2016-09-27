@@ -129,8 +129,6 @@ export interface RoomMessage extends Event {
     message: Message;
 }
 
-export type Payload = any;
-
 export interface RoomMetadata extends Event {
     metadata: Metadata;
 }

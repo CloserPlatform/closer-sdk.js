@@ -17,7 +17,7 @@ export class EventHandler {
         });
     }
 
-    raise(reason: string, cause?) { // FIXME Cause needs typing.
+    raise(reason: string, cause?: any) {
         this.perType["error"].forEach(function(cb) {
             cb({
                 type: "error",
