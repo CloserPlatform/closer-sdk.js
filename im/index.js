@@ -712,7 +712,7 @@ $(document).ready(function() {
         var xhttp = new XMLHttpRequest();
         xhttp.open("GET", 'http://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC', false);
         xhttp.send();
-        return JSON.parse(xhttp.responseText).data.image_original_url;
+        return JSON.parse(xhttp.responseText).data.image_original_url.replace(/http:\/\//, 'https://');
     }
 
     function getURL(server) {
