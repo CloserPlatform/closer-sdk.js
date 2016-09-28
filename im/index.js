@@ -710,7 +710,7 @@ $(document).ready(function() {
 
     function randomGif() {
         var xhttp = new XMLHttpRequest();
-        xhttp.open("GET", 'http://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC', false);
+        xhttp.open("GET", 'https://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC', false);
         xhttp.send();
         return JSON.parse(xhttp.responseText).data.image_original_url.replace(/http:\/\//, 'https://');
     }
