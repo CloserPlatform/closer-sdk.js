@@ -1,9 +1,10 @@
 import { API } from "../src/api";
 import { EventHandler } from "../src/events";
 import { config, log } from "./fixtures";
-import { Event, mark, Message, Room as ProtoRoom, typing } from "../src/protocol";
+import { Archivable, ArchivableWithType, Event, mark, Message, Metadata, Room as ProtoRoom, typing } from "../src/protocol";
 import { createRoom, DirectRoom, Room } from "../src/room";
 
+const actionId = "567";
 const roomId = "123";
 const alice = "321";
 const bob = "456";
@@ -11,14 +12,25 @@ const chad = "987";
 const msg1 = "2323";
 const msg2 = "1313";
 const msg3 = "4545";
+const meta1 = "576";
 
 function msg(id: string): Message {
     return {
         id,
         body: "Hi!",
-        sender: alice,
+        user: alice,
         room: roomId,
         timestamp: 123,
+    };
+}
+
+function meta(id: string, payload: any): Metadata {
+    return {
+        id,
+        room: roomId,
+        user: alice,
+        payload,
+        timestamp: 123
     };
 }
 
@@ -45,7 +57,13 @@ class APIMock extends API {
     }
 
     getRoomHistory(id) {
-        return Promise.resolve([msg(msg1), msg(msg2)]);
+        let a1: Archivable = msg(msg1);
+        let a2: Archivable = msg(msg2);
+        let at1 = a1 as ArchivableWithType;
+        at1.type = "message";
+        let at2 = a2 as ArchivableWithType;
+        at2.type = "message";
+        return Promise.resolve([at1, at2]);
     }
 
     getRoomUsers(id) {
@@ -60,6 +78,10 @@ class APIMock extends API {
         let m = msg(msg3);
         m.body = body;
         return Promise.resolve(m);
+    }
+
+    sendMetadata(id, payload) {
+        return Promise.resolve(meta(meta1, payload));
     }
 
     setMark(id, timestamp) {
@@ -114,17 +136,35 @@ function makeRoom(direct = false) {
 
         it("should run a callback on incoming message", (done) => {
             room.onMessage((msg) => {
-                expect(msg.sender).toBe(chad);
+                expect(msg.user).toBe(chad);
                 done();
             });
 
             let m = msg(msg1);
             m.room = room.id;
-            m.sender = chad;
+            m.user = chad;
             events.notify({
                 type: "room_message",
                 id: room.id,
                 message: m
+            } as Event);
+        });
+
+        it("should run a callback on incoming metadata", (done) => {
+            let payload = ["anything goes", 1, {
+                filter: "all"
+            }];
+
+            room.onMetadata((meta) => {
+                expect(meta.user).toBe(alice);
+                expect(meta.payload).toBe(payload);
+                done();
+            });
+
+            events.notify({
+                type: "room_metadata",
+                id: room.id,
+                metadata: meta(meta1, payload)
             } as Event);
         });
 
@@ -161,6 +201,17 @@ function makeRoom(direct = false) {
         it("should allow sending messages", (done) => {
             room.send("hello").then((msg) => {
                 expect(msg.body).toBe("hello");
+                done();
+            });
+        });
+
+        it("should allow sending metadata", (done) => {
+            let payload = {
+                img: "image",
+                src: "http://i.giphy.com/3o6ZtpxSZbQRRnwCKQ.gif"
+            };
+            room.sendMetadata(payload).then((meta) => {
+                expect(meta.payload).toBe(payload);
                 done();
             });
         });
@@ -214,17 +265,30 @@ describe("Room", () => {
                 });
 
                 events.notify({
-                    type: "room_left",
+                    type: "room_action",
                     id: room.id,
-                    user: alice
+                    action: {
+                        action: "left",
+                        id: actionId,
+                        room: room.id,
+                        user: alice,
+                        reason: "no reason",
+                        timestamp: Date.now()
+                    }
                 } as Event);
             });
         });
 
         events.notify({
-            type: "room_joined",
+            type: "room_action",
             id: room.id,
-            user: bob
+            action: {
+                action: "joined",
+                id: actionId,
+                room: room.id,
+                user: bob,
+                timestamp: Date.now()
+            }
         } as Event);
     });
 
@@ -235,10 +299,15 @@ describe("Room", () => {
         });
 
         events.notify({
-            type: "room_joined",
+            type: "room_action",
             id: room.id,
-            user: alice,
-            timestamp: Date.now()
+            action: {
+                action: "joined",
+                id: actionId,
+                room: room.id,
+                user: alice,
+                timestamp: Date.now()
+            }
         } as Event);
     });
 
@@ -250,27 +319,37 @@ describe("Room", () => {
         });
 
         events.notify({
-            type: "room_left",
+            type: "room_action",
             id: room.id,
-            user: alice,
-            reason: "reason",
-            timestamp: Date.now()
+            action: {
+                action: "left",
+                id: actionId,
+                room: room.id,
+                user: alice,
+                reason: "reason",
+                timestamp: Date.now()
+            }
         } as Event);
     });
 
     it("should run callback on room invite", (done) => {
         room.onInvited((msg) => {
-            expect(msg.user).toBe(bob);
-            expect(msg.inviter).toBe(alice);
+            expect(msg.user).toBe(alice);
+            expect(msg.invitee).toBe(bob);
             done();
         });
 
         events.notify({
-            type: "room_invited",
+            type: "room_action",
             id: room.id,
-            inviter: alice,
-            user: bob,
-            timestamp: Date.now()
+            action: {
+                action: "invited",
+                id: actionId,
+                room: room.id,
+                user: alice,
+                invitee: bob,
+                timestamp: Date.now()
+            }
         } as Event);
     });
 

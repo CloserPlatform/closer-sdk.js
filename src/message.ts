@@ -1,12 +1,13 @@
 import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { ID, Message as MSG, MessageDelivered, Timestamp }  from "./protocol";
+import { ArchivableWithType, ID, Message as MSG, MessageDelivered, Timestamp, Type }  from "./protocol";
 
-export class Message implements MSG {
+export class Message implements MSG, ArchivableWithType {
+    public type: Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
     public id: ID;
     public body: string;
-    public sender: ID;
+    public user: ID;
     public room: ID;
     public timestamp: Timestamp;
     public delivered: Timestamp;
@@ -18,7 +19,7 @@ export class Message implements MSG {
     constructor(message: MSG, log: Logger, events: EventHandler, api: API) {
         this.id = message.id;
         this.body = message.body;
-        this.sender = message.sender;
+        this.user = message.user;
         this.room = message.room;
         this.timestamp = message.timestamp;
         this.delivered = message.delivered;

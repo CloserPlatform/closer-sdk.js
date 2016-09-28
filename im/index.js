@@ -114,7 +114,7 @@ $(document).ready(function() {
     }
 
     function makeReceiver(room, text) {
-        return function(msg) {
+        function receive(msg, className, sender, body) {
             room.getMark().then(function(mark) {
                 if(msg.timestamp > mark) {
                     if(!chatboxes[room.id].isActive()) {
@@ -126,13 +126,23 @@ $(document).ready(function() {
             }).catch(function(error) {
                 console.log("Could not retrieve the mark: ", error);
             });
-
-            var className = msg.delivered ? "delivered" : "";
-            var line = makeTextLine(msg.id, className, msg.timestamp, " " + getUserNickname(msg.sender) +
-                                    ": " + msg.body);
+            var line = makeTextLine(msg.id, className, msg.timestamp, sender, body);
             text.append(line);
             text.trigger('scroll-to-bottom');
         }
+
+        return {
+            message: function(msg) {
+                receive(msg, "message " + msg.delivered ? "delivered" : "", getUserNickname(msg.user), msg.body);
+            },
+            metadata: function(meta) {
+                receive(meta, "metadata", getUserNickname(meta.user), makeEmbed(meta.payload));
+            },
+            action: function(action) {
+                var target = (action.action === "invited" ? getUserNickname(action.invitee) : "the room");
+                receive(action, "info", "", "User " + getUserNickname(action.user) + " " + action.action + " " + target + ".");
+            }
+        };
     }
 
     function makeDirectChatbox(room, directCallBuilder) {
@@ -146,8 +156,10 @@ $(document).ready(function() {
 
         room.onMessage(function(msg) {
             msg.markDelivered();
-            receive(msg);
+            receive.message(msg);
         });
+
+        room.onMetadata(receive.metadata);
 
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (msg) {
@@ -155,7 +167,7 @@ $(document).ready(function() {
                     $('#' + m.id).addClass("delivered");
                 });
                 console.log("Received ack for message: ", msg);
-                receive(msg);
+                receive.message(msg);
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
@@ -313,35 +325,29 @@ $(document).ready(function() {
         });
 
         var text = makeTextArea("chatbox-textarea");
-
-        function receiveAction(timestamp, line) {
-            text.append(makeTextLine("", "info", timestamp, line));
-            text.trigger('scroll-to-bottom');
-        }
+        var receive = makeReceiver(room, text);
 
         room.onJoined(function(msg) {
             if(msg.user != getSessionId(userNickname)) {
                 users.add(msg.user);
             }
-            receiveAction(msg.timestamp, " User " + getUserNickname(msg.user) + " joined the room.");
+            receive.action(msg);
         });
 
         room.onLeft(function(msg) {
             users.remove(msg.user);
-            receiveAction(msg.timestamp, " User " + getUserNickname(msg.user) + " left the room, reason: " + msg.reason + ".");
+            receive.action(msg);
         });
 
-        room.onInvited(function(msg) {
-            receiveAction(msg.timestamp, " User " + getUserNickname(msg.inviter) + " invited user " +
-                          getUserNickname(msg.user) + " to join the room.");
-        });
+        room.onInvited(receive.action);
 
-        var receive = makeReceiver(room, text);
         room.onMessage(function(msg) {
             msg.markDelivered();
-            receive(msg);
-            users.deactivate(msg.sender);
+            receive.message(msg);
+            users.deactivate(msg.user);
         });
+
+        room.onMetadata(receive.metadata);
 
         room.onTyping(function(msg) {
             console.log(msg.user + " is typing!");
@@ -355,7 +361,7 @@ $(document).ready(function() {
                 });
                 hackersTrap(msg.body);
                 console.log("Received ack for message: ", msg);
-                receive(msg);
+                receive.message(msg);
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
@@ -387,7 +393,25 @@ $(document).ready(function() {
             }
         });
 
-        var buttons = makeButtonGroup().append(call);
+        var gif = makeButton("btn-info", "Gif!", function() {
+            room.sendMetadata({
+                type: "gif",
+                url: randomGif()
+            }).then(receive.metadata).catch(function(error) {
+                console.log("Could not send gif!: ", error);
+            });
+        });
+
+        var brag = makeButton("btn-warning", "Brag!", function() {
+            room.sendMetadata({
+                type: "agent",
+                agent: navigator.userAgent
+            }).then(receive.metadata).catch(function(error) {
+                console.log("Could not send User Agent!: ", error);
+            });
+        });
+
+        var buttons = makeButtonGroup().append([call, gif, brag]);
         var panel = makePanel(users.element).addClass('controls-wrapper');
         var controls = makeControls(room.id, [panel, invite, createBot, buttons]).addClass('text-center').hide();
 
@@ -451,8 +475,17 @@ $(document).ready(function() {
 
             room.getHistory().then(function(msgs) {
                 msgs.forEach(function(msg) {
-                    msg.markDelivered();
-                    chatbox.receive(msg);
+                    switch(msg.type) {
+                    case "message":
+                        msg.markDelivered();
+                        chatbox.receive.message(msg);
+                        break;
+                    case "metadata":
+                        chatbox.receive.metadata(msg);
+                        break;
+                    case "action":
+                        chatbox.receive.action(msg);
+                    }
                 });
             }).catch(function(error) {
                 console.log("Fetching room history failed: ", error);
@@ -673,6 +706,13 @@ $(document).ready(function() {
                 });
             });
         }
+    }
+
+    function randomGif() {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", 'http://api.giphy.com/v1/gifs/random?api_key=dc6zaTOxFJmzC', false);
+        xhttp.send();
+        return JSON.parse(xhttp.responseText).data.image_original_url;
     }
 
     function getURL(server) {
