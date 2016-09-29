@@ -1,33 +1,44 @@
+'use strict';
+
 var path = require('path');
-var webpack = require('webpack');
-var TypedocPlugin = require('typedoc-webpack-plugin');
+const loaders = require('./webpack/loaders');
+const plugins = require('./webpack/plugins');
 
 module.exports = {
     entry: './src/main.ts',
+
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'ratel-sdk.js',
         libraryTarget: 'var',
         library: 'RatelSDK'
     },
-    plugins: [
-        new TypedocPlugin({
-            externalPattern: "**/tests/**"
-        })
-    ],
+
+    devtool: process.env.NODE_ENV === 'production' ?
+        'source-map' :
+        'inline-source-map',
+
     resolve: {
-        extensions: ['', '.webpack.js', '.web.js', '.ts', '.js']
+        extensions: [
+            '',
+            '.webpack.js',
+            '.web.js',
+            '.tsx',
+            '.ts',
+            '.js',
+            '.json'
+        ],
     },
+
+    plugins: plugins,
+
     module: {
+        preLoaders: [
+            loaders.tslint
+        ],
         loaders: [
-            {
-                test: /\.tsx?$/,
-                loader: 'ts-loader'
-            }
-        ]
-    },
-    stats: {
-        colors: true
-    },
-    devtool: 'source-map'
+            loaders.tsx,
+            loaders.json
+        ],
+    }
 };
