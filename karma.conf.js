@@ -31,11 +31,10 @@ module.exports = (config) => {
 
         files: [
             './node_modules/es6-promise/dist/es6-promise.js',
-            './tests/*.ts',
             {
-                pattern: './src/*.ts',
+                pattern: './src/**/*.spec.ts',
                 served: true,
-                included: false,
+                included: true,
                 watched: true,
             },
             {
@@ -47,10 +46,11 @@ module.exports = (config) => {
         ],
 
         exclude: [
-            './tests/fixtures.ts'
+            './src/fixtures.spec.ts'
         ],
+
         preprocessors: {
-            './tests/*.ts': ['webpack', 'sourcemap'],
+            './src/**/*.spec.ts': ['webpack', 'sourcemap'],
         },
 
         webpack: Object.assign({}, webpack, {

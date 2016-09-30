@@ -1,4 +1,4 @@
-import { Config, load } from "../src/config";
+import { Config, load } from "./config";
 
 describe("Config", () => {
     it("should load with defaults", () => {

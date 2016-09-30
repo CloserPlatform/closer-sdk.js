@@ -5,7 +5,7 @@
   "main": "dist/ratel-sdk.js",
   "scripts": {
     "deps": "typings install",
-    "lint": "tslint -c tslint.json src/**/*.ts test/**/*.ts",
+    "lint": "tslint -c tslint.json src/**/*.ts",
     "test": "karma start --singleRun true",
     "test-dev": "karma start --singleRun false --browsers 'ChromeWithFakeUserMedia,Firefox,PhantomJS'",
     "build": "npm run commit-hash && cross-env NODE_ENV=production webpack && npm run browserify",
@@ -13,7 +13,7 @@
     "prebuild": "npm run test",
     "pretest": "npm run lint",
     "postinstall": "npm run deps && npm run build",
-    "posttest": "istanbul check-coverage --statement 70 --branch 50 --function 50",
+    "posttest": "istanbul check-coverage",
     "commit-hash": "git rev-parse HEAD > im/version.txt",
     "browserify": "browserify im/index.js -o im/bundle.js"
   },

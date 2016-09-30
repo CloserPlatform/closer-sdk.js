@@ -1,8 +1,8 @@
-import { API } from "../src/api";
-import { EventHandler } from "../src/events";
-import { config, log } from "./fixtures";
-import { Archivable, ArchivableWithType, Event, mark, Message, Metadata, Room as ProtoRoom, typing } from "../src/protocol";
-import { createRoom, DirectRoom, Room } from "../src/room";
+import { API } from "./api";
+import { EventHandler } from "./events";
+import { config, log } from "./fixtures.spec";
+import * as proto from "./protocol";
+import { createRoom, DirectRoom, Room } from "./room";
 
 const actionId = "567";
 const roomId = "123";
@@ -14,7 +14,7 @@ const msg2 = "1313";
 const msg3 = "4545";
 const meta1 = "576";
 
-function msg(id: string): Message {
+function msg(id: string): proto.Message {
     return {
         id,
         body: "Hi!",
@@ -24,7 +24,7 @@ function msg(id: string): Message {
     };
 }
 
-function meta(id: string, payload: any): Metadata {
+function meta(id: string, payload: any): proto.Metadata {
     return {
         id,
         room: roomId,
@@ -57,11 +57,11 @@ class APIMock extends API {
     }
 
     getRoomHistory(id) {
-        let a1: Archivable = msg(msg1);
-        let a2: Archivable = msg(msg2);
-        let at1 = a1 as ArchivableWithType;
+        let a1: proto.Archivable = msg(msg1);
+        let a2: proto.Archivable = msg(msg2);
+        let at1 = a1 as proto.ArchivableWithType;
         at1.type = "message";
-        let at2 = a2 as ArchivableWithType;
+        let at2 = a2 as proto.ArchivableWithType;
         at2.type = "message";
         return Promise.resolve([at1, at2]);
     }
@@ -95,13 +95,15 @@ function makeRoom(direct = false) {
         name: "room",
         created: 123,
         users: [alice],
-        direct: direct
-    } as ProtoRoom;
+        direct
+    } as proto.Room;
 }
 
 ["DirectRoom", "Room"].forEach((d) => {
     describe(d, () => {
-        let events, api, room;
+        let events;
+        let api;
+        let room;
 
         beforeEach(() => {
             events = new EventHandler(log);
@@ -131,7 +133,7 @@ function makeRoom(direct = false) {
                 done();
             });
 
-            events.notify(typing(room.id, chad));
+            events.notify(proto.typing(room.id, chad));
         });
 
         it("should run a callback on incoming message", (done) => {
@@ -147,7 +149,7 @@ function makeRoom(direct = false) {
                 type: "room_message",
                 id: room.id,
                 message: m
-            } as Event);
+            } as proto.Event);
         });
 
         it("should run a callback on incoming metadata", (done) => {
@@ -165,7 +167,7 @@ function makeRoom(direct = false) {
                 type: "room_metadata",
                 id: room.id,
                 metadata: meta(meta1, payload)
-            } as Event);
+            } as proto.Event);
         });
 
         it("should run a callback on incoming mark", (done) => {
@@ -179,7 +181,7 @@ function makeRoom(direct = false) {
                 });
             });
 
-            events.notify(mark(room.id, t));
+            events.notify(proto.mark(room.id, t));
         });
 
         // FIXME These should be moved to integration tests:
@@ -219,7 +221,9 @@ function makeRoom(direct = false) {
 });
 
 describe("DirectRoom", () => {
-    let events, api, room;
+    let events;
+    let api;
+    let room;
 
     beforeEach(() => {
         events = new EventHandler(log);
@@ -236,7 +240,9 @@ describe("DirectRoom", () => {
 });
 
 describe("Room", () => {
-    let events, api, room;
+    let events;
+    let api;
+    let room;
 
     beforeEach(() => {
         events = new EventHandler(log);
@@ -247,19 +253,19 @@ describe("Room", () => {
     it("should maintain the user list", (done) => {
         events.onError((error) => done.fail());
 
-        room.onJoined((msg) => {
-            expect(msg.user).toBe(bob);
+        room.onJoined((joined) => {
+            expect(joined.user).toBe(bob);
 
-            room.getUsers().then((users) => {
-                expect(users).toContain(bob);
-                expect(users).toContain(alice);
+            room.getUsers().then((users1) => {
+                expect(users1).toContain(bob);
+                expect(users1).toContain(alice);
 
-                room.onLeft((msg) => {
-                    expect(msg.user).toBe(alice);
+                room.onLeft((left) => {
+                    expect(left.user).toBe(alice);
 
-                    room.getUsers().then((users) => {
-                        expect(users).toContain(bob);
-                        expect(users).not.toContain(alice);
+                    room.getUsers().then((users2) => {
+                        expect(users2).toContain(bob);
+                        expect(users2).not.toContain(alice);
                         done();
                     });
                 });
@@ -275,7 +281,7 @@ describe("Room", () => {
                         reason: "no reason",
                         timestamp: Date.now()
                     }
-                } as Event);
+                } as proto.Event);
             });
         });
 
@@ -289,7 +295,7 @@ describe("Room", () => {
                 user: bob,
                 timestamp: Date.now()
             }
-        } as Event);
+        } as proto.Event);
     });
 
     it("should run callback on room joined", (done) => {
@@ -308,7 +314,7 @@ describe("Room", () => {
                 user: alice,
                 timestamp: Date.now()
             }
-        } as Event);
+        } as proto.Event);
     });
 
     it("should run callback on room left", (done) => {
@@ -329,7 +335,7 @@ describe("Room", () => {
                 reason: "reason",
                 timestamp: Date.now()
             }
-        } as Event);
+        } as proto.Event);
     });
 
     it("should run callback on room invite", (done) => {
@@ -350,7 +356,7 @@ describe("Room", () => {
                 invitee: bob,
                 timestamp: Date.now()
             }
-        } as Event);
+        } as proto.Event);
     });
 
     // FIXME These should be moved to integration tests:

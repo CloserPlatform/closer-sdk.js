@@ -1,9 +1,8 @@
-import { API } from "../src/api";
-import { createCall, Call } from "../src/call";
-import { EventHandler } from "../src/events";
-import { config, getStream, isWebRTCSupported, log, validSDP, whenever } from "./fixtures";
-import { Call as ProtoCall, Event } from "../src/protocol";
-import { createRTCPool, RTCPool } from "../src/rtc";
+import { API } from "./api";
+import { Call, createCall } from "./call";
+import { EventHandler } from "./events";
+import { config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
+import { Call as ProtoCall, Event } from "./protocol";
 
 const callId = "123";
 const alice = "321";
@@ -30,11 +29,11 @@ class APIMock extends API {
         return Promise.resolve(undefined);
     }
 
-    sendDescription(callId, peer, sdp) {
+    sendDescription(id, peer, sdp) {
         // Do nothing.
     }
 
-    sendCandidate(callId, peer, candidate) {
+    sendCandidate(id, peer, candidate) {
         // Do nothing.
     }
 }
@@ -44,13 +43,15 @@ function makeCall(direct = false) {
         id: callId,
         created: 123,
         users: [alice],
-        direct: direct
+        direct
     } as ProtoCall;
 }
 
 ["DirectCall", "Call"].forEach((d) => {
     describe(d, () => {
-        let events, api, call;
+        let events;
+        let api;
+        let call;
 
         beforeEach(() => {
             events = new EventHandler(log);
@@ -107,19 +108,19 @@ function makeCall(direct = false) {
 
                 events.onError((error) => done.fail());
 
-                call.onJoined((msg) => {
-                    expect(msg.user).toBe(bob);
+                call.onJoined((msg1) => {
+                    expect(msg1.user).toBe(bob);
 
-                    call.getUsers().then((users) => {
-                        expect(users).toContain(bob);
-                        expect(users).toContain(alice);
+                    call.getUsers().then((users1) => {
+                        expect(users1).toContain(bob);
+                        expect(users1).toContain(alice);
 
-                        call.onLeft((msg) => {
-                            expect(msg.user).toBe(alice);
+                        call.onLeft((msg2) => {
+                            expect(msg2.user).toBe(alice);
 
-                            call.getUsers().then((users) => {
-                                expect(users).toContain(bob);
-                                expect(users).not.toContain(alice);
+                            call.getUsers().then((users2) => {
+                                expect(users2).toContain(bob);
+                                expect(users2).not.toContain(alice);
                                 done();
                             });
                         });
@@ -164,7 +165,9 @@ function makeCall(direct = false) {
 });
 
 describe("Call", () => {
-    let events, api, call;
+    let events;
+    let api;
+    let call;
 
     beforeEach(() => {
         events = new EventHandler(log);

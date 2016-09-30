@@ -1,9 +1,6 @@
-import { EventHandler } from "../src/events";
-import { log } from "./fixtures";
-import { Error, Event, mark, RoomMark} from "../src/protocol";
-
-const roomId = "123";
-const alice = "321";
+import { EventHandler } from "./events";
+import { log } from "./fixtures.spec";
+import { Error, mark, RoomMark} from "./protocol";
 
 interface ErrorWithCause extends Error {
     cause: boolean;
@@ -18,7 +15,7 @@ describe("Event Handler", () => {
 
     beforeEach(() => {
         events = new EventHandler(log);
-    })
+    });
 
     it("should allow defining & invoking error handlers", () => {
         let ok = true;
@@ -107,7 +104,7 @@ describe("Event Handler", () => {
 
         events.onConcreteEvent("room_mark", "3", (msg: RoomMark) => first = msg);
         events.onEvent("room_mark", (msg: RoomMark) => {
-            if(msg.id === "3") {
+            if (msg.id === "3") {
                 second = msg;
             }
         });

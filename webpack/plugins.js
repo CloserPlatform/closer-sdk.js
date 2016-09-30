@@ -16,7 +16,7 @@ const basePlugins = [
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
   }),
   new TypedocPlugin({
-    externalPattern: '**/tests**'
+    externalPattern: './src/**/*.spec.ts'
   }),
   new webpack.NoErrorsPlugin()
 ].concat(sourceMap);
