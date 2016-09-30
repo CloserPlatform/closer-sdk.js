@@ -76,7 +76,11 @@ module.exports = (config) => {
             .concat(coverage.length > 0 ? ['karma-remap-istanbul'] : []),
 
         remapIstanbulReporter: {
-            src: 'coverage/phantomjs/coverage-final.json',
+            src: [
+                'coverage/phantomjs/coverage-final.json',
+                'coverage/chrome/coverage-final.json',
+                'coverage/firefox/coverage-final.json'
+            ],
             reports: {
                 html: 'coverage',
             },
@@ -86,12 +90,10 @@ module.exports = (config) => {
 
         // only output json report to be remapped by remap-istanbul
         coverageReporter: {
-            reporters: [
-                { type: 'json' },
-            ],
+            type: 'json',
             dir: './coverage/',
             subdir: (browser) => {
-                return browser.toLowerCase().split(/[ /-]/)[0]; // returns 'chrome'
+                return browser.toLowerCase().split(/[ /-]/)[0]; // returns 'chrome' etc
             }
         },
 

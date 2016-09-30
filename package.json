@@ -7,7 +7,7 @@
     "deps": "typings install",
     "lint": "tslint -c tslint.json src/**/*.ts",
     "test": "karma start --singleRun true",
-    "test-dev": "karma start --singleRun false --browsers 'ChromeWithFakeUserMedia,Firefox,PhantomJS'",
+    "test-dev": "karma start --singleRun true --browsers 'ChromeWithFakeUserMedia,Firefox,PhantomJS'",
     "build": "npm run commit-hash && cross-env NODE_ENV=production webpack && npm run browserify",
     "start": "python3 -m http.server",
     "prebuild": "npm run test",
