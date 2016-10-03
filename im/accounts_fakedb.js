@@ -31,6 +31,9 @@ var users = {
     "pawel.budzyk": {userId: 22, orgId: contactisId},
     "pawel.kaczorowski": {userId: 23, orgId: contactisId},
     "rafal.kulawiak": {userId: 24, orgId: contactisId},
+    "konstantinos": {userId: 25, orgId: contactisId},
+    "pawel.dzieciol": {userId: 26, orgId: contactisId},
+    "dariusz.bembenek":{userId: 27, orgId: contactisId},
     "alice": {userId: 201, orgId: contactisId},
     "bob": {userId: 202, orgId: contactisId},
     "charlie": {userId: 203, orgId: contactisId}
