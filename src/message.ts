@@ -1,7 +1,7 @@
 import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { ArchivableWithType, ID, Message as MSG, MessageDelivered, Timestamp, Type }  from "./protocol";
+import { ArchivableWithType, ChatDelivered, ID, Message as MSG, Timestamp, Type }  from "./protocol";
 
 export class Message implements MSG, ArchivableWithType {
     public type: Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
@@ -38,7 +38,7 @@ export class Message implements MSG, ArchivableWithType {
 
     onDelivery(callback: Callback<Message>) {
         let _this = this;
-        this.events.onConcreteEvent("msg_delivered", this.id, function(msg: MessageDelivered) {
+        this.events.onConcreteEvent("chat_delivered", this.id, function(msg: ChatDelivered) {
             _this.delivered = msg.timestamp;
             callback(_this);
         });

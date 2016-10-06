@@ -25,8 +25,8 @@ export class Artichoke {
             // Do nothing.
         };
         events.onEvent("error", nop);
-        events.onEvent("msg_received", nop);
-        events.onEvent("msg_delivered", nop);
+        events.onEvent("chat_received", nop);
+        events.onEvent("chat_delivered", nop);
     }
 
     // Callbacks:

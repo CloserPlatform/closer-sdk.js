@@ -81,6 +81,20 @@ export interface CallLeft extends CallAction {
     reason: string;
 }
 
+export interface ChatDelivered extends Event {
+    timestamp: Timestamp;
+    user?: ID;
+}
+
+export interface ChatReceived extends Event {
+    message: Message;
+}
+
+export interface ChatRequest extends Event {
+    body: string;
+    room: ID;
+}
+
 export interface Event {
     type: Type;
     ref?: Ref;
@@ -89,19 +103,6 @@ export interface Event {
 
 export interface Error extends Event {
     reason: string;
-}
-
-export interface MessageDelivered extends Event {
-    timestamp: Timestamp;
-}
-
-export interface MessageReceived extends Event {
-    message: Message;
-}
-
-export interface MessageRequest extends Event {
-    body: string;
-    room: ID;
 }
 
 export type Status = "away" | "available" | "unavailable";
@@ -152,18 +153,18 @@ export interface RTCDescription extends Event {
 }
 
 // WS API:
-export function messageRequest(room: ID, body: string, ref: Ref): MessageRequest {
+export function chatRequest(room: ID, body: string, ref: Ref): ChatRequest {
     return {
-        type: "msg_request",
+        type: "chat_request",
         room,
         body,
         ref
     };
 }
 
-export function messageDelivered(id: ID, timestamp: Timestamp): MessageDelivered {
+export function chatDelivered(id: ID, timestamp: Timestamp): ChatDelivered {
     return {
-        type: "msg_delivered",
+        type: "chat_delivered",
         id,
         timestamp
     };

@@ -2,7 +2,7 @@ import { API } from "./api";
 import { EventHandler } from "./events";
 import { config, log, sleep } from "./fixtures.spec";
 import { createMessage } from "./message";
-import { Message, MessageDelivered } from "./protocol";
+import { ChatDelivered, Message } from "./protocol";
 
 const roomId = "123";
 const bob = "456";
@@ -79,10 +79,11 @@ describe("Message", () => {
         });
 
         events.notify({
-            type: "msg_delivered",
+            type: "chat_delivered",
             id: msg.id,
+            user: bob,
             timestamp: 12345
-        } as MessageDelivered);
+        } as ChatDelivered);
     });
 
     it("should run a callback on each delivery", (done) => {
@@ -97,9 +98,10 @@ describe("Message", () => {
         });
 
         [123, 456].forEach((t) => events.notify({
-            type: "msg_delivered",
+            type: "chat_delivered",
             id: msg.id,
+            user: bob,
             timestamp: t
-        } as MessageDelivered));
+        } as ChatDelivered));
     });
 });

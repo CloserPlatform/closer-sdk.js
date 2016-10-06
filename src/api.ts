@@ -191,10 +191,10 @@ export class API {
         return new Promise(function(resolve, reject) {
             let ref = "ref" + Date.now(); // FIXME Use UUID instead.
             _this.promises[ref] = {
-                resolve: (ack: proto.MessageReceived) => resolve(ack.message),
+                resolve: (ack: proto.ChatReceived) => resolve(ack.message),
                 reject
             };
-            _this.send(proto.messageRequest(roomId, body, ref));
+            _this.send(proto.chatRequest(roomId, body, ref));
         });
     }
 
@@ -212,7 +212,7 @@ export class API {
 
     // Message API:
     setDelivered(messageId: proto.ID, timestamp: proto.Timestamp) {
-        this.send(proto.messageDelivered(messageId, timestamp));
+        this.send(proto.chatDelivered(messageId, timestamp));
     }
 
     // Presence API:
