@@ -1,7 +1,7 @@
 import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { ArchivableWithType, ChatDelivered, ID, Message as MSG, Timestamp, Type }  from "./protocol";
+import { ArchivableWithType, ChatDelivered, Delivered, ID, Message as MSG, Timestamp, Type }  from "./protocol";
 
 export class Message implements MSG, ArchivableWithType {
     public type: Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
@@ -10,7 +10,7 @@ export class Message implements MSG, ArchivableWithType {
     public user: ID;
     public room: ID;
     public timestamp: Timestamp;
-    public delivered: Timestamp;
+    public delivered: Delivered;
 
     private log: Logger;
     private events: EventHandler;
@@ -31,15 +31,23 @@ export class Message implements MSG, ArchivableWithType {
 
     markDelivered() {
         if (!this.delivered) {
-            this.delivered = Date.now();
-            this.api.setDelivered(this.id, this.delivered);
+            let ts = Date.now();
+
+            this.delivered = {
+                user: "FIXME", // FIXME We don't currently have the sessionId here...
+                timestamp: ts
+            };
+            this.api.setDelivered(this.id, ts);
         }
     }
 
     onDelivery(callback: Callback<Message>) {
         let _this = this;
         this.events.onConcreteEvent("chat_delivered", this.id, function(msg: ChatDelivered) {
-            _this.delivered = msg.timestamp;
+            _this.delivered = {
+                user: msg.user,
+                timestamp: msg.timestamp
+            };
             callback(_this);
         });
     }

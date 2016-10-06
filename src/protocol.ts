@@ -38,9 +38,14 @@ export interface Call {
     direct: boolean;
 }
 
+export interface Delivered {
+    user: ID;
+    timestamp: Timestamp;
+}
+
 export interface Message extends Archivable {
     body: string;
-    delivered?: Timestamp;
+    delivered?: Delivered;
 }
 
 export interface Metadata extends Archivable {
