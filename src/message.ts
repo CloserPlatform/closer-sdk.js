@@ -1,29 +1,31 @@
 import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { ArchivableWithType, ChatDelivered, Delivered, ID, Message as MSG, Timestamp, Type } from "./protocol";
-import { RichDeliverable } from "./rich";
+import * as proto from "./protocol";
+import { RichDeliverable, RichEditable } from "./rich";
 
-export class Message implements MSG, ArchivableWithType, RichDeliverable {
-    public type: Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
-    public id: ID;
+export class Message implements proto.Message, proto.ArchivableWithType, RichDeliverable, RichEditable<string> {
+    public type: proto.Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
+    public id: proto.ID;
     public body: string;
-    public user: ID;
-    public room: ID;
-    public timestamp: Timestamp;
-    public delivered: Delivered;
+    public user: proto.ID;
+    public room: proto.ID;
+    public timestamp: proto.Timestamp;
+    public delivered: proto.Delivered;
+    public edited: proto.Edited;
 
     private log: Logger;
     private events: EventHandler;
     private api: API;
 
-    constructor(message: MSG, log: Logger, events: EventHandler, api: API) {
+    constructor(message: proto.Message, log: Logger, events: EventHandler, api: API) {
         this.id = message.id;
         this.body = message.body;
         this.user = message.user;
         this.room = message.room;
         this.timestamp = message.timestamp;
         this.delivered = message.delivered;
+        this.edited = message.edited;
 
         this.log = log;
         this.events = events;
@@ -44,7 +46,7 @@ export class Message implements MSG, ArchivableWithType, RichDeliverable {
 
     onDelivery(callback: Callback<Message>) {
         let _this = this;
-        this.events.onConcreteEvent("chat_delivered", this.id, function(msg: ChatDelivered) {
+        this.events.onConcreteEvent("chat_delivered", this.id, function(msg: proto.ChatDelivered) {
             _this.delivered = {
                 user: msg.user,
                 timestamp: msg.timestamp
@@ -53,9 +55,29 @@ export class Message implements MSG, ArchivableWithType, RichDeliverable {
         });
     }
 
-    // TODO markRead, onRead, edit & onEdit
+    edit(body: string) {
+        this.body = body;
+        let ts = Date.now();
+        this.edited = {
+            user: "FIXME", // FIXME We don't currently have the sessionId here...
+            timestamp: ts
+        };
+        this.api.updateArchivable(this, ts); // FIXME Actually use the promise.
+    }
+
+    onEdit(callback: Callback<Message>) {
+        let _this = this;
+        this.events.onConcreteEvent("chat_edited", this.id, function(msg: proto.ChatEdited) {
+            let m = (msg.archivable as proto.Message);
+            _this.body = m.body;
+            _this.edited = m.edited;
+            callback(_this);
+        });
+    }
+
+    // TODO markRead, onRead
 }
 
-export function createMessage(message: MSG, log: Logger, events: EventHandler, api: API): Message {
+export function createMessage(message: proto.Message, log: Logger, events: EventHandler, api: API): Message {
     return new Message(message, log, events, api);
 }

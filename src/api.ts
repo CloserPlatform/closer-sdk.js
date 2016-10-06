@@ -42,9 +42,10 @@ export class API {
     private apiKey: ApiKey;
 
     private url: string;
+    private archivePath = "archive/items";
     private callPath = "calls";
-    private roomPath = "rooms";
     private botPath = "bots";
+    private roomPath = "rooms";
 
     private wsUrl: string;
     private socket: JSONWebSocket;
@@ -214,9 +215,13 @@ export class API {
         this.send(proto.mark(roomId, timestamp));
     }
 
-    // Message API:
-    setDelivered(messageId: proto.ID, timestamp: proto.Timestamp) {
-        this.send(proto.chatDelivered(messageId, timestamp));
+    // Archivable API:
+    setDelivered(archivableId: proto.ID, timestamp: proto.Timestamp) {
+        this.send(proto.chatDelivered(archivableId, timestamp));
+    }
+
+    updateArchivable(archivable: proto.Archivable, timestamp: proto.Timestamp): Promise<proto.Archivable> {
+        return this.post<proto.Archivable, proto.Archivable>([this.url, this.archivePath, archivable.id], archivable);
     }
 
     // Presence API:

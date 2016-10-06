@@ -2,7 +2,7 @@ import { API } from "./api";
 import { EventHandler } from "./events";
 import { config, log, sleep } from "./fixtures.spec";
 import { createMessage } from "./message";
-import { ChatDelivered, Delivered, Message } from "./protocol";
+import { ChatDelivered, ChatEdited, Delivered, Message } from "./protocol";
 
 const roomId = "123";
 const bob = "456";
@@ -10,9 +10,15 @@ const msg1 = "2323";
 
 class APIMock extends API {
     setDelivery = false;
+    updatedArchivable = false;
 
     setDelivered(messageId, timestamp) {
         this.setDelivery = true;
+    }
+
+    updateArchivable(archivable, timestamp) {
+        this.updatedArchivable = true;
+        return Promise.resolve(archivable);
     }
 }
 
@@ -104,5 +110,35 @@ describe("Message", () => {
             user: bob,
             timestamp: t
         } as ChatDelivered));
+    });
+
+    it("should allow editing", () => {
+        expect(msg.edited).not.toBeDefined();
+        msg.edit("edited body");
+        expect(api.updatedArchivable).toBe(true);
+        expect(msg.edited).toBeDefined();
+    });
+
+    it("should run a callback on edit", (done) => {
+        let edited = makeMsg();
+        let body = "edited body";
+        edited.body = body;
+        edited.edited = {
+            user: bob,
+            timestamp: Date.now()
+        };
+        expect(msg.edited).not.toBeDefined();
+
+        msg.onEdit((m) => {
+            expect(m.body).toBe(body);
+            expect(m.edited).toBeDefined();
+            done();
+        });
+
+        events.notify({
+            type: "chat_edited",
+            id: msg.id,
+            archivable: edited
+        } as ChatEdited);
     });
 });

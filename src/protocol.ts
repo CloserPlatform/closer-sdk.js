@@ -42,12 +42,15 @@ export interface Deliverable {
     delivered?: Delivered;
 }
 
-export interface Delivered {
-    user: ID;
-    timestamp: Timestamp;
+export interface Delivered extends UserTimestamp {}
+
+export interface Editable {
+    edited?: Edited;
 }
 
-export interface Media extends Archivable, MediaItem {}
+export interface Edited extends UserTimestamp {}
+
+export interface Media extends Archivable, MediaItem, Editable {}
 
 export interface MediaItem {
     mimeType: string;
@@ -55,7 +58,7 @@ export interface MediaItem {
     description: string;
 }
 
-export interface Message extends Archivable, Deliverable {
+export interface Message extends Archivable, Deliverable, Editable {
     body: string;
 }
 
@@ -70,6 +73,11 @@ export interface Room {
     users: Array<ID>;
     direct: boolean;
     mark?: number;
+}
+
+interface UserTimestamp {
+    user: ID;
+    timestamp: Timestamp;
 }
 
 // JSON Events:
@@ -100,6 +108,10 @@ export interface CallLeft extends CallAction {
 export interface ChatDelivered extends Event {
     timestamp: Timestamp;
     user?: ID;
+}
+
+export interface ChatEdited extends Event {
+    archivable: Archivable;
 }
 
 export interface ChatReceived extends Event {
