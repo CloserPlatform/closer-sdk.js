@@ -68,6 +68,10 @@ class BaseRoom implements proto.Room {
         return this.api.sendMetadata(this.id, payload);
     }
 
+    sendMedia(media: proto.MediaItem): Promise<proto.Media> {
+        return this.api.sendMedia(this.id, media);
+    }
+
     indicateTyping() {
         this.api.sendTyping(this.id);
     }
@@ -86,6 +90,10 @@ class BaseRoom implements proto.Room {
 
     onMetadata(callback: Callback<proto.Metadata>) {
         this.events.onConcreteEvent("room_metadata", this.id, (msg: proto.RoomMetadata) => callback(msg.metadata));
+    }
+
+    onMedia(callback: Callback<proto.Media>) {
+        this.events.onConcreteEvent("room_media", this.id, (msg: proto.RoomMedia) => callback(msg.media));
     }
 
     onTyping(callback: Callback<proto.RoomTyping>) {

@@ -43,6 +43,14 @@ export interface Delivered {
     timestamp: Timestamp;
 }
 
+export interface Media extends Archivable, MediaItem {}
+
+export interface MediaItem {
+    mimeType: string;
+    content: string;
+    description: string;
+}
+
 export interface Message extends Archivable {
     body: string;
     delivered?: Delivered;
@@ -129,6 +137,10 @@ export interface RoomInvitation extends Event {
 
 export interface RoomMark extends Event {
     timestamp: Timestamp;
+}
+
+export interface RoomMedia extends Event {
+    media: Media;
 }
 
 export interface RoomMessage extends Event {

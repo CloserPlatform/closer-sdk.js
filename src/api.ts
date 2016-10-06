@@ -202,6 +202,10 @@ export class API {
         return this.post<any, proto.Metadata>([this.url, this.roomPath, roomId, "metadata"], payload);
     }
 
+    sendMedia(roomId: proto.ID, media: proto.MediaItem): Promise<proto.Media> {
+        return this.post<proto.MediaItem, proto.Media>([this.url, this.roomPath, roomId, "media"], media);
+    }
+
     sendTyping(roomId: proto.ID) {
         this.send(proto.typing(roomId));
     }
