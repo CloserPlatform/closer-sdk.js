@@ -38,6 +38,10 @@ export interface Call {
     direct: boolean;
 }
 
+export interface Deliverable {
+    delivered?: Delivered;
+}
+
 export interface Delivered {
     user: ID;
     timestamp: Timestamp;
@@ -51,9 +55,8 @@ export interface MediaItem {
     description: string;
 }
 
-export interface Message extends Archivable {
+export interface Message extends Archivable, Deliverable {
     body: string;
-    delivered?: Delivered;
 }
 
 export interface Metadata extends Archivable {

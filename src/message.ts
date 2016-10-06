@@ -1,9 +1,10 @@
 import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { ArchivableWithType, ChatDelivered, Delivered, ID, Message as MSG, Timestamp, Type }  from "./protocol";
+import { ArchivableWithType, ChatDelivered, Delivered, ID, Message as MSG, Timestamp, Type } from "./protocol";
+import { RichDeliverable } from "./rich";
 
-export class Message implements MSG, ArchivableWithType {
+export class Message implements MSG, ArchivableWithType, RichDeliverable {
     public type: Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
     public id: ID;
     public body: string;
