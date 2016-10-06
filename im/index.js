@@ -509,8 +509,8 @@ $(document).ready(function() {
     function roomBuilder(session) {
         return function(name) {
             session.chat.createRoom("#" + name).then(function(room) {
-                addRoom(room, session).switchTo();
                 room.join();
+                addRoom(room, session).switchTo();
             }).catch(function(error) {
                 console.log("Creating a room failed: ", error);
             });
