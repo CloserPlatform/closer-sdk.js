@@ -1,4 +1,4 @@
-import * as proto from "../src/protocol";
+import * as proto from "./protocol";
 
 const actionId = "567";
 const roomId = "123";

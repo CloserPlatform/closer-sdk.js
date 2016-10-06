@@ -1,10 +1,8 @@
-import { API } from "../src/api";
-import { Artichoke } from "../src/artichoke";
-import { Call } from "../src/call";
-import { EventHandler } from "../src/events";
-import { config, log } from "./fixtures";
-import { Event } from "../src/protocol";
-import { Room } from "../src/room";
+import { API } from "./api";
+import { Artichoke } from "./artichoke";
+import { EventHandler } from "./events";
+import { config, log } from "./fixtures.spec";
+import { Event } from "./protocol";
 
 class APIMock extends API {
     cb;
@@ -19,7 +17,9 @@ class APIMock extends API {
 }
 
 describe("Artichoke", () => {
-    let events, api, manager;
+    let events;
+    let api;
+    let manager;
 
     beforeEach(() => {
         events = new EventHandler(log);

@@ -1,5 +1,5 @@
-import {withApiKey} from "../src/auth";
-import {config} from "./fixtures";
+import {withApiKey} from "./auth";
+import {config} from "./fixtures.spec";
 
 describe("Authorization", () => {
     it("should authorize with API key", (done) => {

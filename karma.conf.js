@@ -1,84 +1,129 @@
-var webpackConfig = require('./webpack.config');
+'use strict';
 
-module.exports = function(config) {
-  config.set({
+process.env.TEST = true;
 
-    // base path that will be used to resolve all patterns (eg. files, exclude)
-    basePath: '',
+const loaders = require('./webpack/loaders');
+const plugins = require('./webpack/plugins');
+const webpack = require('./webpack.config');
 
+module.exports = (config) => {
+    const coverage = config.singleRun ? ['coverage'] : [];
 
-    // frameworks to use
-    // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-    frameworks: ['jasmine'],
+    config.set({
+        basePath: '',
 
+        frameworks: [
+            'jasmine',
+        ],
 
-    // list of files / patterns to load in the browser
-    files: [
-      './node_modules/es6-promise/dist/es6-promise.js',
-      'tests/*.ts'
-    ],
+        plugins: [
+            'karma-jasmine',
+            'karma-sourcemap-writer',
+            'karma-sourcemap-loader',
+            'karma-webpack',
+            'karma-coverage',
+            'karma-remap-istanbul',
+            'karma-spec-reporter',
+            'karma-chrome-launcher',
+            'karma-firefox-launcher',
+            'karma-phantomjs-launcher'
+        ],
 
-    // list of files to exclude
-    exclude: [
-      'tests/fixtures.ts'
-    ],
+        files: [
+            './node_modules/es6-promise/dist/es6-promise.js',
+            {
+                pattern: './src/**/*.spec.ts',
+                served: true,
+                included: true,
+                watched: true,
+            },
+            {
+                pattern: '**/*.map',
+                served: true,
+                included: false,
+                watched: true,
+            },
+        ],
 
-    // preprocess matching files before serving them to the browser
-    // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
-    preprocessors: {
-      'src/*.ts':['coverage'],
-      'tests/*.ts': ['webpack']
-    },
-    webpack: {
-      module: webpackConfig.module,
-      resolve: webpackConfig.resolve
-    },
+        exclude: [
+            './src/fixtures.spec.ts'
+        ],
 
-    // test results reporter to use
-    // possible values: 'dots', 'progress'
-    // available reporters: https://npmjs.org/browse/keyword/karma-reporter
-    reporters: ['progress', 'coverage'],
+        preprocessors: {
+            './src/**/*.spec.ts': ['webpack', 'sourcemap'],
+        },
 
-    coverageReporter: {
-      type : 'html',
-      dir : 'coverage/'
-    },
+        webpack: Object.assign({}, webpack, {
+            output: null,
+            devtool: 'inline-source-map',
+            verbose: false,
+            module: {
+                loaders: combinedLoaders(),
+                postLoaders: config.singleRun
+                    ? [ loaders.istanbulInstrumenter ]
+                    : [ ],
+            },
+            stats: {
+                colors: true,
+                reasons: true,
+            },
+            debug: config.singleRun ? false : true,
+            plugins,
+        }),
 
+        reporters: ['spec']
+            .concat(coverage)
+            .concat(coverage.length > 0 ? ['karma-remap-istanbul'] : []),
 
-    // web server port
-    port: 9876,
+        remapIstanbulReporter: {
+            src: [
+                'coverage/phantomjs/coverage-final.json',
+                'coverage/chrome/coverage-final.json',
+                'coverage/firefox/coverage-final.json'
+            ],
+            reports: {
+                html: 'coverage',
+            },
+            timeoutNotCreated: 2000,
+            timeoutNoMoreFiles: 2000,
+        },
 
+        // only output json report to be remapped by remap-istanbul
+        coverageReporter: {
+            type: 'json',
+            dir: './coverage/',
+            subdir: (browser) => {
+                return browser.toLowerCase().split(/[ /-]/)[0]; // returns 'chrome' etc
+            }
+        },
 
-    // enable / disable colors in the output (reporters and logs)
-    colors: true,
+        port: 9876,
 
+        colors: true,
 
-    // level of logging
-    // possible values: config.LOG_DISABLE || config.LOG_ERROR || config.LOG_WARN || config.LOG_INFO || config.LOG_DEBUG
-    logLevel: config.LOG_INFO,
+        logLevel: config.singleRun ? config.LOG_INFO : config.LOG_DEBUG,
 
+        autoWatch: true,
 
-    // enable / disable watching file and executing tests whenever any file changes
-    autoWatch: true,
+        browsers: ['PhantomJS'],
 
-
-    // start these browsers
-    // available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-    browsers: ['PhantomJS'],
-
-    customLaunchers: {
-      ChromeWithFakeUserMedia: {
-        base: 'Chrome',
-        flags: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream']
-      }
-    },
-
-    // Continuous Integration mode
-    // if true, Karma captures browsers, runs the tests and exits
-    singleRun: true,
-
-    // Concurrency level
-    // how many browser should be started simultaneous
-    concurrency: Infinity
-  })
+        customLaunchers: {
+            ChromeWithFakeUserMedia: {
+                base: 'Chrome',
+                flags: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream']
+            }
+        }
+    });
 };
+
+function combinedLoaders() {
+    return Object.keys(loaders).reduce(function reduce(aggregate, k) {
+        switch (k) {
+        case 'istanbulInstrumenter':
+        case 'tslint':
+            return aggregate;
+        default:
+            return aggregate.concat([loaders[k]]);
+        }
+    }, []);
+}

@@ -1,4 +1,4 @@
-import { wrapPromise } from "../src/utils";
+import { wrapPromise } from "./utils";
 
 describe("Utils", () => {
     it("wrapPromise should replace a Promise", (done) => {
@@ -17,7 +17,7 @@ describe("Utils", () => {
 
     it("wrapPromise should reject if an error appears in mapping", (done) => {
         wrapPromise(Promise.resolve(23), (i: number) => {
-            throw Error("error!")
+            throw Error("error!");
         }).then((i) => done.fail()).catch((error) => done());
     });
 });

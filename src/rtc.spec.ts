@@ -1,8 +1,8 @@
-import { API } from "../src/api";
-import { EventHandler } from "../src/events";
-import { config, getStream, invalidSDP, isChrome, isWebRTCSupported, log, validSDP, whenever } from "./fixtures";
-import { Candidate, Event, ID, SDP } from "../src/protocol";
-import { createRTCConnection, createRTCPool } from "../src/rtc";
+import { API } from "./api";
+import { EventHandler } from "./events";
+import { config, getStream, invalidSDP, isChrome, isWebRTCSupported, log, validSDP, whenever } from "./fixtures.spec";
+import { Candidate, Event, ID, SDP } from "./protocol";
+import { createRTCConnection, createRTCPool } from "./rtc";
 
 const callId = "123";
 const peerId = "321";
@@ -18,16 +18,16 @@ function descr(sdp): Event {
 
 class APIMock extends API {
     descriptionSent = false;
-    onDescription: (callId: ID, peer: ID, sdp: SDP) => void;
+    onDescription: (call: ID, peer: ID, sdp: SDP) => void;
 
-    sendDescription(callId: ID, peer: ID, sdp: SDP) {
+    sendDescription(call: ID, peer: ID, sdp: SDP) {
         this.descriptionSent = true;
         if (this.onDescription) {
-            this.onDescription(callId, peer, sdp);
+            this.onDescription(call, peer, sdp);
         }
     }
 
-    sendCandidate(callId: ID, peer: ID, candidate: Candidate) {
+    sendCandidate(call: ID, peer: ID, candidate: Candidate) {
         // Do nothing.
     }
 }
@@ -96,7 +96,9 @@ describe("RTCConnection", () => {
 });
 
 describe("RTCPool", () => {
-    let events, api, pool;
+    let events;
+    let api;
+    let pool;
 
     beforeEach(() => {
         events = new EventHandler(log);

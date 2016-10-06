@@ -1,8 +1,8 @@
-import { API } from "../src/api";
-import { EventHandler } from "../src/events";
-import { config, log, sleep } from "./fixtures";
-import { createMessage } from "../src/message";
-import { Message, MessageDelivered } from "../src/protocol";
+import { API } from "./api";
+import { EventHandler } from "./events";
+import { config, log, sleep } from "./fixtures.spec";
+import { createMessage } from "./message";
+import { Message, MessageDelivered } from "./protocol";
 
 const roomId = "123";
 const bob = "456";
@@ -28,7 +28,9 @@ function makeMsg(delivered?: number): Message {
 }
 
 describe("Message", () => {
-    let events, api, msg;
+    let events;
+    let api;
+    let msg;
 
     beforeEach(() => {
         events = new EventHandler(log);

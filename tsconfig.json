@@ -1,9 +1,20 @@
 {
+  "compileOnSave": false,
+  "buildOnSave": false,
   "compilerOptions": {
-    "target": "ES5",
-    "module": "commonjs"
+    "module": "commonjs",
+    "target": "es5",
+    "jsx": "react",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "noImplicitAny": false,
+    "removeComments": false,
+    "sourceMap": false,
+    "inlineSourceMap": true,
+    "noEmitHelpers": false
   },
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist"
   ]
 }
