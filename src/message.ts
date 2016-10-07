@@ -2,9 +2,9 @@ import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import * as proto from "./protocol";
-import { RichDeliverable, RichEditable } from "./rich";
+import { RichMessage } from "./rich";
 
-export class Message implements proto.Message, proto.ArchivableWithType, RichDeliverable, RichEditable<string> {
+export class Message implements RichMessage {
     public type: proto.Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
     public id: proto.ID;
     public body: string;
