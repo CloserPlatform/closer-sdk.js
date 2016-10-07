@@ -278,8 +278,17 @@ function makeControls(id, contents) {
 
 function makeEmbed(object) {
     switch(object.type) {
-    case "gif":
-        return $('<img>').prop('src', object.url);
+    case "media":
+        switch(object.media.mimeType) {
+        case "image/gif":
+            return makePanel([$('<img>').prop('src', object.media.content),
+                              $('<br>'),
+                              object.media.description])
+                .addClass('text-center')
+                .css('width', "50%");
+        default:
+            return "";
+        }
 
     case "agent":
         return $('<span>').text('User agent: ' + object.agent);

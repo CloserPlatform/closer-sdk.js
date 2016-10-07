@@ -132,6 +132,12 @@ $(document).ready(function() {
         }
 
         return {
+            media: function(media) {
+                receive(media, "media", getUserNickname(media.user), makeEmbed({
+                    type: "media",
+                    media: media
+                }));
+            },
             message: function(msg) {
                 receive(msg, "message " + msg.delivered ? "delivered" : "", getUserNickname(msg.user), msg.body);
             },
@@ -160,6 +166,8 @@ $(document).ready(function() {
         });
 
         room.onMetadata(receive.metadata);
+
+        room.onMedia(receive.media);
 
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (msg) {
@@ -349,6 +357,8 @@ $(document).ready(function() {
 
         room.onMetadata(receive.metadata);
 
+        room.onMedia(receive.media);
+
         room.onTyping(function(msg) {
             console.log(msg.user + " is typing!");
             users.activate(msg.user, 5000);
@@ -394,10 +404,11 @@ $(document).ready(function() {
         });
 
         var gif = makeButton("btn-info", "Gif!", function() {
-            room.sendMetadata({
-                type: "gif",
-                url: randomGif()
-            }).then(receive.metadata).catch(function(error) {
+            room.sendMedia({
+                mimeType: "image/gif",
+                content: randomGif(),
+                description: "A random gif image"
+            }).then(receive.media).catch(function(error) {
                 console.log("Could not send gif!: ", error);
             });
         });
@@ -476,6 +487,9 @@ $(document).ready(function() {
             room.getHistory().then(function(msgs) {
                 msgs.forEach(function(msg) {
                     switch(msg.type) {
+                    case "media":
+                        chatbox.receive.media(msg);
+                        break;
                     case "message":
                         msg.markDelivered();
                         chatbox.receive.message(msg);
