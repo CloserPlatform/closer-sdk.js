@@ -111,7 +111,7 @@ function makeTextLine(id, className, timestamp, sender, line) {
     }
 
     function spanify(item) {
-        return (typeof item.jquery !== "undefined") ? item : $('<span>').text(item);
+        return ((typeof item.jquery !== "undefined") ? item : $('<span>').text(item)).addClass('contents');
     }
 
     var ts = time(timestamp);
