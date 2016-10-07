@@ -1,6 +1,7 @@
 import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
+import { createMedia } from "./media";
 import { createMessage, Message } from "./message";
 import * as proto from "./protocol";
 import { wrapPromise } from "./utils";
@@ -32,10 +33,16 @@ class BaseRoom implements proto.Room {
     getHistory(): Promise<Array<proto.Archivable>> {
         let _this = this;
         return wrapPromise(this.api.getRoomHistory(this.id), function(a: proto.ArchivableWithType) {
-            if (a.type === "message") {
-                let msg = (a as proto.Archivable) as proto.Message; // Delicious spaghetti.
+            switch (a.type) {
+            case "media":
+                let media = (a as proto.Archivable) as proto.Media; // FIXME Delicious spaghetti.
+                return createMedia(media, _this.log, _this.events, _this.api);
+
+            case "message":
+                let msg = (a as proto.Archivable) as proto.Message; // FIXME Delicious spaghetti.
                 return createMessage(msg, _this.log, _this.events, _this.api);
-            } else {
+
+            default:
                 return a as proto.Archivable;
             }
         });
