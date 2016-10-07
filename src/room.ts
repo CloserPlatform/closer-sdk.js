@@ -1,7 +1,7 @@
 import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { createMedia } from "./media";
+import { createMedia, Media } from "./media";
 import { createMessage, Message } from "./message";
 import * as proto from "./protocol";
 import { wrapPromise } from "./utils";
@@ -68,15 +68,17 @@ class BaseRoom implements proto.Room {
     send(message: string): Promise<Message> {
         let _this = this;
         return wrapPromise(this.api.sendMessage(this.id, message),
-                           (msg) => createMessage(msg, _this.log, _this.events, _this.api));
+                           (m) => createMessage(m, _this.log, _this.events, _this.api));
     }
 
     sendMetadata(payload: any): Promise<proto.Metadata> {
         return this.api.sendMetadata(this.id, payload);
     }
 
-    sendMedia(media: proto.MediaItem): Promise<proto.Media> {
-        return this.api.sendMedia(this.id, media);
+    sendMedia(media: proto.MediaItem): Promise<Media> {
+        let _this = this;
+        return wrapPromise(this.api.sendMedia(this.id, media),
+                           (m) => createMedia(m, _this.log, _this.events, _this.api));
     }
 
     indicateTyping() {
@@ -92,7 +94,10 @@ class BaseRoom implements proto.Room {
     }
 
     onMessage(callback: Callback<proto.Message>) {
-        this.events.onConcreteEvent("room_message", this.id, (msg: proto.RoomMessage) => callback(msg.message));
+        let _this = this;
+        this.events.onConcreteEvent("room_message", this.id, (msg: proto.RoomMessage) => {
+            callback(createMessage(msg.message, _this.log, _this.events, _this.api));
+        });
     }
 
     onMetadata(callback: Callback<proto.Metadata>) {
@@ -100,7 +105,10 @@ class BaseRoom implements proto.Room {
     }
 
     onMedia(callback: Callback<proto.Media>) {
-        this.events.onConcreteEvent("room_media", this.id, (msg: proto.RoomMedia) => callback(msg.media));
+        let _this = this;
+        this.events.onConcreteEvent("room_media", this.id, (msg: proto.RoomMedia) => {
+            callback(createMedia(msg.media, _this.log, _this.events, _this.api));
+        });
     }
 
     onTyping(callback: Callback<proto.RoomTyping>) {
