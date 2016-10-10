@@ -33,7 +33,7 @@ export function withSignedAuth(sessionData: SessionData, config: Config): Promis
     console.log(config);
 
     let ratelHost = config.ratel.hostname + ":" + config.ratel.port;
-    let ratelUrl = [config.ratel.protocol, "//", ratelHost, "session/verifySig"];
+    let ratelUrl = [config.ratel.protocol, "//", ratelHost].join("");
 
     function callBack(xhttp: XMLHttpRequest, resolve: PromiseResolve<Session>, reject: PromiseReject): Thunk {
         return function () {
@@ -50,5 +50,5 @@ export function withSignedAuth(sessionData: SessionData, config: Config): Promis
         };
     }
 
-    return API.getApiKeyPostRequest(callBack)(ratelUrl, sessionData);
+    return API.getApiKeyPostRequest(callBack)([ratelUrl, "session/verifySig"], sessionData);
 }
