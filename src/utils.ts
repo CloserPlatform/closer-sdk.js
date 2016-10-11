@@ -1,6 +1,6 @@
 // Various utilities.
 
-interface TransferFunction<T, U> {
+export interface TransferFunction<T, U> {
     (arg: T): U;
 }
 

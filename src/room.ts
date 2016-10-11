@@ -6,7 +6,7 @@ import { createMessage, Message } from "./message";
 import * as proto from "./protocol";
 import { wrapPromise } from "./utils";
 
-class BaseRoom implements proto.Room {
+export class BaseRoom implements proto.Room {
     public id: proto.ID;
     public name: string;
     public created: proto.Timestamp;

@@ -8,7 +8,7 @@ export interface RemoteStreamCallback {
     (peer: ID, stream: MediaStream): void;
 }
 
-class BaseCall implements ProtoCall {
+export class BaseCall implements ProtoCall {
     public id: ID;
     public created: Timestamp;
     public users: Array<ID>;

@@ -75,7 +75,7 @@ export interface Room {
     mark?: number;
 }
 
-interface UserTimestamp {
+export interface UserTimestamp {
     user: ID;
     timestamp: Timestamp;
 }
@@ -90,7 +90,7 @@ export interface CallInvitation extends Event {
     inviter: ID;
 }
 
-interface CallAction extends Event {
+export interface CallAction extends Event {
     user: ID;
     timestamp: Timestamp;
 }
