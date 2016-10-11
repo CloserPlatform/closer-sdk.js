@@ -1,6 +1,7 @@
 import { API } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
+import { createMedia, Media } from "./media";
 import { createMessage, Message } from "./message";
 import * as proto from "./protocol";
 import { wrapPromise } from "./utils";
@@ -32,10 +33,16 @@ class BaseRoom implements proto.Room {
     getHistory(): Promise<Array<proto.Archivable>> {
         let _this = this;
         return wrapPromise(this.api.getRoomHistory(this.id), function(a: proto.ArchivableWithType) {
-            if (a.type === "message") {
-                let msg = (a as proto.Archivable) as proto.Message; // Delicious spaghetti.
+            switch (a.type) {
+            case "media":
+                let media = (a as proto.Archivable) as proto.Media; // FIXME Delicious spaghetti.
+                return createMedia(media, _this.log, _this.events, _this.api);
+
+            case "message":
+                let msg = (a as proto.Archivable) as proto.Message; // FIXME Delicious spaghetti.
                 return createMessage(msg, _this.log, _this.events, _this.api);
-            } else {
+
+            default:
                 return a as proto.Archivable;
             }
         });
@@ -61,11 +68,17 @@ class BaseRoom implements proto.Room {
     send(message: string): Promise<Message> {
         let _this = this;
         return wrapPromise(this.api.sendMessage(this.id, message),
-                           (msg) => createMessage(msg, _this.log, _this.events, _this.api));
+                           (m) => createMessage(m, _this.log, _this.events, _this.api));
     }
 
     sendMetadata(payload: any): Promise<proto.Metadata> {
         return this.api.sendMetadata(this.id, payload);
+    }
+
+    sendMedia(media: proto.MediaItem): Promise<Media> {
+        let _this = this;
+        return wrapPromise(this.api.sendMedia(this.id, media),
+                           (m) => createMedia(m, _this.log, _this.events, _this.api));
     }
 
     indicateTyping() {
@@ -81,11 +94,21 @@ class BaseRoom implements proto.Room {
     }
 
     onMessage(callback: Callback<proto.Message>) {
-        this.events.onConcreteEvent("room_message", this.id, (msg: proto.RoomMessage) => callback(msg.message));
+        let _this = this;
+        this.events.onConcreteEvent("room_message", this.id, (msg: proto.RoomMessage) => {
+            callback(createMessage(msg.message, _this.log, _this.events, _this.api));
+        });
     }
 
     onMetadata(callback: Callback<proto.Metadata>) {
         this.events.onConcreteEvent("room_metadata", this.id, (msg: proto.RoomMetadata) => callback(msg.metadata));
+    }
+
+    onMedia(callback: Callback<proto.Media>) {
+        let _this = this;
+        this.events.onConcreteEvent("room_media", this.id, (msg: proto.RoomMedia) => {
+            callback(createMedia(msg.media, _this.log, _this.events, _this.api));
+        });
     }
 
     onTyping(callback: Callback<proto.RoomTyping>) {

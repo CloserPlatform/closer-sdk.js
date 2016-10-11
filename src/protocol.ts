@@ -38,9 +38,28 @@ export interface Call {
     direct: boolean;
 }
 
-export interface Message extends Archivable {
+export interface Deliverable {
+    delivered?: Delivered;
+}
+
+export interface Delivered extends UserTimestamp {}
+
+export interface Editable {
+    edited?: Edited;
+}
+
+export interface Edited extends UserTimestamp {}
+
+export interface Media extends Archivable, MediaItem, Editable {}
+
+export interface MediaItem {
+    mimeType: string;
+    content: string;
+    description: string;
+}
+
+export interface Message extends Archivable, Deliverable, Editable {
     body: string;
-    delivered?: Timestamp;
 }
 
 export interface Metadata extends Archivable {
@@ -54,6 +73,11 @@ export interface Room {
     users: Array<ID>;
     direct: boolean;
     mark?: number;
+}
+
+interface UserTimestamp {
+    user: ID;
+    timestamp: Timestamp;
 }
 
 // JSON Events:
@@ -81,6 +105,24 @@ export interface CallLeft extends CallAction {
     reason: string;
 }
 
+export interface ChatDelivered extends Event {
+    timestamp: Timestamp;
+    user?: ID;
+}
+
+export interface ChatEdited extends Event {
+    archivable: Archivable;
+}
+
+export interface ChatReceived extends Event {
+    message: Message;
+}
+
+export interface ChatRequest extends Event {
+    body: string;
+    room: ID;
+}
+
 export interface Event {
     type: Type;
     ref?: Ref;
@@ -89,19 +131,6 @@ export interface Event {
 
 export interface Error extends Event {
     reason: string;
-}
-
-export interface MessageDelivered extends Event {
-    timestamp: Timestamp;
-}
-
-export interface MessageReceived extends Event {
-    message: Message;
-}
-
-export interface MessageRequest extends Event {
-    body: string;
-    room: ID;
 }
 
 export type Status = "away" | "available" | "unavailable";
@@ -123,6 +152,10 @@ export interface RoomInvitation extends Event {
 
 export interface RoomMark extends Event {
     timestamp: Timestamp;
+}
+
+export interface RoomMedia extends Event {
+    media: Media;
 }
 
 export interface RoomMessage extends Event {
@@ -152,18 +185,18 @@ export interface RTCDescription extends Event {
 }
 
 // WS API:
-export function messageRequest(room: ID, body: string, ref: Ref): MessageRequest {
+export function chatRequest(room: ID, body: string, ref: Ref): ChatRequest {
     return {
-        type: "msg_request",
+        type: "chat_request",
         room,
         body,
         ref
     };
 }
 
-export function messageDelivered(id: ID, timestamp: Timestamp): MessageDelivered {
+export function chatDelivered(id: ID, timestamp: Timestamp): ChatDelivered {
     return {
-        type: "msg_delivered",
+        type: "chat_delivered",
         id,
         timestamp
     };

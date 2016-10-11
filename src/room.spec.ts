@@ -13,6 +13,7 @@ const msg1 = "2323";
 const msg2 = "1313";
 const msg3 = "4545";
 const meta1 = "576";
+const media1 = "365";
 
 function msg(id: string): proto.Message {
     return {
@@ -31,6 +32,18 @@ function meta(id: string, payload: any): proto.Metadata {
         user: alice,
         payload,
         timestamp: 123
+    };
+}
+
+function media(id: string, description: string): proto.Media {
+    return {
+        id,
+        room: roomId,
+        user: alice,
+        timestamp: 123,
+        mimeType: "image/png",
+        content: "https://test.com/img.png",
+        description
     };
 }
 
@@ -82,6 +95,10 @@ class APIMock extends API {
 
     sendMetadata(id, payload) {
         return Promise.resolve(meta(meta1, payload));
+    }
+
+    sendMedia(id, m) {
+        return Promise.resolve(media(media1, m.description));
     }
 
     setMark(id, timestamp) {
@@ -170,6 +187,22 @@ function makeRoom(direct = false) {
             } as proto.Event);
         });
 
+        it("should run a callback on incoming media", (done) => {
+            let descr = "some image";
+
+            room.onMedia((media) => {
+                expect(media.user).toBe(alice);
+                expect(media.description).toBe(descr);
+                done();
+            });
+
+            events.notify({
+                type: "room_media",
+                id: room.id,
+                media: media(media1, descr)
+            } as proto.Event);
+        });
+
         it("should run a callback on incoming mark", (done) => {
             let t = Date.now();
 
@@ -214,6 +247,18 @@ function makeRoom(direct = false) {
             };
             room.sendMetadata(payload).then((meta) => {
                 expect(meta.payload).toBe(payload);
+                done();
+            });
+        });
+
+        it("should allow sending media", (done) => {
+            let gif = {
+                mimeType: "image/gif",
+                content: "http://i.giphy.com/3o6ZtpxSZbQRRnwCKQ.gif",
+                description: "Lovely little gif."
+            };
+            room.sendMedia(gif).then((media) => {
+                expect(media.description).toBe(gif.description);
                 done();
             });
         });

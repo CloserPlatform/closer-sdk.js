@@ -2,7 +2,7 @@ import { API } from "./api";
 import { EventHandler } from "./events";
 import { config, log, sleep } from "./fixtures.spec";
 import { createMessage } from "./message";
-import { Message, MessageDelivered } from "./protocol";
+import { ChatDelivered, ChatEdited, Delivered, Message } from "./protocol";
 
 const roomId = "123";
 const bob = "456";
@@ -10,13 +10,19 @@ const msg1 = "2323";
 
 class APIMock extends API {
     setDelivery = false;
+    updatedArchivable = false;
 
     setDelivered(messageId, timestamp) {
         this.setDelivery = true;
     }
+
+    updateArchivable(archivable, timestamp) {
+        this.updatedArchivable = true;
+        return Promise.resolve(archivable);
+    }
 }
 
-function makeMsg(delivered?: number): Message {
+function makeMsg(delivered?: Delivered): Message {
     return {
         id: msg1,
         body: "Hi!",
@@ -46,7 +52,7 @@ describe("Message", () => {
     });
 
     it("should not mark delivered msgs as delivered", () => {
-        msg = createMessage(makeMsg(987), log, events, api);
+        msg = createMessage(makeMsg({user: bob, timestamp: 987}), log, events, api);
         let d = msg.delivered;
 
         msg.markDelivered();
@@ -74,15 +80,17 @@ describe("Message", () => {
         expect(msg.delivered).not.toBeDefined();
         msg.onDelivery((delivery) => {
             expect(api.setDelivery).toBe(false);
-            expect(msg.delivered).toBe(12345);
+            expect(msg.delivered.user).toBe(bob);
+            expect(msg.delivered.timestamp).toBe(12345);
             done();
         });
 
         events.notify({
-            type: "msg_delivered",
+            type: "chat_delivered",
             id: msg.id,
+            user: bob,
             timestamp: 12345
-        } as MessageDelivered);
+        } as ChatDelivered);
     });
 
     it("should run a callback on each delivery", (done) => {
@@ -97,9 +105,40 @@ describe("Message", () => {
         });
 
         [123, 456].forEach((t) => events.notify({
-            type: "msg_delivered",
+            type: "chat_delivered",
             id: msg.id,
+            user: bob,
             timestamp: t
-        } as MessageDelivered));
+        } as ChatDelivered));
+    });
+
+    it("should allow editing", () => {
+        expect(msg.edited).not.toBeDefined();
+        msg.edit("edited body");
+        expect(api.updatedArchivable).toBe(true);
+        expect(msg.edited).toBeDefined();
+    });
+
+    it("should run a callback on edit", (done) => {
+        let edited = makeMsg();
+        let body = "edited body";
+        edited.body = body;
+        edited.edited = {
+            user: bob,
+            timestamp: Date.now()
+        };
+        expect(msg.edited).not.toBeDefined();
+
+        msg.onEdit((m) => {
+            expect(m.body).toBe(body);
+            expect(m.edited).toBeDefined();
+            done();
+        });
+
+        events.notify({
+            type: "chat_edited",
+            id: msg.id,
+            archivable: edited
+        } as ChatEdited);
     });
 });

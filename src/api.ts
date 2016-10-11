@@ -42,9 +42,10 @@ export class API {
     private apiKey: ApiKey;
 
     private url: string;
+    private archivePath = "archive/items";
     private callPath = "calls";
-    private roomPath = "rooms";
     private botPath = "bots";
+    private roomPath = "rooms";
 
     private wsUrl: string;
     private socket: JSONWebSocket;
@@ -191,15 +192,19 @@ export class API {
         return new Promise(function(resolve, reject) {
             let ref = "ref" + Date.now(); // FIXME Use UUID instead.
             _this.promises[ref] = {
-                resolve: (ack: proto.MessageReceived) => resolve(ack.message),
+                resolve: (ack: proto.ChatReceived) => resolve(ack.message),
                 reject
             };
-            _this.send(proto.messageRequest(roomId, body, ref));
+            _this.send(proto.chatRequest(roomId, body, ref));
         });
     }
 
     sendMetadata(roomId: proto.ID, payload: any): Promise<proto.Metadata> {
         return this.post<any, proto.Metadata>([this.url, this.roomPath, roomId, "metadata"], payload);
+    }
+
+    sendMedia(roomId: proto.ID, media: proto.MediaItem): Promise<proto.Media> {
+        return this.post<proto.MediaItem, proto.Media>([this.url, this.roomPath, roomId, "media"], media);
     }
 
     sendTyping(roomId: proto.ID) {
@@ -210,9 +215,13 @@ export class API {
         this.send(proto.mark(roomId, timestamp));
     }
 
-    // Message API:
-    setDelivered(messageId: proto.ID, timestamp: proto.Timestamp) {
-        this.send(proto.messageDelivered(messageId, timestamp));
+    // Archivable API:
+    setDelivered(archivableId: proto.ID, timestamp: proto.Timestamp) {
+        this.send(proto.chatDelivered(archivableId, timestamp));
+    }
+
+    updateArchivable(archivable: proto.Archivable, timestamp: proto.Timestamp): Promise<proto.Archivable> {
+        return this.post<proto.Archivable, proto.Archivable>([this.url, this.archivePath, archivable.id], archivable);
     }
 
     // Presence API:

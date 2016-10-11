@@ -65,6 +65,16 @@ body {
     padding-left: 3px;
 }
 
+.edited::after {
+    content: "(edited)";
+    padding-left: 3px;
+}
+
+.delivered.edited::after {
+    content: "(edited) ✓";
+    padding-left: 3px;
+}
+
 .panel {
     padding-bottom: 10px;
 }

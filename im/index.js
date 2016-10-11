@@ -129,20 +129,57 @@ $(document).ready(function() {
             var line = makeTextLine(msg.id, className, msg.timestamp, sender, body);
             text.append(line);
             text.trigger('scroll-to-bottom');
+            return line;
         }
 
         return {
+            media: function(media) {
+                var e = media.edited ? " edited" : "";
+                return receive(media, "media" + e, getUserNickname(media.user), makeEmbed({
+                    type: "media",
+                    media: media
+                }));
+            },
             message: function(msg) {
-                receive(msg, "message " + msg.delivered ? "delivered" : "", getUserNickname(msg.user), msg.body);
+                var d = !!msg.delivered ? " delivered" : "";
+                var e = !!msg.edited ? " edited" : "";
+                return receive(msg, "message" + d + e, getUserNickname(msg.user), msg.body);
             },
             metadata: function(meta) {
-                receive(meta, "metadata", getUserNickname(meta.user), makeEmbed(meta.payload));
+                return receive(meta, "metadata", getUserNickname(meta.user), makeEmbed(meta.payload));
             },
             action: function(action) {
                 var target = (action.action === "invited" ? getUserNickname(action.invitee) : "the room");
-                receive(action, "info", "", "User " + getUserNickname(action.user) + " " + action.action + " " + target + ".");
+                return receive(action, "info", "", "User " + getUserNickname(action.user) + " " + action.action + " " + target + ".");
             }
         };
+    }
+
+    function editLine(m) {
+        $('#'+ m.id).addClass('edited');
+        switch(m.type) {
+        case "message":
+            $('#'+ m.id + ' > .contents').text(m.body);
+            break;
+
+        case "media":
+            $('#'+ m.id + ' > .contents').replaceWith(makeEmbed({
+                type: "media",
+                media: m
+            }));
+        }
+    }
+
+    function deliverLine(m) {
+        $('#' + m.id).addClass("delivered");
+    }
+
+    function clickEditor(m) {
+        return function () {
+            console.log("Editing the message!");
+            m.edit("I did not mean to post this...");
+            editLine(m);
+        }
     }
 
     function makeDirectChatbox(room, directCallBuilder) {
@@ -156,18 +193,23 @@ $(document).ready(function() {
 
         room.onMessage(function(msg) {
             msg.markDelivered();
+            msg.onEdit(editLine);
             receive.message(msg);
         });
 
         room.onMetadata(receive.metadata);
 
+        room.onMedia(function(media) {
+            media.onEdit(editLine);
+            receive.media(media);
+        });
+
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (msg) {
-                msg.onDelivery(function(m) {
-                    $('#' + m.id).addClass("delivered");
-                });
+                msg.onDelivery(deliverLine);
+                msg.onEdit(editLine);
                 console.log("Received ack for message: ", msg);
-                receive.message(msg);
+                receive.message(msg).click(clickEditor(msg));
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
@@ -343,11 +385,17 @@ $(document).ready(function() {
 
         room.onMessage(function(msg) {
             msg.markDelivered();
+            msg.onEdit(editLine);
             receive.message(msg);
             users.deactivate(msg.user);
         });
 
         room.onMetadata(receive.metadata);
+
+        room.onMedia(function(media) {
+            media.onEdit(editLine);
+            receive.media(media);
+        });
 
         room.onTyping(function(msg) {
             console.log(msg.user + " is typing!");
@@ -356,12 +404,10 @@ $(document).ready(function() {
 
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (msg) {
-                msg.onDelivery(function(m) {
-                    $('#' + m.id).addClass("delivered");
-                });
+                msg.onDelivery(deliverLine);
                 hackersTrap(msg.body);
                 console.log("Received ack for message: ", msg);
-                receive.message(msg);
+                receive.message(msg).click(clickEditor(msg));
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
@@ -394,10 +440,13 @@ $(document).ready(function() {
         });
 
         var gif = makeButton("btn-info", "Gif!", function() {
-            room.sendMetadata({
-                type: "gif",
-                url: randomGif()
-            }).then(receive.metadata).catch(function(error) {
+            room.sendMedia({
+                mimeType: "image/gif",
+                content: randomGif(),
+                description: "A random gif image"
+            }).then(function(media) {
+                receive.media(media).click(clickEditor(media));
+            }).catch(function(error) {
                 console.log("Could not send gif!: ", error);
             });
         });
@@ -476,8 +525,13 @@ $(document).ready(function() {
             room.getHistory().then(function(msgs) {
                 msgs.forEach(function(msg) {
                     switch(msg.type) {
+                    case "media":
+                        msg.onEdit(editLine);
+                        chatbox.receive.media(msg);
+                        break;
                     case "message":
                         msg.markDelivered();
+                        msg.onEdit(editLine);
                         chatbox.receive.message(msg);
                         break;
                     case "metadata":
