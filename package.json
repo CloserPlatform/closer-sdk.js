@@ -3,7 +3,7 @@
   "version": "0.1.1",
   "description": "Ratel JavaScript SDK",
   "main": "dist/ratel-sdk.js",
-  "types": "dist/src/",
+  "types": "dist/src/main.d.ts",
   "scripts": {
     "lint": "tslint -c tslint.json src/**/*.ts",
     "test": "karma start --singleRun true",
