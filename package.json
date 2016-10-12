@@ -18,10 +18,12 @@
   },
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
   "license": "MIT",
-  "devDependencies": {
+  "dependencies": {
     "@types/es6-shim": "^0.31.32",
     "@types/jasmine": "^2.5.35",
-    "@types/webrtc": "0.0.20",
+    "@types/webrtc": "0.0.20"
+  },
+  "devDependencies": {
     "browserify": "^13.1.0",
     "cross-env": "^3.0.0",
     "crypto-js": "^3.1.6",
