@@ -11,9 +11,8 @@
     "test-dev": "karma start --singleRun true --browsers 'ChromeWithFakeUserMedia,Firefox,PhantomJS'",
     "build": "npm run commit-hash && cross-env NODE_ENV=production webpack && npm run browserify",
     "start": "python3 -m http.server",
-    "prebuild": "npm run test",
+    "prebuild": "npm run deps && npm run test",
     "pretest": "npm run lint",
-    "postinstall": "npm run deps && npm run build",
     "posttest": "istanbul check-coverage",
     "commit-hash": "git rev-parse HEAD > im/version.txt",
     "browserify": "browserify im/index.js -o im/bundle.js"
