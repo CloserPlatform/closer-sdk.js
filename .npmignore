@@ -1,0 +1,15 @@
+/coverage
+/typings
+npm-debug.log
+/im
+/bot
+.git
+*.config.js
+*.conf.js
+*.json
+/webpack
+.npmignore
+*.tgz
+/dist/docs
+/src
+**/*.spec.d.ts
