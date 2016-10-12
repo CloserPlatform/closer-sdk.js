@@ -4,7 +4,6 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es5",
-    "jsx": "react",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "noImplicitAny": false,
@@ -12,8 +11,7 @@
     "sourceMap": false,
     "inlineSourceMap": true,
     "noEmitHelpers": false,
-    "declaration": true,
-    "rootDir": "."
+    "declaration": true
   },
   "exclude": [
     "node_modules",

@@ -23,7 +23,6 @@ module.exports = {
             '',
             '.webpack.js',
             '.web.js',
-            '.tsx',
             '.ts',
             '.js',
             '.json'
