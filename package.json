@@ -57,6 +57,6 @@
     "webpack-split-by-path": "0.0.10"
   },
   "publishConfig": {
-    "registry": "https://nexus.contactis.pl/content/repositories/npm-internal"
+    "registry": "https://nexus.contactis.pl/repository/npm-internal"
   }
 }
