@@ -1,3 +1,5 @@
+/// <reference types="jasmine" />
+
 import { Config, load } from "../src/config";
 import * as logger from "../src/logger";
 

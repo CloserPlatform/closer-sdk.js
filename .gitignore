@@ -5,3 +5,5 @@
 /typings
 /im/version.txt
 /im/bundle.js
+npm-debug.log
+*.tgz

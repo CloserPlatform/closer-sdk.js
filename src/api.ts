@@ -27,13 +27,12 @@ class HeaderValue {
     }
 }
 
-type ResolveCallbackType = <Result>(xhttp: XMLHttpRequest,
-                                    resolve: PromiseResolve<Result>,
-                                    reject: PromiseReject) => Thunk
-type PostRequestType =
-    <Arg, Result>(onload: ResolveCallbackType) => PostRequestWithHeadersType
+export type ResolveCallbackType = <Result>(xhttp: XMLHttpRequest,
+                                           resolve: PromiseResolve<Result>,
+                                           reject: PromiseReject) => Thunk
+export type PostRequestType = <Arg, Result>(onload: ResolveCallbackType) => PostRequestWithHeadersType
 
-type PostRequestWithHeadersType = <Arg, Result>(path: Array<string>, obj: Arg) => Promise<Result>
+export type PostRequestWithHeadersType = <Arg, Result>(path: Array<string>, obj: Arg) => Promise<Result>
 
 export class API {
     private log: Logger;

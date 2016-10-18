@@ -10,8 +10,9 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'ratel-sdk.js',
-        libraryTarget: 'var',
-        library: 'RatelSDK'
+        library: 'RatelSDK',
+        libraryTarget: 'umd',
+        umdNamedDefine: true
     },
 
     devtool: process.env.NODE_ENV === 'production' ?
@@ -23,7 +24,6 @@ module.exports = {
             '',
             '.webpack.js',
             '.web.js',
-            '.tsx',
             '.ts',
             '.js',
             '.json'

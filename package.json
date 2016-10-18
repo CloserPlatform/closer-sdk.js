@@ -1,10 +1,10 @@
 {
   "name": "ratel-sdk-js",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Ratel JavaScript SDK",
   "main": "dist/ratel-sdk.js",
+  "types": "dist/src/main.d.ts",
   "scripts": {
-    "deps": "typings install",
     "lint": "tslint -c tslint.json src/**/*.ts",
     "test": "karma start --singleRun true",
     "test-dev": "karma start --singleRun true --browsers 'ChromeWithFakeUserMedia,Firefox,PhantomJS'",
@@ -12,13 +12,17 @@
     "start": "python3 -m http.server",
     "prebuild": "npm run test",
     "pretest": "npm run lint",
-    "postinstall": "npm run deps && npm run build",
     "posttest": "istanbul check-coverage",
     "commit-hash": "git rev-parse HEAD > im/version.txt",
     "browserify": "browserify im/index.js -o im/bundle.js"
   },
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
   "license": "MIT",
+  "dependencies": {
+    "@types/es6-shim": "^0.31.32",
+    "@types/jasmine": "^2.5.35",
+    "@types/webrtc": "0.0.20"
+  },
   "devDependencies": {
     "browserify": "^13.1.0",
     "cross-env": "^3.0.0",
@@ -42,19 +46,17 @@
     "object-assign": "^4.1.0",
     "source-map-support": "^0.4.0",
     "ts-helpers": "^1.1.1",
-    "ts-loader": "^0.8.2",
-    "tsify": "^1.0.3",
+    "ts-loader": "^0.9.1",
     "tslint": "^3.15.1",
     "tslint-loader": "^2.1.5",
-    "typedoc": "^0.4.5",
-    "typedoc-webpack-plugin": "^1.0.9",
-    "typescript": "^1.8.10",
-    "typings": "^1.3.3",
+    "typedoc": "^0.5.0",
+    "typedoc-webpack-plugin": "^1.0.10",
+    "typescript": "^2.0.3",
     "watchify": "^3.7.0",
     "webpack": "^1.13.0",
     "webpack-split-by-path": "0.0.10"
   },
   "publishConfig": {
-    "registry": "https://nexus.contactis.pl/content/repositories/npm-internal"
+    "registry": "https://nexus.contactis.pl/repository/npm-internal"
   }
 }

@@ -4,14 +4,14 @@
   "compilerOptions": {
     "module": "commonjs",
     "target": "es5",
-    "jsx": "react",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "noImplicitAny": false,
     "removeComments": false,
     "sourceMap": false,
     "inlineSourceMap": true,
-    "noEmitHelpers": false
+    "noEmitHelpers": false,
+    "declaration": true
   },
   "exclude": [
     "node_modules",
