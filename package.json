@@ -14,7 +14,8 @@
     "pretest": "npm run lint",
     "posttest": "istanbul check-coverage",
     "commit-hash": "git rev-parse HEAD > im/version.txt",
-    "browserify": "browserify im/index.js -o im/bundle.js"
+    "browserify": "browserify im/index.js -o im/bundle.js",
+    "clean": "rimraf dist node_modules coverage"
   },
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
   "license": "MIT",
@@ -44,6 +45,7 @@
     "karma-spec-reporter": "0.0.26",
     "karma-webpack": "^1.7.0",
     "object-assign": "^4.1.0",
+    "rimraf": "^2.5.4",
     "source-map-support": "^0.4.0",
     "ts-helpers": "^1.1.1",
     "ts-loader": "^0.9.1",
