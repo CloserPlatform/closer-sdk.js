@@ -28,10 +28,6 @@ export function withApiKey(sessionId: RatelID, apiKey: ApiKey, config: Config): 
 }
 
 export function withSignedAuth(sessionData: SessionData, config: Config): Promise<Session> {
-
-    console.log(sessionData);
-    console.log(config);
-
     let ratelHost = config.ratel.hostname + ":" + config.ratel.port;
     let ratelUrl = [config.ratel.protocol, "//", ratelHost].join("");
 
