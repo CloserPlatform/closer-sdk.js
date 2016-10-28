@@ -36,7 +36,12 @@ var users = {
     "dariusz.bembenek":{userId: 27, orgId: contactisId},
     "alice": {userId: 201, orgId: contactisId},
     "bob": {userId: 202, orgId: contactisId},
-    "charlie": {userId: 203, orgId: contactisId}
+    "charlie": {userId: 203, orgId: contactisId},
+    "duglas": {userId: 204, orgId: contactisId},
+    "eve": {userId: 205, orgId: contactisId},
+    "fred": {userId: 206, orgId: contactisId},
+    "gary": {userId: 207, orgId: contactisId},
+    "helen": {userId: 208, orgId: contactisId}
 };
 
 var reversedUsersMap = {};
