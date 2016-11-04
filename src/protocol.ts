@@ -185,7 +185,7 @@ export interface RTCDescription extends Event {
 }
 
 // WS API:
-export function chatRequest(room: ID, body: string, ref: Ref): ChatRequest {
+export function chatRequest(room: ID, body: string, ref?: Ref): ChatRequest {
     return {
         type: "chat_request",
         room,
