@@ -1,6 +1,6 @@
 import { API } from "./api";
 import { EventHandler } from "./events";
-import { config, log } from "./fixtures.spec";
+import { apiKey, config, log, sessionId } from "./fixtures.spec";
 import { createMedia } from "./media";
 import { ChatEdited, Media } from "./protocol";
 
@@ -39,7 +39,7 @@ describe("Media", () => {
 
     beforeEach(() => {
         events = new EventHandler(log);
-        api = new APIMock(config, log);
+        api = new APIMock(sessionId, apiKey, config, log);
         media = createMedia(makeMedia(), log, events, api);
     });
 

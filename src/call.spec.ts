@@ -1,7 +1,7 @@
 import { API } from "./api";
 import { Call, createCall } from "./call";
 import { EventHandler } from "./events";
-import { config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
+import { apiKey, config, getStream, isWebRTCSupported, log, sessionId, whenever } from "./fixtures.spec";
 import { Call as ProtoCall, Event } from "./protocol";
 
 const callId = "123";
@@ -55,7 +55,7 @@ function makeCall(direct = false) {
 
         beforeEach(() => {
             events = new EventHandler(log);
-            api = new APIMock(config, log);
+            api = new APIMock(sessionId, apiKey, config, log);
             call = createCall(makeCall(d === "DirectCall"), config.chat.rtc, log, events, api);
         });
 
@@ -171,7 +171,7 @@ describe("Call", () => {
 
     beforeEach(() => {
         events = new EventHandler(log);
-        api = new APIMock(config, log);
+        api = new APIMock(sessionId, apiKey, config, log);
         call = createCall(makeCall(), config.chat.rtc, log, events, api) as Call;
     });
 

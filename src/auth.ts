@@ -1,16 +1,15 @@
-import {RatelAPI} from "./api";
-import {Config, load} from "./config";
-import {debugConsole} from "./logger";
-import {Timestamp} from "./protocol";
-import {Session} from "./session";
+import { RatelAPI } from "./api";
+import { Config, load } from "./config";
+import { debugConsole } from "./logger";
+import { ID, Timestamp } from "./protocol";
+import { Session } from "./session";
 
 export type ApiKey = string;
 export type Signature = string;
-export type RatelID = number;
 
 export interface Payload {
-  organizationId: RatelID;
-  sessionId: RatelID;
+  organizationId: ID;
+  sessionId: ID;
   timestamp: Timestamp;
 }
 
@@ -19,11 +18,9 @@ export interface SessionData {
   signature: Signature;
 }
 
-export function withApiKey(sessionId: RatelID, apiKey: ApiKey, config: Config): Promise<Session> {
+export function withApiKey(sessionId: ID, apiKey: ApiKey, config: Config): Promise<Session> {
   return new Promise<Session>(function (resolve, reject) {
-    config.sessionId = sessionId.toString();
-    config.apiKey = apiKey;
-    resolve(new Session(load(config)));
+    resolve(new Session(sessionId, apiKey, load(config)));
   });
 }
 

@@ -18,6 +18,9 @@ export const config: Config = load({
   port: "5431"
 } as Config);
 
+export const sessionId = "12345678";
+export const apiKey = "8615ea03-7421-4fa5-b02c-bf339c18abbf";
+
 export function sleep(time: number): Promise<void> {
   return new Promise<void>(function(resolve, reject) {
     setTimeout(resolve, time);

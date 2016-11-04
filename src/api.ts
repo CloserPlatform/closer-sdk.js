@@ -1,8 +1,8 @@
-import {ApiKey, SessionData} from "./auth";
-import {Config} from "./config";
-import {Callback} from "./events";
-import {JSONWebSocket} from "./jsonws";
-import {Logger} from "./logger";
+import { ApiKey, SessionData } from "./auth";
+import { ChatConfig, RatelConfig } from "./config";
+import { Callback } from "./events";
+import { JSONWebSocket } from "./jsonws";
+import { Logger } from "./logger";
 import * as proto from "./protocol";
 
 export class HeaderValue {
@@ -157,7 +157,7 @@ export class APIWithWebsocket extends RESTfulAPI {
 }
 
 export class API extends APIWithWebsocket {
-  private sessionId: proto.ID;
+  private sessionId: proto.ID; // FIXME Don't rely on this.
   private authHeaders: Array<HeaderValue>;
 
   protected url: string;
@@ -168,16 +168,16 @@ export class API extends APIWithWebsocket {
 
   private wsUrl: string;
 
-  constructor(config: Config, log: Logger) {
+  constructor(sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, log: Logger) {
     super(log);
 
-    this.sessionId = config.sessionId;
-    this.authHeaders = [new HeaderValue("X-Api-Key", config.apiKey)];
+    this.sessionId = sessionId;
+    this.authHeaders = [new HeaderValue("X-Api-Key", apiKey)];
 
     let host = config.hostname + ":" + config.port;
     this.url = [config.protocol, "//", host, "/api"].join("");
     let wsProtocol = config.protocol === "https:" ? "wss:" : "ws:";
-    this.wsUrl = [wsProtocol, "//", host, "/ws/", config.apiKey].join("");
+    this.wsUrl = [wsProtocol, "//", host, "/ws/", apiKey].join("");
   }
 
   connect() {
@@ -330,11 +330,11 @@ export class RatelAPI extends RESTfulAPI {
   private verifyPath = "session/verifySig";
   private url: string;
 
-  constructor(config: Config, log: Logger) {
+  constructor(config: RatelConfig, log: Logger) {
     super(log);
 
-    let host = config.ratel.hostname + ":" + config.ratel.port;
-    this.url = [config.ratel.protocol, "//", host].join("");
+    let host = config.hostname + ":" + config.port;
+    this.url = [config.protocol, "//", host].join("");
   }
 
   verifySignature(sessionData: SessionData): Promise<ApiKey> {

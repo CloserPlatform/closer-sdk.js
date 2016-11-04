@@ -12,13 +12,15 @@ export interface ChatConfig extends URLConfig {
   rtc?: RTCConfiguration;
 }
 
+export interface RatelConfig extends ChatConfig {}
+
 export interface Config extends URLConfig {
   debug?: boolean;
 
   apiKey?: ApiKey;
   sessionId?: ID;
 
-  ratel?: URLConfig;
+  ratel?: RatelConfig;
   chat?: ChatConfig;
 }
 

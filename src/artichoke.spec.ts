@@ -1,7 +1,7 @@
 import { API } from "./api";
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
-import { config, log } from "./fixtures.spec";
+import { apiKey, config, log, sessionId } from "./fixtures.spec";
 import { Event } from "./protocol";
 
 class APIMock extends API {
@@ -23,7 +23,7 @@ describe("Artichoke", () => {
 
     beforeEach(() => {
         events = new EventHandler(log);
-        api = new APIMock(config, log);
+        api = new APIMock(sessionId, apiKey, config, log);
         manager = new Artichoke(config.chat, log, events, api);
     });
 
