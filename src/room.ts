@@ -1,4 +1,4 @@
-import { API } from "./api";
+import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMedia, Media } from "./media";
@@ -16,9 +16,9 @@ export class BaseRoom implements proto.Room {
 
     private log: Logger;
     protected events: EventHandler;
-    protected api: API;
+    protected api: ArtichokeAPI;
 
-    constructor(room: proto.Room, log: Logger, events: EventHandler, api: API) {
+    constructor(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
         this.id = room.id;
         this.name = room.name;
         this.created = room.created;
@@ -123,7 +123,7 @@ export class Room extends BaseRoom {
     private onLeftCallback: Callback<proto.Action>;
     private onInvitedCallback: Callback<proto.Action>;
 
-    constructor(room: proto.Room, log: Logger, events: EventHandler, api: API) {
+    constructor(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
         super(room, log, events, api);
 
         let nop = (a: proto.Action) => {
@@ -189,7 +189,7 @@ export class Room extends BaseRoom {
     }
 }
 
-export function createRoom(room: proto.Room, log: Logger, events: EventHandler, api: API): DirectRoom | Room {
+export function createRoom(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): DirectRoom | Room {
     if (room.direct) {
         return new DirectRoom(room, log, events, api);
     } else {

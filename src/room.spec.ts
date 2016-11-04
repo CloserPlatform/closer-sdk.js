@@ -1,4 +1,4 @@
-import { API } from "./api";
+import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log, sessionId } from "./fixtures.spec";
 import * as proto from "./protocol";
@@ -47,12 +47,16 @@ function media(id: string, description: string): proto.Media {
     };
 }
 
-class APIMock extends API {
+class APIMock extends ArtichokeAPI {
     sentTyping = false;
     marked = false;
     joined = false;
     left = false;
     invited: string;
+
+    constructor() {
+        super(sessionId, apiKey, config.chat, log);
+    }
 
     joinRoom(id) {
         this.joined = true;
@@ -124,7 +128,7 @@ function makeRoom(direct = false) {
 
         beforeEach(() => {
             events = new EventHandler(log);
-            api = new APIMock(sessionId, apiKey, config, log);
+            api = new APIMock();
             room = createRoom(makeRoom(d === "DirectRoom"), log, events, api);
         });
 
@@ -272,7 +276,7 @@ describe("DirectRoom", () => {
 
     beforeEach(() => {
         events = new EventHandler(log);
-        api = new APIMock(sessionId, apiKey, config, log);
+        api = new APIMock();
         room = createRoom(makeRoom(true), log, events, api) as DirectRoom;
     });
 
@@ -291,7 +295,7 @@ describe("Room", () => {
 
     beforeEach(() => {
         events = new EventHandler(log);
-        api = new APIMock(sessionId, apiKey, config, log);
+        api = new APIMock();
         room = createRoom(makeRoom(), log, events, api) as Room;
     });
 

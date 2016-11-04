@@ -1,4 +1,4 @@
-import { API } from "./api";
+import { ArtichokeAPI } from "./api";
 import { Call, createCall, DirectCall } from "./call";
 import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
@@ -9,12 +9,12 @@ import { createRoom, DirectRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
 
 export class Artichoke {
-    private api: API;
+    private api: ArtichokeAPI;
     private config: ChatConfig;
     private log: Logger;
     private events: EventHandler;
 
-    constructor(config: ChatConfig, log: Logger, events: EventHandler, api: API) {
+    constructor(config: ChatConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
         this.api = api;
         this.config = config;
         this.log = log;

@@ -1,4 +1,4 @@
-import { API } from "./api";
+import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, getStream, invalidSDP, isChrome, isWebRTCSupported,
          log, sessionId, validSDP, whenever } from "./fixtures.spec";
@@ -17,9 +17,13 @@ function descr(sdp): Event {
     } as Event;
 }
 
-class APIMock extends API {
+class APIMock extends ArtichokeAPI {
     descriptionSent = false;
     onDescription: (call: ID, peer: ID, sdp: SDP) => void;
+
+    constructor() {
+        super(sessionId, apiKey, config.chat, log);
+    }
 
     sendDescription(call: ID, peer: ID, sdp: SDP) {
         this.descriptionSent = true;
@@ -42,7 +46,7 @@ describe("RTCConnection", () => {
     let api;
 
     beforeEach(() => {
-        api = new APIMock(sessionId, apiKey, config, log);
+        api = new APIMock();
     });
 
     whenever(isWebRTCSupported())("should create SDP offers", (done) => {
@@ -103,7 +107,7 @@ describe("RTCPool", () => {
 
     beforeEach(() => {
         events = new EventHandler(log);
-        api = new APIMock(sessionId, apiKey, config, log);
+        api = new APIMock();
         pool = createRTCPool(callId, config.chat.rtc, log, events, api);
     });
 

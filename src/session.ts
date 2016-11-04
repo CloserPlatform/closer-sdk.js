@@ -1,4 +1,4 @@
-import { API } from "./api";
+import { ArtichokeAPI } from "./api";
 import { Artichoke } from "./artichoke";
 import { ApiKey } from "./auth";
 import { Config } from "./config";
@@ -9,7 +9,7 @@ import { ID } from "./protocol";
 export class Session {
   public id: ID;
   public chat: Artichoke;
-  public api: API;
+  public api: ArtichokeAPI;
   public events: EventHandler;
 
   constructor(id: ID, apiKey: ApiKey, config: Config) {
@@ -19,7 +19,7 @@ export class Session {
 
     this.id = id;
     this.events = new EventHandler(log);
-    this.api = new API(id, apiKey, config.chat, log);
+    this.api = new ArtichokeAPI(id, apiKey, config.chat, log);
     this.chat = new Artichoke(config, log, this.events, this.api);
   }
 }

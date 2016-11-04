@@ -1,4 +1,4 @@
-import { API } from "./api";
+import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { Call as ProtoCall, CallInvited, CallJoined, CallLeft, ID, Timestamp } from "./protocol";
@@ -14,7 +14,7 @@ export class BaseCall implements ProtoCall {
     public users: Array<ID>;
     public direct: boolean;
 
-    protected api: API;
+    protected api: ArtichokeAPI;
     protected events: EventHandler;
 
     private log: Logger;
@@ -23,7 +23,7 @@ export class BaseCall implements ProtoCall {
     private onLeftCallback: Callback<CallLeft>;
     private onJoinedCallback: Callback<CallJoined>;
 
-    constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler, api: API) {
+    constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
         this.id = call.id;
         this.created = call.created;
         this.users = call.users;
@@ -117,7 +117,7 @@ export class Call extends BaseCall {
 }
 
 export function createCall(call: ProtoCall, config: RTCConfiguration,
-                           log: Logger, events: EventHandler, api: API): DirectCall | Call {
+                           log: Logger, events: EventHandler, api: ArtichokeAPI): DirectCall | Call {
     if (call.direct) {
         return new DirectCall(call, config, log, events, api);
     } else {

@@ -1,4 +1,4 @@
-import { API } from "./api";
+import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import * as proto from "./protocol";
@@ -16,9 +16,9 @@ export class Message implements RichMessage {
 
     private log: Logger;
     private events: EventHandler;
-    private api: API;
+    private api: ArtichokeAPI;
 
-    constructor(message: proto.Message, log: Logger, events: EventHandler, api: API) {
+    constructor(message: proto.Message, log: Logger, events: EventHandler, api: ArtichokeAPI) {
         this.id = message.id;
         this.body = message.body;
         this.user = message.user;
@@ -78,6 +78,6 @@ export class Message implements RichMessage {
     // TODO markRead, onRead
 }
 
-export function createMessage(message: proto.Message, log: Logger, events: EventHandler, api: API): Message {
+export function createMessage(message: proto.Message, log: Logger, events: EventHandler, api: ArtichokeAPI): Message {
     return new Message(message, log, events, api);
 }

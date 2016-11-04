@@ -1,4 +1,4 @@
-import { API } from "./api";
+import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
 import { Candidate, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
@@ -26,12 +26,12 @@ export interface RemoteStreamCallback {
 }
 
 export class RTCConnection {
-    private api: API;
+    private api: ArtichokeAPI;
     private log: Logger;
     private conn: RTCPeerConnection;
     private onRemoteStreamCallback: RemoteStreamCallback;
 
-    constructor(stream: MediaStream, config: RTCConfiguration, log: Logger, api: API) {
+    constructor(stream: MediaStream, config: RTCConfiguration, log: Logger, api: ArtichokeAPI) {
         log("Connecting an RTC connection.");
         this.api = api;
         this.log = log;
@@ -121,7 +121,7 @@ export interface ConnectionCallback {
 }
 
 export class RTCPool {
-    private api: API;
+    private api: ArtichokeAPI;
     private events: EventHandler;
     private log: Logger;
 
@@ -131,7 +131,7 @@ export class RTCPool {
     private connections: { [user: string]: RTCConnection };
     private onConnectionCallback: ConnectionCallback;
 
-    constructor(callId: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: API) {
+    constructor(callId: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
         this.api = api;
         this.events = events;
         this.log = log;
@@ -210,11 +210,11 @@ export class RTCPool {
 }
 
 export function createRTCConnection(stream: MediaStream, config: RTCConfiguration,
-                                    log: Logger, api: API): RTCConnection {
+                                    log: Logger, api: ArtichokeAPI): RTCConnection {
     return new RTCConnection(stream, config, log, api);
 }
 
 export function createRTCPool(callId: ID, config: RTCConfiguration, log: Logger,
-                              events: EventHandler, api: API): RTCPool {
+                              events: EventHandler, api: ArtichokeAPI): RTCPool {
     return new RTCPool(callId, config, log, events, api);
 }

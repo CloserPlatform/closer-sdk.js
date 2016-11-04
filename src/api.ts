@@ -156,7 +156,7 @@ export class APIWithWebsocket extends RESTfulAPI {
   }
 }
 
-export class API extends APIWithWebsocket {
+export class ArtichokeAPI extends APIWithWebsocket {
   private sessionId: proto.ID; // FIXME Don't rely on this.
   private authHeaders: Array<HeaderValue>;
 

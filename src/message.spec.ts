@@ -1,4 +1,4 @@
-import { API } from "./api";
+import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log, sessionId, sleep } from "./fixtures.spec";
 import { createMessage } from "./message";
@@ -8,9 +8,13 @@ const roomId = "123";
 const bob = "456";
 const msg1 = "2323";
 
-class APIMock extends API {
+class APIMock extends ArtichokeAPI {
     setDelivery = false;
     updatedArchivable = false;
+
+    constructor() {
+        super(sessionId, apiKey, config.chat, log);
+    }
 
     setDelivered(messageId, timestamp) {
         this.setDelivery = true;
@@ -40,7 +44,7 @@ describe("Message", () => {
 
     beforeEach(() => {
         events = new EventHandler(log);
-        api = new APIMock(sessionId, apiKey, config, log);
+        api = new APIMock();
         msg = createMessage(makeMsg(), log, events, api);
     });
 

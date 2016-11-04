@@ -1,4 +1,4 @@
-import { API } from "./api";
+import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import * as proto from "./protocol";
@@ -17,9 +17,9 @@ export class Media implements RichMedia {
 
     private log: Logger;
     private events: EventHandler;
-    private api: API;
+    private api: ArtichokeAPI;
 
-    constructor(media: proto.Media, log: Logger, events: EventHandler, api: API) {
+    constructor(media: proto.Media, log: Logger, events: EventHandler, api: ArtichokeAPI) {
         this.id = media.id;
         this.user = media.user;
         this.room = media.room;
@@ -55,6 +55,6 @@ export class Media implements RichMedia {
     }
 }
 
-export function createMedia(media: proto.Media, log: Logger, events: EventHandler, api: API): Media {
+export function createMedia(media: proto.Media, log: Logger, events: EventHandler, api: ArtichokeAPI): Media {
     return new Media(media, log, events, api);
 }
