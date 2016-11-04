@@ -46,7 +46,7 @@ describe("RTCConnection", () => {
 
     whenever(isWebRTCSupported())("should create SDP offers", (done) => {
         getStream((stream) => {
-            let rtc = createRTCConnection(stream, config.rtc, log, api);
+            let rtc = createRTCConnection(stream, config.chat.rtc, log, api);
             rtc.onRemoteStream(nop);
 
             expect(api.descriptionSent).toBe(false);
@@ -64,7 +64,7 @@ describe("RTCConnection", () => {
                 type: "offer",
                 sdp: validSDP
             };
-            let rtc = createRTCConnection(stream, config.rtc, log, api);
+            let rtc = createRTCConnection(stream, config.chat.rtc, log, api);
             rtc.onRemoteStream(nop);
 
             expect(api.descriptionSent).toBe(false);
@@ -82,7 +82,7 @@ describe("RTCConnection", () => {
                 type: "offer",
                 sdp: invalidSDP
             };
-            let rtc = createRTCConnection(stream, config.rtc, log, api);
+            let rtc = createRTCConnection(stream, config.chat.rtc, log, api);
             rtc.onRemoteStream(nop);
 
             expect(api.descriptionSent).toBe(false);
@@ -103,7 +103,7 @@ describe("RTCPool", () => {
     beforeEach(() => {
         events = new EventHandler(log);
         api = new APIMock(config, log);
-        pool = createRTCPool(callId, config.rtc, log, events, api);
+        pool = createRTCPool(callId, config.chat.rtc, log, events, api);
     });
 
     whenever(isWebRTCSupported())("should create an RTC connection", (done) => {

@@ -56,7 +56,7 @@ function makeCall(direct = false) {
         beforeEach(() => {
             events = new EventHandler(log);
             api = new APIMock(config, log);
-            call = createCall(makeCall(d === "DirectCall"), config.rtc, log, events, api);
+            call = createCall(makeCall(d === "DirectCall"), config.chat.rtc, log, events, api);
         });
 
         it("should allow rejecting", (done) => {
@@ -172,7 +172,7 @@ describe("Call", () => {
     beforeEach(() => {
         events = new EventHandler(log);
         api = new APIMock(config, log);
-        call = createCall(makeCall(), config.rtc, log, events, api) as Call;
+        call = createCall(makeCall(), config.chat.rtc, log, events, api) as Call;
     });
 
     it("should run a callback on invitation", (done) => {

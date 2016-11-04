@@ -24,7 +24,7 @@ describe("Artichoke", () => {
     beforeEach(() => {
         events = new EventHandler(log);
         api = new APIMock(config, log);
-        manager = new Artichoke(config, log, events, api);
+        manager = new Artichoke(config.chat, log, events, api);
     });
 
     it("should notify on a new event", (done) => {

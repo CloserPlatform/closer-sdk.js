@@ -1,6 +1,6 @@
 import { API } from "./api";
 import { Call, createCall, DirectCall } from "./call";
-import { Config } from "./config";
+import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage } from "./message";
@@ -10,11 +10,11 @@ import { wrapPromise } from "./utils";
 
 export class Artichoke {
     private api: API;
-    private config: Config;
+    private config: ChatConfig;
     private log: Logger;
     private events: EventHandler;
 
-    constructor(config: Config, log: Logger, events: EventHandler, api: API) {
+    constructor(config: ChatConfig, log: Logger, events: EventHandler, api: API) {
         this.api = api;
         this.config = config;
         this.log = log;
