@@ -5,58 +5,58 @@ import { apiKey, config, log, sessionId } from "./fixtures.spec";
 import { Event } from "./protocol";
 
 class APIMock extends ArtichokeAPI {
-    cb;
+  cb;
 
-    constructor() {
-        super(sessionId, apiKey, config.chat, log);
-    }
+  constructor() {
+    super(sessionId, apiKey, config.chat, log);
+  }
 
-    onEvent(callback) {
-        this.cb = callback;
-    }
+  onEvent(callback) {
+    this.cb = callback;
+  }
 
-    connect() {
-        // Do nothing.
-    }
+  connect() {
+    // Do nothing.
+  }
 }
 
 describe("Artichoke", () => {
-    let events;
-    let api;
-    let manager;
+  let events;
+  let api;
+  let manager;
 
-    beforeEach(() => {
-        events = new EventHandler(log);
-        api = new APIMock();
-        manager = new Artichoke(config.chat, log, events, api);
-    });
+  beforeEach(() => {
+    events = new EventHandler(log);
+    api = new APIMock();
+    manager = new Artichoke(config.chat, log, events, api);
+  });
 
-    it("should notify on a new event", (done) => {
-        events.onEvent("hello", (msg) => done());
+  it("should notify on a new event", (done) => {
+    events.onEvent("hello", (msg) => done());
 
-        manager.connect();
+    manager.connect();
 
-        api.cb({
-            type: "hello"
-        } as Event);
-    });
+    api.cb({
+      type: "hello"
+    } as Event);
+  });
 
-    it("should call a callback on server connection", (done) => {
-        manager.onConnect((msg) => done());
-        manager.connect();
+  it("should call a callback on server connection", (done) => {
+    manager.onConnect((msg) => done());
+    manager.connect();
 
-        api.cb({
-            type: "hello"
-        } as Event);
-    });
+    api.cb({
+      type: "hello"
+    } as Event);
+  });
 
-    it("should call a callback on server error", (done) => {
-        manager.onError((error) => done());
-        manager.connect();
+  it("should call a callback on server error", (done) => {
+    manager.onError((error) => done());
+    manager.connect();
 
-        api.cb({
-            type: "error",
-            reason: "why not?"
-        } as Event);
-    });
+    api.cb({
+      type: "error",
+      reason: "why not?"
+    } as Event);
+  });
 });
