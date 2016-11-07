@@ -12,47 +12,52 @@ export const invalidSDP = "v=0\r\no=- 9212849432138844847 2 IN IP4 127.0.0.1\r\n
 export const log = logger.debugConsole;
 
 export const config: Config = load({
-    url: "localhost:5431",
-    debug: true
+  debug: true,
+  hostname: "localhost",
+  protocol: "http:",
+  port: "5431"
 } as Config);
 
+export const sessionId = "12345678";
+export const apiKey = "8615ea03-7421-4fa5-b02c-bf339c18abbf";
+
 export function sleep(time: number): Promise<void> {
-    return new Promise<void>(function(resolve, reject) {
-        setTimeout(resolve, time);
-    });
+  return new Promise<void>(function(resolve, reject) {
+    setTimeout(resolve, time);
+  });
 }
 
 export function whenever(condition: boolean) {
-    return condition ? it : xit;
+  return condition ? it : xit;
 }
 
 export function isChrome() {
-    return typeof window["chrome"] !== "undefined";
+  return typeof window["chrome"] !== "undefined";
 }
 
 export function isFirefox() {
-    return navigator.userAgent.indexOf("Firefox") !== -1;
+  return navigator.userAgent.indexOf("Firefox") !== -1;
 }
 
 export function isWebRTCSupported(): boolean {
-    return [typeof RTCPeerConnection,
-            typeof webkitRTCPeerConnection,
-            typeof mozRTCPeerConnection].some((t) => t !== "undefined");
+  return [typeof RTCPeerConnection,
+          typeof webkitRTCPeerConnection,
+          typeof mozRTCPeerConnection].some((t) => t !== "undefined");
 }
 
 export function getStream(onStream, onError) {
-    let constraints = {
-        fake: true, // NOTE For FireFox.
-        video: true,
-        audio: true
-    };
-    if (typeof navigator.getUserMedia !== "undefined") {
-        navigator.getUserMedia(constraints, onStream, onError);
-    } else if (typeof navigator.mediaDevices.getUserMedia !== "undefined") {
-        navigator.mediaDevices.getUserMedia(constraints).then(onStream).catch(onError);
-    } else if (typeof navigator.mozGetUserMedia !== "undefined") {
-        navigator.mozGetUserMedia(constraints, onStream, onError);
-    } else if (typeof navigator.webkitGetUserMedia !== "undefined") {
-        navigator.webkitGetUserMedia(constraints, onStream, onError);
-    }
+  let constraints = {
+    fake: true, // NOTE For FireFox.
+    video: true,
+    audio: true
+  };
+  if (typeof navigator.getUserMedia !== "undefined") {
+    navigator.getUserMedia(constraints, onStream, onError);
+  } else if (typeof navigator.mediaDevices.getUserMedia !== "undefined") {
+    navigator.mediaDevices.getUserMedia(constraints).then(onStream).catch(onError);
+  } else if (typeof navigator.mozGetUserMedia !== "undefined") {
+    navigator.mozGetUserMedia(constraints, onStream, onError);
+  } else if (typeof navigator.webkitGetUserMedia !== "undefined") {
+    navigator.webkitGetUserMedia(constraints, onStream, onError);
+  }
 }

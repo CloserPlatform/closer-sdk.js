@@ -809,11 +809,11 @@ $(document).ready(function() {
         return encodedHeader + "." + encodedData + "." + signature;
     }
 
-    function run(server, ratelServer, userNickname) {
-        var url = getURL(server);
+    function run(chatServer, ratelServer, userNickname) {
+        var chatUrl = getURL(chatServer);
         var ratelUrl = getURL(ratelServer);
 
-        console.log("Connecting to " + url + " as: " + userNickname);
+        console.log("Connecting to " + chatUrl + " as: " + userNickname);
 
         var payloadData = {
             organizationId: getOrganizationId(userNickname),
@@ -829,22 +829,22 @@ $(document).ready(function() {
         return RatelSDK.withSignedAuth(
             sessionData,
             {
-                "rtc": {
-                    "iceTransportPolicy": "relay",
-                    "iceServers": [{
-                        "urls": ["stun:turn.ratel.im:5349", "turn:turn.ratel.im:5349"],
-                        "username": "test123",
-                        "credential": "test456"
-                    }]
-                },
-                "protocol": url.protocol,
-                "hostname": url.hostname,
-                "port": url.port,
                 "debug": true,
-                ratel: {
-                    "protocol": ratelUrl.protocol,
-                    "hostname": ratelUrl.hostname,
-                    "port": ratelUrl.port,
+                "protocol": ratelUrl.protocol,
+                "hostname": ratelUrl.hostname,
+                "port": ratelUrl.port,
+                "chat": {
+                    "protocol": chatUrl.protocol,
+                    "hostname": chatUrl.hostname,
+                    "port": chatUrl.port,
+                    "rtc": {
+                        "iceTransportPolicy": "relay",
+                        "iceServers": [{
+                            "urls": ["stun:turn.ratel.im:5349", "turn:turn.ratel.im:5349"],
+                            "username": "test123",
+                            "credential": "test456"
+                        }]
+                    }
                 }
             }).then(function (session) {
                 $('#demo-name').html("Ratel IM - " + userNickname);
