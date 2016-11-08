@@ -27,7 +27,7 @@ export function withApiKey(sessionId: ID, apiKey: ApiKey, config: Config): Promi
 export function withSignedAuth(sessionData: SessionData, config: Config): Promise<Session> {
   return new Promise<Session>(function (resolve, reject) {
     let cfg = load(config);
-    let api = new RatelAPI(cfg, debugConsole); // FIXME Should be the common logger.
+    let api = new RatelAPI(cfg.ratel, debugConsole); // FIXME Should be the common logger.
     api.verifySignature(sessionData).then((apiKey) => {
       withApiKey(sessionData.payload.sessionId, apiKey, cfg)
         .then(resolve)

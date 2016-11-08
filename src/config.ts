@@ -3,35 +3,40 @@ import { ID } from "./protocol";
 import { deepcopy } from "./utils";
 
 export interface URLConfig {
-  protocol?: string;
-  hostname?: string;
-  port?: string;
+  protocol: string;
+  hostname: string;
+  port: string;
 }
 
 export interface ChatConfig extends URLConfig {
-  rtc?: RTCConfiguration;
+  rtc: RTCConfiguration;
 }
 
-export interface RatelConfig extends ChatConfig {}
+export interface RatelConfig extends URLConfig {}
 
-export interface Config extends URLConfig {
-  debug?: boolean;
+export interface Config {
+  debug: boolean;
 
   apiKey?: ApiKey;
   sessionId?: ID;
 
-  ratel?: RatelConfig;
-  chat?: ChatConfig;
+  ratel: RatelConfig;
+  chat: ChatConfig;
 }
 
 export const defaultConfig: Config = {
   debug: false,
 
-  protocol: "https:",
-  hostname: "api.dev.ratel.io",
-  port: "",
+  ratel: {
+    protocol: "https:",
+    hostname: "api.dev.ratel.io",
+    port: "",
+  },
 
   chat: {
+    protocol: "https:",
+    hostname: "artichoke.ratel.io",
+    port: "",
     rtc: {
       iceServers: [{
         urls: ["stun:turn.ratel.im:5349", "turn:turn.ratel.im:5349"],
@@ -49,15 +54,5 @@ function merge<O>(a: O, b: O): O {
 }
 
 export function load(conf: Config): Config {
-  let cfg = merge(deepcopy(conf), deepcopy(defaultConfig));
-  let url = {
-    protocol: cfg.protocol,
-    hostname: cfg.hostname,
-    port: cfg.port
-  };
-
-  cfg.ratel = merge<URLConfig>(cfg.ratel || {}, url);
-  cfg.chat = merge<URLConfig>(cfg.chat || {}, url);
-
-  return cfg;
+  return merge(deepcopy(conf), deepcopy(defaultConfig));
 }
