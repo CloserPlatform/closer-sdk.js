@@ -20,6 +20,6 @@ export class Session {
     this.id = id;
     this.events = new EventHandler(log);
     this.api = new ArtichokeAPI(id, apiKey, config.chat, log);
-    this.chat = new Artichoke(config, log, this.events, this.api);
+    this.chat = new Artichoke(config.chat, log, this.events, this.api);
   }
 }

@@ -830,9 +830,11 @@ $(document).ready(function() {
             sessionData,
             {
                 "debug": true,
-                "protocol": ratelUrl.protocol,
-                "hostname": ratelUrl.hostname,
-                "port": ratelUrl.port,
+                "ratel": {
+                    "protocol": ratelUrl.protocol,
+                    "hostname": ratelUrl.hostname,
+                    "port": ratelUrl.port,
+                },
                 "chat": {
                     "protocol": chatUrl.protocol,
                     "hostname": chatUrl.hostname,

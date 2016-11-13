@@ -5,39 +5,26 @@ describe("Config", () => {
   it("should load with defaults", () => {
     let d = load({} as Config);
 
-    let c = load({
-      hostname: "localhost",
-      debug: !d.debug
-    } as Config);
+    let c = load({debug: !d.debug} as Config);
 
-    expect(c.hostname).toBe("localhost");
-    expect(c.port).toBe(d.port);
+    expect(d).toEqual(defaultConfig);
     expect(c.debug).toBe(!d.debug);
     expect(c.ratel).toBeDefined();
-    expect(c.chat.rtc).toBeDefined();
-  });
-
-  it("should automatically add service config", () => {
-    let c = load({
-      hostname: "localhost"
-    } as Config);
-
-    expect(c.hostname).toBe("localhost");
-    expect(c.ratel.hostname).toBe("localhost");
-    expect(c.chat.hostname).toBe("localhost");
+    expect(c.chat).toBeDefined();
   });
 
   it("should not override provided service config", () => {
     let c = load({
-      hostname: "localhost",
+      ratel: {
+        hostname: "ratel-nonlocalhost"
+      },
       chat: {
-        hostname: "notlocalhost"
+        hostname: "chat-nonlocalhost"
       }
     } as Config);
 
-    expect(c.hostname).toBe("localhost");
-    expect(c.ratel.hostname).toBe("localhost");
-    expect(c.chat.hostname).toBe("notlocalhost");
+    expect(c.ratel.hostname).toBe("ratel-nonlocalhost");
+    expect(c.chat.hostname).toBe("chat-nonlocalhost");
   });
 
   it("should not override defaultConfig", () => {
@@ -48,8 +35,10 @@ describe("Config", () => {
 
   it("should not override supplied in config", () => {
     let cfg: Config = {
-      hostname: "localhost"
-    };
+      ratel: {
+        hostname: "ratel-host"
+      }
+    } as Config;
 
     let c = deepcopy(cfg);
     load(cfg);

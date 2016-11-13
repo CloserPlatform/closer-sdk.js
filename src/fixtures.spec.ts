@@ -13,9 +13,6 @@ export const log = logger.debugConsole;
 
 export const config: Config = load({
   debug: true,
-  hostname: "localhost",
-  protocol: "http:",
-  port: "5431"
 } as Config);
 
 export const sessionId = "12345678";
