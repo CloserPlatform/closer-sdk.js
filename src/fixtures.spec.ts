@@ -36,6 +36,10 @@ export function isFirefox() {
   return navigator.userAgent.indexOf("Firefox") !== -1;
 }
 
+export function isPhantomJS() {
+  return !(isChrome() || isFirefox());
+}
+
 export function isWebRTCSupported(): boolean {
   return [typeof RTCPeerConnection,
           typeof webkitRTCPeerConnection,
