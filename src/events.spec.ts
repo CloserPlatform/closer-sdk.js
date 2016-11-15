@@ -99,8 +99,8 @@ describe("Event Handler", () => {
   });
 
   it("onConcreteEvent() should be equivalent to onEvent() with id assertion", () => {
-    let first = undefined;
-    let second = undefined;
+    let first: RoomMark = undefined;
+    let second: RoomMark = undefined;
 
     events.onConcreteEvent("room_mark", "3", (msg: RoomMark) => first = msg);
     events.onEvent("room_mark", (msg: RoomMark) => {
