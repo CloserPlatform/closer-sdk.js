@@ -19,19 +19,11 @@ export interface SessionData {
 }
 
 export function withApiKey(sessionId: ID, apiKey: ApiKey, config: Config): Promise<Session> {
-  return new Promise<Session>(function (resolve, reject) {
-    resolve(new Session(sessionId, apiKey, load(config)));
-  });
+  return Promise.resolve(new Session(sessionId, apiKey, load(config)));
 }
 
 export function withSignedAuth(sessionData: SessionData, config: Config): Promise<Session> {
-  return new Promise<Session>(function (resolve, reject) {
-    let cfg = load(config);
-    let api = new RatelAPI(cfg.ratel, debugConsole); // FIXME Should be the common logger.
-    api.verifySignature(sessionData).then((apiKey) => {
-      withApiKey(sessionData.payload.sessionId, apiKey, cfg)
-        .then(resolve)
-        .catch(reject);
-    }).catch(reject);
-  });
+  let cfg = load(config);
+  let api = new RatelAPI(cfg.ratel, debugConsole); // FIXME Should be the common logger.
+  return api.verifySignature(sessionData).then((apiKey) => withApiKey(sessionData.payload.sessionId, apiKey, cfg));
 }

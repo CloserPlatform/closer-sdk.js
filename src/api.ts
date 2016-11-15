@@ -261,11 +261,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   sendMessage(roomId: proto.ID, body: string): Promise<proto.Message> {
-    return new Promise((resolve, reject) => {
-      this.ask<proto.ChatReceived>(proto.chatRequest(roomId, body))
-        .then((ack) => resolve(ack.message))
-        .catch(reject);
-    });
+    return this.ask<proto.ChatReceived>(proto.chatRequest(roomId, body)).then((ack) => ack.message);
   }
 
   sendMetadata(roomId: proto.ID, payload: any): Promise<proto.Metadata> {
