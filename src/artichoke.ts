@@ -42,29 +42,28 @@ export class Artichoke {
   connect() {
     this.api.connect();
 
-    let _this = this;
-    this.api.onEvent(function(e: proto.Event) {
+    this.api.onEvent((e: proto.Event) => {
       switch (e.type) {
       case "call_invitation":
         let c = e as proto.CallInvitation;
-        c.call = createCall(c.call, _this.config.rtc, _this.log, _this.events, _this.api);
-        _this.events.notify(c);
+        c.call = createCall(c.call, this.config.rtc, this.log, this.events, this.api);
+        this.events.notify(c);
         break;
 
       case "room_invitation":
         let i = e as proto.RoomInvitation;
-        i.room = createRoom(i.room, _this.log, _this.events, _this.api);
-        _this.events.notify(i);
+        i.room = createRoom(i.room, this.log, this.events, this.api);
+        this.events.notify(i);
         break;
 
       case "room_message":
         let m = e as proto.RoomMessage;
-        m.message = createMessage(m.message, _this.log, _this.events, _this.api);
-        _this.events.notify(m);
+        m.message = createMessage(m.message, this.log, this.events, this.api);
+        this.events.notify(m);
         break;
 
       default:
-        _this.events.notify(e);
+        this.events.notify(e);
       }
     });
   }

@@ -45,12 +45,11 @@ export class Media implements RichMedia {
   }
 
   onEdit(callback: Callback<Media>) {
-    let _this = this;
-    this.events.onConcreteEvent("chat_edited", this.id, function(msg: proto.ChatEdited) {
+    this.events.onConcreteEvent("chat_edited", this.id, (msg: proto.ChatEdited) => {
       let m = (msg.archivable as proto.Media);
-      _this.description = m.description;
-      _this.edited = m.edited;
-      callback(_this);
+      this.description = m.description;
+      this.edited = m.edited;
+      callback(this);
     });
   }
 }

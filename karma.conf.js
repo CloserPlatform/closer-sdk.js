@@ -105,7 +105,7 @@ module.exports = (config) => {
 
         autoWatch: true,
 
-        browsers: ['PhantomJS'],
+        browsers: ['ChromeWithFakeUserMedia', 'Firefox','PhantomJS'],
 
         customLaunchers: {
             ChromeWithFakeUserMedia: {

@@ -13,15 +13,14 @@ export class JSONWebSocket {
 
     this.log("Connecting to: " + this.url);
     this.socket = new WebSocket(url);
-    this.socket.onopen = function() {
+    this.socket.onopen = () => {
       log("Connected to: " + url);
     };
   }
 
   onEvent(callback: Callback<Event>) {
-    let _this = this;
-    this.socket.onmessage = function(event) {
-      _this.log("WS received: " + event.data);
+    this.socket.onmessage = (event) => {
+      this.log("WS received: " + event.data);
       callback(read(event.data) as Event);
     };
   }

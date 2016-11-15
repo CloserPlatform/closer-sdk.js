@@ -29,10 +29,9 @@ export class RESTfulAPI {
   private responseCallback<Response>(xhttp: XMLHttpRequest,
                                      resolve: PromiseResolve<Response>,
                                      reject: PromiseReject): Thunk {
-    let _this = this;
-    return function() {
+    return () => {
       if (xhttp.readyState === 4 && xhttp.status === 200) {
-        _this.log("OK response: " + xhttp.responseText);
+        this.log("OK response: " + xhttp.responseText);
         try {
           resolve(JSON.parse(xhttp.responseText));
         } catch (e) {
@@ -40,10 +39,10 @@ export class RESTfulAPI {
           (resolve as PromiseResolve<any>)(xhttp.responseText);
         }
       } else if (xhttp.readyState === 4 && xhttp.status === 204) {
-        _this.log("NoContent response.");
+        this.log("NoContent response.");
         resolve(undefined);
       } else if (xhttp.readyState === 4) {
-        _this.log("Error response: " + xhttp.responseText);
+        this.log("Error response: " + xhttp.responseText);
         try {
           reject(JSON.parse(xhttp.responseText));
         } catch (error) {
@@ -54,13 +53,12 @@ export class RESTfulAPI {
   }
 
   get<Response>(path: Array<string>, headers?: Array<HeaderValue>): Promise<Response> {
-    let _this = this;
-    return new Promise<Response>(function(resolve, reject) {
+    return new Promise<Response>((resolve, reject) => {
       let url = path.join("/");
-      _this.log("GET " + url);
+      this.log("GET " + url);
 
       let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = _this.responseCallback<Response>(xhttp, resolve, reject);
+      xhttp.onreadystatechange = this.responseCallback<Response>(xhttp, resolve, reject);
       xhttp.open("GET", url, true);
       (headers || []).forEach((h) => xhttp.setRequestHeader(h.header, h.value));
       xhttp.send();
@@ -68,22 +66,21 @@ export class RESTfulAPI {
   }
 
   post<Body, Response>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<Response> {
-    let _this = this;
-    return new Promise<Response>(function(resolve, reject) {
+    return new Promise<Response>((resolve, reject) => {
       let url = path.join("/");
 
       let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = _this.responseCallback<Response>(xhttp, resolve, reject);
+      xhttp.onreadystatechange = this.responseCallback<Response>(xhttp, resolve, reject);
       xhttp.open("POST", url, true);
       (headers || []).forEach((h) => xhttp.setRequestHeader(h.header, h.value));
 
       if (body) {
         let json = JSON.stringify(body);
-        _this.log("POST " + url + ": " + json);
+        this.log("POST " + url + ": " + json);
         xhttp.setRequestHeader("Content-Type", "application/json");
         xhttp.send(json);
       } else {
-        _this.log("POST " + url);
+        this.log("POST " + url);
         xhttp.send();
       }
     });
@@ -116,26 +113,24 @@ export class APIWithWebsocket extends RESTfulAPI {
   }
 
   ask<Response>(event: proto.Event): Promise<Response> {
-    let _this = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise((resolve, reject) => {
       let ref = "ref" + Date.now(); // FIXME Use UUID instead.
-      _this.promises[ref] = {
+      this.promises[ref] = {
         resolve,
         reject
       };
       event.ref = ref;
-      _this.send(event);
+      this.send(event);
     });
   }
 
   onEvent(callback: Callback<proto.Event>) {
-    let _this = this;
-    this.socket.onEvent(function(event: proto.Event) {
+    this.socket.onEvent((event: proto.Event) => {
       let e = proto.fix(event);
       if (e.type === "error") {
-        _this.reject(e.ref, e as proto.Error);
+        this.reject(e.ref, e as proto.Error);
       } else {
-        _this.resolve(e.ref, e);
+        this.resolve(e.ref, e);
       }
       callback(e);
     });
@@ -266,9 +261,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   sendMessage(roomId: proto.ID, body: string): Promise<proto.Message> {
-    let _this = this;
-    return new Promise(function(resolve, reject) {
-      _this.ask<proto.ChatReceived>(proto.chatRequest(roomId, body))
+    return new Promise((resolve, reject) => {
+      this.ask<proto.ChatReceived>(proto.chatRequest(roomId, body))
         .then((ack) => resolve(ack.message))
         .catch(reject);
     });

@@ -45,13 +45,12 @@ export class Message implements RichMessage {
   }
 
   onDelivery(callback: Callback<Message>) {
-    let _this = this;
-    this.events.onConcreteEvent("chat_delivered", this.id, function(msg: proto.ChatDelivered) {
-      _this.delivered = {
+    this.events.onConcreteEvent("chat_delivered", this.id, (msg: proto.ChatDelivered) => {
+      this.delivered = {
         user: msg.user,
         timestamp: msg.timestamp
       };
-      callback(_this);
+      callback(this);
     });
   }
 
@@ -66,12 +65,11 @@ export class Message implements RichMessage {
   }
 
   onEdit(callback: Callback<Message>) {
-    let _this = this;
-    this.events.onConcreteEvent("chat_edited", this.id, function(msg: proto.ChatEdited) {
+    this.events.onConcreteEvent("chat_edited", this.id, (msg: proto.ChatEdited) => {
       let m = (msg.archivable as proto.Message);
-      _this.body = m.body;
-      _this.edited = m.edited;
-      callback(_this);
+      this.body = m.body;
+      this.edited = m.edited;
+      callback(this);
     });
   }
 

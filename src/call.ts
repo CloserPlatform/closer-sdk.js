@@ -46,22 +46,21 @@ export class BaseCall implements ProtoCall {
       // Do nothing.
     };
 
-    let _this = this;
-    this.pool.onConnection(function(peer, rtc) {
-      rtc.onRemoteStream((stream) => _this.onRemoteStreamCallback(peer, stream));
+    this.pool.onConnection((peer, rtc) => {
+      rtc.onRemoteStream((stream) => this.onRemoteStreamCallback(peer, stream));
     });
 
     // Signaling callbacks:
-    this.events.onConcreteEvent("call_left", this.id, function(msg: CallLeft) {
-      _this.users = _this.users.filter((u) => u !== msg.user);
-      _this.pool.destroy(msg.user);
-      _this.onLeftCallback(msg);
+    this.events.onConcreteEvent("call_left", this.id, (msg: CallLeft) => {
+      this.users = this.users.filter((u) => u !== msg.user);
+      this.pool.destroy(msg.user);
+      this.onLeftCallback(msg);
     });
 
-    this.events.onConcreteEvent("call_joined", this.id, function(msg: CallJoined) {
-      _this.users.push(msg.user);
-      _this.pool.create(msg.user).onRemoteStream((stream) => _this.onRemoteStreamCallback(msg.user, stream));
-      _this.onJoinedCallback(msg);
+    this.events.onConcreteEvent("call_joined", this.id, (msg: CallJoined) => {
+      this.users.push(msg.user);
+      this.pool.create(msg.user).onRemoteStream((stream) => this.onRemoteStreamCallback(msg.user, stream));
+      this.onJoinedCallback(msg);
     });
   }
 
