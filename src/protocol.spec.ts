@@ -41,11 +41,10 @@ const events: Array<proto.Event> = [{
   user: alice,
   status: "away",
   timestamp: Date.now(),
-} as proto.Presence, {
-  type: "error",
-  ref: "23425",
-  reason: "Because!"
-} as proto.Error, {
+} as proto.Presence, proto.error("Because!", {
+  error: "error",
+  text: "string"
+}, "23425"), {
   type: "room_mark",
   id: roomId,
   timestamp: Date.now()

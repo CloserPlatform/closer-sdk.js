@@ -131,6 +131,7 @@ export interface Event {
 
 export interface Error extends Event {
     reason: string;
+    cause?: any;
 }
 
 export type Status = "away" | "available" | "unavailable";
@@ -315,6 +316,15 @@ export function createBot(name: string, callback?: string): CreateBot {
     return {
         name,
         callback
+    };
+}
+
+// Internal API:
+export function error(reason: string, cause?: any, ref?: string): Error {
+    return {
+        type: "error",
+        reason,
+        cause
     };
 }
 

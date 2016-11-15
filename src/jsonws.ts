@@ -1,6 +1,6 @@
 import { Callback } from "./events";
 import { Logger } from "./logger";
-import { Error, Event, read, write } from "./protocol";
+import { error, Error, Event, read, write } from "./protocol";
 
 export class JSONWebSocket {
   private log: Logger;
@@ -19,12 +19,9 @@ export class JSONWebSocket {
   }
 
   onError(callback: Callback<Error>) {
-    this.socket.onerror = (error) => {
-      this.log("WS error: " + error.message);
-      callback({
-        type: "error",
-        reason: error.message
-      } as Error);
+    this.socket.onerror = (err) => {
+      this.log("WS error: " + err.message);
+      callback(error(err.message, err));
     };
   }
 

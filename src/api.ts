@@ -125,9 +125,7 @@ export class APIWithWebsocket extends RESTfulAPI {
   }
 
   onEvent(callback: Callback<proto.Event>) {
-    this.socket.onError((error: proto.Error) => {
-      callback(error);
-    });
+    this.socket.onError(callback);
 
     this.socket.onEvent((event: proto.Event) => {
       let e = proto.fix(event);
