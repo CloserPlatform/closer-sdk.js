@@ -56,12 +56,11 @@ export class RTCConnection {
   offer(callId: ID, peer: ID): Promise<SDP> {
     this.log("Creating RTC offer.");
 
-    let _this = this;
-    return new Promise(function(resolve, reject) {
-      _this.conn.createOffer(function(offer) {
-        _this.conn.setLocalDescription(offer);
-        _this.initOnICECandidate(callId, peer);
-        _this.api.sendDescription(callId, peer, offer as SDP);
+    return new Promise((resolve, reject) => {
+      this.conn.createOffer((offer) => {
+        this.conn.setLocalDescription(offer);
+        this.initOnICECandidate(callId, peer);
+        this.api.sendDescription(callId, peer, offer as SDP);
         resolve(offer);
       }, reject);
     });
@@ -71,12 +70,11 @@ export class RTCConnection {
     this.log("Creating RTC answer.");
     this.setRemoteDescription(remoteDescription);
 
-    let _this = this;
-    return new Promise(function(resolve, reject) {
-      _this.conn.createAnswer(function(answer) {
-        _this.conn.setLocalDescription(answer);
-        _this.initOnICECandidate(callId, peer);
-        _this.api.sendDescription(callId, peer, answer as SDP);
+    return new Promise((resolve, reject) => {
+      this.conn.createAnswer((answer) => {
+        this.conn.setLocalDescription(answer);
+        this.initOnICECandidate(callId, peer);
+        this.api.sendDescription(callId, peer, answer as SDP);
         resolve(answer);
       }, reject);
     });
@@ -91,20 +89,18 @@ export class RTCConnection {
   }
 
   private initOnICECandidate(callId: ID, peer: ID) {
-    let _this = this;
-    this.conn.onicecandidate = function(event) {
+    this.conn.onicecandidate = (event) => {
       if (event.candidate) {
-        _this.log("Created ICE candidate: " + event.candidate.candidate);
-        _this.api.sendCandidate(callId, peer, event.candidate.candidate as Candidate);
+        this.log("Created ICE candidate: " + event.candidate.candidate);
+        this.api.sendCandidate(callId, peer, event.candidate.candidate as Candidate);
       }
     };
   }
 
   private initOnRemoteStream() {
-    let _this = this;
-    let onstream = function(event) {
-      _this.log("Received a remote stream.");
-      _this.onRemoteStreamCallback(event.stream || event.streams[0]);
+    let onstream = (event) => {
+      this.log("Received a remote stream.");
+      this.onRemoteStreamCallback(event.stream || event.streams[0]);
     };
 
     let hackedConn = (this.conn as RTCPeerConnectionWithOnTrack);
@@ -145,26 +141,25 @@ export class RTCPool {
       // Do Nothing.
     };
 
-    let _this = this;
-    events.onConcreteEvent("rtc_description", callId, function(msg: RTCDescription) {
-      _this.log("Received an RTC description: " + msg.description.sdp);
-      if (msg.peer in _this.connections) {
-        _this.connections[msg.peer].setRemoteDescription(msg.description);
+    events.onConcreteEvent("rtc_description", callId, (msg: RTCDescription) => {
+      this.log("Received an RTC description: " + msg.description.sdp);
+      if (msg.peer in this.connections) {
+        this.connections[msg.peer].setRemoteDescription(msg.description);
       } else {
-        let rtc = _this.createRTC(msg.peer);
-        rtc.answer(_this.callId, msg.peer, msg.description).then(function(answer) {
-          _this.log("Sent an RTC description: " + answer.sdp);
+        let rtc = this.createRTC(msg.peer);
+        rtc.answer(this.callId, msg.peer, msg.description).then((answer) => {
+          this.log("Sent an RTC description: " + answer.sdp);
         }).catch(function(error) {
           events.raise("Could not create an RTC answer.", error);
         });
-        _this.onConnectionCallback(msg.peer, rtc);
+        this.onConnectionCallback(msg.peer, rtc);
       }
     });
 
-    events.onConcreteEvent("rtc_candidate", callId, function(msg: RTCCandidate) {
-      _this.log("Received an RTC candidate: " + msg.candidate);
-      if (msg.peer in _this.connections) {
-        _this.connections[msg.peer].addCandidate(msg.candidate);
+    events.onConcreteEvent("rtc_candidate", callId, (msg: RTCCandidate) => {
+      this.log("Received an RTC candidate: " + msg.candidate);
+      if (msg.peer in this.connections) {
+        this.connections[msg.peer].addCandidate(msg.candidate);
       } else {
         events.raise("Received an invalid RTC candidate. " +  msg.peer + " is not currently in this call.");
       }
@@ -181,11 +176,10 @@ export class RTCPool {
 
   create(peer: ID): RTCConnection {
     let rtc = this.createRTC(peer);
-    let _this = this;
-    rtc.offer(this.callId, peer).then(function(offer) {
-      _this.log("Sent an RTC description: " + offer.sdp);
+    rtc.offer(this.callId, peer).then((offer) => {
+      this.log("Sent an RTC description: " + offer.sdp);
     }).catch(function(error) {
-      _this.events.raise("Could not create an RTC offer.", error);
+      this.events.raise("Could not create an RTC offer.", error);
     });
     return rtc;
   }
@@ -198,8 +192,7 @@ export class RTCPool {
   }
 
   destroyAll() {
-    let _this = this;
-    Object.keys(this.connections).forEach((key) => _this.destroy(key));
+    Object.keys(this.connections).forEach((key) => this.destroy(key));
   }
 
   private createRTC(peer: ID): RTCConnection {

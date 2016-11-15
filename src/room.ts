@@ -31,16 +31,15 @@ export class BaseRoom implements proto.Room {
   }
 
   getHistory(): Promise<Array<proto.Archivable>> {
-    let _this = this;
-    return wrapPromise(this.api.getRoomHistory(this.id), function(a: proto.ArchivableWithType) {
+    return wrapPromise(this.api.getRoomHistory(this.id), (a: proto.ArchivableWithType) => {
       switch (a.type) {
       case "media":
         let media = (a as proto.Archivable) as proto.Media; // FIXME Delicious spaghetti.
-        return createMedia(media, _this.log, _this.events, _this.api);
+        return createMedia(media, this.log, this.events, this.api);
 
       case "message":
         let msg = (a as proto.Archivable) as proto.Message; // FIXME Delicious spaghetti.
-        return createMessage(msg, _this.log, _this.events, _this.api);
+        return createMessage(msg, this.log, this.events, this.api);
 
       default:
         return a as proto.Archivable;
@@ -53,11 +52,8 @@ export class BaseRoom implements proto.Room {
   }
 
   getMark(): Promise<number> {
-    let _this = this;
-    return new Promise(function(resolve, reject) {
-      // NOTE No need to retrieve the mark if it's cached here.
-      resolve(_this.mark);
-    });
+    // NOTE No need to retrieve the list if it's cached here.
+    return Promise.resolve(this.mark);
   }
 
   setMark(timestamp: proto.Timestamp) {
@@ -66,9 +62,8 @@ export class BaseRoom implements proto.Room {
   }
 
   send(message: string): Promise<Message> {
-    let _this = this;
     return wrapPromise(this.api.sendMessage(this.id, message),
-                       (m) => createMessage(m, _this.log, _this.events, _this.api));
+                       (m) => createMessage(m, this.log, this.events, this.api));
   }
 
   sendMetadata(payload: any): Promise<proto.Metadata> {
@@ -76,9 +71,8 @@ export class BaseRoom implements proto.Room {
   }
 
   sendMedia(media: proto.MediaItem): Promise<Media> {
-    let _this = this;
     return wrapPromise(this.api.sendMedia(this.id, media),
-                       (m) => createMedia(m, _this.log, _this.events, _this.api));
+                       (m) => createMedia(m, this.log, this.events, this.api));
   }
 
   indicateTyping() {
@@ -86,17 +80,15 @@ export class BaseRoom implements proto.Room {
   }
 
   onMark(callback: Callback<proto.RoomMark>) {
-    let _this = this;
-    this.events.onConcreteEvent("room_mark", this.id, function(mark: proto.RoomMark) {
-      _this.mark = mark.timestamp;
+    this.events.onConcreteEvent("room_mark", this.id, (mark: proto.RoomMark) => {
+      this.mark = mark.timestamp;
       callback(mark);
     });
   }
 
   onMessage(callback: Callback<proto.Message>) {
-    let _this = this;
     this.events.onConcreteEvent("room_message", this.id, (msg: proto.RoomMessage) => {
-      callback(createMessage(msg.message, _this.log, _this.events, _this.api));
+      callback(createMessage(msg.message, this.log, this.events, this.api));
     });
   }
 
@@ -105,9 +97,8 @@ export class BaseRoom implements proto.Room {
   }
 
   onMedia(callback: Callback<proto.Media>) {
-    let _this = this;
     this.events.onConcreteEvent("room_media", this.id, (msg: proto.RoomMedia) => {
-      callback(createMedia(msg.media, _this.log, _this.events, _this.api));
+      callback(createMedia(msg.media, this.log, this.events, this.api));
     });
   }
 
@@ -133,35 +124,31 @@ export class Room extends BaseRoom {
     this.onJoinedCallback = nop;
     this.onInvitedCallback = nop;
 
-    let _this = this;
-    this.events.onConcreteEvent("room_action", this.id, function(e: proto.RoomAction) {
+    this.events.onConcreteEvent("room_action", this.id, (e: proto.RoomAction) => {
       switch (e.action.action) {
       case "joined":
-        _this.users.push(e.action.user);
-        _this.onJoinedCallback(e.action);
+        this.users.push(e.action.user);
+        this.onJoinedCallback(e.action);
         break;
 
       case "left":
-        _this.users = _this.users.filter((u) => u !== e.action.user);
-        _this.onLeftCallback(e.action);
+        this.users = this.users.filter((u) => u !== e.action.user);
+        this.onLeftCallback(e.action);
         break;
 
       case "invited":
-        _this.onInvitedCallback(e.action);
+        this.onInvitedCallback(e.action);
         break;
 
       default:
-        _this.events.raise("Invalid room_action event", e);
+        this.events.raise("Invalid room_action event", e);
       }
     });
   }
 
   getUsers(): Promise<Array<proto.ID>> {
-    let _this = this;
-    return new Promise(function(resolve, reject) {
-      // NOTE No need to retrieve the list if it's cached here.
-      resolve(_this.users);
-    });
+    // NOTE No need to retrieve the list if it's cached here.
+    return Promise.resolve(this.users);
   }
 
   join(): Promise<void> {
