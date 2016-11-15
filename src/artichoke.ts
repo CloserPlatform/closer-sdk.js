@@ -34,6 +34,10 @@ export class Artichoke {
     this.events.onEvent("hello", callback);
   }
 
+  onDisconnect(callback: Callback<proto.Disconnect>) {
+    this.events.onEvent("disconnect", callback);
+  }
+
   onError(callback: Callback<proto.Error>) {
     this.events.onError(callback);
   }

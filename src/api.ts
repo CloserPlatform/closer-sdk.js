@@ -125,6 +125,8 @@ export class APIWithWebsocket extends RESTfulAPI {
   }
 
   onEvent(callback: Callback<proto.Event>) {
+    this.socket.onDisconnect(callback);
+
     this.socket.onError(callback);
 
     this.socket.onEvent((event: proto.Event) => {

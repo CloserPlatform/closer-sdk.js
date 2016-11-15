@@ -185,6 +185,12 @@ export interface RTCDescription extends Event {
     description: SDP;
 }
 
+// Internal events:
+export interface Disconnect extends Event {
+    reason: string;
+    code: number;
+}
+
 // WS API:
 export function chatRequest(room: ID, body: string, ref?: Ref): ChatRequest {
     return {
@@ -325,6 +331,14 @@ export function error(reason: string, cause?: any, ref?: string): Error {
         type: "error",
         reason,
         cause
+    };
+}
+
+export function disconnect(code: number, reason: string): Disconnect {
+    return {
+        type: "disconnect",
+        reason,
+        code
     };
 }
 
