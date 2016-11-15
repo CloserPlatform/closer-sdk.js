@@ -330,7 +330,8 @@ export function error(reason: string, cause?: any, ref?: string): Error {
     return {
         type: "error",
         reason,
-        cause
+        cause,
+        ref
     };
 }
 
