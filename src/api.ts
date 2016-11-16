@@ -292,8 +292,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   // Presence API:
-  setStatus(status: proto.Status, timestamp: proto.Timestamp) {
-    this.send(proto.presence(status, timestamp));
+  setStatus(status: proto.Status) {
+    this.send(proto.presenceRequest(status));
   }
 
   // Bot API:
