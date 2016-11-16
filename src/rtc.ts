@@ -46,11 +46,7 @@ export class RTCConnection {
   }
 
   addCandidate(candidate: Candidate) {
-    this.conn.addIceCandidate(new RTCIceCandidate({
-      "candidate": candidate,
-      "sdpMid": "",
-      "sdpMLineIndex": 0
-    }));
+    this.conn.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
   offer(callId: ID, peer: ID): Promise<SDP> {
@@ -92,7 +88,7 @@ export class RTCConnection {
     this.conn.onicecandidate = (event) => {
       if (event.candidate) {
         this.log("Created ICE candidate: " + event.candidate.candidate);
-        this.api.sendCandidate(callId, peer, event.candidate.candidate as Candidate);
+        this.api.sendCandidate(callId, peer, event.candidate);
       }
     };
   }
