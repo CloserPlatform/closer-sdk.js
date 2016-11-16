@@ -36,12 +36,12 @@ const events: Array<proto.Event> = [{
   type: "room_typing",
   id: roomId,
   user: alice
-} as proto.RoomTyping, {
-  type: "presence",
+} as proto.RoomTyping, proto.presenceRequest("available"), {
+  type: "presence_update",
   user: alice,
   status: "away",
   timestamp: Date.now(),
-} as proto.Presence, proto.error("Because!", {
+} as proto.PresenceUpdate, proto.error("Because!", {
   error: "error",
   text: "string"
 }, "23425"), {

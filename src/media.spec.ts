@@ -1,6 +1,6 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
-import { apiKey, config, log, sessionId } from "./fixtures.spec";
+import { apiKey, config, log } from "./fixtures.spec";
 import { createMedia } from "./media";
 import { ChatEdited, Media } from "./protocol";
 
@@ -23,7 +23,7 @@ class APIMock extends ArtichokeAPI {
   updatedArchivable = false;
 
   constructor() {
-    super(sessionId, apiKey, config.chat, log);
+    super(apiKey, config.chat, log);
   }
 
   setDelivered(messageId, timestamp) {

@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Call, createCall } from "./call";
 import { EventHandler } from "./events";
-import { apiKey, config, getStream, isWebRTCSupported, log, sessionId, whenever } from "./fixtures.spec";
+import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
 import { Call as ProtoCall, Event } from "./protocol";
 
 const callId = "123";
@@ -15,7 +15,7 @@ class APIMock extends ArtichokeAPI {
   invited: string;
 
   constructor() {
-    super(sessionId, apiKey, config.chat, log);
+    super( apiKey, config.chat, log);
   }
 
   joinCall(id) {

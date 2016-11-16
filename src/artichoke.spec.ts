@@ -1,14 +1,14 @@
 import { ArtichokeAPI } from "./api";
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
-import { apiKey, config, log, sessionId } from "./fixtures.spec";
+import { apiKey, config, log } from "./fixtures.spec";
 import { disconnect, error, Event } from "./protocol";
 
 class APIMock extends ArtichokeAPI {
   cb;
 
   constructor() {
-    super(sessionId, apiKey, config.chat, log);
+    super(apiKey, config.chat, log);
   }
 
   onEvent(callback) {

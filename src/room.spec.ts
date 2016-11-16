@@ -1,6 +1,6 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
-import { apiKey, config, log, sessionId } from "./fixtures.spec";
+import { apiKey, config, log } from "./fixtures.spec";
 import * as proto from "./protocol";
 import { createRoom, DirectRoom, Room } from "./room";
 
@@ -55,7 +55,7 @@ class APIMock extends ArtichokeAPI {
   invited: string;
 
   constructor() {
-    super(sessionId, apiKey, config.chat, log);
+    super(apiKey, config.chat, log);
   }
 
   joinRoom(id) {

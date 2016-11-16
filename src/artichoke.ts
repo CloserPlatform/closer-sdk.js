@@ -136,12 +136,12 @@ export class Artichoke {
   }
 
   // Presence API:
-  onStatusUpdate(callback: Callback<proto.Presence>) {
-    this.events.onEvent("presence", callback);
+  onStatusUpdate(callback: Callback<proto.PresenceUpdate>) {
+    this.events.onEvent("presence_update", callback);
   }
 
   setStatus(status: proto.Status) {
-    this.api.setStatus(status, Date.now());
+    this.api.setStatus(status);
   }
 
   // Utils:
