@@ -170,7 +170,7 @@ export interface RoomTyping extends Event {
     user?: ID;
 }
 
-export type Candidate = string;
+export type Candidate = RTCIceCandidate;
 
 export interface RTCCandidate extends Event {
     peer: ID;
