@@ -156,7 +156,6 @@ export class APIWithWebsocket extends RESTfulAPI {
 }
 
 export class ArtichokeAPI extends APIWithWebsocket {
-  private sessionId: proto.ID; // FIXME Don't rely on this.
   private authHeaders: Array<HeaderValue>;
 
   protected url: string;
@@ -167,10 +166,9 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   private wsUrl: string;
 
-  constructor(sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, log: Logger) {
+  constructor(apiKey: ApiKey, config: ChatConfig, log: Logger) {
     super(log);
 
-    this.sessionId = sessionId;
     this.authHeaders = [new HeaderValue("X-Api-Key", apiKey)];
 
     let host = config.hostname + ":" + config.port;
@@ -295,7 +293,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   // Presence API:
   setStatus(status: proto.Status, timestamp: proto.Timestamp) {
-    this.send(proto.presence(this.sessionId, status, timestamp));
+    this.send(proto.presence(status, timestamp));
   }
 
   // Bot API:

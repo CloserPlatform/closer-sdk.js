@@ -137,7 +137,7 @@ export interface Error extends Event {
 export type Status = "away" | "available" | "unavailable";
 
 export interface Presence extends Event {
-    user: ID;
+    user?: ID;
     status: Status;
     timestamp: Timestamp;
 }
@@ -217,10 +217,9 @@ export function mark(id: ID, timestamp: Timestamp): RoomMark {
     };
 }
 
-export function presence(user: ID, status: Status, timestamp: Timestamp): Presence {
+export function presence(status: Status, timestamp: Timestamp): Presence {
     return {
         type: "presence",
-        user,
         status,
         timestamp
     };

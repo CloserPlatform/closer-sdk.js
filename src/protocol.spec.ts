@@ -36,7 +36,7 @@ const events: Array<proto.Event> = [{
   type: "room_typing",
   id: roomId,
   user: alice
-} as proto.RoomTyping, {
+} as proto.RoomTyping, proto.presence("available", Date.now()), {
   type: "presence",
   user: alice,
   status: "away",

@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
-import { apiKey, config, getStream, invalidSDP, isChrome, isWebRTCSupported,
-         log, sessionId, validSDP, whenever } from "./fixtures.spec";
+import { apiKey, config, getStream, invalidSDP, isChrome,
+         isWebRTCSupported, log, validSDP, whenever } from "./fixtures.spec";
 import { Candidate, Event, ID, SDP } from "./protocol";
 import { createRTCConnection, createRTCPool } from "./rtc";
 
@@ -22,7 +22,7 @@ class APIMock extends ArtichokeAPI {
   onDescription: (call: ID, peer: ID, sdp: SDP) => void;
 
   constructor() {
-    super(sessionId, apiKey, config.chat, log);
+    super(apiKey, config.chat, log);
   }
 
   sendDescription(call: ID, peer: ID, sdp: SDP) {
