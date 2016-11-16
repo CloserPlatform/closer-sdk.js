@@ -2,7 +2,7 @@ import { ArtichokeAPI } from "./api";
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
 import { apiKey, config, log, sessionId } from "./fixtures.spec";
-import { Event } from "./protocol";
+import { disconnect, error, Event } from "./protocol";
 
 class APIMock extends ArtichokeAPI {
   cb;
@@ -23,40 +23,39 @@ class APIMock extends ArtichokeAPI {
 describe("Artichoke", () => {
   let events;
   let api;
-  let manager;
+  let chat;
 
   beforeEach(() => {
     events = new EventHandler(log);
     api = new APIMock();
-    manager = new Artichoke(config.chat, log, events, api);
+    chat = new Artichoke(config.chat, log, events, api);
   });
 
   it("should notify on a new event", (done) => {
     events.onEvent("hello", (msg) => done());
-
-    manager.connect();
-
+    chat.connect();
     api.cb({
       type: "hello"
     } as Event);
   });
 
   it("should call a callback on server connection", (done) => {
-    manager.onConnect((msg) => done());
-    manager.connect();
-
+    chat.onConnect((msg) => done());
+    chat.connect();
     api.cb({
       type: "hello"
     } as Event);
   });
 
-  it("should call a callback on server error", (done) => {
-    manager.onError((error) => done());
-    manager.connect();
+  it("should call a callback on server disconnection", (done) => {
+    chat.onDisconnect((msg) => done());
+    chat.connect();
+    api.cb(disconnect(1023, "Too much effort."));
+  });
 
-    api.cb({
-      type: "error",
-      reason: "why not?"
-    } as Event);
+  it("should call a callback on server error", (done) => {
+    chat.onError((error) => done());
+    chat.connect();
+    api.cb(error("why not?"));
   });
 });

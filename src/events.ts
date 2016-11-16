@@ -1,5 +1,5 @@
 import { Logger } from "./logger";
-import { Error, Event, ID, Type, write } from "./protocol";
+import { error, Error, Event, ID, Type, write } from "./protocol";
 
 export interface Callback<T> {
   (arg: T): void;
@@ -19,11 +19,7 @@ export class EventHandler {
 
   raise(reason: string, cause?: any) {
     this.perType["error"].forEach(function(cb) {
-      cb({
-        type: "error",
-        reason,
-        cause
-      } as Event);
+      cb(error(reason, cause));
     });
   }
 

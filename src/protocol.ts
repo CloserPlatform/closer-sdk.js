@@ -131,6 +131,7 @@ export interface Event {
 
 export interface Error extends Event {
     reason: string;
+    cause?: any;
 }
 
 export type Status = "away" | "available" | "unavailable";
@@ -182,6 +183,12 @@ export type SDP = RTCSessionDescriptionInit;
 export interface RTCDescription extends Event {
     peer: ID;
     description: SDP;
+}
+
+// Internal events:
+export interface Disconnect extends Event {
+    reason: string;
+    code: number;
 }
 
 // WS API:
@@ -315,6 +322,24 @@ export function createBot(name: string, callback?: string): CreateBot {
     return {
         name,
         callback
+    };
+}
+
+// Internal API:
+export function error(reason: string, cause?: any, ref?: string): Error {
+    return {
+        type: "error",
+        reason,
+        cause,
+        ref
+    };
+}
+
+export function disconnect(code: number, reason: string): Disconnect {
+    return {
+        type: "disconnect",
+        reason,
+        code
     };
 }
 
