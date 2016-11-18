@@ -1,5 +1,6 @@
 import { AgentContext, ApiKey, SessionData } from "./auth";
-import { ChatConfig, RatelConfig } from "./config";
+import { CampaignSpawnData } from "./campaign";
+import { ChatConfig, RatelConfig, WheelhouseConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
@@ -326,5 +327,21 @@ export class RatelAPI extends RESTfulAPI {
 
   verifySignature(sessionData: SessionData): Promise<AgentContext> {
     return this.post<SessionData, AgentContext>([this.url, this.verifyPath], [], sessionData);
+  }
+}
+
+export class WheelhouseAPI extends RESTfulAPI {
+  private spawnCampaignPath = "api/campaign";
+  private url: string;
+
+  constructor(config: WheelhouseConfig, log: Logger) {
+    super(log);
+
+    let host = config.hostname + ":" + config.port;
+    this.url = [config.protocol, "//", host].join("");
+  }
+
+  spawnCampaign(campaignSpawnData: CampaignSpawnData): Promise<void> {
+    return this.post<CampaignSpawnData, void>([this.url, this.spawnCampaignPath], [], campaignSpawnData);
   }
 }
