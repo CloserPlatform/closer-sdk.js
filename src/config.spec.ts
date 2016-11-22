@@ -21,14 +21,14 @@ describe("Config", () => {
       ratel: {
         hostname: "ratel-nonlocalhost"
       },
-      wheelhouse: {
-        hostname: "wheelhouse-nonlocalhost"
+      resource: {
+        hostname: "resource-nonlocalhost"
       },
     } as Config);
 
     expect(c.chat.hostname).toBe("chat-nonlocalhost");
     expect(c.ratel.hostname).toBe("ratel-nonlocalhost");
-    expect(c.wheelhouse.hostname).toBe("wheelhouse-nonlocalhost");
+    expect(c.resource.hostname).toBe("resource-nonlocalhost");
   });
 
   it("should not override defaultConfig", () => {

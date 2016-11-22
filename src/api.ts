@@ -1,6 +1,6 @@
 import { AgentContext, ApiKey, SessionData } from "./auth";
 import { CampaignSpawnData } from "./campaign";
-import { ChatConfig, RatelConfig, WheelhouseConfig } from "./config";
+import { ChatConfig, RatelConfig, ResourceConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
@@ -330,11 +330,11 @@ export class RatelAPI extends RESTfulAPI {
   }
 }
 
-export class WheelhouseAPI extends RESTfulAPI {
+export class ResourceAPI extends RESTfulAPI {
   private spawnCampaignPath = "api/campaign";
   private url: string;
 
-  constructor(config: WheelhouseConfig, log: Logger) {
+  constructor(config: ResourceConfig, log: Logger) {
     super(log);
 
     let host = config.hostname + ":" + config.port;

@@ -14,7 +14,7 @@ export interface ChatConfig extends URLConfig {
 
 export interface RatelConfig extends URLConfig {}
 
-export interface WheelhouseConfig extends URLConfig {}
+export interface ResourceConfig extends URLConfig {}
 
 export interface Config {
   debug: boolean;
@@ -24,7 +24,7 @@ export interface Config {
 
   chat: ChatConfig;
   ratel: RatelConfig;
-  wheelhouse: WheelhouseConfig;
+  resource: ResourceConfig;
 }
 
 export const defaultConfig: Config = {
@@ -49,7 +49,7 @@ export const defaultConfig: Config = {
     port: "",
   },
 
-  wheelhouse: {
+  resource: {
     protocol: "https:",
     hostname: "api.dev.wheelhouse.io",
     port: "",
