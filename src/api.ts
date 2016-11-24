@@ -330,6 +330,9 @@ export class RatelAPI extends RESTfulAPI {
   }
 
   verifySignature(sessionData: SessionData): Promise<ApiKey> {
-    return this.post<SessionData, ApiKey>([this.url, this.verifyPath], [], sessionData);
+    let data: any = sessionData;
+    data.payload.organizationId = parseInt(sessionData.payload.organizationId);
+    data.payload.sessionId = parseInt(sessionData.payload.sessionId);
+    return this.post<SessionData, ApiKey>([this.url, this.verifyPath], [], data);
   }
 }
