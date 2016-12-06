@@ -8,14 +8,20 @@ export type ApiKey = string;
 export type Signature = string;
 
 export interface Payload {
-  organizationId: ID;
-  sessionId: ID;
+  orgId: ID;
+  externalId: ID;
   timestamp: Timestamp;
 }
 
 export interface SessionData {
   payload: Payload;
   signature: Signature;
+}
+
+export interface AgentContext {
+  id: ID;
+  orgId: ID;
+  apiKey: ApiKey;
 }
 
 export function withApiKey(sessionId: ID, apiKey: ApiKey, config: Config): Promise<Session> {
@@ -25,5 +31,7 @@ export function withApiKey(sessionId: ID, apiKey: ApiKey, config: Config): Promi
 export function withSignedAuth(sessionData: SessionData, config: Config): Promise<Session> {
   let cfg = load(config);
   let api = new RatelAPI(cfg.ratel, debugConsole); // FIXME Should be the common logger.
-  return api.verifySignature(sessionData).then((apiKey) => withApiKey(sessionData.payload.sessionId, apiKey, cfg));
+  return api.verifySignature(sessionData).then((context: AgentContext) => {
+    return withApiKey(sessionData.payload.externalId, context.apiKey, cfg);
+  });
 }

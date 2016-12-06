@@ -1,4 +1,4 @@
-import { ApiKey, SessionData } from "./auth";
+import { AgentContext, ApiKey, SessionData } from "./auth";
 import { ChatConfig, RatelConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
@@ -32,12 +32,7 @@ export class RESTfulAPI {
     return () => {
       if (xhttp.readyState === 4 && xhttp.status === 200) {
         this.log("OK response: " + xhttp.responseText);
-        try {
-          resolve(JSON.parse(xhttp.responseText));
-        } catch (e) {
-          // FIXME Needed by RatelAPI.verifySignature()
-          (resolve as PromiseResolve<any>)(xhttp.responseText);
-        }
+        resolve(JSON.parse(xhttp.responseText));
       } else if (xhttp.readyState === 4 && xhttp.status === 204) {
         this.log("NoContent response.");
         resolve(undefined);
@@ -326,10 +321,10 @@ export class RatelAPI extends RESTfulAPI {
     super(log);
 
     let host = config.hostname + ":" + config.port;
-    this.url = [config.protocol, "//", host].join("");
+    this.url = [config.protocol, "//", host, "/api"].join("");
   }
 
-  verifySignature(sessionData: SessionData): Promise<ApiKey> {
-    return this.post<SessionData, ApiKey>([this.url, this.verifyPath], [], sessionData);
+  verifySignature(sessionData: SessionData): Promise<AgentContext> {
+    return this.post<SessionData, AgentContext>([this.url, this.verifyPath], [], sessionData);
   }
 }

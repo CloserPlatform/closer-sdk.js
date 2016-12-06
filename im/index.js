@@ -816,14 +816,14 @@ $(document).ready(function() {
         console.log("Connecting to " + chatUrl + " as: " + userNickname);
 
         var payloadData = {
-            organizationId: getOrganizationId(userNickname),
-            sessionId: getSessionId(userNickname),
+            orgId: getOrganizationId(userNickname),
+            externalId: getSessionId(userNickname),
             timestamp: Date.now()
         };
 
         var sessionData = {
             payload: payloadData,
-            signature: jwt_sign(payloadData, secretKeys[payloadData.organizationId] || "defaultKey")
+            signature: jwt_sign(payloadData, secretKeys[payloadData.orgId] || "defaultKey")
         };
 
         return RatelSDK.withSignedAuth(
