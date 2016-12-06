@@ -817,7 +817,7 @@ $(document).ready(function() {
 
         var payloadData = {
             organizationId: getOrganizationId(userNickname),
-            sessionId: getSessionId(userNickname),
+            externalId: getSessionId(userNickname),
             timestamp: Date.now()
         };
 
