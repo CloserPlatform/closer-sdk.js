@@ -326,7 +326,7 @@ export class RatelAPI extends RESTfulAPI {
     super(log);
 
     let host = config.hostname + ":" + config.port;
-    this.url = [config.protocol, "//", host].join("");
+    this.url = [config.protocol, "//", host, "/api"].join("");
   }
 
   verifySignature(sessionData: SessionData): Promise<ApiKey> {
