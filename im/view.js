@@ -1,7 +1,7 @@
 function makeLoginForm(id, onClick) {
     var form = $('<form id="login_form">')
         .append([makeInput('server', 'Server:', 'Server', 'artichoke.ratel.io'),
-                 makeInput('ratel-server', 'RatelServer:', 'RatelServer', 'api.dev.ratel.io'),
+                 makeInput('ratel-server', 'RatelServer:', 'RatelServer', 'briefcase.ratel.io'),
                  makeInput('user-nickname', 'Name:', 'Nickname')]);
 
     var button = $('<button class="btn btn-primary" form="login_form">')
