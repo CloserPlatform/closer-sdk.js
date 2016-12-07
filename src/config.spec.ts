@@ -15,16 +15,20 @@ describe("Config", () => {
 
   it("should not override provided service config", () => {
     let c = load({
+      chat: {
+        hostname: "chat-nonlocalhost"
+      },
       ratel: {
         hostname: "ratel-nonlocalhost"
       },
-      chat: {
-        hostname: "chat-nonlocalhost"
-      }
+      resource: {
+        hostname: "resource-nonlocalhost"
+      },
     } as Config);
 
-    expect(c.ratel.hostname).toBe("ratel-nonlocalhost");
     expect(c.chat.hostname).toBe("chat-nonlocalhost");
+    expect(c.ratel.hostname).toBe("ratel-nonlocalhost");
+    expect(c.resource.hostname).toBe("resource-nonlocalhost");
   });
 
   it("should not override defaultConfig", () => {

@@ -14,24 +14,21 @@ export interface ChatConfig extends URLConfig {
 
 export interface RatelConfig extends URLConfig {}
 
+export interface ResourceConfig extends URLConfig {}
+
 export interface Config {
   debug: boolean;
 
   apiKey?: ApiKey;
   sessionId?: ID;
 
-  ratel: RatelConfig;
   chat: ChatConfig;
+  ratel: RatelConfig;
+  resource: ResourceConfig;
 }
 
 export const defaultConfig: Config = {
   debug: false,
-
-  ratel: {
-    protocol: "https:",
-    hostname: "api.dev.ratel.io",
-    port: "",
-  },
 
   chat: {
     protocol: "https:",
@@ -44,6 +41,18 @@ export const defaultConfig: Config = {
         credential: "test456"
       }]
     }
+  },
+
+  ratel: {
+    protocol: "https:",
+    hostname: "api.dev.ratel.io",
+    port: "",
+  },
+
+  resource: {
+    protocol: "https:",
+    hostname: "wheelhouse.ratel.io",
+    port: "",
   }
 };
 
