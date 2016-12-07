@@ -9,6 +9,7 @@ $(document).ready(function() {
         };
     }
 
+    var sessionId = undefined;
     var loginBox = makeLoginBox();
     var chat = makeChat();
     var userNickname = undefined;
@@ -186,8 +187,10 @@ $(document).ready(function() {
         console.log("Building direct chatbox: ", room);
 
         // FIXME 2hacky4me
-        var peer = room.name.slice(3).split("-")
-            .filter(function(e) { return e !== getSessionId(userNickname).toString(); })[0];
+        var peer = room.users.filter(function(u) {
+            return u !== sessionId;
+        })[0];
+
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
 
@@ -629,14 +632,15 @@ $(document).ready(function() {
             delete streams[m.user];
             renderStreams();
             users.remove(m.user);
-
-            if(call.direct && users.list().length === 0) {
-                endCall("ended");
-            }
         });
 
         call.onJoined(function(m) {
             console.log("User joined the call: ", m);
+        });
+
+        call.onEnd(function(e) {
+            console.log("Call ended: ", e.reason);
+            endCall("ended");
         });
 
         function endCall(reason) {
@@ -849,6 +853,7 @@ $(document).ready(function() {
                     }
                 }
             }).then(function (session) {
+                sessionId = session.id;
                 $('#demo-name').html("Ratel IM - " + userNickname);
                 statusSwitch.show();
 
@@ -940,6 +945,9 @@ $(document).ready(function() {
 
                     session.chat.onCall(function(m) {
                         console.log("Received call offer: ", m);
+                        m.call.onEnd(function(e) {
+                            console.log("Call ended: ", e.reason);
+                        });
                         var line = "";
                         if(m.call.direct) {
                             line = getUserNickname(m.inviter) + " is calling, answer?";

@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { Call as ProtoCall, CallInvited, CallJoined, CallLeft, ID, Timestamp } from "./protocol";
+import { Call as ProtoCall, CallEnd, CallInvited, CallJoined, CallLeft, ID, Timestamp } from "./protocol";
 import { createRTCPool, RTCPool } from "./rtc";
 
 export interface RemoteStreamCallback {
@@ -11,6 +11,7 @@ export interface RemoteStreamCallback {
 export class BaseCall implements ProtoCall {
   public id: ID;
   public created: Timestamp;
+  public ended: Timestamp;
   public users: Array<ID>;
   public direct: boolean;
 
@@ -26,6 +27,7 @@ export class BaseCall implements ProtoCall {
   constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = call.id;
     this.created = call.created;
+    this.ended = call.ended;
     this.users = call.users;
     this.direct = call.direct;
 
@@ -96,6 +98,13 @@ export class BaseCall implements ProtoCall {
 
   onRemoteStream(callback: RemoteStreamCallback) {
     this.onRemoteStreamCallback = callback;
+  }
+
+  onEnd(callback: Callback<CallEnd>) {
+    this.events.onConcreteEvent("call_end", this.id, (e: CallEnd) => {
+      this.ended = Date.now(); // FIXME Use provided timestamp.
+      callback(e);
+    });
   }
 }
 

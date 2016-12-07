@@ -60,5 +60,5 @@ function getOrganizationId(nickname) {
 }
 
 function getUserNickname(userId) {
-    return reversedUsersMap[userId];
+    return reversedUsersMap[userId] || userId;
 }

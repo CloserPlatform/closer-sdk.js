@@ -34,6 +34,7 @@ export interface Bot {
 export interface Call {
   id: ID;
   created: Timestamp;
+  ended?: Timestamp;
   users: Array<ID>;
   direct: boolean;
 }
@@ -85,14 +86,18 @@ export interface BotUpdated extends Event {
   bot: Bot;
 }
 
+export interface CallAction extends Event {
+  user: ID;
+  timestamp: Timestamp;
+}
+
 export interface CallInvitation extends Event {
   call: Call;
   inviter: ID;
 }
 
-export interface CallAction extends Event {
-  user: ID;
-  timestamp: Timestamp;
+export interface CallEnd extends Event {
+  reason: string;
 }
 
 export interface CallInvited extends CallAction {
