@@ -32,6 +32,6 @@ export function withSignedAuth(sessionData: SessionData, config: Config): Promis
   let cfg = load(config);
   let api = new RatelAPI(cfg.ratel, debugConsole); // FIXME Should be the common logger.
   return api.verifySignature(sessionData).then((context: AgentContext) => {
-    return withApiKey(sessionData.payload.externalId, context.apiKey, cfg);
+    return withApiKey(context.id, context.apiKey, cfg);
   });
 }
