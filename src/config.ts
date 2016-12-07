@@ -51,7 +51,7 @@ export const defaultConfig: Config = {
 
   resource: {
     protocol: "https:",
-    hostname: "api.dev.wheelhouse.io",
+    hostname: "wheelhouse.ratel.io",
     port: "",
   }
 };
