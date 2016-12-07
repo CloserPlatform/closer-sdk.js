@@ -624,7 +624,6 @@ $(document).ready(function() {
             console.log("Remote stream for user " + user +  " started!");
             streams[user] = stream;
             renderStreams();
-            users.add(user);
         });
 
         call.onLeft(function(m) {
@@ -636,6 +635,15 @@ $(document).ready(function() {
 
         call.onJoined(function(m) {
             console.log("User joined the call: ", m);
+            users.add(user);
+        });
+
+        call.onAnswered(function(m) {
+            console.log("User answered the call: ", m);
+        });
+
+        call.onRejected(function(m) {
+            console.log("User rejected the call: ", m);
         });
 
         call.onEnd(function(e) {
@@ -681,7 +689,7 @@ $(document).ready(function() {
             input = makeDiv();
         } else {
             call.onInvited(function(m) {
-                console.log(getUserNickname(m.inviter) + " invited " + m.user + " to join the call: ", m);
+                console.log(getUserNickname(m.user) + " invited " + m.invitee + " to join the call: ", m);
             });
 
             input = makeInputField("Invite!", function(userNickname) {
@@ -717,10 +725,9 @@ $(document).ready(function() {
                 controls.hide();
                 switcher.deactivate();
             },
-            join: function() {
-                call.join(localStream);
+            answer: function() {
+                call.answer(localStream);
             },
-            leave: endCall,
             onTeardown: function(callback) {
                 onTeardownCallback = callback;
             },
@@ -958,12 +965,12 @@ $(document).ready(function() {
                         if(confirm(line)) {
                             createStream(function(stream) {
                                 var callbox = addCall(m.call, stream);
-                                callbox.join();
+                                callbox.answer();
                                 callbox.switchTo();
                             });
                         } else {
                             console.log("Rejecting call...");
-                            m.call.reject(m);
+                            m.call.reject("rejected");
                         }
                     });
 

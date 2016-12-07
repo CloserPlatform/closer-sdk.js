@@ -5,10 +5,8 @@ export type Ref = string;
 export type Timestamp = number;
 
 // Datatypes:
-export type Verb = "joined" | "left" | "invited";
-
-export interface Action extends Archivable {
-  action: Verb;
+export interface RoomAction extends RoomArchivable {
+  action: "joined" | "left" | "invited";
   reason?: string;
   invitee?: ID;
 }
@@ -16,12 +14,11 @@ export interface Action extends Archivable {
 export interface Archivable {
   id: ID;
   user: ID;
-  room: ID;
   timestamp: Timestamp;
 }
 
-export interface ArchivableWithType extends Archivable {
-  type: Type;
+export interface RoomArchivable extends Archivable {
+    room: ID;
 }
 
 export interface Bot {
@@ -39,6 +36,16 @@ export interface Call {
   direct: boolean;
 }
 
+export interface CallAction extends CallArchivable {
+  action: "joined" | "left" | "invited" | "rejected" | "answered";
+  reason?: string;
+  invitee?: ID;
+}
+
+export interface CallArchivable extends Archivable {
+  call: ID;
+}
+
 export interface Deliverable {
   delivered?: Delivered;
 }
@@ -51,7 +58,7 @@ export interface Editable {
 
 export interface Edited extends UserTimestamp {}
 
-export interface Media extends Archivable, MediaItem, Editable {}
+export interface Media extends RoomArchivable, MediaItem, Editable {}
 
 export interface MediaItem {
   mimeType: string;
@@ -59,11 +66,11 @@ export interface MediaItem {
   description: string;
 }
 
-export interface Message extends Archivable, Deliverable, Editable {
+export interface Message extends RoomArchivable, Deliverable, Editable {
   body: string;
 }
 
-export interface Metadata extends Archivable {
+export interface Metadata extends RoomArchivable {
   payload: any;
 }
 
@@ -76,6 +83,10 @@ export interface Room {
   mark?: number;
 }
 
+export interface ArchivableWithType extends Archivable {
+  type: Type;
+}
+
 export interface UserTimestamp {
   user: ID;
   timestamp: Timestamp;
@@ -86,9 +97,8 @@ export interface BotUpdated extends Event {
   bot: Bot;
 }
 
-export interface CallAction extends Event {
-  user: ID;
-  timestamp: Timestamp;
+export interface CallActionSent extends Event {
+  action: CallAction;
 }
 
 export interface CallInvitation extends Event {
@@ -97,16 +107,6 @@ export interface CallInvitation extends Event {
 }
 
 export interface CallEnd extends Event {
-  reason: string;
-}
-
-export interface CallInvited extends CallAction {
-  inviter: ID;
-}
-
-export interface CallJoined extends CallAction { }
-
-export interface CallLeft extends CallAction {
   reason: string;
 }
 
@@ -155,8 +155,8 @@ export interface PresenceUpdate extends Event {
   timestamp: Timestamp;
 }
 
-export interface RoomAction extends Event {
-  action: Action;
+export interface RoomActionSent extends Event {
+  action: RoomAction;
 }
 
 export interface RoomInvitation extends Event {

@@ -12,10 +12,22 @@ const chad = "987";
 class APIMock extends ArtichokeAPI {
   joined = false;
   left: string;
+  answered = false;
+  rejected: string;
   invited: string;
 
   constructor() {
     super( apiKey, config.chat, log);
+  }
+
+  answerCall(id) {
+    this.answered = true;
+    return Promise.resolve(undefined);
+  }
+
+  rejectCall(id, reason) {
+    this.rejected = reason;
+    return Promise.resolve(undefined);
   }
 
   joinCall(id) {
@@ -66,8 +78,8 @@ function makeCall(direct = false) {
     it("should allow rejecting", (done) => {
       events.onError((error) => done.fail());
 
-      call.reject().then(() => {
-        expect(api.left).toBe("rejected");
+      call.reject("rejected").then(() => {
+        expect(api.rejected).toBe("rejected");
         done();
       });
     });
@@ -84,9 +96,14 @@ function makeCall(direct = false) {
         });
 
         events.notify({
-          type: "call_joined",
+          type: "call_action",
           id: call.id,
-          user: chad
+          action: {
+            action: "joined",
+            call: call.id,
+            user: chad,
+            timestamp: Date.now()
+          }
         } as Event);
       }, (error) => done.fail());
     });
@@ -100,9 +117,56 @@ function makeCall(direct = false) {
       });
 
       events.notify({
-        type: "call_left",
+        type: "call_action",
         id: call.id,
-        user: alice
+        action: {
+          action: "left",
+          call: call.id,
+          user: alice,
+          timestamp: Date.now(),
+          reason: "reason"
+        }
+      } as Event);
+    });
+
+    it("should run a callback on answer", (done) => {
+      events.onError((error) => done.fail());
+
+      call.onAnswered((msg) => {
+        expect(msg.user).toBe(alice);
+        done();
+      });
+
+      events.notify({
+        type: "call_action",
+        id: call.id,
+        action: {
+          action: "answered",
+          call: call.id,
+          user: alice,
+          timestamp: Date.now()
+        }
+      } as Event);
+    });
+
+    it("should run a callback on reject", (done) => {
+      events.onError((error) => done.fail());
+
+      call.onRejected((msg) => {
+        expect(msg.user).toBe(alice);
+        done();
+      });
+
+      events.notify({
+        type: "call_action",
+        id: call.id,
+        action: {
+          action: "rejected",
+          call: call.id,
+          user: alice,
+          timestamp: Date.now(),
+          reason: "reason"
+        }
       } as Event);
     });
 
@@ -130,28 +194,39 @@ function makeCall(direct = false) {
             });
 
             events.notify({
-              type: "call_left",
+              type: "call_action",
               id: call.id,
-              user: alice
+              action: {
+                action: "left",
+                call: call.id,
+                user: alice,
+                timestamp: Date.now(),
+                reason: "reason"
+              }
             } as Event);
           });
         });
 
         events.notify({
-          type: "call_joined",
+          type: "call_action",
           id: call.id,
-          user: bob
+          action: {
+            action: "joined",
+            call: call.id,
+            user: bob,
+            timestamp: Date.now()
+          }
         } as Event);
       }, (error) => done.fail());
     });
 
     // FIXME These should be moved to integration tests:
-    whenever(isWebRTCSupported())("should allow joining", (done) => {
+    whenever(isWebRTCSupported())("should allow answering", (done) => {
       getStream((stream) => {
         events.onError((error) => done.fail());
 
-        call.join(stream).then(() => {
-          expect(api.joined).toBe(true);
+        call.answer(stream).then(() => {
+          expect(api.answered).toBe(true);
           done();
         });
       }, (error) => done.fail());
@@ -183,20 +258,35 @@ describe("Call", () => {
     events.onError((error) => done.fail());
 
     call.onInvited((msg) => {
-      expect(msg.sender).toBe(alice);
-      expect(msg.user).toBe(chad);
+      expect(msg.user).toBe(alice);
+      expect(msg.invitee).toBe(chad);
       done();
     });
 
     events.notify({
-      type: "call_invited",
+      type: "call_action",
       id: call.id,
-      sender: alice,
-      user: chad
+      action: {
+        action: "invited",
+        call: call.id,
+        user: alice,
+        invitee: chad
+      }
     } as Event);
   });
 
   // FIXME These should be moved to integration tests:
+  whenever(isWebRTCSupported())("should allow joining", (done) => {
+    getStream((stream) => {
+      events.onError((error) => done.fail());
+
+      call.join(stream).then(() => {
+        expect(api.joined).toBe(true);
+        done();
+      });
+    }, (error) => done.fail());
+  });
+
   it("should allow inviting users", (done) => {
     events.onError((error) => done.fail());
 

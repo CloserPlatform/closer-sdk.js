@@ -11,23 +11,6 @@ const events: Array<proto.Event> = [{
   type: "heartbeat",
   timestamp: Date.now()
 } as proto.Heartbeat, {
-  type: "call_invited",
-  id: callId,
-  user: alice,
-  inviter: bob,
-  timestamp: Date.now()
-} as proto.CallInvited, {
-  type: "call_left",
-  id: callId,
-  user: alice,
-  reason: "no reason",
-  timestamp: Date.now()
-} as proto.CallLeft, {
-  type: "call_joined",
-  id: callId,
-  user: alice,
-  timestamp: Date.now()
-} as proto.CallJoined, {
   type: "room_invitation",
   inviter: bob,
   room: {
@@ -71,7 +54,7 @@ const events: Array<proto.Event> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.RoomAction, {
+} as proto.RoomActionSent, {
   type: "room_action",
   id: roomId,
   action: {
@@ -82,7 +65,7 @@ const events: Array<proto.Event> = [{
     invitee: bob,
     timestamp: Date.now()
   }
-} as proto.RoomAction, {
+} as proto.RoomActionSent, {
   type: "room_action",
   id: roomId,
   action: {
@@ -93,7 +76,39 @@ const events: Array<proto.Event> = [{
     reason: "reason",
     timestamp: Date.now()
   }
-} as proto.RoomAction];
+} as proto.RoomActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    action: "joined",
+    id: actionId,
+    call: callId,
+    user: alice,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    action: "invited",
+    id: actionId,
+    call: callId,
+    user: alice,
+    invitee: bob,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    action: "left",
+    id: actionId,
+    call: callId,
+    user: alice,
+    reason: "reason",
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent];
 
 describe("Protocol", () => {
   it("should be reversible", () => {
