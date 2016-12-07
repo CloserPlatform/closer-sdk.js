@@ -854,6 +854,10 @@ $(document).ready(function() {
 
                 newRoom = roomBuilder(session);
 
+                session.chat.onHeartbeat(function(hb) {
+                    console.log("Server time: ", hb.timestamp);
+                });
+
                 session.chat.onError(function(error) {
                     console.log("An error has occured: ", error);
                 });

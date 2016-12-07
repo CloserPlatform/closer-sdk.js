@@ -34,6 +34,10 @@ export class Artichoke {
     this.events.onEvent("hello", callback);
   }
 
+  onHeartbeat(callback: Callback<proto.Heartbeat>) {
+    this.events.onEvent("heartbeat", callback);
+  }
+
   onDisconnect(callback: Callback<proto.Disconnect>) {
     this.events.onEvent("disconnect", callback);
   }

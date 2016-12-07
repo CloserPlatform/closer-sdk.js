@@ -8,6 +8,9 @@ const alice = "321";
 const bob = "987";
 
 const events: Array<proto.Event> = [{
+  type: "heartbeat",
+  timestamp: Date.now()
+} as proto.Heartbeat, {
   type: "call_invited",
   id: callId,
   user: alice,

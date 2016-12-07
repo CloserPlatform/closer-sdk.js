@@ -134,6 +134,10 @@ export interface Error extends Event {
   cause?: any;
 }
 
+export interface Heartbeat extends Event {
+  timestamp: Timestamp;
+}
+
 export type Status = "away" | "available" | "unavailable";
 
 export interface PresenceRequest extends Event {
