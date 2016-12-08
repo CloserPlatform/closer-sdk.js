@@ -663,7 +663,7 @@ $(document).ready(function() {
 
         call.onJoined(function(m) {
             console.log("User joined the call: ", m);
-            users.add(user);
+            users.add(m.user);
         });
 
         call.onAnswered(function(m) {
