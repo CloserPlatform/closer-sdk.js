@@ -938,13 +938,14 @@ $(document).ready(function() {
                     session.chat.onRoom(function (m) {
                         console.log("Received room invitation: ", m);
                         if(!m.room.direct) {
-                            if(confirm(getUserNickname(m.inviter) + " invited you to join room " + m.room.name)) {
+                            var line = getUserNickname(m.inviter) + " invited you to join room " + m.room.name;
+                            confirmModal("Room invitation", line, "Join", function() {
                                 console.log("Joining room " + m.room.name);
                                 m.room.join();
                                 addRoom(m.room, session).switchTo();
-                            } else {
+                            }, "Nope", function() {
                                 console.log("Rejecting invitation...");
-                            }
+                            });
                         } else {
                             addRoom(m.room, session);
                         }
@@ -975,7 +976,6 @@ $(document).ready(function() {
                             m.call.reject("rejected");
                         });
                     });
-
                 });
 
                 session.chat.connect();
