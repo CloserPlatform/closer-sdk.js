@@ -14,6 +14,7 @@ export interface RoomAction extends RoomArchivable {
 }
 
 export interface Archivable {
+  type: Type;
   id: ID;
   user: ID;
   timestamp: Timestamp;
@@ -84,10 +85,6 @@ export interface Room {
   users: Array<ID>;
   direct: boolean;
   mark?: number;
-}
-
-export interface ArchivableWithType extends Archivable {
-  type: Type;
 }
 
 export interface UserTimestamp {

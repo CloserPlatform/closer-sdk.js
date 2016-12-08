@@ -202,6 +202,10 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<Array<proto.Call>>([this.url, this.callPath]);
   }
 
+  getCallHistory(callId: proto.ID): Promise<Array<proto.CallArchivable>> {
+    return this.getAuth<Array<proto.CallArchivable>>([this.url, this.callPath, callId, "history"]);
+  }
+
   answerCall(callId: proto.ID): Promise<void> {
     return this.postAuth<void, void>([this.url, this.callPath, callId, "answer"]);
   }
@@ -260,8 +264,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<Array<proto.ID>>([this.url, this.roomPath, roomId, "users"]);
   }
 
-  getRoomHistory(roomId: proto.ID): Promise<Array<proto.ArchivableWithType>> {
-    return this.getAuth<Array<proto.ArchivableWithType>>([this.url, this.roomPath, roomId, "history"]);
+  getRoomHistory(roomId: proto.ID): Promise<Array<proto.RoomArchivable>> {
+    return this.getAuth<Array<proto.RoomArchivable>>([this.url, this.roomPath, roomId, "history"]);
   }
 
   joinRoom(roomId: proto.ID): Promise<void> {

@@ -17,6 +17,7 @@ const media1 = "365";
 
 function msg(id: string): proto.Message {
   return {
+    type: "message",
     id,
     body: "Hi!",
     user: alice,
@@ -27,6 +28,7 @@ function msg(id: string): proto.Message {
 
 function meta(id: string, payload: any): proto.Metadata {
   return {
+    type: "metadata",
     id,
     room: roomId,
     user: alice,
@@ -37,6 +39,7 @@ function meta(id: string, payload: any): proto.Metadata {
 
 function media(id: string, description: string): proto.Media {
   return {
+    type: "media",
     id,
     room: roomId,
     user: alice,
@@ -74,13 +77,7 @@ class APIMock extends ArtichokeAPI {
   }
 
   getRoomHistory(id) {
-    let a1: proto.Archivable = msg(msg1);
-    let a2: proto.Archivable = msg(msg2);
-    let at1 = a1 as proto.ArchivableWithType;
-    at1.type = "message";
-    let at2 = a2 as proto.ArchivableWithType;
-    at2.type = "message";
-    return Promise.resolve([at1, at2]);
+    return Promise.resolve([msg(msg1), msg(msg2)]);
   }
 
   getRoomUsers(id) {

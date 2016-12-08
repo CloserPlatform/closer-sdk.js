@@ -30,19 +30,19 @@ export class BaseRoom implements proto.Room {
     this.api = api;
   }
 
-  getHistory(): Promise<Array<proto.Archivable>> {
-    return wrapPromise(this.api.getRoomHistory(this.id), (a: proto.ArchivableWithType) => {
+  getHistory(): Promise<Array<proto.RoomArchivable>> {
+    return wrapPromise(this.api.getRoomHistory(this.id), (a: proto.RoomArchivable) => {
       switch (a.type) {
       case "media":
-        let media = (a as proto.Archivable) as proto.Media; // FIXME Delicious spaghetti.
+        let media = a as proto.Media;
         return createMedia(media, this.log, this.events, this.api);
 
       case "message":
-        let msg = (a as proto.Archivable) as proto.Message; // FIXME Delicious spaghetti.
+        let msg = a as proto.Message;
         return createMessage(msg, this.log, this.events, this.api);
 
       default:
-        return a as proto.Archivable;
+        return a as proto.RoomArchivable;
       }
     });
   }

@@ -782,6 +782,7 @@ $(document).ready(function() {
 
     function addCall(call, stream) {
         var box = makeCall(call, stream);
+        call.getHistory(); // NOTE Just for testing purposes.
         chat.add(call.id, box);
         return box;
     }

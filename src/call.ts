@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { Call as ProtoCall, CallAction, CallActionSent, CallEnd, ID, Timestamp } from "./protocol";
+import { Call as ProtoCall, CallAction, CallActionSent, CallArchivable, CallEnd, ID, Timestamp } from "./protocol";
 import { createRTCPool, RTCPool } from "./rtc";
 
 export interface RemoteStreamCallback {
@@ -116,6 +116,10 @@ export class BaseCall implements ProtoCall {
 
   getUsers(): Promise<Array<ID>> {
     return Promise.resolve(this.users);
+  }
+
+  getHistory(): Promise<Array<CallArchivable>> {
+    return this.api.getCallHistory(this.id);
   }
 
   addLocalStream(stream: MediaStream) {

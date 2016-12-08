@@ -8,6 +8,7 @@ const roomId = "123";
 const bob = "456";
 function makeMedia(): Media {
   return {
+    type: "media",
     id: "2323",
     user: bob,
     room: roomId,
