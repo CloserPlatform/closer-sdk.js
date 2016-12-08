@@ -304,7 +304,9 @@ export interface CreateCall {
   users: Array<ID>;
 }
 
-export interface CreateDirectCall extends CreateDirectEntity {};
+export interface CreateDirectCall extends CreateDirectEntity {
+  timeout?: number;
+};
 
 export interface CreateDirectEntity {
   user: ID;
@@ -335,9 +337,10 @@ export function createCall(users: Array<ID>): CreateCall {
   };
 }
 
-export function createDirectCall(user: ID): CreateDirectRoom {
+export function createDirectCall(user: ID, timeout?: number): CreateDirectCall {
   return {
-    user
+    user,
+    timeout
   };
 }
 

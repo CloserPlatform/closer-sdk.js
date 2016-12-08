@@ -789,7 +789,7 @@ $(document).ready(function() {
     function directCallBuilder(session) {
         return function(room, user) {
             createStream(function(stream) {
-                session.chat.createDirectCall(user).then(function(call) {
+                session.chat.createDirectCall(user, 10).then(function(call) {
                     var box = addCall(call, stream);
                     chatboxes[room.id].addCall(box);
                     box.switchTo();

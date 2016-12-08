@@ -189,9 +189,9 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<proto.CreateCall, proto.Call>([this.url, this.callPath], proto.createCall(sessionIds));
   }
 
-  createDirectCall(sessionId: proto.ID): Promise<proto.Call> {
+  createDirectCall(sessionId: proto.ID, timeout?: number): Promise<proto.Call> {
     return this.postAuth<proto.CreateDirectCall, proto.Call>([this.url, this.callPath],
-                                                             proto.createDirectCall(sessionId));
+                                                             proto.createDirectCall(sessionId, timeout));
   }
 
   getCall(callId: proto.ID): Promise<proto.Call> {

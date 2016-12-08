@@ -98,8 +98,8 @@ export class Artichoke {
     this.events.onEvent("call_invitation", callback);
   }
 
-  createDirectCall(peer: proto.ID): Promise<DirectCall> {
-    return this.wrapCall(this.api.createDirectCall(peer));
+  createDirectCall(peer: proto.ID, timeout?: number): Promise<DirectCall> {
+    return this.wrapCall(this.api.createDirectCall(peer, timeout));
   }
 
   createCall(users: Array<proto.ID>): Promise<Call> {
