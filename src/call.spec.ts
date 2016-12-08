@@ -18,7 +18,7 @@ class APIMock extends ArtichokeAPI {
   updates: Array<string> = [];
 
   constructor() {
-    super( apiKey, config.chat, log);
+    super(apiKey, config.chat, log);
   }
 
   answerCall(id) {
