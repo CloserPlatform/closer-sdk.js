@@ -224,6 +224,16 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<void, void>([this.url, this.callPath, callId, "invite", sessionId]);
   }
 
+  updateStream(callId: proto.ID, update: "mute" | "unmute" | "pause" | "unpause") {
+    const updates = {
+      mute: proto.muteAudio(callId),
+      unmute: proto.unmuteAudio(callId),
+      pause: proto.pauseVideo(callId),
+      unpause: proto.unpauseVideo(callId)
+    };
+    this.send(updates[update]);
+  }
+
   // Room API:
   createRoom(name: string): Promise<proto.Room> {
     return this.postAuth<proto.CreateRoom, proto.Room>([this.url, this.roomPath], proto.createRoom(name));

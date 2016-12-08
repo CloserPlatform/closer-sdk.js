@@ -37,7 +37,8 @@ export interface Call {
 }
 
 export interface CallAction extends CallArchivable {
-  action: "joined" | "left" | "invited" | "rejected" | "answered";
+  action: "joined" | "left" | "invited" | "rejected" | "answered" | "audio_muted"
+    | "audio_unmuted" | "video_paused" | "video_unpaused";
   reason?: string;
   invitee?: ID;
 }
@@ -143,6 +144,9 @@ export interface Heartbeat extends Event {
   timestamp: Timestamp;
 }
 
+export interface MuteAudio extends StreamUpdate {}
+export interface PauseVideo extends StreamUpdate {}
+
 export type Status = "away" | "available" | "unavailable";
 
 export interface PresenceRequest extends Event {
@@ -198,6 +202,10 @@ export interface RTCDescription extends Event {
   description: SDP;
 }
 
+export interface StreamUpdate extends Event {}
+export interface UnmuteAudio extends StreamUpdate {}
+export interface UnpauseVideo extends StreamUpdate {}
+
 // Internal events:
 export interface Disconnect extends Event {
   reason: string;
@@ -219,6 +227,34 @@ export function chatDelivered(id: ID, timestamp: Timestamp): ChatDelivered {
     type: "chat_delivered",
     id,
     timestamp
+  };
+}
+
+export function muteAudio(id: ID): MuteAudio {
+  return {
+    type: "stream_mute",
+    id
+  };
+}
+
+export function unmuteAudio(id: ID): UnmuteAudio {
+  return {
+    type: "stream_unmute",
+    id
+  };
+}
+
+export function pauseVideo(id: ID): PauseVideo {
+  return {
+    type: "stream_pause",
+    id
+  };
+}
+
+export function unpauseVideo(id: ID): UnpauseVideo {
+  return {
+    type: "stream_unpause",
+    id
   };
 }
 

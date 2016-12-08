@@ -26,6 +26,10 @@ export class BaseCall implements ProtoCall {
   protected onInvitedCallback: Callback<CallAction>;
   private onAnsweredCallback: Callback<CallAction>;
   private onRejectedCallback: Callback<CallAction>;
+  private onMutedCallback: Callback<CallAction>;
+  private onUnmutedCallback: Callback<CallAction>;
+  private onPausedCallback: Callback<CallAction>;
+  private onUnpausedCallback: Callback<CallAction>;
 
   constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = call.id;
@@ -53,6 +57,10 @@ export class BaseCall implements ProtoCall {
     this.onInvitedCallback = nop;
     this.onAnsweredCallback = nop;
     this.onRejectedCallback = nop;
+    this.onMutedCallback = nop;
+    this.onUnmutedCallback = nop;
+    this.onPausedCallback = nop;
+    this.onUnpausedCallback = nop;
 
     this.pool.onConnection((peer, rtc) => {
       rtc.onRemoteStream((stream) => this.onRemoteStreamCallback(peer, stream));
@@ -84,6 +92,22 @@ export class BaseCall implements ProtoCall {
         this.onRejectedCallback(e.action);
         break;
 
+      case "audio_muted":
+        this.onMutedCallback(e.action);
+        break;
+
+      case "audio_unmuted":
+        this.onUnmutedCallback(e.action);
+        break;
+
+      case "video_paused":
+        this.onPausedCallback(e.action);
+        break;
+
+      case "video_unpaused":
+        this.onUnpausedCallback(e.action);
+        break;
+
       default:
         this.events.raise("Invalid call_action event", e);
       }
@@ -112,6 +136,22 @@ export class BaseCall implements ProtoCall {
     return this.api.leaveCall(this.id, reason);
   }
 
+  mute() {
+    this.pool.muteStream();
+  }
+
+  unmute() {
+    this.pool.unmuteStream();
+  }
+
+  pause() {
+    this.pool.pauseStream();
+  }
+
+  unpause() {
+    this.pool.unpauseStream();
+  }
+
   onAnswered(callback: Callback<CallAction>) {
     this.onAnsweredCallback = callback;
   }
@@ -130,6 +170,22 @@ export class BaseCall implements ProtoCall {
 
   onRemoteStream(callback: RemoteStreamCallback) {
     this.onRemoteStreamCallback = callback;
+  }
+
+  onStreamMuted(callback: Callback<CallAction>) {
+    this.onMutedCallback = callback;
+  }
+
+  onStreamUnmuted(callback: Callback<CallAction>) {
+    this.onUnmutedCallback = callback;
+  }
+
+  onStreamPaused(callback: Callback<CallAction>) {
+    this.onPausedCallback = callback;
+  }
+
+  onStreamUnpaused(callback: Callback<CallAction>) {
+    this.onUnpausedCallback = callback;
   }
 
   onEnd(callback: Callback<CallEnd>) {

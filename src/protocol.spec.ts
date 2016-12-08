@@ -108,7 +108,51 @@ const events: Array<proto.Event> = [{
     reason: "reason",
     timestamp: Date.now()
   }
-} as proto.CallActionSent];
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    action: "audio_muted",
+    id: actionId,
+    call: callId,
+    user: alice,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    action: "audio_unmuted",
+    id: actionId,
+    call: callId,
+    user: alice,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    action: "video_paused",
+    id: actionId,
+    call: callId,
+    user: alice,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    action: "video_unpaused",
+    id: actionId,
+    call: callId,
+    user: alice,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent,
+proto.muteAudio(callId),
+proto.unmuteAudio(callId),
+proto.pauseVideo(callId),
+proto.unpauseVideo(callId)];
 
 describe("Protocol", () => {
   it("should be reversible", () => {

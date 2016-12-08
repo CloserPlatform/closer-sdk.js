@@ -191,6 +191,42 @@ export class RTCPool {
     Object.keys(this.connections).forEach((key) => this.destroy(key));
   }
 
+  muteStream() {
+    if (this.localStream && this.localStream.getAudioTracks().some((t) => t.enabled)) {
+      this.localStream.getAudioTracks().forEach((t) => {
+        t.enabled = false;
+      });
+      this.api.updateStream(this.callId, "mute");
+    }
+  }
+
+  unmuteStream() {
+    if (this.localStream && this.localStream.getAudioTracks().some((t) => !t.enabled)) {
+      this.localStream.getAudioTracks().forEach((t) => {
+        t.enabled = true;
+      });
+      this.api.updateStream(this.callId, "unmute");
+    }
+  }
+
+  pauseStream() {
+    if (this.localStream && this.localStream.getVideoTracks().some((t) => t.enabled)) {
+      this.localStream.getVideoTracks().forEach((t) => {
+        t.enabled = false;
+      });
+      this.api.updateStream(this.callId, "pause");
+    }
+  }
+
+  unpauseStream() {
+    if (this.localStream && this.localStream.getVideoTracks().some((t) => !t.enabled)) {
+      this.localStream.getVideoTracks().forEach((t) => {
+        t.enabled = true;
+      });
+      this.api.updateStream(this.callId, "unpause");
+    }
+  }
+
   private createRTC(peer: ID): RTCConnection {
     let rtc = createRTCConnection(this.localStream, this.config, this.log, this.api);
     this.connections[peer] = rtc;
