@@ -952,8 +952,10 @@ $(document).ready(function() {
 
                     session.chat.onCall(function(m) {
                         console.log("Received call offer: ", m);
+                        var closeModal = function() {};
                         m.call.onEnd(function(e) {
                             console.log("Call ended: ", e.reason);
+                            closeModal();
                         });
                         var line = "";
                         if(m.call.direct) {
@@ -962,16 +964,16 @@ $(document).ready(function() {
                             line = getUserNickname(m.inviter) + " invites you to join a conference call with " +
                                 m.call.users.map(getUserNickname);
                         }
-                        if(confirm(line)) {
+                        closeModal = confirmModal("Call invitation", line, "Answer", function() {
                             createStream(function(stream) {
                                 var callbox = addCall(m.call, stream);
                                 callbox.answer();
                                 callbox.switchTo();
                             });
-                        } else {
+                        }, "Reject", function () {
                             console.log("Rejecting call...");
                             m.call.reject("rejected");
-                        }
+                        });
                     });
 
                 });

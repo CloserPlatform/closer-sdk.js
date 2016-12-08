@@ -297,3 +297,28 @@ function makeEmbed(object) {
         return "";
     }
 }
+
+function confirmModal(title, text, confirmText, onConfirm, cancelText, onCancel) {
+  var buttons = {};
+  buttons[confirmText] = function() {
+    onConfirm();
+    modal.dialog("close");
+  };
+  buttons[cancelText] = function() {
+    onCancel();
+    modal.dialog("close");
+  };
+  var modal = makeDiv()
+      .prop('title', title)
+      .append($('<span>').text(text))
+      .dialog({
+        "resizable": false,
+        "height": "auto",
+        "width": 400,
+        "modal": true,
+        "buttons": buttons
+      });
+  return function() {
+    modal.dialog("close");
+  };
+}
