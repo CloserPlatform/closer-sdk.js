@@ -143,9 +143,12 @@ export interface Error extends Event {
   cause?: any;
 }
 
-export interface Heartbeat extends Event {
+export interface ServerInfo extends Event {
   timestamp: Timestamp;
 }
+
+export interface Heartbeat extends ServerInfo {}
+export interface Hello extends ServerInfo {}
 
 export interface MuteAudio extends StreamUpdate {}
 export interface PauseVideo extends StreamUpdate {}
@@ -414,6 +417,11 @@ export function fix(e: Event): Event {
     et.timestamp = Date.now();
     return et;
 
+  case "hello":
+    let h = deepcopy(e) as Hello;
+    h.timestamp = Date.now();
+    return h;
+
   default:
     return e;
   }
@@ -426,6 +434,11 @@ export function unfix(e: Event): Event {
     let et = deepcopy(e) as CallEnd;
     et.timestamp = undefined;
     return et;
+
+  case "hello":
+    let h = deepcopy(e) as Hello;
+    h.timestamp = undefined;
+    return h;
 
   default:
     return e;

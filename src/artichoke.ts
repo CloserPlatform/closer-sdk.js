@@ -30,7 +30,7 @@ export class Artichoke {
   }
 
   // Callbacks:
-  onConnect(callback: Callback<proto.Event>) {
+  onConnect(callback: Callback<proto.Hello>) {
     this.events.onEvent("hello", callback);
   }
 
