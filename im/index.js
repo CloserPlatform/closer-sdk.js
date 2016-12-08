@@ -612,7 +612,11 @@ $(document).ready(function() {
 
         var users = makeUserList(function() {});
         var streams = {
-            "You": localStream
+            "You": {
+               "stream": localStream,
+               "muted": false,
+               "paused": false
+            }
         };
 
         var callbox = makeCallbox(call.id, "callbox");
@@ -622,7 +626,31 @@ $(document).ready(function() {
 
         call.onRemoteStream(function(user, stream) {
             console.log("Remote stream for user " + user +  " started!");
-            streams[user] = stream;
+            streams[user] = {
+                "stream": stream,
+                "muted": false,
+                "paused": false
+            };
+            renderStreams();
+        });
+
+        call.onStreamMuted(function(m) {
+            streams[m.user].muted = true;
+            renderStreams();
+        });
+
+        call.onStreamUnmuted(function(m) {
+            streams[m.user].muted = false;
+            renderStreams();
+        });
+
+        call.onStreamPaused(function(m) {
+            streams[m.user].paused = true;
+            renderStreams();
+        });
+
+        call.onStreamUnpaused(function(m) {
+            streams[m.user].paused = false;
             renderStreams();
         });
 
@@ -679,6 +707,19 @@ $(document).ready(function() {
             endCall("closed");
         });
 
+        var toggle = makeButton('btn-info', "Toggle stream", function() {
+            if(streams["You"].muted) {
+              call.unmute();
+              call.unpause();
+            } else {
+              call.mute();
+              call.pause();
+            }
+            streams["You"].muted = !streams["You"].muted;
+            streams["You"].paused = !streams["You"].paused;
+            renderStreams();
+        });
+
         var hangup = makeButton('btn-danger', "Hangup!", function() {
             endCall("hangup");
         });
@@ -697,7 +738,7 @@ $(document).ready(function() {
             }, function() {});
         }
 
-        var buttons = makeButtonGroup().append(hangup);
+        var buttons = makeButtonGroup().append([hangup, toggle]);
         var panel = makePanel(users.element).addClass('controls-wrapper');
         var controls = makeControls(call.id, [panel, input, buttons]).addClass('text-center').hide();
         renderStreams();

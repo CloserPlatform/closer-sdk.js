@@ -223,10 +223,17 @@ function makeStreamBox(id, name, stream, muted) {
             class: 'video-stream',
             autoplay: true,
             muted: muted,
-            src: window.URL.createObjectURL(stream)
+            src: window.URL.createObjectURL(stream.stream)
         });
 
-    var panel = $('<div>').addClass('panel panel-default stream-wrapper').append([makeLabel(id, '', name), video])
+    var status = "";
+    if(stream.muted && stream.paused) status = "(paused & muted)";
+    else if (stream.muted) status = "(muted)";
+    else if (stream.paused) status = "(paused)";
+
+    var panel = $('<div>')
+        .addClass('panel panel-default stream-wrapper')
+        .append([makeLabel(id, '', name), video, status])
     return $('<div>').append(panel);
 }
 
