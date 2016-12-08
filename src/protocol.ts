@@ -1,3 +1,5 @@
+import {deepcopy} from "./utils";
+
 // Common types:
 export type Type = string;
 export type ID = string;
@@ -109,6 +111,7 @@ export interface CallInvitation extends Event {
 
 export interface CallEnd extends Event {
   reason: string;
+  timestamp: Timestamp;
 }
 
 export interface ChatDelivered extends Event {
@@ -405,10 +408,26 @@ export function write(event: Event): string {
 // Backend fixer-uppers:
 export function fix(e: Event): Event {
   // NOTE Use this function to fix any backend crap.
-  return e;
+  switch (e.type) {
+  case "call_end":
+    let et = deepcopy(e) as CallEnd;
+    et.timestamp = Date.now();
+    return et;
+
+  default:
+    return e;
+  }
 }
 
 export function unfix(e: Event): Event {
   // NOTE Use this function to reverse fix(e).
-  return e;
+  switch (e.type) {
+  case "call_end":
+    let et = deepcopy(e) as CallEnd;
+    et.timestamp = undefined;
+    return et;
+
+  default:
+    return e;
+  }
 }

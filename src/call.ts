@@ -190,7 +190,7 @@ export class BaseCall implements ProtoCall {
 
   onEnd(callback: Callback<CallEnd>) {
     this.events.onConcreteEvent("call_end", this.id, (e: CallEnd) => {
-      this.ended = Date.now(); // FIXME Use provided timestamp.
+      this.ended = e.timestamp;
       callback(e);
     });
   }
