@@ -689,7 +689,7 @@ $(document).ready(function() {
             callbox.empty();
             var grid = makeSplitGrid(Object.keys(streams).map(function(user) {
                 var isMe = user === "You";
-                return makeStreamBox(user, isMe ? "You" : getUserNickname(user) + ":", streams[user], isMe);
+                return makeStreamBox(user, isMe ? "You:" : getUserNickname(user) + ":", streams[user], isMe);
             }));
             callbox.append(grid);
         }
