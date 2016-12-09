@@ -842,6 +842,9 @@ $(document).ready(function() {
             "phone": phone,
             "password": password
         }));
+        if(xhttp.status !== 200) {
+          throw "Invalid credentials.";
+        }
         return JSON.parse(xhttp.responseText);
     }
 
@@ -849,7 +852,13 @@ $(document).ready(function() {
         var chatUrl = getURL(chatServer);
         var ratelUrl = getURL(ratelServer);
 
-        var user = logIn(ratelUrl, phone, password);
+        var user = undefined;
+        try {
+            user = logIn(ratelUrl, phone, password);
+        } catch(e) {
+            return Promise.reject(e);
+        }
+
         console.log("Connecting to " + chatUrl + " as: " + JSON.stringify(user));
 
         getSessionId = function(phone) {
