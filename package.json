@@ -8,14 +8,13 @@
     "lint": "tslint -c tslint.json src/**/*.ts",
     "test": "karma start --singleRun true",
     "test:ci": "karma start --singleRun true --browsers PhantomJS",
-    "build": "npm run commit-hash && cross-env NODE_ENV=production webpack && npm run browserify",
-    "build:ci": "npm run commit-hash && cross-env NODE_ENV=development webpack && npm run browserify",
+    "build": "npm run commit-hash && cross-env NODE_ENV=production webpack",
+    "build:ci": "npm run commit-hash && cross-env NODE_ENV=development webpack",
     "start": "python3 -m http.server",
     "prebuild": "npm run test",
     "pretest": "npm run lint",
     "posttest": "istanbul check-coverage",
     "commit-hash": "git rev-parse HEAD > im/version.txt",
-    "browserify": "browserify im/index.js -o im/bundle.js",
     "clean": "rimraf dist node_modules coverage"
   },
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
@@ -26,9 +25,7 @@
     "@types/webrtc": "0.0.20"
   },
   "devDependencies": {
-    "browserify": "^13.1.0",
     "cross-env": "^3.0.0",
-    "crypto-js": "^3.1.6",
     "es6-promise": "^3.2.1",
     "istanbul": "^1.0.0-alpha.2",
     "istanbul-instrumenter-loader": "^0.2.0",
