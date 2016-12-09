@@ -12,11 +12,14 @@ $(document).ready(function() {
     var sessionId = undefined;
     var loginBox = makeLoginBox();
     var chat = makeChat();
-    var userNickname = undefined;
-    var chatboxes = {};
+    var userPhone = undefined;
 
+    var chatboxes = {};
     var callIndex = 1;
 
+    var users = {};
+    var getSessionId = function() {};
+    var getUserNickname = function() {};
     var newRoom = function() {};
 
     var status = "available";
@@ -37,8 +40,9 @@ $(document).ready(function() {
         console.log("Building the login box!");
         var form = makeLoginForm("login-box", function (event) {
             event.preventDefault();
-            userNickname = $('#user-nickname').val();
-            run($('#server').val(), $('#ratel-server').val(), userNickname).then(
+            userPhone = $('#user-phone').val();
+            var password = $('#user-password').val();
+            run($('#server').val(), $('#ratel-server').val(), userPhone, password).then(
                 function () {
                     loginBox.element.hide();
                     chat.element.show();
@@ -361,7 +365,7 @@ $(document).ready(function() {
 
         room.getUsers().then(function(list) {
             list.filter(function(u) {
-                return u != getSessionId(userNickname);
+                return u != getSessionId(userPhone);
             }).forEach(function(u) {
                 users.add(u);
             });
@@ -373,7 +377,7 @@ $(document).ready(function() {
         var receive = makeReceiver(room, text);
 
         room.onJoined(function(msg) {
-            if(msg.user != getSessionId(userNickname)) {
+            if(msg.user != getSessionId(userPhone)) {
                 users.add(msg.user);
             }
             receive.action(msg);
@@ -577,7 +581,7 @@ $(document).ready(function() {
     function botBuilder(session) {
         return function(name, callback, room) {
             return session.chat.createBot(name, callback).then(function(bot) {
-                internBot(bot);
+                internUser(bot);
                 room.invite(bot.id);
                 alert("Bot credentials: " + bot.id + " " + bot.apiKey);
             }).catch(function(error) {
@@ -586,13 +590,8 @@ $(document).ready(function() {
         }
     }
 
-    function internBot(bot) {
-        users[bot.name] = {
-            'userId': bot.id,
-            'orgId': 1
-        };
-
-        reversedUsersMap[bot.id] = bot.name;
+    function internUser(user) {
+        users[user.id] = user;
     }
 
     function createStream(callback) {
@@ -689,7 +688,8 @@ $(document).ready(function() {
         function renderStreams() {
             callbox.empty();
             var grid = makeSplitGrid(Object.keys(streams).map(function(user) {
-                return makeStreamBox(user, (getUserNickname(user) || "You") + ":", streams[user], user === "You");
+                var isMe = user === "You";
+                return makeStreamBox(user, isMe ? "You" : getUserNickname(user) + ":", streams[user], isMe);
             }));
             callbox.append(grid);
         }
@@ -733,8 +733,8 @@ $(document).ready(function() {
                 console.log(getUserNickname(m.user) + " invited " + m.invitee + " to join the call: ", m);
             });
 
-            input = makeInputField("Invite!", function(userNickname) {
-                call.invite(getSessionId(userNickname));
+            input = makeInputField("Invite!", function(userPhone) {
+                call.invite(getSessionId(userPhone));
             }, function() {});
         }
 
@@ -826,61 +826,55 @@ $(document).ready(function() {
         return new URL((server.startsWith("http") ? "" : window.location.protocol) + server);
     }
 
-    function jwt_sign(data, secret) {
-        // Based on code by Jonathan Petitcolas
-        // https://www.jonathan-petitcolas.com/2014/11/27/creating-json-web-token-in-javascript.html
-        var CryptoJS = require('crypto-js');
-        var header = {
-            "alg": "HS256",
-            "typ": "JWT"
-        };
-
-        function base64url(source) {
-            // Encode in classical base64
-            let encodedSource = CryptoJS.enc.Base64.stringify(source);
-
-            // Remove padding equal characters
-            encodedSource = encodedSource.replace(/=+$/, "");
-
-            // Replace characters according to base64url specifications
-            encodedSource = encodedSource.replace(/\+/g, "-");
-            encodedSource = encodedSource.replace(/\//g, "_");
-
-            return encodedSource;
-        }
-
-        var stringifiedHeader = CryptoJS.enc.Utf8.parse(JSON.stringify(header));
-        var encodedHeader = base64url(stringifiedHeader);
-
-        var stringifiedData = CryptoJS.enc.Utf8.parse(JSON.stringify(data));
-        var encodedData = base64url(stringifiedData);
-
-        var signature = encodedHeader + "." + encodedData;
-        signature = CryptoJS.HmacSHA256(signature, secret);
-        signature = base64url(signature);
-
-        return encodedHeader + "." + encodedData + "." + signature;
+    function getUser(url, id, apiKey) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", url + 'api/users/' + id, false);
+        xhttp.setRequestHeader('X-Api-Key', apiKey);
+        xhttp.send();
+        return JSON.parse(xhttp.responseText);
     }
 
-    function run(chatServer, ratelServer, userNickname) {
+    function logIn(url, phone, password) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", url + 'api/session', false);
+        xhttp.setRequestHeader('Content-Type', 'application/json');
+        xhttp.send(JSON.stringify({
+            "phone": phone,
+            "password": password
+        }));
+        return JSON.parse(xhttp.responseText);
+    }
+
+    function run(chatServer, ratelServer, phone, password) {
         var chatUrl = getURL(chatServer);
         var ratelUrl = getURL(ratelServer);
 
-        console.log("Connecting to " + chatUrl + " as: " + userNickname);
+        var user = logIn(ratelUrl, phone, password);
+        console.log("Connecting to " + chatUrl + " as: " + JSON.stringify(user));
 
-        var payloadData = {
-            orgId: getOrganizationId(userNickname),
-            externalId: getSessionId(userNickname),
-            timestamp: Date.now()
-        };
+        getSessionId = function(phone) {
+            var sessionId = "nope";
+            Object.getOwnPropertyNames(users).forEach(function(id) {
+                if(users[id].phone === phone) {
+                    sessionId = id;
+                }
+            });
+            return sessionId;
+        }
 
-        var sessionData = {
-            payload: payloadData,
-            signature: jwt_sign(payloadData, secretKeys[payloadData.orgId] || "defaultKey")
-        };
+        getUserNickname = function(userId) {
+            if(users[userId]) {
+                return users[userId].name
+            } else {
+                var u = getUser(ratelUrl, userId, user.apiKey);
+                internUser(u);
+                return u.name;
+            }
+        }
 
-        return RatelSDK.withSignedAuth(
-            sessionData,
+        return RatelSDK.withApiKey(
+            user.id,
+            user.apiKey,
             {
                 "debug": true,
                 "ratel": {
@@ -903,7 +897,7 @@ $(document).ready(function() {
                 }
             }).then(function (session) {
                 sessionId = session.id;
-                $('#demo-name').html("Ratel IM - " + userNickname);
+                $('#demo-name').html("Ratel IM - " + user.name);
                 statusSwitch.show();
 
                 newRoom = roomBuilder(session);
@@ -939,7 +933,7 @@ $(document).ready(function() {
 
                     session.chat.getBots().then(function(bots) {
                         console.log("Bots: ", bots);
-                        bots.forEach(internBot);
+                        bots.forEach(internUser);
                     }).catch(function(error) {
                         console.log("Fetching bots failed: ", error);
                     });
@@ -967,7 +961,7 @@ $(document).ready(function() {
 
                     session.chat.onBotUpdate(function(m) {
                         console.log("Bot " + m.bot.name + " has been updated: ", m.bot);
-                        internBot(m.bot);
+                        internUser(m.bot);
                     });
 
                     session.chat.onStatusUpdate(function(m) {
