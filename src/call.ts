@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { Call as ProtoCall, CallInvited, CallJoined, CallLeft, ID, Timestamp } from "./protocol";
+import { Call as ProtoCall, CallAction, CallActionSent, CallArchivable, CallEnd, ID, Timestamp } from "./protocol";
 import { createRTCPool, RTCPool } from "./rtc";
 
 export interface RemoteStreamCallback {
@@ -11,6 +11,7 @@ export interface RemoteStreamCallback {
 export class BaseCall implements ProtoCall {
   public id: ID;
   public created: Timestamp;
+  public ended: Timestamp;
   public users: Array<ID>;
   public direct: boolean;
 
@@ -20,12 +21,20 @@ export class BaseCall implements ProtoCall {
   private log: Logger;
   private pool: RTCPool;
   private onRemoteStreamCallback: RemoteStreamCallback;
-  private onLeftCallback: Callback<CallLeft>;
-  private onJoinedCallback: Callback<CallJoined>;
+  private onLeftCallback: Callback<CallAction>;
+  private onJoinedCallback: Callback<CallAction>;
+  protected onInvitedCallback: Callback<CallAction>;
+  private onAnsweredCallback: Callback<CallAction>;
+  private onRejectedCallback: Callback<CallAction>;
+  private onMutedCallback: Callback<CallAction>;
+  private onUnmutedCallback: Callback<CallAction>;
+  private onPausedCallback: Callback<CallAction>;
+  private onUnpausedCallback: Callback<CallAction>;
 
   constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = call.id;
     this.created = call.created;
+    this.ended = call.ended;
     this.users = call.users;
     this.direct = call.direct;
 
@@ -39,28 +48,69 @@ export class BaseCall implements ProtoCall {
     this.onRemoteStreamCallback = (peer, stream) => {
       // Do nothing.
     };
-    this.onLeftCallback = (msg) => {
+
+    let nop = (a: CallAction) => {
       // Do nothing.
     };
-    this.onJoinedCallback = (msg) => {
-      // Do nothing.
-    };
+    this.onLeftCallback = nop;
+    this.onJoinedCallback = nop;
+    this.onInvitedCallback = nop;
+    this.onAnsweredCallback = nop;
+    this.onRejectedCallback = nop;
+    this.onMutedCallback = nop;
+    this.onUnmutedCallback = nop;
+    this.onPausedCallback = nop;
+    this.onUnpausedCallback = nop;
 
     this.pool.onConnection((peer, rtc) => {
       rtc.onRemoteStream((stream) => this.onRemoteStreamCallback(peer, stream));
     });
 
-    // Signaling callbacks:
-    this.events.onConcreteEvent("call_left", this.id, (msg: CallLeft) => {
-      this.users = this.users.filter((u) => u !== msg.user);
-      this.pool.destroy(msg.user);
-      this.onLeftCallback(msg);
-    });
+    this.events.onConcreteEvent("call_action", this.id, (e: CallActionSent) => {
+      switch (e.action.action) {
+      case "joined":
+        this.users.push(e.action.user);
+        this.pool.create(e.action.user).onRemoteStream((stream) => this.onRemoteStreamCallback(e.action.user, stream));
+        this.onJoinedCallback(e.action);
+        break;
 
-    this.events.onConcreteEvent("call_joined", this.id, (msg: CallJoined) => {
-      this.users.push(msg.user);
-      this.pool.create(msg.user).onRemoteStream((stream) => this.onRemoteStreamCallback(msg.user, stream));
-      this.onJoinedCallback(msg);
+      case "left":
+        this.users = this.users.filter((u) => u !== e.action.user);
+        this.pool.destroy(e.action.user);
+        this.onLeftCallback(e.action);
+        break;
+
+      case "invited":
+        this.onInvitedCallback(e.action);
+        break;
+
+      case "answered":
+        this.onAnsweredCallback(e.action);
+        break;
+
+      case "rejected":
+        this.onRejectedCallback(e.action);
+        break;
+
+      case "audio_muted":
+        this.onMutedCallback(e.action);
+        break;
+
+      case "audio_unmuted":
+        this.onUnmutedCallback(e.action);
+        break;
+
+      case "video_paused":
+        this.onPausedCallback(e.action);
+        break;
+
+      case "video_unpaused":
+        this.onUnpausedCallback(e.action);
+        break;
+
+      default:
+        this.events.raise("Invalid call_action event", e);
+      }
     });
   }
 
@@ -68,17 +118,21 @@ export class BaseCall implements ProtoCall {
     return Promise.resolve(this.users);
   }
 
+  getHistory(): Promise<Array<CallArchivable>> {
+    return this.api.getCallHistory(this.id);
+  }
+
   addLocalStream(stream: MediaStream) {
     this.pool.addLocalStream(stream);
   }
 
-  reject(): Promise<void> {
-    return this.leave("rejected");
+  answer(stream: MediaStream): Promise<void> {
+    this.addLocalStream(stream);
+    return this.api.answerCall(this.id);
   }
 
-  join(stream: MediaStream): Promise<void> {
-    this.addLocalStream(stream);
-    return this.api.joinCall(this.id);
+  reject(reason: string): Promise<void> {
+    return this.api.rejectCall(this.id, reason);
   }
 
   leave(reason: string): Promise<void> {
@@ -86,16 +140,63 @@ export class BaseCall implements ProtoCall {
     return this.api.leaveCall(this.id, reason);
   }
 
-  onLeft(callback: Callback<CallLeft>) {
+  mute() {
+    this.pool.muteStream();
+  }
+
+  unmute() {
+    this.pool.unmuteStream();
+  }
+
+  pause() {
+    this.pool.pauseStream();
+  }
+
+  unpause() {
+    this.pool.unpauseStream();
+  }
+
+  onAnswered(callback: Callback<CallAction>) {
+    this.onAnsweredCallback = callback;
+  }
+
+  onRejected(callback: Callback<CallAction>) {
+    this.onRejectedCallback = callback;
+  }
+
+  onLeft(callback: Callback<CallAction>) {
     this.onLeftCallback = callback;
   }
 
-  onJoined(callback: Callback<CallJoined>) {
+  onJoined(callback: Callback<CallAction>) {
     this.onJoinedCallback = callback;
   }
 
   onRemoteStream(callback: RemoteStreamCallback) {
     this.onRemoteStreamCallback = callback;
+  }
+
+  onStreamMuted(callback: Callback<CallAction>) {
+    this.onMutedCallback = callback;
+  }
+
+  onStreamUnmuted(callback: Callback<CallAction>) {
+    this.onUnmutedCallback = callback;
+  }
+
+  onStreamPaused(callback: Callback<CallAction>) {
+    this.onPausedCallback = callback;
+  }
+
+  onStreamUnpaused(callback: Callback<CallAction>) {
+    this.onUnpausedCallback = callback;
+  }
+
+  onEnd(callback: Callback<CallEnd>) {
+    this.events.onConcreteEvent("call_end", this.id, (e: CallEnd) => {
+      this.ended = e.timestamp;
+      callback(e);
+    });
   }
 }
 
@@ -106,8 +207,13 @@ export class Call extends BaseCall {
     return this.api.inviteToCall(this.id, user);
   }
 
-  onInvited(callback: Callback<CallInvited>) {
-    this.events.onConcreteEvent("call_invited", this.id, callback);
+  join(stream: MediaStream): Promise<void> {
+    this.addLocalStream(stream);
+    return this.api.joinCall(this.id);
+  }
+
+  onInvited(callback: Callback<CallAction>) {
+    this.onInvitedCallback = callback;
   }
 }
 

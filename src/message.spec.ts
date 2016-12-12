@@ -28,6 +28,7 @@ class APIMock extends ArtichokeAPI {
 
 function makeMsg(delivered?: Delivered): Message {
   return {
+    type: "message",
     id: msg1,
     body: "Hi!",
     user: bob,

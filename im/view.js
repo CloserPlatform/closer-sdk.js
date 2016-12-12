@@ -2,7 +2,8 @@ function makeLoginForm(id, onClick) {
     var form = $('<form id="login_form">')
         .append([makeInput('server', 'Server:', 'Server', 'artichoke.ratel.io'),
                  makeInput('ratel-server', 'RatelServer:', 'RatelServer', 'briefcase.ratel.io'),
-                 makeInput('user-nickname', 'Name:', 'Nickname')]);
+                 makeInput('user-phone', 'Phone:', '+48123456789'),
+                 makeInput('user-password', 'Password:', 'pa$$w0rd!')]);
 
     var button = $('<button class="btn btn-primary" form="login_form">')
         .append('Login!')
@@ -223,10 +224,17 @@ function makeStreamBox(id, name, stream, muted) {
             class: 'video-stream',
             autoplay: true,
             muted: muted,
-            src: window.URL.createObjectURL(stream)
+            src: window.URL.createObjectURL(stream.stream)
         });
 
-    var panel = $('<div>').addClass('panel panel-default stream-wrapper').append([makeLabel(id, '', name), video])
+    var status = "";
+    if(stream.muted && stream.paused) status = "(paused & muted)";
+    else if (stream.muted) status = "(muted)";
+    else if (stream.paused) status = "(paused)";
+
+    var panel = $('<div>')
+        .addClass('panel panel-default stream-wrapper')
+        .append([makeLabel(id, '', name), video, status])
     return $('<div>').append(panel);
 }
 
@@ -296,4 +304,29 @@ function makeEmbed(object) {
     default:
         return "";
     }
+}
+
+function confirmModal(title, text, confirmText, onConfirm, cancelText, onCancel) {
+  var buttons = {};
+  buttons[confirmText] = function() {
+    onConfirm();
+    modal.dialog("close");
+  };
+  buttons[cancelText] = function() {
+    onCancel();
+    modal.dialog("close");
+  };
+  var modal = makeDiv()
+      .prop('title', title)
+      .append($('<span>').text(text))
+      .dialog({
+        "resizable": false,
+        "height": "auto",
+        "width": 400,
+        "modal": true,
+        "buttons": buttons
+      });
+  return function() {
+    modal.dialog("close");
+  };
 }

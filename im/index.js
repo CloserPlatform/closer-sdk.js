@@ -9,13 +9,17 @@ $(document).ready(function() {
         };
     }
 
+    var sessionId = undefined;
     var loginBox = makeLoginBox();
     var chat = makeChat();
-    var userNickname = undefined;
-    var chatboxes = {};
+    var userPhone = undefined;
 
+    var chatboxes = {};
     var callIndex = 1;
 
+    var users = {};
+    var getSessionId = function() {};
+    var getUserNickname = function() {};
     var newRoom = function() {};
 
     var status = "available";
@@ -36,8 +40,9 @@ $(document).ready(function() {
         console.log("Building the login box!");
         var form = makeLoginForm("login-box", function (event) {
             event.preventDefault();
-            userNickname = $('#user-nickname').val();
-            run($('#server').val(), $('#ratel-server').val(), userNickname).then(
+            userPhone = $('#user-phone').val();
+            var password = $('#user-password').val();
+            run($('#server').val(), $('#ratel-server').val(), userPhone, password).then(
                 function () {
                     loginBox.element.hide();
                     chat.element.show();
@@ -186,8 +191,10 @@ $(document).ready(function() {
         console.log("Building direct chatbox: ", room);
 
         // FIXME 2hacky4me
-        var peer = room.name.slice(3).split("-")
-            .filter(function(e) { return e !== getSessionId(userNickname).toString(); })[0];
+        var peer = room.users.filter(function(u) {
+            return u !== sessionId;
+        })[0];
+
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
 
@@ -358,7 +365,7 @@ $(document).ready(function() {
 
         room.getUsers().then(function(list) {
             list.filter(function(u) {
-                return u != getSessionId(userNickname);
+                return u != getSessionId(userPhone);
             }).forEach(function(u) {
                 users.add(u);
             });
@@ -370,7 +377,7 @@ $(document).ready(function() {
         var receive = makeReceiver(room, text);
 
         room.onJoined(function(msg) {
-            if(msg.user != getSessionId(userNickname)) {
+            if(msg.user != getSessionId(userPhone)) {
                 users.add(msg.user);
             }
             receive.action(msg);
@@ -574,7 +581,7 @@ $(document).ready(function() {
     function botBuilder(session) {
         return function(name, callback, room) {
             return session.chat.createBot(name, callback).then(function(bot) {
-                internBot(bot);
+                internUser(bot);
                 room.invite(bot.id);
                 alert("Bot credentials: " + bot.id + " " + bot.apiKey);
             }).catch(function(error) {
@@ -583,13 +590,8 @@ $(document).ready(function() {
         }
     }
 
-    function internBot(bot) {
-        users[bot.name] = {
-            'userId': bot.id,
-            'orgId': 1
-        };
-
-        reversedUsersMap[bot.id] = bot.name;
+    function internUser(user) {
+        users[user.id] = user;
     }
 
     function createStream(callback) {
@@ -609,7 +611,11 @@ $(document).ready(function() {
 
         var users = makeUserList(function() {});
         var streams = {
-            "You": localStream
+            "You": {
+               "stream": localStream,
+               "muted": false,
+               "paused": false
+            }
         };
 
         var callbox = makeCallbox(call.id, "callbox");
@@ -619,9 +625,32 @@ $(document).ready(function() {
 
         call.onRemoteStream(function(user, stream) {
             console.log("Remote stream for user " + user +  " started!");
-            streams[user] = stream;
+            streams[user] = {
+                "stream": stream,
+                "muted": false,
+                "paused": false
+            };
             renderStreams();
-            users.add(user);
+        });
+
+        call.onStreamMuted(function(m) {
+            streams[m.user].muted = true;
+            renderStreams();
+        });
+
+        call.onStreamUnmuted(function(m) {
+            streams[m.user].muted = false;
+            renderStreams();
+        });
+
+        call.onStreamPaused(function(m) {
+            streams[m.user].paused = true;
+            renderStreams();
+        });
+
+        call.onStreamUnpaused(function(m) {
+            streams[m.user].paused = false;
+            renderStreams();
         });
 
         call.onLeft(function(m) {
@@ -629,14 +658,24 @@ $(document).ready(function() {
             delete streams[m.user];
             renderStreams();
             users.remove(m.user);
-
-            if(call.direct && users.list().length === 0) {
-                endCall("ended");
-            }
         });
 
         call.onJoined(function(m) {
             console.log("User joined the call: ", m);
+            users.add(m.user);
+        });
+
+        call.onAnswered(function(m) {
+            console.log("User answered the call: ", m);
+        });
+
+        call.onRejected(function(m) {
+            console.log("User rejected the call: ", m);
+        });
+
+        call.onEnd(function(e) {
+            console.log("Call ended: ", e.reason);
+            endCall("ended");
         });
 
         function endCall(reason) {
@@ -649,7 +688,8 @@ $(document).ready(function() {
         function renderStreams() {
             callbox.empty();
             var grid = makeSplitGrid(Object.keys(streams).map(function(user) {
-                return makeStreamBox(user, (getUserNickname(user) || "You") + ":", streams[user], user === "You");
+                var isMe = user === "You";
+                return makeStreamBox(user, isMe ? "You:" : getUserNickname(user) + ":", streams[user], isMe);
             }));
             callbox.append(grid);
         }
@@ -667,6 +707,19 @@ $(document).ready(function() {
             endCall("closed");
         });
 
+        var toggle = makeButton('btn-info', "Toggle stream", function() {
+            if(streams["You"].muted) {
+              call.unmute();
+              call.unpause();
+            } else {
+              call.mute();
+              call.pause();
+            }
+            streams["You"].muted = !streams["You"].muted;
+            streams["You"].paused = !streams["You"].paused;
+            renderStreams();
+        });
+
         var hangup = makeButton('btn-danger', "Hangup!", function() {
             endCall("hangup");
         });
@@ -677,15 +730,15 @@ $(document).ready(function() {
             input = makeDiv();
         } else {
             call.onInvited(function(m) {
-                console.log(getUserNickname(m.inviter) + " invited " + m.user + " to join the call: ", m);
+                console.log(getUserNickname(m.user) + " invited " + m.invitee + " to join the call: ", m);
             });
 
-            input = makeInputField("Invite!", function(userNickname) {
-                call.invite(getSessionId(userNickname));
+            input = makeInputField("Invite!", function(userPhone) {
+                call.invite(getSessionId(userPhone));
             }, function() {});
         }
 
-        var buttons = makeButtonGroup().append(hangup);
+        var buttons = makeButtonGroup().append([hangup, toggle]);
         var panel = makePanel(users.element).addClass('controls-wrapper');
         var controls = makeControls(call.id, [panel, input, buttons]).addClass('text-center').hide();
         renderStreams();
@@ -713,10 +766,9 @@ $(document).ready(function() {
                 controls.hide();
                 switcher.deactivate();
             },
-            join: function() {
-                call.join(localStream);
+            answer: function() {
+                call.answer(localStream);
             },
-            leave: endCall,
             onTeardown: function(callback) {
                 onTeardownCallback = callback;
             },
@@ -730,6 +782,7 @@ $(document).ready(function() {
 
     function addCall(call, stream) {
         var box = makeCall(call, stream);
+        call.getHistory(); // NOTE Just for testing purposes.
         chat.add(call.id, box);
         return box;
     }
@@ -737,7 +790,7 @@ $(document).ready(function() {
     function directCallBuilder(session) {
         return function(room, user) {
             createStream(function(stream) {
-                session.chat.createDirectCall(user).then(function(call) {
+                session.chat.createDirectCall(user, 10).then(function(call) {
                     var box = addCall(call, stream);
                     chatboxes[room.id].addCall(box);
                     box.switchTo();
@@ -773,61 +826,64 @@ $(document).ready(function() {
         return new URL((server.startsWith("http") ? "" : window.location.protocol) + server);
     }
 
-    function jwt_sign(data, secret) {
-        // Based on code by Jonathan Petitcolas
-        // https://www.jonathan-petitcolas.com/2014/11/27/creating-json-web-token-in-javascript.html
-        var CryptoJS = require('crypto-js');
-        var header = {
-            "alg": "HS256",
-            "typ": "JWT"
-        };
-
-        function base64url(source) {
-            // Encode in classical base64
-            let encodedSource = CryptoJS.enc.Base64.stringify(source);
-
-            // Remove padding equal characters
-            encodedSource = encodedSource.replace(/=+$/, "");
-
-            // Replace characters according to base64url specifications
-            encodedSource = encodedSource.replace(/\+/g, "-");
-            encodedSource = encodedSource.replace(/\//g, "_");
-
-            return encodedSource;
-        }
-
-        var stringifiedHeader = CryptoJS.enc.Utf8.parse(JSON.stringify(header));
-        var encodedHeader = base64url(stringifiedHeader);
-
-        var stringifiedData = CryptoJS.enc.Utf8.parse(JSON.stringify(data));
-        var encodedData = base64url(stringifiedData);
-
-        var signature = encodedHeader + "." + encodedData;
-        signature = CryptoJS.HmacSHA256(signature, secret);
-        signature = base64url(signature);
-
-        return encodedHeader + "." + encodedData + "." + signature;
+    function getUser(url, id, apiKey) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("GET", url + 'api/users/' + id, false);
+        xhttp.setRequestHeader('X-Api-Key', apiKey);
+        xhttp.send();
+        return JSON.parse(xhttp.responseText);
     }
 
-    function run(chatServer, ratelServer, userNickname) {
+    function logIn(url, phone, password) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", url + 'api/session', false);
+        xhttp.setRequestHeader('Content-Type', 'application/json');
+        xhttp.send(JSON.stringify({
+            "phone": phone,
+            "password": password
+        }));
+        if(xhttp.status !== 200) {
+          throw "Invalid credentials.";
+        }
+        return JSON.parse(xhttp.responseText);
+    }
+
+    function run(chatServer, ratelServer, phone, password) {
         var chatUrl = getURL(chatServer);
         var ratelUrl = getURL(ratelServer);
 
-        console.log("Connecting to " + chatUrl + " as: " + userNickname);
+        var user = undefined;
+        try {
+            user = logIn(ratelUrl, phone, password);
+        } catch(e) {
+            return Promise.reject(e);
+        }
 
-        var payloadData = {
-            orgId: getOrganizationId(userNickname),
-            externalId: getSessionId(userNickname),
-            timestamp: Date.now()
-        };
+        console.log("Connecting to " + chatUrl + " as: " + JSON.stringify(user));
 
-        var sessionData = {
-            payload: payloadData,
-            signature: jwt_sign(payloadData, secretKeys[payloadData.orgId] || "defaultKey")
-        };
+        getSessionId = function(phone) {
+            var sessionId = "nope";
+            Object.getOwnPropertyNames(users).forEach(function(id) {
+                if(users[id].phone === phone) {
+                    sessionId = id;
+                }
+            });
+            return sessionId;
+        }
 
-        return RatelSDK.withSignedAuth(
-            sessionData,
+        getUserNickname = function(userId) {
+            if(users[userId]) {
+                return users[userId].name
+            } else {
+                var u = getUser(ratelUrl, userId, user.apiKey);
+                internUser(u);
+                return u.name;
+            }
+        }
+
+        return RatelSDK.withApiKey(
+            user.id,
+            user.apiKey,
             {
                 "debug": true,
                 "ratel": {
@@ -849,10 +905,15 @@ $(document).ready(function() {
                     }
                 }
             }).then(function (session) {
-                $('#demo-name').html("Ratel IM - " + userNickname);
+                sessionId = session.id;
+                $('#demo-name').html("Ratel IM - " + user.name);
                 statusSwitch.show();
 
                 newRoom = roomBuilder(session);
+
+                session.chat.onHeartbeat(function(hb) {
+                    console.log("Server time: ", hb.timestamp);
+                });
 
                 session.chat.onError(function(error) {
                     console.log("An error has occured: ", error);
@@ -881,7 +942,7 @@ $(document).ready(function() {
 
                     session.chat.getBots().then(function(bots) {
                         console.log("Bots: ", bots);
-                        bots.forEach(internBot);
+                        bots.forEach(internUser);
                     }).catch(function(error) {
                         console.log("Fetching bots failed: ", error);
                     });
@@ -909,7 +970,7 @@ $(document).ready(function() {
 
                     session.chat.onBotUpdate(function(m) {
                         console.log("Bot " + m.bot.name + " has been updated: ", m.bot);
-                        internBot(m.bot);
+                        internUser(m.bot);
                     });
 
                     session.chat.onStatusUpdate(function(m) {
@@ -922,13 +983,14 @@ $(document).ready(function() {
                     session.chat.onRoom(function (m) {
                         console.log("Received room invitation: ", m);
                         if(!m.room.direct) {
-                            if(confirm(getUserNickname(m.inviter) + " invited you to join room " + m.room.name)) {
+                            var line = getUserNickname(m.inviter) + " invited you to join room " + m.room.name;
+                            confirmModal("Room invitation", line, "Join", function() {
                                 console.log("Joining room " + m.room.name);
                                 m.room.join();
                                 addRoom(m.room, session).switchTo();
-                            } else {
+                            }, "Nope", function() {
                                 console.log("Rejecting invitation...");
-                            }
+                            });
                         } else {
                             addRoom(m.room, session);
                         }
@@ -936,6 +998,11 @@ $(document).ready(function() {
 
                     session.chat.onCall(function(m) {
                         console.log("Received call offer: ", m);
+                        var closeModal = function() {};
+                        m.call.onEnd(function(e) {
+                            console.log("Call ended: ", e.reason);
+                            closeModal();
+                        });
                         var line = "";
                         if(m.call.direct) {
                             line = getUserNickname(m.inviter) + " is calling, answer?";
@@ -943,18 +1010,17 @@ $(document).ready(function() {
                             line = getUserNickname(m.inviter) + " invites you to join a conference call with " +
                                 m.call.users.map(getUserNickname);
                         }
-                        if(confirm(line)) {
+                        closeModal = confirmModal("Call invitation", line, "Answer", function() {
                             createStream(function(stream) {
                                 var callbox = addCall(m.call, stream);
-                                callbox.join();
+                                callbox.answer();
                                 callbox.switchTo();
                             });
-                        } else {
+                        }, "Reject", function () {
                             console.log("Rejecting call...");
-                            m.call.reject(m);
-                        }
+                            m.call.reject("rejected");
+                        });
                     });
-
                 });
 
                 session.chat.connect();

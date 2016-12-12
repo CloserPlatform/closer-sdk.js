@@ -8,23 +8,9 @@ const alice = "321";
 const bob = "987";
 
 const events: Array<proto.Event> = [{
-  type: "call_invited",
-  id: callId,
-  user: alice,
-  inviter: bob,
+  type: "heartbeat",
   timestamp: Date.now()
-} as proto.CallInvited, {
-  type: "call_left",
-  id: callId,
-  user: alice,
-  reason: "no reason",
-  timestamp: Date.now()
-} as proto.CallLeft, {
-  type: "call_joined",
-  id: callId,
-  user: alice,
-  timestamp: Date.now()
-} as proto.CallJoined, {
+} as proto.Heartbeat, {
   type: "room_invitation",
   inviter: bob,
   room: {
@@ -52,6 +38,7 @@ const events: Array<proto.Event> = [{
   type: "room_message",
   id: roomId,
   message: {
+    type: "message",
     id: msgId,
     body: "Oi papi!",
     user: alice,
@@ -62,16 +49,18 @@ const events: Array<proto.Event> = [{
   type: "room_action",
   id: roomId,
   action: {
+    type: "room_action",
     action: "joined",
     id: actionId,
     room: roomId,
     user: alice,
     timestamp: Date.now()
   }
-} as proto.RoomAction, {
+} as proto.RoomActionSent, {
   type: "room_action",
   id: roomId,
   action: {
+    type: "room_action",
     action: "invited",
     id: actionId,
     room: roomId,
@@ -79,10 +68,11 @@ const events: Array<proto.Event> = [{
     invitee: bob,
     timestamp: Date.now()
   }
-} as proto.RoomAction, {
+} as proto.RoomActionSent, {
   type: "room_action",
   id: roomId,
   action: {
+    type: "room_action",
     action: "left",
     id: actionId,
     room: roomId,
@@ -90,7 +80,90 @@ const events: Array<proto.Event> = [{
     reason: "reason",
     timestamp: Date.now()
   }
-} as proto.RoomAction];
+} as proto.RoomActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    type: "call_action",
+    action: "joined",
+    id: actionId,
+    call: callId,
+    user: alice,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    type: "call_action",
+    action: "invited",
+    id: actionId,
+    call: callId,
+    user: alice,
+    invitee: bob,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    type: "call_action",
+    action: "left",
+    id: actionId,
+    call: callId,
+    user: alice,
+    reason: "reason",
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    type: "call_action",
+    action: "audio_muted",
+    id: actionId,
+    call: callId,
+    user: alice,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    type: "call_action",
+    action: "audio_unmuted",
+    id: actionId,
+    call: callId,
+    user: alice,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    type: "call_action",
+    action: "video_paused",
+    id: actionId,
+    call: callId,
+    user: alice,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent, {
+  type: "call_action",
+  id: callId,
+  action: {
+    type: "call_action",
+    action: "video_unpaused",
+    id: actionId,
+    call: callId,
+    user: alice,
+    timestamp: Date.now()
+  }
+} as proto.CallActionSent,
+proto.muteAudio(callId),
+proto.unmuteAudio(callId),
+proto.pauseVideo(callId),
+proto.unpauseVideo(callId)];
 
 describe("Protocol", () => {
   it("should be reversible", () => {

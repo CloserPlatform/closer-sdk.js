@@ -30,19 +30,19 @@ export class BaseRoom implements proto.Room {
     this.api = api;
   }
 
-  getHistory(): Promise<Array<proto.Archivable>> {
-    return wrapPromise(this.api.getRoomHistory(this.id), (a: proto.ArchivableWithType) => {
+  getHistory(): Promise<Array<proto.RoomArchivable>> {
+    return wrapPromise(this.api.getRoomHistory(this.id), (a: proto.RoomArchivable) => {
       switch (a.type) {
       case "media":
-        let media = (a as proto.Archivable) as proto.Media; // FIXME Delicious spaghetti.
+        let media = a as proto.Media;
         return createMedia(media, this.log, this.events, this.api);
 
       case "message":
-        let msg = (a as proto.Archivable) as proto.Message; // FIXME Delicious spaghetti.
+        let msg = a as proto.Message;
         return createMessage(msg, this.log, this.events, this.api);
 
       default:
-        return a as proto.Archivable;
+        return a as proto.RoomArchivable;
       }
     });
   }
@@ -110,21 +110,21 @@ export class BaseRoom implements proto.Room {
 export class DirectRoom extends BaseRoom {}
 
 export class Room extends BaseRoom {
-  private onJoinedCallback: Callback<proto.Action>;
-  private onLeftCallback: Callback<proto.Action>;
-  private onInvitedCallback: Callback<proto.Action>;
+  private onJoinedCallback: Callback<proto.RoomAction>;
+  private onLeftCallback: Callback<proto.RoomAction>;
+  private onInvitedCallback: Callback<proto.RoomAction>;
 
   constructor(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     super(room, log, events, api);
 
-    let nop = (a: proto.Action) => {
+    let nop = (a: proto.RoomAction) => {
       // Do nothing.
     };
     this.onLeftCallback = nop;
     this.onJoinedCallback = nop;
     this.onInvitedCallback = nop;
 
-    this.events.onConcreteEvent("room_action", this.id, (e: proto.RoomAction) => {
+    this.events.onConcreteEvent("room_action", this.id, (e: proto.RoomActionSent) => {
       switch (e.action.action) {
       case "joined":
         this.users.push(e.action.user);
@@ -163,15 +163,15 @@ export class Room extends BaseRoom {
     return this.api.inviteToRoom(this.id, user);
   }
 
-  onJoined(callback: Callback<proto.Action>) {
+  onJoined(callback: Callback<proto.RoomAction>) {
     this.onJoinedCallback = callback;
   }
 
-  onLeft(callback: Callback<proto.Action>) {
+  onLeft(callback: Callback<proto.RoomAction>) {
     this.onLeftCallback = callback;
   }
 
-  onInvited(callback: Callback<proto.Action>) {
+  onInvited(callback: Callback<proto.RoomAction>) {
     this.onInvitedCallback = callback;
   }
 }

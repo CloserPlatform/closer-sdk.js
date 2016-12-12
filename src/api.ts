@@ -190,9 +190,9 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<proto.CreateCall, proto.Call>([this.url, this.callPath], proto.createCall(sessionIds));
   }
 
-  createDirectCall(sessionId: proto.ID): Promise<proto.Call> {
+  createDirectCall(sessionId: proto.ID, timeout?: number): Promise<proto.Call> {
     return this.postAuth<proto.CreateDirectCall, proto.Call>([this.url, this.callPath],
-                                                             proto.createDirectCall(sessionId));
+                                                             proto.createDirectCall(sessionId, timeout));
   }
 
   getCall(callId: proto.ID): Promise<proto.Call> {
@@ -201,6 +201,19 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   getCalls(): Promise<Array<proto.Call>> {
     return this.getAuth<Array<proto.Call>>([this.url, this.callPath]);
+  }
+
+  getCallHistory(callId: proto.ID): Promise<Array<proto.CallArchivable>> {
+    return this.getAuth<Array<proto.CallArchivable>>([this.url, this.callPath, callId, "history"]);
+  }
+
+  answerCall(callId: proto.ID): Promise<void> {
+    return this.postAuth<void, void>([this.url, this.callPath, callId, "answer"]);
+  }
+
+  rejectCall(callId: proto.ID, reason: string): Promise<void> {
+    return this.postAuth<proto.LeaveReason, void>([this.url, this.callPath, callId, "reject"],
+                                                  proto.leaveReason(reason));
   }
 
   joinCall(callId: proto.ID): Promise<void> {
@@ -214,6 +227,16 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   inviteToCall(callId: proto.ID, sessionId: proto.ID): Promise<void> {
     return this.postAuth<void, void>([this.url, this.callPath, callId, "invite", sessionId]);
+  }
+
+  updateStream(callId: proto.ID, update: "mute" | "unmute" | "pause" | "unpause") {
+    const updates = {
+      mute: proto.muteAudio(callId),
+      unmute: proto.unmuteAudio(callId),
+      pause: proto.pauseVideo(callId),
+      unpause: proto.unpauseVideo(callId)
+    };
+    this.send(updates[update]);
   }
 
   // Room API:
@@ -242,8 +265,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<Array<proto.ID>>([this.url, this.roomPath, roomId, "users"]);
   }
 
-  getRoomHistory(roomId: proto.ID): Promise<Array<proto.ArchivableWithType>> {
-    return this.getAuth<Array<proto.ArchivableWithType>>([this.url, this.roomPath, roomId, "history"]);
+  getRoomHistory(roomId: proto.ID): Promise<Array<proto.RoomArchivable>> {
+    return this.getAuth<Array<proto.RoomArchivable>>([this.url, this.roomPath, roomId, "history"]);
   }
 
   joinRoom(roomId: proto.ID): Promise<void> {

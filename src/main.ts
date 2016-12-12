@@ -10,7 +10,7 @@ export { Call, DirectCall } from "./call";
 export { Config } from "./config";
 export { Media } from "./media";
 export { Message } from "./message";
-export { Action, Archivable, Metadata} from "./protocol";
+export { Archivable, CallAction, Metadata, RoomAction} from "./protocol";
 export { DirectRoom, Room } from "./room";
 export { Session } from "./session";
 
