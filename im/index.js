@@ -882,7 +882,7 @@ $(document).ready(function() {
         }
 
         return RatelSDK.withApiKey(
-            user.id,
+            user.user.id, // Well fuck.
             user.apiKey,
             {
                 "debug": true,
@@ -906,7 +906,7 @@ $(document).ready(function() {
                 }
             }).then(function (session) {
                 sessionId = session.id;
-                $('#demo-name').html("Ratel IM - " + user.name);
+                $('#demo-name').html("Ratel IM - " + user.user.name);
                 statusSwitch.show();
 
                 newRoom = roomBuilder(session);
