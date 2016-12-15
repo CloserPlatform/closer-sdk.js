@@ -29,6 +29,10 @@ module.exports = (config) => {
             'karma-phantomjs-launcher'
         ],
 
+        mime: {
+           'application/javascript': ['ts']
+        },
+
         files: [
             './node_modules/es6-promise/dist/es6-promise.js',
             {
