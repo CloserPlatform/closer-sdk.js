@@ -3,7 +3,6 @@
 const path = require('path');
 const webpack = require('webpack');
 const SplitByPathPlugin = require('webpack-split-by-path');
-const TypedocPlugin = require('typedoc-webpack-plugin');
 
 const sourceMap = process.env.TEST || process.env.NODE_ENV !== 'production'
   ? [new webpack.SourceMapDevToolPlugin({ filename: null, test: /\.tsx?$/ })]
@@ -14,9 +13,6 @@ const basePlugins = [
     __DEV__: process.env.NODE_ENV !== 'production',
     __TEST__: JSON.stringify(process.env.TEST || false),
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-  }),
-  new TypedocPlugin({
-    externalPattern: './src/**/*.spec.ts'
   }),
   new webpack.NoErrorsPlugin()
 ].concat(sourceMap);
