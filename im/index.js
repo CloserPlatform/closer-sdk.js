@@ -621,8 +621,6 @@ $(document).ready(function() {
         var callbox = makeCallbox(call.id, "callbox");
         var onTeardownCallback = function() {};
 
-        call.addLocalStream(localStream);
-
         call.onRemoteStream(function(user, stream) {
             console.log("Remote stream for user " + user +  " started!");
             streams[user] = {
@@ -790,7 +788,7 @@ $(document).ready(function() {
     function directCallBuilder(session) {
         return function(room, user) {
             createStream(function(stream) {
-                session.chat.createDirectCall(user, 10).then(function(call) {
+                session.chat.createDirectCall(stream, user, 10).then(function(call) {
                     var box = addCall(call, stream);
                     chatboxes[room.id].addCall(box);
                     box.switchTo();
@@ -804,7 +802,7 @@ $(document).ready(function() {
     function callBuilder(session) {
         return function(room, users) {
             createStream(function(stream) {
-                session.chat.createCall(users).then(function(call) {
+                session.chat.createCall(stream, users).then(function(call) {
                     var box = addCall(call, stream);
                     chatboxes[room.id].addCall(box);
                     box.switchTo();
