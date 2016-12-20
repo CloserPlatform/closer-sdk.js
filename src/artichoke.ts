@@ -98,12 +98,12 @@ export class Artichoke {
     this.events.onEvent("call_invitation", callback);
   }
 
-  createDirectCall(peer: proto.ID, timeout?: number): Promise<DirectCall> {
-    return this.wrapCall(this.api.createDirectCall(peer, timeout));
+  createDirectCall(stream: MediaStream, peer: proto.ID, timeout?: number): Promise<DirectCall> {
+    return this.wrapCall(this.api.createDirectCall(peer, timeout), stream);
   }
 
-  createCall(users: Array<proto.ID>): Promise<Call> {
-    return this.wrapCall(this.api.createCall(users));
+  createCall(stream: MediaStream, users: Array<proto.ID>): Promise<Call> {
+    return this.wrapCall(this.api.createCall(users), stream);
   }
 
   getCall(call: proto.ID): Promise<Call | DirectCall> {
@@ -149,8 +149,8 @@ export class Artichoke {
   }
 
   // Utils:
-  private wrapCall(promise: Promise<proto.Call | Array<proto.Call>>) {
-    return wrapPromise(promise, (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
+  private wrapCall(promise: Promise<proto.Call | Array<proto.Call>>, stream?: MediaStream) {
+    return wrapPromise(promise, (call) => createCall(call, this.config.rtc, this.log, this.events, this.api, stream));
   }
 
   private wrapRoom(promise: Promise<proto.Room | Array<proto.Room>>) {

@@ -19,7 +19,7 @@ export class BaseCall implements ProtoCall {
   protected events: EventHandler;
 
   private log: Logger;
-  private pool: RTCPool;
+  protected pool: RTCPool;
   private onRemoteStreamCallback: RemoteStreamCallback;
   private onLeftCallback: Callback<CallAction>;
   private onJoinedCallback: Callback<CallAction>;
@@ -31,7 +31,8 @@ export class BaseCall implements ProtoCall {
   private onPausedCallback: Callback<CallAction>;
   private onUnpausedCallback: Callback<CallAction>;
 
-  constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler,
+              api: ArtichokeAPI, stream?: MediaStream) {
     this.id = call.id;
     this.created = call.created;
     this.ended = call.ended;
@@ -44,14 +45,23 @@ export class BaseCall implements ProtoCall {
 
     this.pool = createRTCPool(this.id, config, log, events, api);
 
+    if (stream) {
+      this.pool.addLocalStream(stream);
+    }
+
     // By default do nothing:
-    this.onRemoteStreamCallback = (peer, stream) => {
+    this.onRemoteStreamCallback = (peer, s) => {
       // Do nothing.
     };
+
+    this.pool.onConnection((peer, rtc) => {
+      rtc.onRemoteStream((s) => this.onRemoteStreamCallback(peer, s));
+    });
 
     let nop = (a: CallAction) => {
       // Do nothing.
     };
+
     this.onLeftCallback = nop;
     this.onJoinedCallback = nop;
     this.onInvitedCallback = nop;
@@ -62,15 +72,11 @@ export class BaseCall implements ProtoCall {
     this.onPausedCallback = nop;
     this.onUnpausedCallback = nop;
 
-    this.pool.onConnection((peer, rtc) => {
-      rtc.onRemoteStream((stream) => this.onRemoteStreamCallback(peer, stream));
-    });
-
     this.events.onConcreteEvent("call_action", this.id, (e: CallActionSent) => {
       switch (e.action.action) {
       case "joined":
         this.users.push(e.action.user);
-        this.pool.create(e.action.user).onRemoteStream((stream) => this.onRemoteStreamCallback(e.action.user, stream));
+        this.pool.create(e.action.user).onRemoteStream((s) => this.onRemoteStreamCallback(e.action.user, s));
         this.onJoinedCallback(e.action);
         break;
 
@@ -122,12 +128,8 @@ export class BaseCall implements ProtoCall {
     return this.api.getCallHistory(this.id);
   }
 
-  addLocalStream(stream: MediaStream) {
-    this.pool.addLocalStream(stream);
-  }
-
   answer(stream: MediaStream): Promise<void> {
-    this.addLocalStream(stream);
+    this.pool.addLocalStream(stream);
     return this.api.answerCall(this.id);
   }
 
@@ -208,7 +210,7 @@ export class Call extends BaseCall {
   }
 
   join(stream: MediaStream): Promise<void> {
-    this.addLocalStream(stream);
+    this.pool.addLocalStream(stream);
     return this.api.joinCall(this.id);
   }
 
@@ -217,11 +219,11 @@ export class Call extends BaseCall {
   }
 }
 
-export function createCall(call: ProtoCall, config: RTCConfiguration,
-                           log: Logger, events: EventHandler, api: ArtichokeAPI): DirectCall | Call {
+export function createCall(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler,
+                           api: ArtichokeAPI, stream?: MediaStream): DirectCall | Call {
   if (call.direct) {
-    return new DirectCall(call, config, log, events, api);
+    return new DirectCall(call, config, log, events, api, stream);
   } else {
-    return new Call(call, config, log, events, api);
+    return new Call(call, config, log, events, api, stream);
   }
 }

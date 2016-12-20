@@ -91,7 +91,7 @@ function makeCall(direct = false) {
 
     whenever(isWebRTCSupported())("should run a callback on join", (done) => {
       getStream((stream) => {
-        call.addLocalStream(stream);
+        (call as any).pool.addLocalStream(stream);
 
         events.onError((error) => done.fail());
 
@@ -177,7 +177,7 @@ function makeCall(direct = false) {
 
     whenever(isWebRTCSupported())("should maintain the user list", (done) => {
       getStream((stream) => {
-        call.addLocalStream(stream);
+        (call as any).pool.addLocalStream(stream);
 
         events.onError((error) => done.fail());
 
