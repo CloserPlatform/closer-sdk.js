@@ -104,6 +104,10 @@ export class APIWithWebsocket extends RESTfulAPI {
     this.socket = new JSONWebSocket(url, this.log);
   }
 
+  disconnect() {
+    this.socket.disconnect();
+  }
+
   send(event: proto.Event) {
     this.socket.send(proto.unfix(event));
   }

@@ -18,6 +18,10 @@ export class JSONWebSocket {
     };
   }
 
+  disconnect() {
+    this.socket.close();
+  }
+
   onDisconnect(callback: Callback<Disconnect>) {
     this.socket.onclose = (close) => {
       this.log("WS disconnected: " + close.reason);
