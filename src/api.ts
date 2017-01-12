@@ -357,10 +357,9 @@ export class RatelAPI extends RESTfulAPI {
   }
 }
 
-export class ResourceAPI extends RESTfulAPI {
+export class WheelHouseAPI extends RESTfulAPI {
   private spawnCampaignPath = "api/campaign";
   private url: string;
-
   constructor(config: ResourceConfig, log: Logger) {
     super(log);
 
@@ -371,7 +370,8 @@ export class ResourceAPI extends RESTfulAPI {
   spawnCampaign(campaignSpawnData: CampaignSpawnData): Promise<void> {
     return this.post<CampaignSpawnData, void>([this.url, this.spawnCampaignPath, "/spawn"], [], campaignSpawnData);
   }
-  createRoom(createRoomData: CreateRoomData): Promise<void> {
-    return this.post<CreateRoomData, void>([this.url, this.spawnCampaignPath, "/createRoom"], [], createRoomData);
+
+  createRoom(createRoomData: CreateRoomData): Promise<proto.Room> {
+    return this.post<CreateRoomData, proto.Room>([this.url, this.spawnCampaignPath, "/createRoom"], [], createRoomData);
   }
 }
