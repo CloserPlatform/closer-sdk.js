@@ -1,5 +1,5 @@
 import { AgentContext, ApiKey, SessionData } from "./auth";
-import { CampaignSpawnData } from "./campaign";
+import { CampaignSpawnData, CreateRoomData } from "./campaign";
 import { ChatConfig, RatelConfig, ResourceConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
@@ -369,6 +369,9 @@ export class ResourceAPI extends RESTfulAPI {
   }
 
   spawnCampaign(campaignSpawnData: CampaignSpawnData): Promise<void> {
-    return this.post<CampaignSpawnData, void>([this.url, this.spawnCampaignPath], [], campaignSpawnData);
+    return this.post<CampaignSpawnData, void>([this.url, this.spawnCampaignPath, "/spawn"], [], campaignSpawnData);
+  }
+  createRoom(createRoomData: CreateRoomData): Promise<void> {
+    return this.post<CreateRoomData, void>([this.url, this.spawnCampaignPath, "/createRoom"], [], createRoomData);
   }
 }
