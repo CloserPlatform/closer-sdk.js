@@ -6,5 +6,12 @@ export interface Meta {
 
 export interface CampaignSpawnData {
     campaignId: ID;
+    channelId: ID;
+    meta: Meta;
+}
+
+export interface CreateRoomData {
+    orgId: ID;
+    campaignId: ID;
     meta: Meta;
 }

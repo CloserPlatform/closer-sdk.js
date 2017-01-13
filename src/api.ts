@@ -1,5 +1,5 @@
 import { AgentContext, ApiKey, SessionData } from "./auth";
-import { CampaignSpawnData } from "./campaign";
+import { CampaignSpawnData, CreateRoomData } from "./campaign";
 import { ChatConfig, RatelConfig, ResourceConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
@@ -357,10 +357,9 @@ export class RatelAPI extends RESTfulAPI {
   }
 }
 
-export class ResourceAPI extends RESTfulAPI {
+export class WheelHouseAPI extends RESTfulAPI {
   private spawnCampaignPath = "api/campaign";
   private url: string;
-
   constructor(config: ResourceConfig, log: Logger) {
     super(log);
 
@@ -369,6 +368,10 @@ export class ResourceAPI extends RESTfulAPI {
   }
 
   spawnCampaign(campaignSpawnData: CampaignSpawnData): Promise<void> {
-    return this.post<CampaignSpawnData, void>([this.url, this.spawnCampaignPath], [], campaignSpawnData);
+    return this.post<CampaignSpawnData, void>([this.url, this.spawnCampaignPath, "/spawn"], [], campaignSpawnData);
+  }
+
+  createRoom(createRoomData: CreateRoomData): Promise<proto.Room> {
+    return this.post<CreateRoomData, proto.Room>([this.url, this.spawnCampaignPath, "/createRoom"], [], createRoomData);
   }
 }
