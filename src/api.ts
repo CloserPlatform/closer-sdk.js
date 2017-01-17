@@ -360,11 +360,14 @@ export class RatelAPI extends RESTfulAPI {
 export class WheelHouseAPI extends RESTfulAPI {
   private spawnCampaignPath = "api/campaign";
   private url: string;
-  constructor(config: ResourceConfig, log: Logger) {
+  private authHeaders: Array<HeaderValue>;
+
+  constructor(apiKey: ApiKey, config: ResourceConfig, log: Logger) {
     super(log);
 
     let host = config.hostname + ":" + config.port;
     this.url = [config.protocol, "//", host].join("");
+    this.authHeaders = [new HeaderValue("X-Api-Key", apiKey)];
   }
 
   spawnCampaign(campaignSpawnData: CampaignSpawnData): Promise<void> {
@@ -372,6 +375,7 @@ export class WheelHouseAPI extends RESTfulAPI {
   }
 
   createRoom(createRoomData: CreateRoomData): Promise<proto.Room> {
-    return this.post<CreateRoomData, proto.Room>([this.url, this.spawnCampaignPath, "/createRoom"], [], createRoomData);
+    return this.post<CreateRoomData, proto.Room>([this.url, this.spawnCampaignPath, "/createRoom"],
+      this.authHeaders, createRoomData);
   }
 }
