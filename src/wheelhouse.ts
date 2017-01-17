@@ -1,6 +1,6 @@
 import { ArtichokeAPI, WheelHouseAPI } from "./api";
 import { CreateRoomData } from "./campaign";
-import { ChatConfig } from "./config";
+import { ResourceConfig } from "./config";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
 import * as proto from "./protocol";
@@ -10,11 +10,11 @@ import { wrapPromise } from "./utils";
 export class WheelHouse {
   private wheelHouseAPI: WheelHouseAPI;
   private artichokeApi: ArtichokeAPI;
-  private config: ChatConfig;
+  private config: ResourceConfig;
   private log: Logger;
   private events: EventHandler;
 
-  constructor(config: ChatConfig, log: Logger, events: EventHandler,
+  constructor(config: ResourceConfig, log: Logger, events: EventHandler,
               wheelHouseAPI: WheelHouseAPI, artichokeApi: ArtichokeAPI) {
     this.wheelHouseAPI = wheelHouseAPI;
     this.artichokeApi = artichokeApi;
