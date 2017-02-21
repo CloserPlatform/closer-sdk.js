@@ -187,8 +187,12 @@ export interface RoomMetadata extends Event {
   metadata: Metadata;
 }
 
+export interface RoomStartTyping extends Event {
+}
+
 export interface RoomTyping extends Event {
-  user?: ID;
+  user: ID;
+  timestamp: Timestamp;
 }
 
 export type Candidate = RTCIceCandidate;
@@ -294,11 +298,19 @@ export function rtcCandidate(id: ID, peer: ID, candidate: Candidate): RTCCandida
   };
 }
 
-export function typing(id: ID, user?: ID): RoomTyping {
+export function startTyping(id: ID): RoomStartTyping {
+  return {
+    type: "room_start_typing",
+    id
+  };
+}
+
+export function typing(id: ID, user: ID, timestamp: Timestamp): RoomTyping {
   return {
     type: "room_typing",
     id,
-    user
+    user,
+    timestamp
   };
 }
 

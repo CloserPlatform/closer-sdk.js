@@ -298,7 +298,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   sendTyping(roomId: proto.ID) {
-    this.send(proto.typing(roomId));
+    this.send(proto.startTyping(roomId));
   }
 
   setMark(roomId: proto.ID, timestamp: proto.Timestamp) {
