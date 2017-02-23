@@ -21,7 +21,8 @@ const events: Array<proto.Event> = [{
 } as proto.RoomInvitation, {
   type: "room_typing",
   id: roomId,
-  user: alice
+  user: alice,
+  timestamp: Date.now(),
 } as proto.RoomTyping, proto.presenceRequest("available"), {
   type: "presence_update",
   user: alice,

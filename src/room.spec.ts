@@ -151,7 +151,7 @@ function makeRoom(direct = false) {
         done();
       });
 
-      events.notify(proto.typing(room.id, chad));
+      events.notify(proto.typing(room.id, chad, Date.now()));
     });
 
     it("should run a callback on incoming message", (done) => {
