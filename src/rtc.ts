@@ -7,10 +7,6 @@ import { Candidate, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
 function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {
   if (typeof RTCPeerConnection !== "undefined") {
     return new RTCPeerConnection(config);
-  } else if (typeof webkitRTCPeerConnection !== "undefined") {
-    return new webkitRTCPeerConnection(config);
-  } else if (typeof mozRTCPeerConnection !== "undefined") {
-    return new mozRTCPeerConnection(config);
   } else {
     // FIXME Add support for more browsers.
     throw Error("Browser not supported!");
@@ -18,7 +14,7 @@ function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {
 }
 
 interface RTCPeerConnectionWithOnTrack extends RTCPeerConnection {
-  ontrack?: (event: RTCMediaStreamEvent) => void; // NOTE Hackaround for unstable API.
+  ontrack?: (event: MediaStreamEvent) => void; // NOTE Hackaround for unstable API.
 }
 
 export interface RemoteStreamCallback {
