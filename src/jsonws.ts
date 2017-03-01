@@ -31,8 +31,8 @@ export class JSONWebSocket {
 
   onError(callback: Callback<Error>) {
     this.socket.onerror = (err) => {
-      this.log("WS error: " + err.message);
-      callback(error(err.message, err));
+      this.log("WS error: " + err);
+      callback(error("Websocket connection error.", err));
     };
   }
 

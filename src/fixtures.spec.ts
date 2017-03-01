@@ -41,9 +41,7 @@ export function isPhantomJS() {
 }
 
 export function isWebRTCSupported(): boolean {
-  return [typeof RTCPeerConnection,
-          typeof webkitRTCPeerConnection,
-          typeof mozRTCPeerConnection].some((t) => t !== "undefined");
+  return [typeof RTCPeerConnection].some((t) => t !== "undefined");
 }
 
 export function getStream(onStream, onError) {
@@ -56,9 +54,5 @@ export function getStream(onStream, onError) {
     navigator.getUserMedia(constraints, onStream, onError);
   } else if (typeof navigator.mediaDevices.getUserMedia !== "undefined") {
     navigator.mediaDevices.getUserMedia(constraints).then(onStream).catch(onError);
-  } else if (typeof navigator.mozGetUserMedia !== "undefined") {
-    navigator.mozGetUserMedia(constraints, onStream, onError);
-  } else if (typeof navigator.webkitGetUserMedia !== "undefined") {
-    navigator.webkitGetUserMedia(constraints, onStream, onError);
   }
 }
