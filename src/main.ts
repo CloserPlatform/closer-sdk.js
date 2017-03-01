@@ -1,5 +1,4 @@
 /// <reference types="es6-shim" />
-/// <reference types="webrtc" />
 
 // Main entry points:
 export * from "./auth";
