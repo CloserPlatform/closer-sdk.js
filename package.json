@@ -14,8 +14,6 @@
     "prebuild": "npm run test",
     "pretest": "npm run lint",
     "pretest:ci": "npm run lint",
-    "postbuild": "npm run docs",
-    "postbuild:ci": "npm run docs",
     "posttest": "istanbul check-coverage --statement 75 --branch 57 --function 59",
     "posttest:ci": "istanbul check-coverage --statement 66 --branch 45 --function 47",
     "start": "python3 -m http.server",
