@@ -1,6 +1,6 @@
 {
   "name": "ratel-sdk-js",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Ratel JavaScript SDK",
   "main": "dist/ratel-sdk.js",
   "types": "dist/main.d.ts",
@@ -23,11 +23,9 @@
   },
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
   "license": "MIT",
-  "dependencies": {
-    "@types/es6-shim": "^0.31.32",
-    "@types/jasmine": "^2.5.43"
-  },
   "devDependencies": {
+    "@types/es6-shim": "^0.31.32",
+    "@types/jasmine": "^2.5.43",
     "cross-env": "^3.1.4",
     "es6-promise": "^3.3.1",
     "istanbul": "^1.0.0-alpha.2",
