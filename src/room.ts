@@ -6,17 +6,27 @@ import { createMessage, Message } from "./message";
 import * as proto from "./protocol";
 import { wrapPromise } from "./utils";
 
-export class BaseRoom implements proto.Room {
+export enum RoomType {
+  BASIC,
+  DIRECT,
+  BUSINESS
+}
+
+export abstract class BaseRoom implements proto.Room {
   public id: proto.ID;
   public name: string;
   public created: proto.Timestamp;
   public users: Array<proto.ID>;
   public direct: boolean;
+  public orgId: proto.ID;
+  public externalId: string;
   public mark: proto.Timestamp;
 
   private log: Logger;
   protected events: EventHandler;
   protected api: ArtichokeAPI;
+
+  public abstract readonly roomType: RoomType;
 
   constructor(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = room.id;
@@ -24,6 +34,8 @@ export class BaseRoom implements proto.Room {
     this.created = room.created;
     this.users = room.users;
     this.direct = room.direct;
+    this.orgId = room.orgId;
+    this.externalId = room.externalId;
     this.mark = room.mark || 0;
     this.log = log;
     this.events = events;
@@ -34,11 +46,11 @@ export class BaseRoom implements proto.Room {
     return wrapPromise(this.api.getRoomHistory(this.id), (a: proto.RoomArchivable) => {
       switch (a.type) {
       case "media":
-        let media = a as proto.Media;
+        const media = a as proto.Media;
         return createMedia(media, this.log, this.events, this.api);
 
       case "message":
-        let msg = a as proto.Message;
+        const msg = a as proto.Message;
         return createMessage(msg, this.log, this.events, this.api);
 
       default:
@@ -107,9 +119,13 @@ export class BaseRoom implements proto.Room {
   }
 }
 
-export class DirectRoom extends BaseRoom {}
+export class DirectRoom extends BaseRoom {
+  public readonly roomType: RoomType = RoomType.DIRECT;
+}
 
 export class Room extends BaseRoom {
+  public readonly roomType: RoomType = RoomType.BASIC;
+
   private onJoinedCallback: Callback<proto.RoomAction>;
   private onLeftCallback: Callback<proto.RoomAction>;
   private onInvitedCallback: Callback<proto.RoomAction>;
@@ -117,7 +133,7 @@ export class Room extends BaseRoom {
   constructor(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     super(room, log, events, api);
 
-    let nop = (a: proto.RoomAction) => {
+    const nop = (a: proto.RoomAction) => {
       // Do nothing.
     };
     this.onLeftCallback = nop;
@@ -176,9 +192,15 @@ export class Room extends BaseRoom {
   }
 }
 
-export function createRoom(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): DirectRoom | Room {
+export class BusinessRoom extends Room {
+  public readonly roomType: RoomType = RoomType.BUSINESS;
+}
+
+export function createRoom(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): BaseRoom {
   if (room.direct) {
     return new DirectRoom(room, log, events, api);
+  } else if (room.orgId) {
+    return new BusinessRoom(room, log, events, api);
   } else {
     return new Room(room, log, events, api);
   }

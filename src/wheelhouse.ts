@@ -4,7 +4,7 @@ import { ResourceConfig } from "./config";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
 import * as proto from "./protocol";
-import { createRoom, DirectRoom, Room } from "./room";
+import { BusinessRoom, createRoom } from "./room";
 import { wrapPromise } from "./utils";
 
 export class WheelHouse {
@@ -24,7 +24,7 @@ export class WheelHouse {
   }
 
   // Campaigns API
-  createRoom(createRoomData: CreateRoomData): Promise<Room | DirectRoom> {
+  createRoom(createRoomData: CreateRoomData): Promise<BusinessRoom> {
     return this.wrapRoom(this.wheelHouseAPI.createRoom(createRoomData));
   }
 
