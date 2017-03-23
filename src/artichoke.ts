@@ -5,7 +5,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage } from "./message";
 import * as proto from "./protocol";
-import { createRoom, DirectRoom, Room } from "./room";
+import { BaseRoom, createRoom, DirectRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
 
 export class Artichoke {
@@ -127,15 +127,15 @@ export class Artichoke {
     return this.wrapRoom(this.api.createDirectRoom(peer));
   }
 
-  getRoom(room: proto.ID): Promise<Room | DirectRoom> {
+  getRoom(room: proto.ID): Promise<BaseRoom> {
     return this.wrapRoom(this.api.getRoom(room));
   }
 
-  getRooms(): Promise<Array<Room | DirectRoom>> {
+  getRooms(): Promise<Array<BaseRoom>> {
     return this.wrapRoom(this.api.getRooms());
   }
 
-  getRoster(): Promise<Array<Room | DirectRoom>> {
+  getRoster(): Promise<Array<BaseRoom>> {
     return this.wrapRoom(this.api.getRoster());
   }
 
