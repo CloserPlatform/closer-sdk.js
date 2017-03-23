@@ -2,7 +2,7 @@ import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
 import * as proto from "./protocol";
-import { createRoom, DirectRoom, Room } from "./room";
+import { BaseRoom, createRoom, DirectRoom, Room, RoomType } from "./room";
 
 const actionId = "567";
 const roomId = "123";
@@ -107,14 +107,31 @@ class APIMock extends ArtichokeAPI {
   }
 }
 
-function makeRoom(direct = false) {
-  return {
+function makeRoom(roomType: RoomType) {
+  const room = {
     id: roomId,
     name: "room",
     created: 123,
     users: [alice],
-    direct
+    direct: false,
   } as proto.Room;
+
+  switch (roomType) {
+    case RoomType.DIRECT:
+      room.direct = true;
+      return room;
+
+    case RoomType.BUSINESS:
+      room.orgId = "1234";
+      room.externalId = "5678";
+      return room;
+
+    case RoomType.BASIC:
+      return room;
+
+    default:
+      throw Error("invalid RoomType");
+  }
 }
 
 ["DirectRoom", "Room"].forEach((d) => {
@@ -126,7 +143,8 @@ function makeRoom(direct = false) {
     beforeEach(() => {
       events = new EventHandler(log);
       api = new APIMock();
-      room = createRoom(makeRoom(d === "DirectRoom"), log, events, api);
+      const roomType = d === "DirectRoom" ? RoomType.DIRECT : RoomType.BASIC;
+      room = createRoom(makeRoom(roomType), log, events, api);
     });
 
     it("should maintain a high water mark", (done) => {
@@ -274,7 +292,7 @@ describe("DirectRoom", () => {
   beforeEach(() => {
     events = new EventHandler(log);
     api = new APIMock();
-    room = createRoom(makeRoom(true), log, events, api) as DirectRoom;
+    room = createRoom(makeRoom(RoomType.DIRECT), log, events, api) as DirectRoom;
   });
 
   it("should retrieve users", (done) => {
@@ -293,7 +311,7 @@ describe("Room", () => {
   beforeEach(() => {
     events = new EventHandler(log);
     api = new APIMock();
-    room = createRoom(makeRoom(), log, events, api) as Room;
+    room = createRoom(makeRoom(RoomType.BASIC), log, events, api) as Room;
   });
 
   it("should maintain the user list", (done) => {
@@ -419,5 +437,20 @@ describe("Room", () => {
   it("should allow inviting others", () => {
     room.invite(chad);
     expect(api.invited).toBe(chad);
+  });
+});
+
+describe("Room, BusinessRoom, DirectRoom", () => {
+  const events = new EventHandler(log);
+  const api = new APIMock();
+
+  it("should have proper roomType field defined", (done) => {
+    const businessRoom: BaseRoom = createRoom(makeRoom(RoomType.BUSINESS), log, events, api);
+    const directRoom: BaseRoom = createRoom(makeRoom(RoomType.DIRECT), log, events, api);
+    const basicRoom: BaseRoom = createRoom(makeRoom(RoomType.BASIC), log, events, api);
+    expect(businessRoom.roomType).toEqual(RoomType.BUSINESS);
+    expect(directRoom.roomType).toEqual(RoomType.DIRECT);
+    expect(basicRoom.roomType).toEqual(RoomType.BASIC);
+    done();
   });
 });
