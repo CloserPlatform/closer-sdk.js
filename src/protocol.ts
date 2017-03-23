@@ -84,6 +84,8 @@ export interface Room {
   created: Timestamp;
   users: Array<ID>;
   direct: boolean;
+  orgId?: ID;
+  externalId?: string;
   mark?: number;
 }
 
