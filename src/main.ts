@@ -11,7 +11,7 @@ export { Config } from "./config";
 export { Media } from "./media";
 export { Message } from "./message";
 export { Archivable, CallAction, CallArchivable, Metadata, RoomAction, RoomArchivable} from "./protocol";
-export { DirectRoom, Room } from "./room";
+export { DirectRoom, GroupRoom } from "./room";
 export { Session } from "./session";
 
 // Other useful crap:

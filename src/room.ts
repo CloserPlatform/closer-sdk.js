@@ -7,12 +7,12 @@ import * as proto from "./protocol";
 import { wrapPromise } from "./utils";
 
 export enum RoomType {
-  BASIC,
+  GROUP,
   DIRECT,
   BUSINESS
 }
 
-export abstract class BaseRoom implements proto.Room {
+export abstract class Room implements proto.Room {
   public id: proto.ID;
   public name: string;
   public created: proto.Timestamp;
@@ -119,12 +119,12 @@ export abstract class BaseRoom implements proto.Room {
   }
 }
 
-export class DirectRoom extends BaseRoom {
+export class DirectRoom extends Room {
   public readonly roomType: RoomType = RoomType.DIRECT;
 }
 
-export class Room extends BaseRoom {
-  public readonly roomType: RoomType = RoomType.BASIC;
+export class GroupRoom extends Room {
+  public readonly roomType: RoomType = RoomType.GROUP;
 
   private onJoinedCallback: Callback<proto.RoomAction>;
   private onLeftCallback: Callback<proto.RoomAction>;
@@ -192,16 +192,16 @@ export class Room extends BaseRoom {
   }
 }
 
-export class BusinessRoom extends Room {
+export class BusinessRoom extends GroupRoom {
   public readonly roomType: RoomType = RoomType.BUSINESS;
 }
 
-export function createRoom(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): BaseRoom {
+export function createRoom(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): Room {
   if (room.direct) {
     return new DirectRoom(room, log, events, api);
   } else if (room.orgId) {
     return new BusinessRoom(room, log, events, api);
   } else {
-    return new Room(room, log, events, api);
+    return new GroupRoom(room, log, events, api);
   }
 }

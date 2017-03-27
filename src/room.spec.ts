@@ -2,7 +2,7 @@ import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
 import * as proto from "./protocol";
-import { BaseRoom, createRoom, DirectRoom, Room, RoomType } from "./room";
+import { createRoom, DirectRoom, GroupRoom, Room, RoomType } from "./room";
 
 const actionId = "567";
 const roomId = "123";
@@ -126,7 +126,7 @@ function makeRoom(roomType: RoomType) {
       room.externalId = "5678";
       return room;
 
-    case RoomType.BASIC:
+    case RoomType.GROUP:
       return room;
 
     default:
@@ -134,7 +134,7 @@ function makeRoom(roomType: RoomType) {
   }
 }
 
-["DirectRoom", "Room"].forEach((d) => {
+["DirectRoom", "GroupRoom"].forEach((d) => {
   describe(d, () => {
     let events;
     let api;
@@ -143,7 +143,7 @@ function makeRoom(roomType: RoomType) {
     beforeEach(() => {
       events = new EventHandler(log);
       api = new APIMock();
-      const roomType = d === "DirectRoom" ? RoomType.DIRECT : RoomType.BASIC;
+      const roomType = d === "DirectRoom" ? RoomType.DIRECT : RoomType.GROUP;
       room = createRoom(makeRoom(roomType), log, events, api);
     });
 
@@ -303,7 +303,7 @@ describe("DirectRoom", () => {
   });
 });
 
-describe("Room", () => {
+describe("GroupRoom", () => {
   let events;
   let api;
   let room;
@@ -311,7 +311,7 @@ describe("Room", () => {
   beforeEach(() => {
     events = new EventHandler(log);
     api = new APIMock();
-    room = createRoom(makeRoom(RoomType.BASIC), log, events, api) as Room;
+    room = createRoom(makeRoom(RoomType.GROUP), log, events, api) as GroupRoom;
   });
 
   it("should maintain the user list", (done) => {
@@ -440,17 +440,17 @@ describe("Room", () => {
   });
 });
 
-describe("Room, BusinessRoom, DirectRoom", () => {
+describe("GroupRoom, BusinessRoom, DirectRoom", () => {
   const events = new EventHandler(log);
   const api = new APIMock();
 
   it("should have proper roomType field defined", (done) => {
-    const businessRoom: BaseRoom = createRoom(makeRoom(RoomType.BUSINESS), log, events, api);
-    const directRoom: BaseRoom = createRoom(makeRoom(RoomType.DIRECT), log, events, api);
-    const basicRoom: BaseRoom = createRoom(makeRoom(RoomType.BASIC), log, events, api);
+    const businessRoom: Room = createRoom(makeRoom(RoomType.BUSINESS), log, events, api);
+    const directRoom: Room = createRoom(makeRoom(RoomType.DIRECT), log, events, api);
+    const basicRoom: Room = createRoom(makeRoom(RoomType.GROUP), log, events, api);
     expect(businessRoom.roomType).toEqual(RoomType.BUSINESS);
     expect(directRoom.roomType).toEqual(RoomType.DIRECT);
-    expect(basicRoom.roomType).toEqual(RoomType.BASIC);
+    expect(basicRoom.roomType).toEqual(RoomType.GROUP);
     done();
   });
 });

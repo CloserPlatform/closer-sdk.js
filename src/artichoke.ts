@@ -5,7 +5,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage } from "./message";
 import * as proto from "./protocol";
-import { BaseRoom, createRoom, DirectRoom, Room } from "./room";
+import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
 
 export class Artichoke {
@@ -119,7 +119,7 @@ export class Artichoke {
     this.events.onEvent("room_invitation", callback);
   }
 
-  createRoom(name: string): Promise<Room> {
+  createRoom(name: string): Promise<GroupRoom> {
     return this.wrapRoom(this.api.createRoom(name));
   }
 
@@ -127,15 +127,15 @@ export class Artichoke {
     return this.wrapRoom(this.api.createDirectRoom(peer));
   }
 
-  getRoom(room: proto.ID): Promise<BaseRoom> {
+  getRoom(room: proto.ID): Promise<Room> {
     return this.wrapRoom(this.api.getRoom(room));
   }
 
-  getRooms(): Promise<Array<BaseRoom>> {
+  getRooms(): Promise<Array<Room>> {
     return this.wrapRoom(this.api.getRooms());
   }
 
-  getRoster(): Promise<Array<BaseRoom>> {
+  getRoster(): Promise<Array<Room>> {
     return this.wrapRoom(this.api.getRoster());
   }
 

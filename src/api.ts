@@ -243,7 +243,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
     this.send(updates[update]);
   }
 
-  // Room API:
+  // GroupRoom API:
   createRoom(name: string): Promise<proto.Room> {
     return this.postAuth<proto.CreateRoom, proto.Room>([this.url, this.roomPath], proto.createRoom(name));
   }
