@@ -4,6 +4,8 @@ import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import * as proto from "./protocol";
+import { CallInvitation } from "./protocol";
+import { RichCallInvitation, richEvents, RichRoomInvitation } from "./rich-events";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
 
@@ -50,22 +52,24 @@ export class Artichoke {
     this.api.connect();
 
     this.api.onEvent((e: proto.Event) => {
-      switch (e.type) {
-      case "call_invitation":
-        let c = e as proto.CallInvitation;
-        c.call = createCall(c.call, this.config.rtc, this.log, this.events, this.api);
-        this.events.notify(c);
-        break;
+      if (richEvents.isCallInvitation(e)) {
 
-      case "room_invitation":
-        let i = e as proto.RoomInvitation;
-        i.room = createRoom(i.room, this.log, this.events, this.api);
-        this.events.notify(i);
-        break;
+        const call = createCall(e.call, this.config.rtc, this.log, this.events, this.api);
+        const richEvent: RichCallInvitation =  { ...e, call };
+        this.events.notify(richEvent);
 
-      default:
+      } else if (richEvents.isRichRoomInvitation(e)) {
+
+        const room: Room = createRoom(e.room, this.log, this.events, this.api);
+        const richEvent: RichRoomInvitation = {...e, room };
+        this.events.notify(richEvent);
+
+      } else {
+
         this.events.notify(e);
+
       }
+
     });
   }
 
@@ -91,7 +95,7 @@ export class Artichoke {
   }
 
   // Call API:
-  onCall(callback: Callback<proto.CallInvitation>) {
+  onCall(callback: Callback<CallInvitation>) {
     this.events.onEvent("call_invitation", callback);
   }
 
@@ -112,7 +116,7 @@ export class Artichoke {
   }
 
   // Chat room API:
-  onRoom(callback: Callback<proto.RoomInvitation>) {
+  onRoom(callback: Callback<RichRoomInvitation>) {
     this.events.onEvent("room_invitation", callback);
   }
 
