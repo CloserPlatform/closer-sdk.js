@@ -76,6 +76,10 @@ export class Artichoke {
     });
   }
 
+  disconnect() {
+    this.api.disconnect();
+  }
+
   // Bot API:
   onBotUpdate(callback: Callback<proto.BotUpdated>) {
     this.events.onEvent("bot_updated", callback);
