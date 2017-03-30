@@ -6,10 +6,24 @@ import { createMessage, Message } from "./message";
 import * as proto from "./protocol";
 import { wrapPromise } from "./utils";
 
-export enum RoomType {
-  GROUP,
-  DIRECT,
-  BUSINESS
+export namespace roomType {
+  export enum RoomType {
+    GROUP,
+    DIRECT,
+    BUSINESS,
+  }
+
+  export function isDirect(room: Room): room is DirectRoom {
+    return room.roomType === RoomType.DIRECT;
+  }
+
+  export function isGroup(room: Room): room is GroupRoom {
+    return room.roomType === RoomType.GROUP;
+  }
+
+  export function isBusiness(room: Room): room is BusinessRoom {
+    return room.roomType === RoomType.BUSINESS;
+  }
 }
 
 export abstract class Room implements proto.Room {
@@ -26,7 +40,7 @@ export abstract class Room implements proto.Room {
   protected events: EventHandler;
   protected api: ArtichokeAPI;
 
-  public abstract readonly roomType: RoomType;
+  public abstract readonly roomType: roomType.RoomType;
 
   constructor(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = room.id;
@@ -120,11 +134,11 @@ export abstract class Room implements proto.Room {
 }
 
 export class DirectRoom extends Room {
-  public readonly roomType: RoomType = RoomType.DIRECT;
+  public readonly roomType: roomType.RoomType = roomType.RoomType.DIRECT;
 }
 
 export class GroupRoom extends Room {
-  public readonly roomType: RoomType = RoomType.GROUP;
+  public readonly roomType: roomType.RoomType = roomType.RoomType.GROUP;
 
   private onJoinedCallback: Callback<proto.RoomAction>;
   private onLeftCallback: Callback<proto.RoomAction>;
@@ -193,7 +207,7 @@ export class GroupRoom extends Room {
 }
 
 export class BusinessRoom extends GroupRoom {
-  public readonly roomType: RoomType = RoomType.BUSINESS;
+  public readonly roomType: roomType.RoomType = roomType.RoomType.BUSINESS;
 }
 
 export function createRoom(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): Room {

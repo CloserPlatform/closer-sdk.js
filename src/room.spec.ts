@@ -2,7 +2,9 @@ import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
 import * as proto from "./protocol";
-import { createRoom, DirectRoom, GroupRoom, Room, RoomType } from "./room";
+import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
+
+import RoomType = roomType.RoomType;
 
 const actionId = "567";
 const roomId = "123";
