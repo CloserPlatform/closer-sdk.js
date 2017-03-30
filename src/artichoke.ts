@@ -3,7 +3,6 @@ import { Call, createCall, DirectCall } from "./call";
 import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { createMessage } from "./message";
 import * as proto from "./protocol";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
@@ -62,12 +61,6 @@ export class Artichoke {
         let i = e as proto.RoomInvitation;
         i.room = createRoom(i.room, this.log, this.events, this.api);
         this.events.notify(i);
-        break;
-
-      case "room_message":
-        let m = e as proto.RoomMessage;
-        m.message = createMessage(m.message, this.log, this.events, this.api);
-        this.events.notify(m);
         break;
 
       default:
