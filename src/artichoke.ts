@@ -5,7 +5,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import * as proto from "./protocol";
 import { CallInvitation } from "./protocol";
-import { RichCallInvitation, richEvents, RichRoomInvitation } from "./rich-events";
+import { eventTypes, RichEvent, richEvents, RichRoomInvitation } from "./rich-events";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
 
@@ -52,24 +52,8 @@ export class Artichoke {
     this.api.connect();
 
     this.api.onEvent((e: proto.Event) => {
-      if (richEvents.isCallInvitation(e)) {
-
-        const call = createCall(e.call, this.config.rtc, this.log, this.events, this.api);
-        const richEvent: RichCallInvitation =  { ...e, call };
-        this.events.notify(richEvent);
-
-      } else if (richEvents.isRichRoomInvitation(e)) {
-
-        const room: Room = createRoom(e.room, this.log, this.events, this.api);
-        const richEvent: RichRoomInvitation = {...e, room };
-        this.events.notify(richEvent);
-
-      } else {
-
-        this.events.notify(e);
-
-      }
-
+      const richEvent: RichEvent = richEvents.upgrade(e, this.config, this.log, this.events, this.api);
+      this.events.notify(richEvent);
     });
   }
 
