@@ -1,7 +1,7 @@
 import { EventHandler } from "./events";
 import { log } from "./fixtures.spec";
 import { mark } from "./protocol";
-import {RichError, RichRoomMark} from "./rich-events";
+import { eventTypes, RichError, RichRoomMark } from "./rich-events";
 
 interface ErrorWithCause extends RichError {
   cause: boolean;
@@ -41,7 +41,7 @@ describe("Event Handler", () => {
   it("should allow defining event handlers", () => {
     let ok = 0;
 
-    events.onEvent("room_mark", (msg: RichRoomMark) => ok++);
+    events.onEvent(eventTypes.ROOM_MARK, (msg: RichRoomMark) => ok++);
     expect(ok).toBe(0);
 
     [1, 2, 3, 4, 5].forEach((i) => {
@@ -54,8 +54,8 @@ describe("Event Handler", () => {
     let first = 0;
     let second = 0;
 
-    events.onEvent("room_mark", (msg: RichRoomMark) => first++);
-    events.onEvent("room_mark", (msg: RichRoomMark) => second++);
+    events.onEvent(eventTypes.ROOM_MARK, (msg: RichRoomMark) => first++);
+    events.onEvent(eventTypes.ROOM_MARK, (msg: RichRoomMark) => second++);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -66,7 +66,7 @@ describe("Event Handler", () => {
   it("should allow defining concrete event handlers", () => {
     let ok = "0";
 
-    events.onConcreteEvent("room_mark", "3", (msg: RichRoomMark) => ok = msg.id);
+    events.onConcreteEvent(eventTypes.ROOM_MARK, "3", (msg: RichRoomMark) => ok = msg.id);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -77,8 +77,8 @@ describe("Event Handler", () => {
     let first = false;
     let second = false;
 
-    events.onConcreteEvent("room_mark", "3", (msg: RichRoomMark) => first = true);
-    events.onConcreteEvent("room_mark", "1", (msg: RichRoomMark) => second = true);
+    events.onConcreteEvent(eventTypes.ROOM_MARK, "3", (msg: RichRoomMark) => first = true);
+    events.onConcreteEvent(eventTypes.ROOM_MARK, "1", (msg: RichRoomMark) => second = true);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -90,8 +90,8 @@ describe("Event Handler", () => {
     let first = false;
     let second = 0;
 
-    events.onConcreteEvent("room_mark", "3", (msg: RichRoomMark) => first = true);
-    events.onEvent("room_mark", (msg: RichRoomMark) => second++);
+    events.onConcreteEvent(eventTypes.ROOM_MARK, "3", (msg: RichRoomMark) => first = true);
+    events.onEvent(eventTypes.ROOM_MARK, (msg: RichRoomMark) => second++);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -103,8 +103,8 @@ describe("Event Handler", () => {
     let first: RichRoomMark = undefined;
     let second: RichRoomMark = undefined;
 
-    events.onConcreteEvent("room_mark", "3", (msg: RichRoomMark) => first = msg);
-    events.onEvent("room_mark", (msg: RichRoomMark) => {
+    events.onConcreteEvent(eventTypes.ROOM_MARK, "3", (msg: RichRoomMark) => first = msg);
+    events.onEvent(eventTypes.ROOM_MARK, (msg: RichRoomMark) => {
       if (msg.id === "3") {
         second = msg;
       }

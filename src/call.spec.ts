@@ -3,7 +3,7 @@ import { Call, createCall } from "./call";
 import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
 import { Call as ProtoCall } from "./protocol";
-import {RichEvent} from "./rich-events";
+import { eventTypes, RichEvent } from "./rich-events";
 
 const callId = "123";
 const alice = "321";
@@ -102,7 +102,7 @@ function makeCall(direct = false) {
         });
 
         events.notify({
-          type: "call_action",
+          type: eventTypes.CALL_ACTION,
           id: call.id,
           action: {
             action: "joined",
@@ -123,7 +123,7 @@ function makeCall(direct = false) {
       });
 
       events.notify({
-        type: "call_action",
+        type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
           action: "left",
@@ -144,7 +144,7 @@ function makeCall(direct = false) {
       });
 
       events.notify({
-        type: "call_action",
+        type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
           action: "answered",
@@ -164,7 +164,7 @@ function makeCall(direct = false) {
       });
 
       events.notify({
-        type: "call_action",
+        type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
           action: "rejected",
@@ -200,7 +200,7 @@ function makeCall(direct = false) {
             });
 
             events.notify({
-              type: "call_action",
+              type: eventTypes.CALL_ACTION,
               id: call.id,
               action: {
                 action: "left",
@@ -214,7 +214,7 @@ function makeCall(direct = false) {
         });
 
         events.notify({
-          type: "call_action",
+          type: eventTypes.CALL_ACTION,
           id: call.id,
           action: {
             action: "joined",
@@ -285,7 +285,7 @@ function makeCall(direct = false) {
         });
 
         events.notify({
-          type: "call_action",
+          type: eventTypes.CALL_ACTION,
           id: call.id,
           action: {
             action: "video_paused",
@@ -297,7 +297,7 @@ function makeCall(direct = false) {
       });
 
       events.notify({
-        type: "call_action",
+        type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
           action: "audio_muted",
@@ -331,7 +331,7 @@ describe("Call", () => {
     });
 
     events.notify({
-      type: "call_action",
+      type: eventTypes.CALL_ACTION,
       id: call.id,
       action: {
         action: "invited",

@@ -3,7 +3,7 @@ import { EventHandler } from "./events";
 import { apiKey, config, log, sleep } from "./fixtures.spec";
 import { createMessage } from "./message";
 import { Delivered, Message } from "./protocol";
-import { RichChatDelivered, RichChatEdited } from "./rich-events";
+import { eventTypes, RichChatDelivered, RichChatEdited } from "./rich-events";
 
 const roomId = "123";
 const bob = "456";
@@ -92,7 +92,7 @@ describe("Message", () => {
     });
 
     events.notify({
-      type: "chat_delivered",
+      type: eventTypes.CHAT_DELIVERED,
       id: msg.id,
       user: bob,
       timestamp: 12345
@@ -111,7 +111,7 @@ describe("Message", () => {
     });
 
     [123, 456].forEach((t) => events.notify({
-      type: "chat_delivered",
+      type: eventTypes.CHAT_DELIVERED,
       id: msg.id,
       user: bob,
       timestamp: t
@@ -142,7 +142,7 @@ describe("Message", () => {
     });
 
     events.notify({
-      type: "chat_edited",
+      type: eventTypes.CHAT_EDITED,
       id: msg.id,
       archivable: edited
     } as RichChatEdited);

@@ -5,7 +5,7 @@ import * as proto from "./protocol";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 
 import RoomType = roomType.RoomType;
-import { RichEvent } from "./rich-events";
+import { eventTypes, RichEvent } from "./rich-events";
 
 const actionId = "567";
 const roomId = "123";
@@ -185,7 +185,7 @@ function makeRoom(roomType: RoomType) {
       m.room = room.id;
       m.user = chad;
       events.notify({
-        type: "room_message",
+        type: eventTypes.ROOM_MESSAGE,
         id: room.id,
         message: m
       } as RichEvent);
@@ -203,7 +203,7 @@ function makeRoom(roomType: RoomType) {
       });
 
       events.notify({
-        type: "room_metadata",
+        type: eventTypes.ROOM_METADATA,
         id: room.id,
         metadata: meta(meta1, payload)
       } as RichEvent);
@@ -219,7 +219,7 @@ function makeRoom(roomType: RoomType) {
       });
 
       events.notify({
-        type: "room_media",
+        type: eventTypes.ROOM_MEDIA,
         id: room.id,
         media: media(media1, descr)
       } as RichEvent);
@@ -338,7 +338,7 @@ describe("GroupRoom", () => {
         });
 
         events.notify({
-          type: "room_action",
+          type: eventTypes.ROOM_ACTION,
           id: room.id,
           action: {
             action: "left",
@@ -353,7 +353,7 @@ describe("GroupRoom", () => {
     });
 
     events.notify({
-      type: "room_action",
+      type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
         action: "joined",
@@ -372,7 +372,7 @@ describe("GroupRoom", () => {
     });
 
     events.notify({
-      type: "room_action",
+      type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
         action: "joined",
@@ -392,7 +392,7 @@ describe("GroupRoom", () => {
     });
 
     events.notify({
-      type: "room_action",
+      type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
         action: "left",
@@ -413,7 +413,7 @@ describe("GroupRoom", () => {
     });
 
     events.notify({
-      type: "room_action",
+      type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
         action: "invited",

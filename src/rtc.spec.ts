@@ -3,7 +3,7 @@ import { EventHandler } from "./events";
 import { apiKey, config, getStream, invalidSDP, isChrome,
          isWebRTCSupported, log, validSDP, whenever } from "./fixtures.spec";
 import { Candidate, ID, SDP } from "./protocol";
-import {RichEvent} from "./rich-events";
+import { eventTypes, RichEvent } from "./rich-events";
 import { createRTCConnection, createRTCPool } from "./rtc";
 
 const callId = "123";
@@ -11,7 +11,7 @@ const peerId = "321";
 
 function descr(sdp): RichEvent {
   return {
-    type: "rtc_description",
+    type: eventTypes.RTC_DESCRIPTION,
     id: callId,
     peer: peerId,
     description: sdp

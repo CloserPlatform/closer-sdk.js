@@ -1,4 +1,5 @@
-import {deepcopy} from "./utils";
+import { eventTypes } from "./rich-events";
+import { deepcopy } from "./utils";
 
 // Common types:
 export type Type = string;
@@ -224,7 +225,7 @@ export interface Disconnect extends Event {
 // WS API:
 export function chatRequest(room: ID, body: string, ref?: Ref): ChatRequest {
   return {
-    type: "chat_request",
+    type: eventTypes.CHAT_REQUEST,
     room,
     body,
     ref
@@ -233,7 +234,7 @@ export function chatRequest(room: ID, body: string, ref?: Ref): ChatRequest {
 
 export function chatDelivered(id: ID, timestamp: Timestamp): ChatDelivered {
   return {
-    type: "chat_delivered",
+    type: eventTypes.CHAT_DELIVERED,
     id,
     timestamp
   };
@@ -241,35 +242,35 @@ export function chatDelivered(id: ID, timestamp: Timestamp): ChatDelivered {
 
 export function muteAudio(id: ID): MuteAudio {
   return {
-    type: "stream_mute",
+    type: eventTypes.STREAM_MUTE,
     id
   };
 }
 
 export function unmuteAudio(id: ID): UnmuteAudio {
   return {
-    type: "stream_unmute",
+    type: eventTypes.STREAM_UNMUTE,
     id
   };
 }
 
 export function pauseVideo(id: ID): PauseVideo {
   return {
-    type: "stream_pause",
+    type: eventTypes.STREAM_PAUSE,
     id
   };
 }
 
 export function unpauseVideo(id: ID): UnpauseVideo {
   return {
-    type: "stream_unpause",
+    type: eventTypes.STREAM_UNPAUSE,
     id
   };
 }
 
 export function mark(id: ID, timestamp: Timestamp): RoomMark {
   return {
-    type: "room_mark",
+    type: eventTypes.ROOM_MARK,
     id,
     timestamp
   };
@@ -277,14 +278,14 @@ export function mark(id: ID, timestamp: Timestamp): RoomMark {
 
 export function presenceRequest(status: Status): PresenceRequest {
   return {
-    type: "presence_request",
+    type: eventTypes.PRESENCE_REQUEST,
     status
   };
 }
 
 export function rtcDescription(id: ID, peer: ID, description: SDP): RTCDescription {
   return {
-    type: "rtc_description",
+    type: eventTypes.RTC_DESCRIPTION,
     id,
     peer,
     description
@@ -293,7 +294,7 @@ export function rtcDescription(id: ID, peer: ID, description: SDP): RTCDescripti
 
 export function rtcCandidate(id: ID, peer: ID, candidate: Candidate): RTCCandidate {
   return {
-    type: "rtc_candidate",
+    type: eventTypes.RTC_CANDIDATE,
     id,
     peer,
     candidate
@@ -302,14 +303,14 @@ export function rtcCandidate(id: ID, peer: ID, candidate: Candidate): RTCCandida
 
 export function startTyping(id: ID): RoomStartTyping {
   return {
-    type: "room_start_typing",
+    type: eventTypes.ROOM_START_TYPING,
     id
   };
 }
 
 export function typing(id: ID, user: ID, timestamp: Timestamp): RoomTyping {
   return {
-    type: "room_typing",
+    type: eventTypes.ROOM_TYPING,
     id,
     user,
     timestamp
@@ -395,7 +396,7 @@ export function createBot(name: string, callback?: string): CreateBot {
 // Internal API:
 export function error(reason: string, cause?: any, ref?: string): Error {
   return {
-    type: "error",
+    type: eventTypes.ERROR,
     reason,
     cause,
     ref
@@ -423,12 +424,12 @@ export function write(event: Event): string {
 export function fix(e: Event): Event {
   // NOTE Use this function to fix any backend crap.
   switch (e.type) {
-  case "call_end":
+  case eventTypes.CALL_END:
     let et = deepcopy(e) as CallEnd;
     et.timestamp = Date.now();
     return et;
 
-  case "hello":
+  case eventTypes.HELLO:
     let h = deepcopy(e) as Hello;
     h.timestamp = Date.now();
     return h;
@@ -441,12 +442,12 @@ export function fix(e: Event): Event {
 export function unfix(e: Event): Event {
   // NOTE Use this function to reverse fix(e).
   switch (e.type) {
-  case "call_end":
+  case eventTypes.CALL_END:
     let et = deepcopy(e) as CallEnd;
     et.timestamp = undefined;
     return et;
 
-  case "hello":
+  case eventTypes.HELLO:
     let h = deepcopy(e) as Hello;
     h.timestamp = undefined;
     return h;

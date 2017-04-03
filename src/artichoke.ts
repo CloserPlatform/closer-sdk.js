@@ -36,9 +36,9 @@ export class Artichoke {
     let nop = (e: RichEvent) => {
       // Do nothing.
     };
-    events.onEvent("error", nop);
-    events.onEvent("chat_received", nop);
-    events.onEvent("chat_delivered", nop);
+    events.onEvent(eventTypes.ERROR, nop);
+    events.onEvent(eventTypes.CHAT_RECEIVED, nop);
+    events.onEvent(eventTypes.CHAT_DELIVERED, nop);
   }
 
   // Callbacks:
@@ -112,7 +112,7 @@ export class Artichoke {
 
   // Chat room API:
   onRoom(callback: Callback<RichRoomInvitation>) {
-    this.events.onEvent("room_invitation", callback);
+    this.events.onEvent(eventTypes.ROOM_INVITATION, callback);
   }
 
   createRoom(name: string): Promise<GroupRoom> {

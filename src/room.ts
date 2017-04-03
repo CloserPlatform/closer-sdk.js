@@ -5,6 +5,7 @@ import { createMedia, Media } from "./media";
 import { createMessage, Message } from "./message";
 import * as proto from "./protocol";
 import {
+  eventTypes,
   RichRoomActionSent, RichRoomMark, RichRoomMedia, RichRoomMessage, RichRoomMetadata,
   RichRoomTyping
 } from "./rich-events";
@@ -110,30 +111,32 @@ export abstract class Room implements proto.Room {
   }
 
   onMark(callback: Callback<RichRoomMark>) {
-    this.events.onConcreteEvent("room_mark", this.id, (mark: RichRoomMark) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_MARK, this.id, (mark: RichRoomMark) => {
       this.mark = mark.timestamp;
       callback(mark);
     });
   }
 
   onMessage(callback: Callback<Message>) {
-    this.events.onConcreteEvent("room_message", this.id, (msg: RichRoomMessage) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (msg: RichRoomMessage) => {
       callback(msg.message);
     });
   }
 
   onMetadata(callback: Callback<proto.Metadata>) {
-    this.events.onConcreteEvent("room_metadata", this.id, (msg: RichRoomMetadata) => callback(msg.metadata));
+    this.events.onConcreteEvent(eventTypes.ROOM_METADATA, this.id, (msg: RichRoomMetadata) => {
+      callback(msg.metadata);
+    });
   }
 
   onMedia(callback: Callback<Media>) {
-    this.events.onConcreteEvent("room_media", this.id, (msg: RichRoomMedia) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_MEDIA, this.id, (msg: RichRoomMedia) => {
       callback(msg.media);
     });
   }
 
   onTyping(callback: Callback<RichRoomTyping>) {
-    this.events.onConcreteEvent("room_typing", this.id, callback);
+    this.events.onConcreteEvent(eventTypes.ROOM_TYPING, this.id, callback);
   }
 }
 
@@ -158,7 +161,7 @@ export class GroupRoom extends Room {
     this.onJoinedCallback = nop;
     this.onInvitedCallback = nop;
 
-    this.events.onConcreteEvent("room_action", this.id, (e: RichRoomActionSent) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_ACTION, this.id, (e: RichRoomActionSent) => {
       switch (e.action.action) {
       case "joined":
         this.users.push(e.action.user);

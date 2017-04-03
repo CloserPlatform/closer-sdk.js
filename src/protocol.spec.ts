@@ -1,4 +1,5 @@
 import * as proto from "./protocol";
+import { eventTypes } from "./rich-events";
 
 const actionId = "567";
 const roomId = "123";
@@ -8,10 +9,10 @@ const alice = "321";
 const bob = "987";
 
 const events: Array<proto.Event> = [{
-  type: "heartbeat",
+  type: eventTypes.HEARTBEAT,
   timestamp: Date.now()
 } as proto.Heartbeat, {
-  type: "room_invitation",
+  type: eventTypes.ROOM_INVITATION,
   inviter: bob,
   room: {
     id: roomId,
@@ -19,12 +20,12 @@ const events: Array<proto.Event> = [{
     direct: false
   }
 } as proto.RoomInvitation, {
-  type: "room_typing",
+  type: eventTypes.ROOM_TYPING,
   id: roomId,
   user: alice,
   timestamp: Date.now(),
 } as proto.RoomTyping, proto.presenceRequest("available"), {
-  type: "presence_update",
+  type: eventTypes.PRESENCE_UPDATE,
   user: alice,
   status: "away",
   timestamp: Date.now(),
@@ -32,11 +33,11 @@ const events: Array<proto.Event> = [{
   error: "error",
   text: "string"
 }, "23425"), {
-  type: "room_mark",
+  type: eventTypes.ROOM_MARK,
   id: roomId,
   timestamp: Date.now()
 } as proto.RoomMark, {
-  type: "room_message",
+  type: eventTypes.ROOM_MESSAGE,
   id: roomId,
   message: {
     type: "message",
@@ -47,7 +48,7 @@ const events: Array<proto.Event> = [{
     timestamp: Date.now(),
   }
 } as proto.RoomMessage, {
-  type: "room_action",
+  type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
     type: "room_action",
@@ -58,7 +59,7 @@ const events: Array<proto.Event> = [{
     timestamp: Date.now()
   }
 } as proto.RoomActionSent, {
-  type: "room_action",
+  type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
     type: "room_action",
@@ -70,7 +71,7 @@ const events: Array<proto.Event> = [{
     timestamp: Date.now()
   }
 } as proto.RoomActionSent, {
-  type: "room_action",
+  type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
     type: "room_action",
@@ -82,7 +83,7 @@ const events: Array<proto.Event> = [{
     timestamp: Date.now()
   }
 } as proto.RoomActionSent, {
-  type: "call_action",
+  type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
     type: "call_action",
@@ -93,7 +94,7 @@ const events: Array<proto.Event> = [{
     timestamp: Date.now()
   }
 } as proto.CallActionSent, {
-  type: "call_action",
+  type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
     type: "call_action",
@@ -105,7 +106,7 @@ const events: Array<proto.Event> = [{
     timestamp: Date.now()
   }
 } as proto.CallActionSent, {
-  type: "call_action",
+  type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
     type: "call_action",
@@ -117,7 +118,7 @@ const events: Array<proto.Event> = [{
     timestamp: Date.now()
   }
 } as proto.CallActionSent, {
-  type: "call_action",
+  type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
     type: "call_action",
@@ -128,7 +129,7 @@ const events: Array<proto.Event> = [{
     timestamp: Date.now()
   }
 } as proto.CallActionSent, {
-  type: "call_action",
+  type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
     type: "call_action",
@@ -139,7 +140,7 @@ const events: Array<proto.Event> = [{
     timestamp: Date.now()
   }
 } as proto.CallActionSent, {
-  type: "call_action",
+  type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
     type: "call_action",
@@ -150,7 +151,7 @@ const events: Array<proto.Event> = [{
     timestamp: Date.now()
   }
 } as proto.CallActionSent, {
-  type: "call_action",
+  type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
     type: "call_action",

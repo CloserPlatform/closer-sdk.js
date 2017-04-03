@@ -3,7 +3,7 @@ import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
 import { disconnect, error } from "./protocol";
-import { RichEvent } from "./rich-events";
+import { eventTypes, RichEvent, RichHello } from "./rich-events";
 
 class APIMock extends ArtichokeAPI {
   cb;
@@ -33,7 +33,7 @@ describe("Artichoke", () => {
   });
 
   it("should notify on a new event", (done) => {
-    events.onEvent("hello", (msg) => done());
+    events.onEvent(eventTypes.HELLO, (msg: RichHello) => done());
     chat.connect();
     api.cb({
       type: "hello"

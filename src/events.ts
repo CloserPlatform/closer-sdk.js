@@ -1,6 +1,6 @@
 import { Logger } from "./logger";
 import { error, ID, Type, write } from "./protocol";
-import {RichError, RichEvent} from "./rich-events";
+import { eventTypes, RichError, RichEvent } from "./rich-events";
 
 export interface Callback<T> {
   (arg: T): void;
@@ -52,7 +52,7 @@ export class EventHandler {
   }
 
   onError(callback: Callback<RichError>) {
-    this.onEvent("error", callback);
+    this.onEvent(eventTypes.ERROR, callback);
   }
 
   onEvent(type: Type, callback: Callback<RichEvent>) {

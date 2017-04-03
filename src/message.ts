@@ -3,7 +3,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import * as proto from "./protocol";
 import { RichMessage } from "./rich";
-import { RichChatDelivered, RichChatEdited } from "./rich-events";
+import { eventTypes, RichChatDelivered, RichChatEdited } from "./rich-events";
 
 export class Message implements RichMessage {
   public type: proto.Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
@@ -46,7 +46,7 @@ export class Message implements RichMessage {
   }
 
   onDelivery(callback: Callback<Message>) {
-    this.events.onConcreteEvent("chat_delivered", this.id, (msg: RichChatDelivered) => {
+    this.events.onConcreteEvent(eventTypes.CHAT_DELIVERED, this.id, (msg: RichChatDelivered) => {
       this.delivered = {
         user: msg.user,
         timestamp: msg.timestamp
@@ -66,7 +66,7 @@ export class Message implements RichMessage {
   }
 
   onEdit(callback: Callback<Message>) {
-    this.events.onConcreteEvent("chat_edited", this.id, (msg: RichChatEdited) => {
+    this.events.onConcreteEvent(eventTypes.CHAT_EDITED, this.id, (msg: RichChatEdited) => {
       let m = (msg.archivable as proto.Message);
       this.body = m.body;
       this.edited = m.edited;
