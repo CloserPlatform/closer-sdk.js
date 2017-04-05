@@ -1,101 +1,57 @@
-import { eventTypes } from "./rich-events";
-import { deepcopy } from "./utils";
+import { deepcopy } from "../utils";
+import {
+  Archivable,
+  Bot,
+  Call,
+  CallAction,
+  ID,
+  Media,
+  Message,
+  Metadata,
+  Ref,
+  Room,
+  RoomAction,
+  Timestamp,
+  Type
+} from "./protocol";
 
-// Common types:
-export type Type = string;
-export type ID = string;
-export type Ref = string;
-export type Timestamp = number;
-
-// Datatypes:
-export interface RoomAction extends RoomArchivable {
-  action: "joined" | "left" | "invited";
-  reason?: string;
-  invitee?: ID;
-}
-
-export interface Archivable {
-  type: Type;
-  id: ID;
-  user: ID;
-  timestamp: Timestamp;
-}
-
-export interface RoomArchivable extends Archivable {
-    room: ID;
-}
-
-export interface Bot {
-  id: ID;
-  name: string;
-  creator: ID;
-  callback?: string;
-}
-
-export interface Call {
-  id: ID;
-  created: Timestamp;
-  ended?: Timestamp;
-  users: Array<ID>;
-  direct: boolean;
-}
-
-export interface CallAction extends CallArchivable {
-  action: "joined" | "left" | "invited" | "rejected" | "answered" | "audio_muted"
-    | "audio_unmuted" | "video_paused" | "video_unpaused";
-  reason?: string;
-  invitee?: ID;
-}
-
-export interface CallArchivable extends Archivable {
-  call: ID;
-}
-
-export interface Deliverable {
-  delivered?: Delivered;
-}
-
-export interface Delivered extends UserTimestamp {}
-
-export interface Editable {
-  edited?: Edited;
-}
-
-export interface Edited extends UserTimestamp {}
-
-export interface Media extends RoomArchivable, MediaItem, Editable {}
-
-export interface MediaItem {
-  mimeType: string;
-  content: string;
-  description: string;
-}
-
-export interface Message extends RoomArchivable, Deliverable, Editable {
-  body: string;
-}
-
-export interface Metadata extends RoomArchivable {
-  payload: any;
-}
-
-export interface Room {
-  id: ID;
-  name: string;
-  created: Timestamp;
-  users: Array<ID>;
-  direct: boolean;
-  orgId?: ID;
-  externalId?: string;
-  mark?: number;
-}
-
-export interface UserTimestamp {
-  user: ID;
-  timestamp: Timestamp;
+export namespace eventTypes {
+  export const BOT_UPDATED = "bot_updated";
+  export const CALL_ACTION = "call_action";
+  export const CALL_END = "call_end";
+  export const CALL_INVITATION = "call_invitation";
+  export const CHAT_REQUEST = "chat_request";
+  export const CHAT_RECEIVED = "chat_received";
+  export const CHAT_DELIVERED = "chat_delivered";
+  export const CHAT_EDITED = "chat_edited";
+  export const ERROR = "error";
+  export const HEARTBEAT = "heartbeat";
+  export const HELLO = "hello";
+  export const PRESENCE_REQUEST = "presence_request";
+  export const PRESENCE_UPDATE = "presence_update";
+  export const ROOM_ACTION = "room_action";
+  export const ROOM_INVITATION = "room_invitation";
+  export const ROOM_MARK = "room_mark";
+  export const ROOM_MEDIA = "room_media";
+  export const ROOM_MESSAGE = "room_message";
+  export const ROOM_METADATA = "room_metadata";
+  export const ROOM_TYPING = "room_typing";
+  export const ROOM_START_TYPING = "room_start_typing";
+  export const RTC_DESCRIPTION = "rtc_description";
+  export const RTC_CANDIDATE = "rtc_candidate";
+  export const STREAM_MUTE = "stream_mute";
+  export const STREAM_PAUSE = "stream_pause";
+  export const STREAM_UNMUTE = "stream_unmute";
+  export const STREAM_UNPAUSE = "stream_unpause";
 }
 
 // JSON Events:
+export interface Event {
+  type: Type;
+  ref?: Ref;
+  id?: ID;
+}
+
 export interface BotUpdated extends Event {
   bot: Bot;
 }
@@ -132,12 +88,6 @@ export interface ChatRequest extends Event {
   room: ID;
 }
 
-export interface Event {
-  type: Type;
-  ref?: Ref;
-  id?: ID;
-}
-
 export interface Error extends Event {
   reason: string;
   cause?: any;
@@ -147,11 +97,15 @@ export interface ServerInfo extends Event {
   timestamp: Timestamp;
 }
 
-export interface Heartbeat extends ServerInfo {}
-export interface Hello extends ServerInfo {}
+export interface Heartbeat extends ServerInfo {
+}
+export interface Hello extends ServerInfo {
+}
 
-export interface MuteAudio extends StreamUpdate {}
-export interface PauseVideo extends StreamUpdate {}
+export interface MuteAudio extends StreamUpdate {
+}
+export interface PauseVideo extends StreamUpdate {
+}
 
 export type Status = "away" | "available" | "unavailable";
 
@@ -212,9 +166,12 @@ export interface RTCDescription extends Event {
   description: SDP;
 }
 
-export interface StreamUpdate extends Event {}
-export interface UnmuteAudio extends StreamUpdate {}
-export interface UnpauseVideo extends StreamUpdate {}
+export interface StreamUpdate extends Event {
+}
+export interface UnmuteAudio extends StreamUpdate {
+}
+export interface UnpauseVideo extends StreamUpdate {
+}
 
 // Internal events:
 export interface Disconnect extends Event {
@@ -317,82 +274,6 @@ export function typing(id: ID, user: ID, timestamp: Timestamp): RoomTyping {
   };
 }
 
-// REST API:
-export interface CreateCall {
-  users: Array<ID>;
-}
-
-export interface CreateDirectCall extends CreateDirectEntity {
-  timeout?: number;
-};
-
-export interface CreateDirectEntity {
-  user: ID;
-}
-
-export interface CreateDirectRoom extends CreateDirectEntity {};
-
-export interface CreateRoom {
-  name: string;
-}
-
-export interface LeaveReason {
-  reason: string;
-}
-
-export interface Invite {
-  user: ID;
-}
-
-export interface CreateBot {
-  name: string;
-  callback?: string;
-}
-
-export function createCall(users: Array<ID>): CreateCall {
-  return {
-    users
-  };
-}
-
-export function createDirectCall(user: ID, timeout?: number): CreateDirectCall {
-  return {
-    user,
-    timeout
-  };
-}
-
-export function leaveReason(reason: string): LeaveReason {
-  return {
-    reason
-  };
-}
-
-export function createRoom(name: string): CreateRoom {
-  return {
-    name
-  };
-}
-
-export function createDirectRoom(user: ID): CreateDirectRoom {
-  return {
-    user
-  };
-}
-
-export function invite(user): Invite {
-  return {
-    user
-  };
-}
-
-export function createBot(name: string, callback?: string): CreateBot {
-  return {
-    name,
-    callback
-  };
-}
-
 // Internal API:
 export function error(reason: string, cause?: any, ref?: string): Error {
   return {
@@ -424,35 +305,35 @@ export function write(event: Event): string {
 export function fix(e: Event): Event {
   // NOTE Use this function to fix any backend crap.
   switch (e.type) {
-  case eventTypes.CALL_END:
-    let et = deepcopy(e) as CallEnd;
-    et.timestamp = Date.now();
-    return et;
+    case eventTypes.CALL_END:
+      let et = deepcopy(e) as CallEnd;
+      et.timestamp = Date.now();
+      return et;
 
-  case eventTypes.HELLO:
-    let h = deepcopy(e) as Hello;
-    h.timestamp = Date.now();
-    return h;
+    case eventTypes.HELLO:
+      let h = deepcopy(e) as Hello;
+      h.timestamp = Date.now();
+      return h;
 
-  default:
-    return e;
+    default:
+      return e;
   }
 }
 
 export function unfix(e: Event): Event {
   // NOTE Use this function to reverse fix(e).
   switch (e.type) {
-  case eventTypes.CALL_END:
-    let et = deepcopy(e) as CallEnd;
-    et.timestamp = undefined;
-    return et;
+    case eventTypes.CALL_END:
+      let et = deepcopy(e) as CallEnd;
+      et.timestamp = undefined;
+      return et;
 
-  case eventTypes.HELLO:
-    let h = deepcopy(e) as Hello;
-    h.timestamp = undefined;
-    return h;
+    case eventTypes.HELLO:
+      let h = deepcopy(e) as Hello;
+      h.timestamp = undefined;
+      return h;
 
-  default:
-    return e;
+    default:
+      return e;
   }
 }

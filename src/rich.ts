@@ -1,5 +1,5 @@
 import { Callback } from "./events";
-import { Deliverable, Editable, Media, Message } from "./protocol";
+import { Deliverable, Editable, Media, Message } from "./protocol/protocol";
 
 export interface RichDeliverable extends Deliverable {
   markDelivered: () => void;

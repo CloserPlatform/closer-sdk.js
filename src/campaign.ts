@@ -1,4 +1,4 @@
-import { ID } from "./protocol";
+import { ID } from "./protocol/protocol";
 
 export interface Meta {
     [key: string]: string;

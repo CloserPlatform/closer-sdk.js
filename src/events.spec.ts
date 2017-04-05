@@ -1,7 +1,7 @@
 import { EventHandler } from "./events";
 import { log } from "./fixtures.spec";
-import { mark } from "./protocol";
-import { eventTypes, RichError, RichRoomMark } from "./rich-events";
+import { eventTypes, mark } from "./protocol/events";
+import { RichError, RichRoomMark } from "./protocol/rich-events";
 
 interface ErrorWithCause extends RichError {
   cause: boolean;

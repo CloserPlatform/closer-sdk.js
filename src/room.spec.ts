@@ -1,11 +1,12 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
-import * as proto from "./protocol";
+import { eventTypes, mark, typing } from "./protocol/events";
+import * as proto from "./protocol/protocol";
+import { RichEvent } from "./protocol/rich-events";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 
 import RoomType = roomType.RoomType;
-import { eventTypes, RichEvent } from "./rich-events";
 
 const actionId = "567";
 const roomId = "123";
@@ -172,7 +173,7 @@ function makeRoom(roomType: RoomType) {
         done();
       });
 
-      events.notify(proto.typing(room.id, chad, Date.now()));
+      events.notify(typing(room.id, chad, Date.now()));
     });
 
     it("should run a callback on incoming message", (done) => {
@@ -236,7 +237,7 @@ function makeRoom(roomType: RoomType) {
         });
       });
 
-      events.notify(proto.mark(room.id, t));
+      events.notify(mark(room.id, t));
     });
 
     // FIXME These should be moved to integration tests:

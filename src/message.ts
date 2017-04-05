@@ -1,9 +1,10 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import * as proto from "./protocol";
+import { eventTypes } from "./protocol/events";
+import * as proto from "./protocol/protocol";
+import { RichChatDelivered, RichChatEdited } from "./protocol/rich-events";
 import { RichMessage } from "./rich";
-import { eventTypes, RichChatDelivered, RichChatEdited } from "./rich-events";
 
 export class Message implements RichMessage {
   public type: proto.Type = "message"; // NOTE Needed in order to differentiate between different Archivables.

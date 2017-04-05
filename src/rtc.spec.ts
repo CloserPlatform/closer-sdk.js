@@ -1,9 +1,19 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
-import { apiKey, config, getStream, invalidSDP, isChrome,
-         isWebRTCSupported, log, validSDP, whenever } from "./fixtures.spec";
-import { Candidate, ID, SDP } from "./protocol";
-import { eventTypes, RichEvent } from "./rich-events";
+import {
+  apiKey,
+  config,
+  getStream,
+  invalidSDP,
+  isChrome,
+  isWebRTCSupported,
+  log,
+  validSDP,
+  whenever
+} from "./fixtures.spec";
+import { Candidate, eventTypes, SDP } from "./protocol/events";
+import { ID } from "./protocol/protocol";
+import { RichEvent } from "./protocol/rich-events";
 import { createRTCConnection, createRTCPool } from "./rtc";
 
 const callId = "123";

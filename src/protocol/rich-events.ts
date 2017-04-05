@@ -1,44 +1,13 @@
-/* tslint:disable no-unused-variable */
-
-import { ArtichokeAPI } from "./api";
-import { BaseCall, createCall } from "./call";
-import { ChatConfig } from "./config";
-import { EventHandler } from "./events";
-import { Logger } from "./logger";
-import { createMedia, Media } from "./media";
-import { createMessage, Message } from "./message";
-import * as proto from "./protocol";
-import { createRoom, Room } from "./room";
-
-export namespace eventTypes {
-  export const BOT_UPDATED = "bot_updated";
-  export const CALL_ACTION = "call_action";
-  export const CALL_END = "call_end";
-  export const CALL_INVITATION = "call_invitation";
-  export const CHAT_REQUEST = "chat_request";
-  export const CHAT_RECEIVED = "chat_received";
-  export const CHAT_DELIVERED = "chat_delivered";
-  export const CHAT_EDITED = "chat_edited";
-  export const ERROR = "error";
-  export const HEARTBEAT = "heartbeat";
-  export const HELLO = "hello";
-  export const PRESENCE_REQUEST = "presence_request";
-  export const PRESENCE_UPDATE = "presence_update";
-  export const ROOM_ACTION = "room_action";
-  export const ROOM_INVITATION = "room_invitation";
-  export const ROOM_MARK = "room_mark";
-  export const ROOM_MEDIA = "room_media";
-  export const ROOM_MESSAGE = "room_message";
-  export const ROOM_METADATA = "room_metadata";
-  export const ROOM_TYPING = "room_typing";
-  export const ROOM_START_TYPING = "room_start_typing";
-  export const RTC_DESCRIPTION = "rtc_description";
-  export const RTC_CANDIDATE = "rtc_candidate";
-  export const STREAM_MUTE = "stream_mute";
-  export const STREAM_PAUSE = "stream_pause";
-  export const STREAM_UNMUTE = "stream_unmute";
-  export const STREAM_UNPAUSE = "stream_unpause";
-}
+import { ArtichokeAPI } from "../api";
+import { BaseCall, createCall } from "../call";
+import { ChatConfig } from "../config";
+import { EventHandler } from "../events";
+import { Logger } from "../logger";
+import { createMedia, Media } from "../media";
+import { createMessage, Message } from "../message";
+import { createRoom, Room } from "../room";
+import * as proto from "./events";
+import { eventTypes } from "./events";
 
 export interface RichEvent extends proto.Event {
 }

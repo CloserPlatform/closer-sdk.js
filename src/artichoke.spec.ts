@@ -2,8 +2,8 @@ import { ArtichokeAPI } from "./api";
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
-import { disconnect, error } from "./protocol";
-import { eventTypes, RichEvent, RichHello } from "./rich-events";
+import { disconnect, error, eventTypes } from "./protocol/events";
+import { RichEvent, RichHello } from "./protocol/rich-events";
 
 class APIMock extends ArtichokeAPI {
   cb;

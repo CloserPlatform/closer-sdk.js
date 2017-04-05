@@ -1,9 +1,10 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import * as proto from "./protocol";
+import { eventTypes } from "./protocol/events";
+import * as proto from "./protocol/protocol";
+import { RichChatEdited } from "./protocol/rich-events";
 import { RichMedia } from "./rich";
-import { eventTypes, RichChatEdited } from "./rich-events";
 
 export class Media implements RichMedia {
   public type: proto.Type = "media";

@@ -3,7 +3,7 @@ import { CreateRoomData } from "./campaign";
 import { ResourceConfig } from "./config";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
-import * as proto from "./protocol";
+import * as proto from "./protocol/protocol";
 import { BusinessRoom, createRoom } from "./room";
 import { wrapPromise } from "./utils";
 

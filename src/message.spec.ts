@@ -2,8 +2,9 @@ import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log, sleep } from "./fixtures.spec";
 import { createMessage } from "./message";
-import { Delivered, Message } from "./protocol";
-import { eventTypes, RichChatDelivered, RichChatEdited } from "./rich-events";
+import { eventTypes } from "./protocol/events";
+import { Delivered, Message } from "./protocol/protocol";
+import { RichChatDelivered, RichChatEdited } from "./protocol/rich-events";
 
 const roomId = "123";
 const bob = "456";

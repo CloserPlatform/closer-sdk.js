@@ -4,7 +4,28 @@ import { ChatConfig, RatelConfig, ResourceConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
-import * as proto from "./protocol";
+import {
+  Candidate,
+  chatDelivered,
+  ChatReceived,
+  chatRequest,
+  Error,
+  Event,
+  fix,
+  mark,
+  muteAudio,
+  pauseVideo,
+  presenceRequest,
+  rtcCandidate,
+  rtcDescription,
+  SDP,
+  startTyping,
+  Status,
+  unfix,
+  unmuteAudio,
+  unpauseVideo
+} from "./protocol/events";
+import * as proto from "./protocol/protocol";
 
 export class HeaderValue {
   header: string;
@@ -84,10 +105,10 @@ export class RESTfulAPI {
 }
 
 export interface PromiseResolve<T> extends Callback<T> {}
-export interface PromiseReject extends Callback<proto.Error> {}
+export interface PromiseReject extends Callback<Error> {}
 
 interface PromiseFunctions {
-  resolve: PromiseResolve<proto.Event>;
+  resolve: PromiseResolve<Event>;
   reject: PromiseReject;
 }
 
@@ -108,11 +129,11 @@ export class APIWithWebsocket extends RESTfulAPI {
     this.socket.disconnect();
   }
 
-  send(event: proto.Event) {
-    this.socket.send(proto.unfix(event));
+  send(event: Event) {
+    this.socket.send(unfix(event));
   }
 
-  ask<Response>(event: proto.Event): Promise<Response> {
+  ask<Response>(event: Event): Promise<Response> {
     return new Promise((resolve, reject) => {
       let ref = "ref" + Date.now(); // FIXME Use UUID instead.
       this.promises[ref] = {
@@ -124,15 +145,15 @@ export class APIWithWebsocket extends RESTfulAPI {
     });
   }
 
-  onEvent(callback: Callback<proto.Event>) {
+  onEvent(callback: Callback<Event>) {
     this.socket.onDisconnect(callback);
 
     this.socket.onError(callback);
 
-    this.socket.onEvent((event: proto.Event) => {
-      let e = proto.fix(event);
+    this.socket.onEvent((event: Event) => {
+      let e = fix(event);
       if (e.type === "error") {
-        this.reject(e.ref, e as proto.Error);
+        this.reject(e.ref, e as Error);
       } else {
         this.resolve(e.ref, e);
       }
@@ -140,14 +161,14 @@ export class APIWithWebsocket extends RESTfulAPI {
     });
   }
 
-  private resolve(ref: proto.Ref, event: proto.Event) {
+  private resolve(ref: proto.Ref, event: Event) {
     if (ref && ref in this.promises) {
       this.promises[ref].resolve(event);
       delete this.promises[ref];
     }
   }
 
-  private reject(ref: proto.Ref, error: proto.Error) {
+  private reject(ref: proto.Ref, error: Error) {
     if (ref && ref in this.promises) {
       this.promises[ref].reject(error);
       delete this.promises[ref];
@@ -182,12 +203,12 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   // Call API:
-  sendDescription(callId: proto.ID, sessionId: proto.ID, description: proto.SDP) {
-    this.send(proto.rtcDescription(callId, sessionId, description));
+  sendDescription(callId: proto.ID, sessionId: proto.ID, description: SDP) {
+    this.send(rtcDescription(callId, sessionId, description));
   }
 
-  sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: proto.Candidate) {
-    this.send(proto.rtcCandidate(callId, sessionId, candidate));
+  sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: Candidate) {
+    this.send(rtcCandidate(callId, sessionId, candidate));
   }
 
   createCall(sessionIds: Array<proto.ID>): Promise<proto.Call> {
@@ -235,10 +256,10 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   updateStream(callId: proto.ID, update: "mute" | "unmute" | "pause" | "unpause") {
     const updates = {
-      mute: proto.muteAudio(callId),
-      unmute: proto.unmuteAudio(callId),
-      pause: proto.pauseVideo(callId),
-      unpause: proto.unpauseVideo(callId)
+      mute: muteAudio(callId),
+      unmute: unmuteAudio(callId),
+      pause: pauseVideo(callId),
+      unpause: unpauseVideo(callId)
     };
     this.send(updates[update]);
   }
@@ -286,7 +307,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   sendMessage(roomId: proto.ID, body: string): Promise<proto.Message> {
-    return this.ask<proto.ChatReceived>(proto.chatRequest(roomId, body)).then((ack) => ack.message);
+    return this.ask<ChatReceived>(chatRequest(roomId, body)).then((ack) => ack.message);
   }
 
   sendMetadata(roomId: proto.ID, payload: any): Promise<proto.Metadata> {
@@ -298,16 +319,16 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   sendTyping(roomId: proto.ID) {
-    this.send(proto.startTyping(roomId));
+    this.send(startTyping(roomId));
   }
 
   setMark(roomId: proto.ID, timestamp: proto.Timestamp) {
-    this.send(proto.mark(roomId, timestamp));
+    this.send(mark(roomId, timestamp));
   }
 
   // Archivable API:
   setDelivered(archivableId: proto.ID, timestamp: proto.Timestamp) {
-    this.send(proto.chatDelivered(archivableId, timestamp));
+    this.send(chatDelivered(archivableId, timestamp));
   }
 
   updateArchivable(archivable: proto.Archivable, timestamp: proto.Timestamp): Promise<proto.Archivable> {
@@ -315,8 +336,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   // Presence API:
-  setStatus(status: proto.Status) {
-    this.send(proto.presenceRequest(status));
+  setStatus(status: Status) {
+    this.send(presenceRequest(status));
   }
 
   // Bot API:

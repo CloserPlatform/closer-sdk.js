@@ -3,9 +3,9 @@ import { Call, createCall, DirectCall } from "./call";
 import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import * as proto from "./protocol";
+import { Event, eventTypes, Status } from "./protocol/events";
+import * as proto from "./protocol/protocol";
 import {
-  eventTypes,
   RichBotUpdated,
   RichCallInvitation,
   RichDisconnect,
@@ -16,7 +16,7 @@ import {
   RichHello,
   RichPresenceUpdate,
   RichRoomInvitation
-} from "./rich-events";
+} from "./protocol/rich-events";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
 
@@ -62,7 +62,7 @@ export class Artichoke {
   connect() {
     this.api.connect();
 
-    this.api.onEvent((e: proto.Event) => {
+    this.api.onEvent((e: Event) => {
       const richEvent: RichEvent = richEvents.upgrade(e, this.config, this.log, this.events, this.api);
       this.events.notify(richEvent);
     });
@@ -140,7 +140,7 @@ export class Artichoke {
     this.events.onEvent(eventTypes.PRESENCE_UPDATE, callback);
   }
 
-  setStatus(status: proto.Status) {
+  setStatus(status: Status) {
     this.api.setStatus(status);
   }
 

@@ -1,5 +1,5 @@
-import * as proto from "./protocol";
-import { eventTypes } from "./rich-events";
+import * as proto from "./events";
+import { eventTypes } from "./events";
 
 const actionId = "567";
 const roomId = "123";

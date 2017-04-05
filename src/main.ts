@@ -10,7 +10,7 @@ export { Call, DirectCall } from "./call";
 export { Config } from "./config";
 export { Media } from "./media";
 export { Message } from "./message";
-export { Archivable, CallAction, CallArchivable, Metadata, RoomAction, RoomArchivable} from "./protocol";
+export { Archivable, CallAction, CallArchivable, Metadata, RoomAction, RoomArchivable} from "./protocol/protocol";
 export { BusinessRoom, DirectRoom, GroupRoom, Room } from "./room";
 export { Session } from "./session";
 
@@ -18,6 +18,6 @@ export { Session } from "./session";
 import * as api from "./api";
 import * as events from "./events";
 import * as logger from "./logger";
-import * as protocol from "./protocol";
+import * as protocol from "./protocol/protocol";
 
 export { api, events, logger, protocol };

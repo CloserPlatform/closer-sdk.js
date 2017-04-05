@@ -4,7 +4,7 @@ import { ApiKey } from "./auth";
 import { Config } from "./config";
 import { EventHandler } from "./events";
 import * as logger from "./logger";
-import { ID } from "./protocol";
+import { ID } from "./protocol/protocol";
 import { WheelHouse } from "./wheelhouse";
 
 export class Session {

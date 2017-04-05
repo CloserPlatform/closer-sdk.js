@@ -3,12 +3,16 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMedia, Media } from "./media";
 import { createMessage, Message } from "./message";
-import * as proto from "./protocol";
+import { eventTypes } from "./protocol/events";
+import * as proto from "./protocol/protocol";
 import {
-  eventTypes,
-  RichRoomActionSent, RichRoomMark, RichRoomMedia, RichRoomMessage, RichRoomMetadata,
+  RichRoomActionSent,
+  RichRoomMark,
+  RichRoomMedia,
+  RichRoomMessage,
+  RichRoomMetadata,
   RichRoomTyping
-} from "./rich-events";
+} from "./protocol/rich-events";
 import { wrapPromise } from "./utils";
 
 export namespace roomType {

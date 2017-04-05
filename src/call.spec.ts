@@ -2,8 +2,9 @@ import { ArtichokeAPI } from "./api";
 import { Call, createCall } from "./call";
 import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
-import { Call as ProtoCall } from "./protocol";
-import { eventTypes, RichEvent } from "./rich-events";
+import { Call as ProtoCall } from "./protocol/protocol";
+import { RichEvent } from "./protocol/rich-events";
+import { eventTypes } from "./protocol/events";
 
 const callId = "123";
 const alice = "321";

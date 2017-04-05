@@ -1,8 +1,9 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { Call as ProtoCall, CallAction, CallArchivable, ID, Timestamp } from "./protocol";
-import { eventTypes, RichCallActionSent, RichCallEnd } from "./rich-events";
+import { eventTypes } from "./protocol/events";
+import { Call as ProtoCall, CallAction, CallArchivable, ID, Timestamp } from "./protocol/protocol";
+import { RichCallActionSent, RichCallEnd } from "./protocol/rich-events";
 import { createRTCPool, RTCPool } from "./rtc";
 
 export interface RemoteStreamCallback {
