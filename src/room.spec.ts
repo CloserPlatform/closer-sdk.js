@@ -5,6 +5,7 @@ import * as proto from "./protocol";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 
 import RoomType = roomType.RoomType;
+import { RichEvent } from "./rich-events";
 
 const actionId = "567";
 const roomId = "123";
@@ -187,7 +188,7 @@ function makeRoom(roomType: RoomType) {
         type: "room_message",
         id: room.id,
         message: m
-      } as proto.Event);
+      } as RichEvent);
     });
 
     it("should run a callback on incoming metadata", (done) => {
@@ -205,7 +206,7 @@ function makeRoom(roomType: RoomType) {
         type: "room_metadata",
         id: room.id,
         metadata: meta(meta1, payload)
-      } as proto.Event);
+      } as RichEvent);
     });
 
     it("should run a callback on incoming media", (done) => {
@@ -221,7 +222,7 @@ function makeRoom(roomType: RoomType) {
         type: "room_media",
         id: room.id,
         media: media(media1, descr)
-      } as proto.Event);
+      } as RichEvent);
     });
 
     it("should run a callback on incoming mark", (done) => {
@@ -347,7 +348,7 @@ describe("GroupRoom", () => {
             reason: "no reason",
             timestamp: Date.now()
           }
-        } as proto.Event);
+        } as RichEvent);
       });
     });
 
@@ -361,7 +362,7 @@ describe("GroupRoom", () => {
         user: bob,
         timestamp: Date.now()
       }
-    } as proto.Event);
+    } as RichEvent);
   });
 
   it("should run callback on room joined", (done) => {
@@ -380,7 +381,7 @@ describe("GroupRoom", () => {
         user: alice,
         timestamp: Date.now()
       }
-    } as proto.Event);
+    } as RichEvent);
   });
 
   it("should run callback on room left", (done) => {
@@ -401,7 +402,7 @@ describe("GroupRoom", () => {
         reason: "reason",
         timestamp: Date.now()
       }
-    } as proto.Event);
+    } as RichEvent);
   });
 
   it("should run callback on room invite", (done) => {
@@ -422,7 +423,7 @@ describe("GroupRoom", () => {
         invitee: bob,
         timestamp: Date.now()
       }
-    } as proto.Event);
+    } as RichEvent);
   });
 
   // FIXME These should be moved to integration tests:

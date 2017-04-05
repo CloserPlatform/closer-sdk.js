@@ -2,7 +2,8 @@ import { ArtichokeAPI } from "./api";
 import { Call, createCall } from "./call";
 import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
-import { Call as ProtoCall, Event } from "./protocol";
+import { Call as ProtoCall } from "./protocol";
+import {RichEvent} from "./rich-events";
 
 const callId = "123";
 const alice = "321";
@@ -109,7 +110,7 @@ function makeCall(direct = false) {
             user: chad,
             timestamp: Date.now()
           }
-        } as Event);
+        } as RichEvent);
       }, (error) => done.fail());
     });
 
@@ -131,7 +132,7 @@ function makeCall(direct = false) {
           timestamp: Date.now(),
           reason: "reason"
         }
-      } as Event);
+      } as RichEvent);
     });
 
     it("should run a callback on answer", (done) => {
@@ -151,7 +152,7 @@ function makeCall(direct = false) {
           user: alice,
           timestamp: Date.now()
         }
-      } as Event);
+      } as RichEvent);
     });
 
     it("should run a callback on reject", (done) => {
@@ -172,7 +173,7 @@ function makeCall(direct = false) {
           timestamp: Date.now(),
           reason: "reason"
         }
-      } as Event);
+      } as RichEvent);
     });
 
     whenever(isWebRTCSupported())("should maintain the user list", (done) => {
@@ -208,7 +209,7 @@ function makeCall(direct = false) {
                 timestamp: Date.now(),
                 reason: "reason"
               }
-            } as Event);
+            } as RichEvent);
           });
         });
 
@@ -221,7 +222,7 @@ function makeCall(direct = false) {
             user: bob,
             timestamp: Date.now()
           }
-        } as Event);
+        } as RichEvent);
       }, (error) => done.fail());
     });
 
@@ -292,7 +293,7 @@ function makeCall(direct = false) {
             user: alice,
             timestamp: Date.now()
           }
-        } as Event);
+        } as RichEvent);
       });
 
       events.notify({
@@ -304,7 +305,7 @@ function makeCall(direct = false) {
           user: alice,
           timestamp: Date.now()
         }
-      } as Event);
+      } as RichEvent);
     });
   });
 });
@@ -338,7 +339,7 @@ describe("Call", () => {
         user: alice,
         invitee: chad
       }
-    } as Event);
+    } as RichEvent);
   });
 
   // FIXME These should be moved to integration tests:

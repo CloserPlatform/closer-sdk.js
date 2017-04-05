@@ -2,7 +2,8 @@ import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
 import { createMedia } from "./media";
-import { ChatEdited, Media } from "./protocol";
+import { Media } from "./protocol";
+import { RichChatEdited } from "./rich-events";
 
 const roomId = "123";
 const bob = "456";
@@ -76,6 +77,6 @@ describe("Media", () => {
       type: "chat_edited",
       id: media.id,
       archivable: edited
-    } as ChatEdited);
+    } as RichChatEdited);
   });
 });

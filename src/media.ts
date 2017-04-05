@@ -3,6 +3,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import * as proto from "./protocol";
 import { RichMedia } from "./rich";
+import { RichChatEdited } from "./rich-events";
 
 export class Media implements RichMedia {
   public type: proto.Type = "media";
@@ -45,7 +46,7 @@ export class Media implements RichMedia {
   }
 
   onEdit(callback: Callback<Media>) {
-    this.events.onConcreteEvent("chat_edited", this.id, (msg: proto.ChatEdited) => {
+    this.events.onConcreteEvent("chat_edited", this.id, (msg: RichChatEdited) => {
       let m = (msg.archivable as proto.Media);
       this.description = m.description;
       this.edited = m.edited;

@@ -2,7 +2,8 @@ import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log, sleep } from "./fixtures.spec";
 import { createMessage } from "./message";
-import { ChatDelivered, ChatEdited, Delivered, Message } from "./protocol";
+import { Delivered, Message } from "./protocol";
+import { RichChatDelivered, RichChatEdited } from "./rich-events";
 
 const roomId = "123";
 const bob = "456";
@@ -95,7 +96,7 @@ describe("Message", () => {
       id: msg.id,
       user: bob,
       timestamp: 12345
-    } as ChatDelivered);
+    } as RichChatDelivered);
   });
 
   it("should run a callback on each delivery", (done) => {
@@ -114,7 +115,7 @@ describe("Message", () => {
       id: msg.id,
       user: bob,
       timestamp: t
-    } as ChatDelivered));
+    } as RichChatDelivered));
   });
 
   it("should allow editing", () => {
@@ -144,6 +145,6 @@ describe("Message", () => {
       type: "chat_edited",
       id: msg.id,
       archivable: edited
-    } as ChatEdited);
+    } as RichChatEdited);
   });
 });

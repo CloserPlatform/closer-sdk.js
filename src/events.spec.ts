@@ -1,12 +1,13 @@
 import { EventHandler } from "./events";
 import { log } from "./fixtures.spec";
-import { Error, mark, RoomMark} from "./protocol";
+import { mark } from "./protocol";
+import {RichError, RichRoomMark} from "./rich-events";
 
-interface ErrorWithCause extends Error {
+interface ErrorWithCause extends RichError {
   cause: boolean;
 }
 
-function msg(id: string): RoomMark {
+function msg(id: string): RichRoomMark {
   return mark(id, Date.now());
 }
 
@@ -31,7 +32,7 @@ describe("Event Handler", () => {
   it("should run error handler on unhandled event", () => {
     let ok = false;
 
-    events.onError((error: Error) => ok = true);
+    events.onError((error: RichError) => ok = true);
     expect(ok).toBe(false);
     events.notify({ type: "unhandled" });
     expect(ok).toBe(true);
@@ -40,7 +41,7 @@ describe("Event Handler", () => {
   it("should allow defining event handlers", () => {
     let ok = 0;
 
-    events.onEvent("room_mark", (msg: RoomMark) => ok++);
+    events.onEvent("room_mark", (msg: RichRoomMark) => ok++);
     expect(ok).toBe(0);
 
     [1, 2, 3, 4, 5].forEach((i) => {
@@ -53,8 +54,8 @@ describe("Event Handler", () => {
     let first = 0;
     let second = 0;
 
-    events.onEvent("room_mark", (msg: RoomMark) => first++);
-    events.onEvent("room_mark", (msg: RoomMark) => second++);
+    events.onEvent("room_mark", (msg: RichRoomMark) => first++);
+    events.onEvent("room_mark", (msg: RichRoomMark) => second++);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -65,7 +66,7 @@ describe("Event Handler", () => {
   it("should allow defining concrete event handlers", () => {
     let ok = "0";
 
-    events.onConcreteEvent("room_mark", "3", (msg: RoomMark) => ok = msg.id);
+    events.onConcreteEvent("room_mark", "3", (msg: RichRoomMark) => ok = msg.id);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -76,8 +77,8 @@ describe("Event Handler", () => {
     let first = false;
     let second = false;
 
-    events.onConcreteEvent("room_mark", "3", (msg: RoomMark) => first = true);
-    events.onConcreteEvent("room_mark", "1", (msg: RoomMark) => second = true);
+    events.onConcreteEvent("room_mark", "3", (msg: RichRoomMark) => first = true);
+    events.onConcreteEvent("room_mark", "1", (msg: RichRoomMark) => second = true);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -89,8 +90,8 @@ describe("Event Handler", () => {
     let first = false;
     let second = 0;
 
-    events.onConcreteEvent("room_mark", "3", (msg: RoomMark) => first = true);
-    events.onEvent("room_mark", (msg: RoomMark) => second++);
+    events.onConcreteEvent("room_mark", "3", (msg: RichRoomMark) => first = true);
+    events.onEvent("room_mark", (msg: RichRoomMark) => second++);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -99,11 +100,11 @@ describe("Event Handler", () => {
   });
 
   it("onConcreteEvent() should be equivalent to onEvent() with id assertion", () => {
-    let first: RoomMark = undefined;
-    let second: RoomMark = undefined;
+    let first: RichRoomMark = undefined;
+    let second: RichRoomMark = undefined;
 
-    events.onConcreteEvent("room_mark", "3", (msg: RoomMark) => first = msg);
-    events.onEvent("room_mark", (msg: RoomMark) => {
+    events.onConcreteEvent("room_mark", "3", (msg: RichRoomMark) => first = msg);
+    events.onEvent("room_mark", (msg: RichRoomMark) => {
       if (msg.id === "3") {
         second = msg;
       }

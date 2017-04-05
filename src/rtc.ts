@@ -1,7 +1,8 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
-import { Candidate, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
+import { Candidate, ID, SDP } from "./protocol";
+import { RichRTCCandidate, RichRTCDescription } from "./rich-events";
 
 // Cross-browser support:
 function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {
@@ -133,7 +134,7 @@ export class RTCPool {
       // Do Nothing.
     };
 
-    events.onConcreteEvent("rtc_description", callId, (msg: RTCDescription) => {
+    events.onConcreteEvent("rtc_description", callId, (msg: RichRTCDescription) => {
       this.log("Received an RTC description: " + msg.description.sdp);
       if (msg.peer in this.connections) {
         this.connections[msg.peer].setRemoteDescription(msg.description);
@@ -148,7 +149,7 @@ export class RTCPool {
       }
     });
 
-    events.onConcreteEvent("rtc_candidate", callId, (msg: RTCCandidate) => {
+    events.onConcreteEvent("rtc_candidate", callId, (msg: RichRTCCandidate) => {
       this.log("Received an RTC candidate: " + msg.candidate);
       if (msg.peer in this.connections) {
         this.connections[msg.peer].addCandidate(msg.candidate);

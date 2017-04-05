@@ -2,7 +2,8 @@ import { ArtichokeAPI } from "./api";
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
-import { disconnect, error, Event } from "./protocol";
+import { disconnect, error } from "./protocol";
+import { RichEvent } from "./rich-events";
 
 class APIMock extends ArtichokeAPI {
   cb;
@@ -36,7 +37,7 @@ describe("Artichoke", () => {
     chat.connect();
     api.cb({
       type: "hello"
-    } as Event);
+    } as RichEvent);
   });
 
   it("should call a callback on server connection", (done) => {
@@ -44,7 +45,7 @@ describe("Artichoke", () => {
     chat.connect();
     api.cb({
       type: "hello"
-    } as Event);
+    } as RichEvent);
   });
 
   it("should call a callback on server disconnection", (done) => {

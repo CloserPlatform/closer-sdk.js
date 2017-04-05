@@ -4,8 +4,19 @@ import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import * as proto from "./protocol";
-import { CallInvitation } from "./protocol";
-import { eventTypes, RichEvent, richEvents, RichRoomInvitation } from "./rich-events";
+import {
+  eventTypes,
+  RichBotUpdated,
+  RichCallInvitation,
+  RichDisconnect,
+  RichError,
+  RichEvent,
+  richEvents,
+  RichHeartbeat,
+  RichHello,
+  RichPresenceUpdate,
+  RichRoomInvitation
+} from "./rich-events";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
 
@@ -22,7 +33,7 @@ export class Artichoke {
     this.events = events;
 
     // NOTE Disable some events by default.
-    let nop = (e: proto.Event) => {
+    let nop = (e: RichEvent) => {
       // Do nothing.
     };
     events.onEvent("error", nop);
@@ -31,19 +42,19 @@ export class Artichoke {
   }
 
   // Callbacks:
-  onConnect(callback: Callback<proto.Hello>) {
-    this.events.onEvent("hello", callback);
+  onConnect(callback: Callback<RichHello>) {
+    this.events.onEvent(eventTypes.HELLO, callback);
   }
 
-  onHeartbeat(callback: Callback<proto.Heartbeat>) {
-    this.events.onEvent("heartbeat", callback);
+  onHeartbeat(callback: Callback<RichHeartbeat>) {
+    this.events.onEvent(eventTypes.HEARTBEAT, callback);
   }
 
-  onDisconnect(callback: Callback<proto.Disconnect>) {
+  onDisconnect(callback: Callback<RichDisconnect>) {
     this.events.onEvent("disconnect", callback);
   }
 
-  onError(callback: Callback<proto.Error>) {
+  onError(callback: Callback<RichError>) {
     this.events.onError(callback);
   }
 
@@ -62,8 +73,8 @@ export class Artichoke {
   }
 
   // Bot API:
-  onBotUpdate(callback: Callback<proto.BotUpdated>) {
-    this.events.onEvent("bot_updated", callback);
+  onBotUpdate(callback: Callback<RichBotUpdated>) {
+    this.events.onEvent(eventTypes.BOT_UPDATED, callback);
   }
 
   createBot(name: string, callback?: string): Promise<proto.Bot> {
@@ -79,8 +90,8 @@ export class Artichoke {
   }
 
   // Call API:
-  onCall(callback: Callback<CallInvitation>) {
-    this.events.onEvent("call_invitation", callback);
+  onCall(callback: Callback<RichCallInvitation>) {
+    this.events.onEvent(eventTypes.CALL_INVITATION, callback);
   }
 
   createDirectCall(stream: MediaStream, peer: proto.ID, timeout?: number): Promise<DirectCall> {
@@ -125,8 +136,8 @@ export class Artichoke {
   }
 
   // Presence API:
-  onStatusUpdate(callback: Callback<proto.PresenceUpdate>) {
-    this.events.onEvent("presence_update", callback);
+  onStatusUpdate(callback: Callback<RichPresenceUpdate>) {
+    this.events.onEvent(eventTypes.PRESENCE_UPDATE, callback);
   }
 
   setStatus(status: proto.Status) {
