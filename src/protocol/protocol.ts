@@ -1,4 +1,5 @@
 // Common types:
+import { actionTypes } from "./wire-events";
 export type Type = string;
 export type ID = string;
 export type Ref = string;
@@ -6,7 +7,7 @@ export type Timestamp = number;
 
 // Datatypes:
 export interface RoomAction extends RoomArchivable {
-  action: "joined" | "left" | "invited";
+  action: actionTypes.JOINED | actionTypes.LEFT | actionTypes.INVITED;
   reason?: string;
   invitee?: ID;
 }
@@ -38,8 +39,9 @@ export interface Call {
 }
 
 export interface CallAction extends CallArchivable {
-  action: "joined" | "left" | "invited" | "rejected" | "answered" | "audio_muted"
-    | "audio_unmuted" | "video_paused" | "video_unpaused";
+  action: actionTypes.JOINED | actionTypes.LEFT| actionTypes.INVITED
+    | actionTypes.REJECTED | actionTypes.ANSWERED | actionTypes.AUDIO_MUTED
+    | actionTypes.AUDIO_UNMUTED | actionTypes.VIDEO_PAUSED | actionTypes.VIDEO_UNPAUSED,
   reason?: string;
   invitee?: ID;
 }

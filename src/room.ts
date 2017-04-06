@@ -12,7 +12,7 @@ import {
   RoomTyping
 } from "./protocol/events";
 import * as proto from "./protocol/protocol";
-import { eventTypes } from "./protocol/wire-events";
+import { actionTypes, eventTypes } from "./protocol/wire-events";
 import { wrapPromise } from "./utils";
 
 export namespace roomType {
@@ -167,17 +167,17 @@ export class GroupRoom extends Room {
 
     this.events.onConcreteEvent(eventTypes.ROOM_ACTION, this.id, (e: RoomActionSent) => {
       switch (e.action.action) {
-      case "joined":
+      case actionTypes.JOINED:
         this.users.push(e.action.user);
         this.onJoinedCallback(e.action);
         break;
 
-      case "left":
+      case actionTypes.LEFT:
         this.users = this.users.filter((u) => u !== e.action.user);
         this.onLeftCallback(e.action);
         break;
 
-      case "invited":
+      case actionTypes.INVITED:
         this.onInvitedCallback(e.action);
         break;
 

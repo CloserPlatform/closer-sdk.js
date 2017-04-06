@@ -1,5 +1,5 @@
 import * as wireEvents from "./wire-events";
-import { eventTypes } from "./wire-events";
+import { actionTypes, eventTypes } from "./wire-events";
 
 const actionId = "567";
 const roomId = "123";
@@ -51,8 +51,8 @@ const events: Array<wireEvents.WireEvent> = [{
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
-    type: "room_action",
-    action: "joined",
+    type: eventTypes.ROOM_ACTION,
+    action: actionTypes.JOINED,
     id: actionId,
     room: roomId,
     user: alice,
@@ -62,8 +62,8 @@ const events: Array<wireEvents.WireEvent> = [{
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
-    type: "room_action",
-    action: "invited",
+    type: eventTypes.ROOM_ACTION,
+    action: actionTypes.INVITED,
     id: actionId,
     room: roomId,
     user: alice,
@@ -74,8 +74,8 @@ const events: Array<wireEvents.WireEvent> = [{
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
-    type: "room_action",
-    action: "left",
+    type: eventTypes.ROOM_ACTION,
+    action: actionTypes.LEFT,
     id: actionId,
     room: roomId,
     user: alice,
@@ -86,8 +86,8 @@ const events: Array<wireEvents.WireEvent> = [{
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
-    type: "call_action",
-    action: "joined",
+    type: eventTypes.CALL_ACTION,
+    action: actionTypes.JOINED,
     id: actionId,
     call: callId,
     user: alice,
@@ -97,8 +97,8 @@ const events: Array<wireEvents.WireEvent> = [{
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
-    type: "call_action",
-    action: "invited",
+    type: eventTypes.CALL_ACTION,
+    action: actionTypes.INVITED,
     id: actionId,
     call: callId,
     user: alice,
@@ -109,8 +109,8 @@ const events: Array<wireEvents.WireEvent> = [{
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
-    type: "call_action",
-    action: "left",
+    type: eventTypes.CALL_ACTION,
+    action: actionTypes.LEFT,
     id: actionId,
     call: callId,
     user: alice,
@@ -121,8 +121,8 @@ const events: Array<wireEvents.WireEvent> = [{
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
-    type: "call_action",
-    action: "audio_muted",
+    type: eventTypes.CALL_ACTION,
+    action: actionTypes.AUDIO_MUTED,
     id: actionId,
     call: callId,
     user: alice,
@@ -132,8 +132,8 @@ const events: Array<wireEvents.WireEvent> = [{
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
-    type: "call_action",
-    action: "audio_unmuted",
+    type: eventTypes.CALL_ACTION,
+    action: actionTypes.AUDIO_UNMUTED,
     id: actionId,
     call: callId,
     user: alice,
@@ -143,8 +143,8 @@ const events: Array<wireEvents.WireEvent> = [{
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
-    type: "call_action",
-    action: "video_paused",
+    type: eventTypes.CALL_ACTION,
+    action: actionTypes.VIDEO_PAUSED,
     id: actionId,
     call: callId,
     user: alice,
@@ -154,8 +154,8 @@ const events: Array<wireEvents.WireEvent> = [{
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
-    type: "call_action",
-    action: "video_unpaused",
+    type: eventTypes.CALL_ACTION,
+    action: actionTypes.VIDEO_UNPAUSED,
     id: actionId,
     call: callId,
     user: alice,

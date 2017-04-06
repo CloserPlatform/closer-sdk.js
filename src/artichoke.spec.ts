@@ -36,7 +36,7 @@ describe("Artichoke", () => {
     events.onEvent(eventTypes.HELLO, (msg: Hello) => done());
     chat.connect();
     api.cb({
-      type: "hello"
+      type: eventTypes.HELLO,
     } as Event);
   });
 
@@ -44,7 +44,7 @@ describe("Artichoke", () => {
     chat.onConnect((msg) => done());
     chat.connect();
     api.cb({
-      type: "hello"
+      type: eventTypes.HELLO,
     } as Event);
   });
 

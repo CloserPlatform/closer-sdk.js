@@ -29,6 +29,29 @@ export namespace eventTypes {
   export const STREAM_PAUSE = "stream_pause";
   export const STREAM_UNMUTE = "stream_unmute";
   export const STREAM_UNPAUSE = "stream_unpause";
+
+  export const DISCONNECT = "disconnect";
+}
+
+export namespace actionTypes {
+  export type JOINED = "joined"
+  export const JOINED = "joined";
+  export type LEFT = "left";
+  export const LEFT = "left";
+  export type INVITED = "invited";
+  export const INVITED = "invited";
+  export type ANSWERED = "answered";
+  export const ANSWERED = "answered";
+  export type REJECTED = "rejected";
+  export const REJECTED = "rejected";
+  export type AUDIO_MUTED = "audio_muted";
+  export const AUDIO_MUTED = "audio_muted";
+  export type AUDIO_UNMUTED = "audio_unmuted";
+  export const AUDIO_UNMUTED = "audio_unmuted";
+  export type VIDEO_PAUSED = "video_paused";
+  export const VIDEO_PAUSED = "video_paused";
+  export type VIDEO_UNPAUSED = "video_unpaused";
+  export const VIDEO_UNPAUSED = "video_unpaused";
 }
 
 // JSON Events:
@@ -272,7 +295,7 @@ export function error(reason: string, cause?: any, ref?: string): WireError {
 
 export function disconnect(code: number, reason: string): WireDisconnect {
   return {
-    type: "disconnect",
+    type: eventTypes.DISCONNECT,
     reason,
     code
   };

@@ -3,7 +3,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { CallActionSent, CallEnd } from "./protocol/events";
 import * as proto from "./protocol/protocol";
-import { eventTypes } from "./protocol/wire-events";
+import { actionTypes, eventTypes } from "./protocol/wire-events";
 import { createRTCPool, RTCPool } from "./rtc";
 
 export interface RemoteStreamCallback {
@@ -76,43 +76,43 @@ export class BaseCall implements proto.Call {
 
     this.events.onConcreteEvent(eventTypes.CALL_ACTION, this.id, (e: CallActionSent) => {
       switch (e.action.action) {
-      case "joined":
+      case actionTypes.JOINED:
         this.users.push(e.action.user);
         this.pool.create(e.action.user).onRemoteStream((s) => this.onRemoteStreamCallback(e.action.user, s));
         this.onJoinedCallback(e.action);
         break;
 
-      case "left":
+      case actionTypes.LEFT:
         this.users = this.users.filter((u) => u !== e.action.user);
         this.pool.destroy(e.action.user);
         this.onLeftCallback(e.action);
         break;
 
-      case "invited":
+      case actionTypes.INVITED:
         this.onInvitedCallback(e.action);
         break;
 
-      case "answered":
+      case actionTypes.ANSWERED:
         this.onAnsweredCallback(e.action);
         break;
 
-      case "rejected":
+      case actionTypes.REJECTED:
         this.onRejectedCallback(e.action);
         break;
 
-      case "audio_muted":
+      case actionTypes.AUDIO_MUTED:
         this.onMutedCallback(e.action);
         break;
 
-      case "audio_unmuted":
+      case actionTypes.AUDIO_UNMUTED:
         this.onUnmutedCallback(e.action);
         break;
 
-      case "video_paused":
+      case actionTypes.VIDEO_PAUSED:
         this.onPausedCallback(e.action);
         break;
 
-      case "video_unpaused":
+      case actionTypes.VIDEO_UNPAUSED:
         this.onUnpausedCallback(e.action);
         break;
 

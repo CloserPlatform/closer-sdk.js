@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
-import { eventTypes, mark, typing } from "./protocol/wire-events";
+import { actionTypes, eventTypes, mark, typing } from "./protocol/wire-events";
 import * as proto from "./protocol/protocol";
 import { Event } from "./protocol/events";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
@@ -342,7 +342,7 @@ describe("GroupRoom", () => {
           type: eventTypes.ROOM_ACTION,
           id: room.id,
           action: {
-            action: "left",
+            action: actionTypes.LEFT,
             id: actionId,
             room: room.id,
             user: alice,
@@ -357,7 +357,7 @@ describe("GroupRoom", () => {
       type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
-        action: "joined",
+        action: actionTypes.JOINED,
         id: actionId,
         room: room.id,
         user: bob,
@@ -376,7 +376,7 @@ describe("GroupRoom", () => {
       type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
-        action: "joined",
+        action: actionTypes.JOINED,
         id: actionId,
         room: room.id,
         user: alice,
@@ -396,7 +396,7 @@ describe("GroupRoom", () => {
       type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
-        action: "left",
+        action: actionTypes.LEFT,
         id: actionId,
         room: room.id,
         user: alice,
@@ -417,7 +417,7 @@ describe("GroupRoom", () => {
       type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
-        action: "invited",
+        action: actionTypes.INVITED,
         id: actionId,
         room: room.id,
         user: alice,

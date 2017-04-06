@@ -4,7 +4,7 @@ import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
 import { Call as ProtoCall } from "./protocol/protocol";
 import { Event } from "./protocol/events";
-import { eventTypes } from "./protocol/wire-events";
+import { actionTypes, eventTypes } from "./protocol/wire-events";
 
 const callId = "123";
 const alice = "321";
@@ -106,7 +106,7 @@ function makeCall(direct = false) {
           type: eventTypes.CALL_ACTION,
           id: call.id,
           action: {
-            action: "joined",
+            action: actionTypes.JOINED,
             call: call.id,
             user: chad,
             timestamp: Date.now()
@@ -127,7 +127,7 @@ function makeCall(direct = false) {
         type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
-          action: "left",
+          action: actionTypes.LEFT,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
@@ -148,7 +148,7 @@ function makeCall(direct = false) {
         type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
-          action: "answered",
+          action: actionTypes.ANSWERED,
           call: call.id,
           user: alice,
           timestamp: Date.now()
@@ -168,7 +168,7 @@ function makeCall(direct = false) {
         type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
-          action: "rejected",
+          action: actionTypes.REJECTED,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
@@ -204,7 +204,7 @@ function makeCall(direct = false) {
               type: eventTypes.CALL_ACTION,
               id: call.id,
               action: {
-                action: "left",
+                action: actionTypes.LEFT,
                 call: call.id,
                 user: alice,
                 timestamp: Date.now(),
@@ -218,7 +218,7 @@ function makeCall(direct = false) {
           type: eventTypes.CALL_ACTION,
           id: call.id,
           action: {
-            action: "joined",
+            action: actionTypes.JOINED,
             call: call.id,
             user: bob,
             timestamp: Date.now()
@@ -289,7 +289,7 @@ function makeCall(direct = false) {
           type: eventTypes.CALL_ACTION,
           id: call.id,
           action: {
-            action: "video_paused",
+            action: actionTypes.VIDEO_PAUSED,
             call: call.id,
             user: alice,
             timestamp: Date.now()
@@ -301,7 +301,7 @@ function makeCall(direct = false) {
         type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
-          action: "audio_muted",
+          action: actionTypes.AUDIO_MUTED,
           call: call.id,
           user: alice,
           timestamp: Date.now()
@@ -335,7 +335,7 @@ describe("Call", () => {
       type: eventTypes.CALL_ACTION,
       id: call.id,
       action: {
-        action: "invited",
+        action: actionTypes.INVITED,
         call: call.id,
         user: alice,
         invitee: chad

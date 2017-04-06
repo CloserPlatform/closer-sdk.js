@@ -40,7 +40,7 @@ export class Artichoke {
   }
 
   onDisconnect(callback: Callback<events.RichDisconnect>) {
-    this.events.onEvent("disconnect", callback);
+    this.events.onEvent(eventTypes.DISCONNECT, callback);
   }
 
   onError(callback: Callback<events.Error>) {
