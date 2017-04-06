@@ -1,6 +1,6 @@
 import { Callback } from "./events";
 import { Logger } from "./logger";
-import { disconnect, Disconnect, error, Error, read, WireEvent, write } from "./protocol/wire-events";
+import { disconnect, error, read, WireDisconnect, WireError, WireEvent, write } from "./protocol/wire-events";
 
 export class JSONWebSocket {
   private log: Logger;
@@ -22,14 +22,14 @@ export class JSONWebSocket {
     this.socket.close();
   }
 
-  onDisconnect(callback: Callback<Disconnect>) {
+  onDisconnect(callback: Callback<WireDisconnect>) {
     this.socket.onclose = (close) => {
       this.log("WS disconnected: " + close.reason);
       callback(disconnect(close.code, close.reason));
     };
   }
 
-  onError(callback: Callback<Error>) {
+  onError(callback: Callback<WireError>) {
     this.socket.onerror = (err) => {
       this.log("WS error: " + err);
       callback(error("Websocket connection error.", err));

@@ -11,7 +11,7 @@ const bob = "987";
 const events: Array<proto.WireEvent> = [{
   type: eventTypes.HEARTBEAT,
   timestamp: Date.now()
-} as proto.Heartbeat, {
+} as proto.WireHeartbeat, {
   type: eventTypes.ROOM_INVITATION,
   inviter: bob,
   room: {
@@ -19,24 +19,24 @@ const events: Array<proto.WireEvent> = [{
     name: "room",
     direct: false
   }
-} as proto.RoomInvitation, {
+} as proto.WireRoomInvitation, {
   type: eventTypes.ROOM_TYPING,
   id: roomId,
   user: alice,
   timestamp: Date.now(),
-} as proto.RoomTyping, proto.presenceRequest("available"), {
+} as proto.WireRoomTyping, proto.presenceRequest("available"), {
   type: eventTypes.PRESENCE_UPDATE,
   user: alice,
   status: "away",
   timestamp: Date.now(),
-} as proto.PresenceUpdate, proto.error("Because!", {
+} as proto.WirePresenceUpdate, proto.error("Because!", {
   error: "error",
   text: "string"
 }, "23425"), {
   type: eventTypes.ROOM_MARK,
   id: roomId,
   timestamp: Date.now()
-} as proto.RoomMark, {
+} as proto.WireRoomMark, {
   type: eventTypes.ROOM_MESSAGE,
   id: roomId,
   message: {
@@ -47,7 +47,7 @@ const events: Array<proto.WireEvent> = [{
     room: roomId,
     timestamp: Date.now(),
   }
-} as proto.RoomMessage, {
+} as proto.WireRoomMessage, {
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
@@ -58,7 +58,7 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.RoomActionSent, {
+} as proto.WireRoomActionSent, {
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
@@ -70,7 +70,7 @@ const events: Array<proto.WireEvent> = [{
     invitee: bob,
     timestamp: Date.now()
   }
-} as proto.RoomActionSent, {
+} as proto.WireRoomActionSent, {
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
@@ -82,7 +82,7 @@ const events: Array<proto.WireEvent> = [{
     reason: "reason",
     timestamp: Date.now()
   }
-} as proto.RoomActionSent, {
+} as proto.WireRoomActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -93,7 +93,7 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.CallActionSent, {
+} as proto.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -105,7 +105,7 @@ const events: Array<proto.WireEvent> = [{
     invitee: bob,
     timestamp: Date.now()
   }
-} as proto.CallActionSent, {
+} as proto.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -117,7 +117,7 @@ const events: Array<proto.WireEvent> = [{
     reason: "reason",
     timestamp: Date.now()
   }
-} as proto.CallActionSent, {
+} as proto.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -128,7 +128,7 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.CallActionSent, {
+} as proto.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -139,7 +139,7 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.CallActionSent, {
+} as proto.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -150,7 +150,7 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.CallActionSent, {
+} as proto.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -161,7 +161,7 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.CallActionSent,
+} as proto.WireCallActionSent,
 proto.muteAudio(callId),
 proto.unmuteAudio(callId),
 proto.pauseVideo(callId),

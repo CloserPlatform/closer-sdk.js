@@ -8,9 +8,7 @@ import * as proto from "./protocol/protocol";
 import {
   Candidate,
   chatDelivered,
-  ChatReceived,
   chatRequest,
-  Error,
   fix,
   mark,
   muteAudio,
@@ -24,6 +22,8 @@ import {
   unfix,
   unmuteAudio,
   unpauseVideo,
+  WireChatReceived,
+  WireError,
   WireEvent
 } from "./protocol/wire-events";
 
@@ -105,7 +105,7 @@ export class RESTfulAPI {
 }
 
 export interface PromiseResolve<T> extends Callback<T> {}
-export interface PromiseReject extends Callback<Error> {}
+export interface PromiseReject extends Callback<WireError> {}
 
 interface PromiseFunctions {
   resolve: PromiseResolve<WireEvent>;
@@ -153,7 +153,7 @@ export class APIWithWebsocket extends RESTfulAPI {
     this.socket.onEvent((event: WireEvent) => {
       let e = fix(event);
       if (e.type === "error") {
-        this.reject(e.ref, e as Error);
+        this.reject(e.ref, e as WireError);
       } else {
         this.resolve(e.ref, e);
       }
@@ -168,7 +168,7 @@ export class APIWithWebsocket extends RESTfulAPI {
     }
   }
 
-  private reject(ref: proto.Ref, error: Error) {
+  private reject(ref: proto.Ref, error: WireError) {
     if (ref && ref in this.promises) {
       this.promises[ref].reject(error);
       delete this.promises[ref];
@@ -307,7 +307,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   sendMessage(roomId: proto.ID, body: string): Promise<proto.Message> {
-    return this.ask<ChatReceived>(chatRequest(roomId, body)).then((ack) => ack.message);
+    return this.ask<WireChatReceived>(chatRequest(roomId, body)).then((ack) => ack.message);
   }
 
   sendMetadata(roomId: proto.ID, payload: any): Promise<proto.Metadata> {
