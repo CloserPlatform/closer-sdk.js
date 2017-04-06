@@ -16,8 +16,8 @@ export { Session } from "./session";
 
 // Other useful crap:
 import * as api from "./api";
-import * as events from "./events";
 import * as logger from "./logger";
+import * as events from "./protocol/events";
 import * as protocol from "./protocol/protocol";
 
 export { api, events, logger, protocol };
