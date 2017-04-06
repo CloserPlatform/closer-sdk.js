@@ -1,9 +1,9 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
-import { Candidate, eventTypes, SDP } from "./protocol/events";
 import { ID } from "./protocol/protocol";
 import { RichRTCCandidate, RichRTCDescription } from "./protocol/rich-events";
+import { Candidate, eventTypes, SDP } from "./protocol/wire-events";
 
 // Cross-browser support:
 function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {

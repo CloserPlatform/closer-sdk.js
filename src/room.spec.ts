@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
-import { eventTypes, mark, typing } from "./protocol/events";
+import { eventTypes, mark, typing } from "./protocol/wire-events";
 import * as proto from "./protocol/protocol";
 import { RichEvent } from "./protocol/rich-events";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";

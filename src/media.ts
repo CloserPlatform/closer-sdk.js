@@ -1,9 +1,9 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { eventTypes } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import { RichChatEdited } from "./protocol/rich-events";
+import { eventTypes } from "./protocol/wire-events";
 import { RichMedia } from "./rich";
 
 export class Media implements RichMedia {

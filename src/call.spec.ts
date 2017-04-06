@@ -4,7 +4,7 @@ import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
 import { Call as ProtoCall } from "./protocol/protocol";
 import { RichEvent } from "./protocol/rich-events";
-import { eventTypes } from "./protocol/events";
+import { eventTypes } from "./protocol/wire-events";
 
 const callId = "123";
 const alice = "321";

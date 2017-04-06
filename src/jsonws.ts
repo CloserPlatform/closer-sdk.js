@@ -1,6 +1,6 @@
 import { Callback } from "./events";
 import { Logger } from "./logger";
-import { disconnect, Disconnect, error, Error, Event, read, write } from "./protocol/events";
+import { disconnect, Disconnect, error, Error, Event, read, write } from "./protocol/wire-events";
 
 export class JSONWebSocket {
   private log: Logger;

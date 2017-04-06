@@ -2,7 +2,7 @@ import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log, sleep } from "./fixtures.spec";
 import { createMessage } from "./message";
-import { eventTypes } from "./protocol/events";
+import { eventTypes } from "./protocol/wire-events";
 import { Delivered, Message } from "./protocol/protocol";
 import { RichChatDelivered, RichChatEdited } from "./protocol/rich-events";
 

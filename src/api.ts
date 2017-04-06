@@ -4,6 +4,7 @@ import { ChatConfig, RatelConfig, ResourceConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
+import * as proto from "./protocol/protocol";
 import {
   Candidate,
   chatDelivered,
@@ -24,8 +25,7 @@ import {
   unfix,
   unmuteAudio,
   unpauseVideo
-} from "./protocol/events";
-import * as proto from "./protocol/protocol";
+} from "./protocol/wire-events";
 
 export class HeaderValue {
   header: string;

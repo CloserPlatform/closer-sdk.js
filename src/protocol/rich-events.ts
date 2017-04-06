@@ -6,8 +6,8 @@ import { Logger } from "../logger";
 import { createMedia, Media } from "../media";
 import { createMessage, Message } from "../message";
 import { createRoom, Room } from "../room";
-import * as proto from "./events";
-import { eventTypes } from "./events";
+import * as proto from "./wire-events";
+import { eventTypes } from "./wire-events";
 
 export interface RichEvent extends proto.Event {
 }
