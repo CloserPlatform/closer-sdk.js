@@ -41,7 +41,7 @@ export interface Call {
 export interface CallAction extends CallArchivable {
   action: actionTypes.JOINED | actionTypes.LEFT| actionTypes.INVITED
     | actionTypes.REJECTED | actionTypes.ANSWERED | actionTypes.AUDIO_MUTED
-    | actionTypes.AUDIO_UNMUTED | actionTypes.VIDEO_PAUSED | actionTypes.VIDEO_UNPAUSED,
+    | actionTypes.AUDIO_UNMUTED | actionTypes.VIDEO_PAUSED | actionTypes.VIDEO_UNPAUSED;
   reason?: string;
   invitee?: ID;
 }

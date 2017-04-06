@@ -1,4 +1,3 @@
-import { deepcopy } from "../utils";
 import * as proto from "./protocol";
 
 export namespace eventTypes {
@@ -308,41 +307,4 @@ export function read(bytes: string): WireEvent {
 
 export function write(event: WireEvent): string {
   return JSON.stringify(event);
-}
-
-// Backend fixer-uppers:
-export function fix(e: WireEvent): WireEvent {
-  // NOTE Use this function to fix any backend crap.
-  switch (e.type) {
-    case eventTypes.CALL_END:
-      let et = deepcopy(e) as WireCallEnd;
-      et.timestamp = Date.now();
-      return et;
-
-    case eventTypes.HELLO:
-      let h = deepcopy(e) as WireHello;
-      h.timestamp = Date.now();
-      return h;
-
-    default:
-      return e;
-  }
-}
-
-export function unfix(e: WireEvent): WireEvent {
-  // NOTE Use this function to reverse fix(e).
-  switch (e.type) {
-    case eventTypes.CALL_END:
-      let et = deepcopy(e) as WireCallEnd;
-      et.timestamp = undefined;
-      return et;
-
-    case eventTypes.HELLO:
-      let h = deepcopy(e) as WireHello;
-      h.timestamp = undefined;
-      return h;
-
-    default:
-      return e;
-  }
 }

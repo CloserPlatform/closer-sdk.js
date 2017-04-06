@@ -6,6 +6,7 @@ import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
 import * as proto from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
+import { eventTypes } from "./protocol/wire-events";
 
 export class HeaderValue {
   header: string;
@@ -110,7 +111,7 @@ export class APIWithWebsocket extends RESTfulAPI {
   }
 
   send(event: wireEvents.WireEvent) {
-    this.socket.send(wireEvents.unfix(event));
+    this.socket.send(event);
   }
 
   ask<Response>(event: wireEvents.WireEvent): Promise<Response> {
@@ -131,13 +132,12 @@ export class APIWithWebsocket extends RESTfulAPI {
     this.socket.onError(callback);
 
     this.socket.onEvent((event: wireEvents.WireEvent) => {
-      let e = wireEvents.fix(event);
-      if (e.type === "error") {
-        this.reject(e.ref, e as wireEvents.WireError);
+      if (event.type === eventTypes.ERROR) {
+        this.reject(event.ref, event as wireEvents.WireError);
       } else {
-        this.resolve(e.ref, e);
+        this.resolve(event.ref, event);
       }
-      callback(e);
+      callback(event);
     });
   }
 
