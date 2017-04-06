@@ -1,4 +1,5 @@
 import * as proto from "./protocol";
+import * as wireEntities from "./wire-entities";
 
 export namespace eventTypes {
   export const BOT_UPDATED = "bot_updated";
@@ -69,7 +70,7 @@ export interface WireCallActionSent extends WireEvent {
 }
 
 export interface WireCallInvitation extends WireEvent {
-  call: proto.Call;
+  call: wireEntities.Call;
   inviter: proto.ID;
 }
 
@@ -88,7 +89,7 @@ export interface WireChatEdited extends WireEvent {
 }
 
 export interface WireChatReceived extends WireEvent {
-  message: proto.Message;
+  message: wireEntities.Message;
 }
 
 export interface WireChatRequest extends WireEvent {
@@ -133,7 +134,7 @@ export interface WireRoomActionSent extends WireEvent {
 
 export interface WireRoomInvitation extends WireEvent {
   inviter: proto.ID;
-  room: proto.Room;
+  room: wireEntities.Room;
 }
 
 export interface WireRoomMark extends WireEvent {
@@ -141,11 +142,11 @@ export interface WireRoomMark extends WireEvent {
 }
 
 export interface WireRoomMedia extends WireEvent {
-  media: proto.Media;
+  media: wireEntities.Media;
 }
 
 export interface WireRoomMessage extends WireEvent {
-  message: proto.Message;
+  message: wireEntities.Message;
 }
 
 export interface WireRoomMetadata extends WireEvent {

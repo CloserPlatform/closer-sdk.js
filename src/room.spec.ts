@@ -1,9 +1,10 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
-import { actionTypes, eventTypes, mark, typing } from "./protocol/wire-events";
-import * as proto from "./protocol/protocol";
 import { Event } from "./protocol/events";
+import * as proto from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
+import { actionTypes, eventTypes, mark, typing } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 
 import RoomType = roomType.RoomType;
@@ -19,7 +20,7 @@ const msg3 = "4545";
 const meta1 = "576";
 const media1 = "365";
 
-function msg(id: string): proto.Message {
+function msg(id: string): wireEntities.Message {
   return {
     type: "message",
     id,
@@ -41,7 +42,7 @@ function meta(id: string, payload: any): proto.Metadata {
   };
 }
 
-function media(id: string, description: string): proto.Media {
+function media(id: string, description: string): wireEntities.Media {
   return {
     type: "media",
     id,
@@ -118,7 +119,7 @@ function makeRoom(roomType: RoomType) {
     created: 123,
     users: [alice],
     direct: false,
-  } as proto.Room;
+  } as wireEntities.Room;
 
   switch (roomType) {
     case RoomType.DIRECT:

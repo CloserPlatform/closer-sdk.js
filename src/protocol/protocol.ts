@@ -30,14 +30,6 @@ export interface Bot {
   callback?: string;
 }
 
-export interface Call {
-  id: ID;
-  created: Timestamp;
-  ended?: Timestamp;
-  users: Array<ID>;
-  direct: boolean;
-}
-
 export interface CallAction extends CallArchivable {
   action: actionTypes.JOINED | actionTypes.LEFT| actionTypes.INVITED
     | actionTypes.REJECTED | actionTypes.ANSWERED | actionTypes.AUDIO_MUTED
@@ -62,31 +54,14 @@ export interface Editable {
 
 export interface Edited extends UserTimestamp {}
 
-export interface Media extends RoomArchivable, MediaItem, Editable {}
-
 export interface MediaItem {
   mimeType: string;
   content: string;
   description: string;
 }
 
-export interface Message extends RoomArchivable, Deliverable, Editable {
-  body: string;
-}
-
 export interface Metadata extends RoomArchivable {
   payload: any;
-}
-
-export interface Room {
-  id: ID;
-  name: string;
-  created: Timestamp;
-  users: Array<ID>;
-  direct: boolean;
-  orgId?: ID;
-  externalId?: string;
-  mark?: number;
 }
 
 export interface UserTimestamp {

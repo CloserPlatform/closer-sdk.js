@@ -1,5 +1,6 @@
 import { Callback } from "./events";
-import { Deliverable, Editable, Media, Message } from "./protocol/protocol";
+import { Deliverable, Editable } from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
 
 export interface RichDeliverable extends Deliverable {
   markDelivered: () => void;
@@ -11,6 +12,6 @@ export interface RichEditable<T> extends Editable {
   onEdit: (cb: Callback<Editable>) => void;
 }
 
-export interface RichMessage extends Message, RichDeliverable, RichEditable<string> {}
+export interface RichMessage extends wireEntities.Message, RichDeliverable, RichEditable<string> {}
 
-export interface RichMedia extends Media, RichEditable<string> {}
+export interface RichMedia extends wireEntities.Media, RichEditable<string> {}

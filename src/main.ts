@@ -6,12 +6,12 @@ export * from "./auth";
 // Some useful types:
 export { Artichoke as Chat } from "./artichoke";
 export { WheelHouse as Campaign } from "./wheelhouse"
-export { GroupCall, DirectCall } from "./call";
+export { GroupCall, DirectCall, callType } from "./call";
 export { Config } from "./config";
 export { Media } from "./media";
 export { Message } from "./message";
 export { Archivable, CallAction, CallArchivable, Metadata, RoomAction, RoomArchivable} from "./protocol/protocol";
-export { BusinessRoom, DirectRoom, GroupRoom, Room } from "./room";
+export { BusinessRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 export { Session } from "./session";
 
 // Other useful crap:

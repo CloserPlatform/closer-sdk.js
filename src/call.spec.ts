@@ -2,7 +2,7 @@ import { ArtichokeAPI } from "./api";
 import { GroupCall, createCall, callType, Call } from "./call";
 import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
-import { Call as ProtoCall } from "./protocol/protocol";
+import { Call as ProtoCall } from "./protocol/wire-entities";
 import { Event } from "./protocol/events";
 import { actionTypes, eventTypes } from "./protocol/wire-events";
 import CallType = callType.CallType;

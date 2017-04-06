@@ -3,7 +3,7 @@ import { CreateRoomData } from "./campaign";
 import { ResourceConfig } from "./config";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
-import * as proto from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
 import { BusinessRoom, createRoom } from "./room";
 import { wrapPromise } from "./utils";
 
@@ -28,7 +28,8 @@ export class WheelHouse {
     return this.wrapRoom(this.wheelHouseAPI.createRoom(createRoomData));
   }
 
-  private wrapRoom(promise: Promise<proto.Room | Array<proto.Room>>) {
-    return wrapPromise(promise, (room: proto.Room) => createRoom(room, this.log, this.events, this.artichokeApi));
+  private wrapRoom(promise: Promise<wireEntities.Room | Array<wireEntities.Room>>) {
+    return wrapPromise(promise, (room: wireEntities.Room) =>
+      createRoom(room, this.log, this.events, this.artichokeApi));
   }
 }

@@ -3,6 +3,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { ChatDelivered, ChatEdited } from "./protocol/events";
 import * as proto from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
 import { eventTypes } from "./protocol/wire-events";
 import { RichMessage } from "./rich";
 
@@ -20,7 +21,7 @@ export class Message implements RichMessage {
   private events: EventHandler;
   private api: ArtichokeAPI;
 
-  constructor(message: proto.Message, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(message: wireEntities.Message, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = message.id;
     this.body = message.body;
     this.user = message.user;
@@ -68,7 +69,7 @@ export class Message implements RichMessage {
 
   onEdit(callback: Callback<Message>) {
     this.events.onConcreteEvent(eventTypes.CHAT_EDITED, this.id, (msg: ChatEdited) => {
-      let m = (msg.archivable as proto.Message);
+      let m = (msg.archivable as wireEntities.Message);
       this.body = m.body;
       this.edited = m.edited;
       callback(this);
@@ -78,6 +79,7 @@ export class Message implements RichMessage {
   // TODO markRead, onRead
 }
 
-export function createMessage(message: proto.Message, log: Logger, events: EventHandler, api: ArtichokeAPI): Message {
+export function createMessage(message: wireEntities.Message, log: Logger,
+                              events: EventHandler, api: ArtichokeAPI): Message {
   return new Message(message, log, events, api);
 }

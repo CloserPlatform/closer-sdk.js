@@ -5,6 +5,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import * as events from "./protocol/events";
 import * as proto from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
 import { eventTypes, Status, WireEvent } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
@@ -39,7 +40,7 @@ export class Artichoke {
     this.events.onEvent(eventTypes.HEARTBEAT, callback);
   }
 
-  onDisconnect(callback: Callback<events.RichDisconnect>) {
+  onDisconnect(callback: Callback<events.Disconnect>) {
     this.events.onEvent(eventTypes.DISCONNECT, callback);
   }
 
@@ -134,11 +135,11 @@ export class Artichoke {
   }
 
   // Utils:
-  private wrapCall(promise: Promise<proto.Call | Array<proto.Call>>, stream?: MediaStream) {
+  private wrapCall(promise: Promise<wireEntities.Call | Array<wireEntities.Call>>, stream?: MediaStream) {
     return wrapPromise(promise, (call) => createCall(call, this.config.rtc, this.log, this.events, this.api, stream));
   }
 
-  private wrapRoom(promise: Promise<proto.Room | Array<proto.Room>>) {
-    return wrapPromise(promise, (room: proto.Room) => createRoom(room, this.log, this.events, this.api));
+  private wrapRoom(promise: Promise<wireEntities.Room | Array<wireEntities.Room>>) {
+    return wrapPromise(promise, (room: wireEntities.Room) => createRoom(room, this.log, this.events, this.api));
   }
 }

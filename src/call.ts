@@ -3,6 +3,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { CallActionSent, CallEnd } from "./protocol/events";
 import * as proto from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
 import { actionTypes, eventTypes } from "./protocol/wire-events";
 import { createRTCPool, RTCPool } from "./rtc";
 
@@ -25,7 +26,7 @@ export namespace callType {
   }
 }
 
-export abstract class Call implements proto.Call {
+export abstract class Call implements wireEntities.Call {
   public id: proto.ID;
   public created: proto.Timestamp;
   public ended: proto.Timestamp;
@@ -50,7 +51,7 @@ export abstract class Call implements proto.Call {
 
   public abstract readonly callType: callType.CallType;
 
-  constructor(call: proto.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
+  constructor(call: wireEntities.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
               api: ArtichokeAPI, stream?: MediaStream) {
     this.id = call.id;
     this.created = call.created;
@@ -242,7 +243,7 @@ export class GroupCall extends Call {
   }
 }
 
-export function createCall(call: proto.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
+export function createCall(call: wireEntities.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
                            api: ArtichokeAPI, stream?: MediaStream): Call {
   if (call.direct) {
     return new DirectCall(call, config, log, events, api, stream);

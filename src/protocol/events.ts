@@ -104,7 +104,7 @@ export interface UnmuteAudio extends StreamUpdate, wireEvents.WireUnmuteAudio {
 export interface UnpauseVideo extends StreamUpdate, wireEvents.WireUnpauseVideo {
 }
 
-export interface RichDisconnect extends Event, wireEvents.WireDisconnect {
+export interface Disconnect extends Event, wireEvents.WireDisconnect {
 }
 
 export namespace eventUtils {

@@ -2,12 +2,12 @@ import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
 import { createMedia } from "./media";
-import { Media } from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
 import { ChatEdited } from "./protocol/events";
 
 const roomId = "123";
 const bob = "456";
-function makeMedia(): Media {
+function makeMedia(): wireEntities.Media {
   return {
     type: "media",
     id: "2323",
