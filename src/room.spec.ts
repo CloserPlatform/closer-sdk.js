@@ -451,10 +451,10 @@ describe("GroupRoom, BusinessRoom, DirectRoom", () => {
   it("should have proper roomType field defined", (done) => {
     const businessRoom: Room = createRoom(makeRoom(RoomType.BUSINESS), log, events, api);
     const directRoom: Room = createRoom(makeRoom(RoomType.DIRECT), log, events, api);
-    const basicRoom: Room = createRoom(makeRoom(RoomType.GROUP), log, events, api);
+    const groupRoom: Room = createRoom(makeRoom(RoomType.GROUP), log, events, api);
     expect(businessRoom.roomType).toEqual(RoomType.BUSINESS);
     expect(directRoom.roomType).toEqual(RoomType.DIRECT);
-    expect(basicRoom.roomType).toEqual(RoomType.GROUP);
+    expect(groupRoom.roomType).toEqual(RoomType.GROUP);
     done();
   });
 });

@@ -1,10 +1,11 @@
 import { ArtichokeAPI } from "./api";
-import { GroupCall, createCall } from "./call";
+import { GroupCall, createCall, callType, Call } from "./call";
 import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
 import { Call as ProtoCall } from "./protocol/protocol";
 import { Event } from "./protocol/events";
 import { actionTypes, eventTypes } from "./protocol/wire-events";
+import CallType = callType.CallType;
 
 const callId = "123";
 const alice = "321";
@@ -61,13 +62,25 @@ class APIMock extends ArtichokeAPI {
   }
 }
 
-function makeCall(direct = false) {
-  return {
+function makeCall(callType: CallType) {
+  const call = {
     id: callId,
     created: 123,
     users: [alice],
-    direct
   } as ProtoCall;
+
+  switch(callType) {
+    case CallType.DIRECT:
+      call.direct = true;
+      return call;
+
+    case CallType.GROUP:
+      call.direct = false;
+      return call;
+
+    default:
+      throw Error("invalid CallType")
+  }
 }
 
 ["DirectCall", "GroupCall"].forEach((d) => {
@@ -79,7 +92,8 @@ function makeCall(direct = false) {
     beforeEach(() => {
       events = new EventHandler(log);
       api = new APIMock();
-      call = createCall(makeCall(d === "DirectCall"), config.chat.rtc, log, events, api);
+      const callType = d === "DirectCall" ? CallType.DIRECT : CallType.GROUP;
+      call = createCall(makeCall(callType), config.chat.rtc, log, events, api);
     });
 
     it("should allow rejecting", (done) => {
@@ -319,7 +333,7 @@ describe("GroupCall", () => {
   beforeEach(() => {
     events = new EventHandler(log);
     api = new APIMock();
-    call = createCall(makeCall(), config.chat.rtc, log, events, api) as GroupCall;
+    call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api) as GroupCall;
   });
 
   it("should run a callback on invitation", (done) => {
@@ -363,4 +377,16 @@ describe("GroupCall", () => {
       done();
     });
   });
+});
+
+describe("DirectCall, GroupCall", () => {
+  const events = new EventHandler(log);
+  const api = new APIMock();
+
+  it("should have proper callTYpe filed defined", () => {
+    const directCall: Call = createCall(makeCall(CallType.DIRECT), config.chat.rtc, log, events, api);
+    const groupCall: Call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api);
+    expect(directCall.callType).toEqual(CallType.DIRECT);
+    expect(groupCall.callType).toEqual(CallType.GROUP);
+  })
 });

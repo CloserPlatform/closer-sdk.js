@@ -10,7 +10,22 @@ export interface RemoteStreamCallback {
   (peer: proto.ID, stream: MediaStream): void;
 }
 
-export class Call implements proto.Call {
+export namespace callType {
+  export enum CallType {
+    DIRECT,
+    GROUP,
+  }
+
+  export function isDirect(call: Call): call is DirectCall {
+    return call.callType === CallType.DIRECT;
+  }
+
+  export function isGroup(call: Call): call is GroupCall {
+    return call.callType === CallType.GROUP;
+  }
+}
+
+export abstract class Call implements proto.Call {
   public id: proto.ID;
   public created: proto.Timestamp;
   public ended: proto.Timestamp;
@@ -32,6 +47,8 @@ export class Call implements proto.Call {
   private onUnmutedCallback: Callback<proto.CallAction>;
   private onPausedCallback: Callback<proto.CallAction>;
   private onUnpausedCallback: Callback<proto.CallAction>;
+
+  public abstract readonly callType: callType.CallType;
 
   constructor(call: proto.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
               api: ArtichokeAPI, stream?: MediaStream) {
@@ -204,9 +221,13 @@ export class Call implements proto.Call {
   }
 }
 
-export class DirectCall extends Call {}
+export class DirectCall extends Call {
+  public readonly callType: callType.CallType = callType.CallType.DIRECT;
+}
 
 export class GroupCall extends Call {
+  public readonly callType: callType.CallType = callType.CallType.GROUP;
+
   invite(user: proto.ID): Promise<void> {
     return this.api.inviteToCall(this.id, user);
   }
@@ -222,7 +243,7 @@ export class GroupCall extends Call {
 }
 
 export function createCall(call: proto.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
-                           api: ArtichokeAPI, stream?: MediaStream): DirectCall | GroupCall {
+                           api: ArtichokeAPI, stream?: MediaStream): Call {
   if (call.direct) {
     return new DirectCall(call, config, log, events, api, stream);
   } else {
