@@ -182,7 +182,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
     super.connect(this.wsUrl);
   }
 
-  // Call API:
+  // GroupCall API:
   sendDescription(callId: proto.ID, sessionId: proto.ID, description: wireEvents.SDP) {
     this.send(wireEvents.rtcDescription(callId, sessionId, description));
   }

@@ -1,5 +1,5 @@
 import { ArtichokeAPI } from "./api";
-import { Call, createCall, DirectCall } from "./call";
+import { createCall, DirectCall, GroupCall } from "./call";
 import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
@@ -78,7 +78,7 @@ export class Artichoke {
     return this.api.getBots();
   }
 
-  // Call API:
+  // GroupCall API:
   onCall(callback: Callback<events.CallInvitation>) {
     this.events.onEvent(eventTypes.CALL_INVITATION, callback);
   }
@@ -87,15 +87,15 @@ export class Artichoke {
     return this.wrapCall(this.api.createDirectCall(peer, timeout), stream);
   }
 
-  createCall(stream: MediaStream, users: Array<proto.ID>): Promise<Call> {
+  createCall(stream: MediaStream, users: Array<proto.ID>): Promise<GroupCall> {
     return this.wrapCall(this.api.createCall(users), stream);
   }
 
-  getCall(call: proto.ID): Promise<Call | DirectCall> {
+  getCall(call: proto.ID): Promise<GroupCall | DirectCall> {
     return this.wrapCall(this.api.getCall(call));
   }
 
-  getCalls(): Promise<Array<Call | DirectCall>> {
+  getCalls(): Promise<Array<GroupCall | DirectCall>> {
     return this.wrapCall(this.api.getCalls());
   }
 

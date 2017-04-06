@@ -1,5 +1,5 @@
 import { ArtichokeAPI } from "./api";
-import { Call, createCall } from "./call";
+import { GroupCall, createCall } from "./call";
 import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
 import { Call as ProtoCall } from "./protocol/protocol";
@@ -70,7 +70,7 @@ function makeCall(direct = false) {
   } as ProtoCall;
 }
 
-["DirectCall", "Call"].forEach((d) => {
+["DirectCall", "GroupCall"].forEach((d) => {
   describe(d, () => {
     let events;
     let api;
@@ -311,7 +311,7 @@ function makeCall(direct = false) {
   });
 });
 
-describe("Call", () => {
+describe("GroupCall", () => {
   let events;
   let api;
   let call;
@@ -319,7 +319,7 @@ describe("Call", () => {
   beforeEach(() => {
     events = new EventHandler(log);
     api = new APIMock();
-    call = createCall(makeCall(), config.chat.rtc, log, events, api) as Call;
+    call = createCall(makeCall(), config.chat.rtc, log, events, api) as GroupCall;
   });
 
   it("should run a callback on invitation", (done) => {

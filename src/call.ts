@@ -206,7 +206,7 @@ export class BaseCall implements proto.Call {
 
 export class DirectCall extends BaseCall {}
 
-export class Call extends BaseCall {
+export class GroupCall extends BaseCall {
   invite(user: proto.ID): Promise<void> {
     return this.api.inviteToCall(this.id, user);
   }
@@ -222,10 +222,10 @@ export class Call extends BaseCall {
 }
 
 export function createCall(call: proto.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
-                           api: ArtichokeAPI, stream?: MediaStream): DirectCall | Call {
+                           api: ArtichokeAPI, stream?: MediaStream): DirectCall | GroupCall {
   if (call.direct) {
     return new DirectCall(call, config, log, events, api, stream);
   } else {
-    return new Call(call, config, log, events, api, stream);
+    return new GroupCall(call, config, log, events, api, stream);
   }
 }

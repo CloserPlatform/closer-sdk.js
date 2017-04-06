@@ -6,7 +6,7 @@ export * from "./auth";
 // Some useful types:
 export { Artichoke as Chat } from "./artichoke";
 export { WheelHouse as Campaign } from "./wheelhouse"
-export { Call, DirectCall } from "./call";
+export { GroupCall, DirectCall } from "./call";
 export { Config } from "./config";
 export { Media } from "./media";
 export { Message } from "./message";
