@@ -46,54 +46,54 @@ export namespace eventTypes {
 }
 
 // JSON Events:
-export interface Event {
+export interface WireEvent {
   type: Type;
   ref?: Ref;
   id?: ID;
 }
 
-export interface BotUpdated extends Event {
+export interface BotUpdated extends WireEvent {
   bot: Bot;
 }
 
-export interface CallActionSent extends Event {
+export interface CallActionSent extends WireEvent {
   action: CallAction;
 }
 
-export interface CallInvitation extends Event {
+export interface CallInvitation extends WireEvent {
   call: Call;
   inviter: ID;
 }
 
-export interface CallEnd extends Event {
+export interface CallEnd extends WireEvent {
   reason: string;
   timestamp: Timestamp;
 }
 
-export interface ChatDelivered extends Event {
+export interface ChatDelivered extends WireEvent {
   timestamp: Timestamp;
   user?: ID;
 }
 
-export interface ChatEdited extends Event {
+export interface ChatEdited extends WireEvent {
   archivable: Archivable;
 }
 
-export interface ChatReceived extends Event {
+export interface ChatReceived extends WireEvent {
   message: Message;
 }
 
-export interface ChatRequest extends Event {
+export interface ChatRequest extends WireEvent {
   body: string;
   room: ID;
 }
 
-export interface Error extends Event {
+export interface Error extends WireEvent {
   reason: string;
   cause?: any;
 }
 
-export interface ServerInfo extends Event {
+export interface ServerInfo extends WireEvent {
   timestamp: Timestamp;
 }
 
@@ -109,64 +109,64 @@ export interface PauseVideo extends StreamUpdate {
 
 export type Status = "away" | "available" | "unavailable";
 
-export interface PresenceRequest extends Event {
+export interface PresenceRequest extends WireEvent {
   status: Status;
 }
 
-export interface PresenceUpdate extends Event {
+export interface PresenceUpdate extends WireEvent {
   user: ID;
   status: Status;
   timestamp: Timestamp;
 }
 
-export interface RoomActionSent extends Event {
+export interface RoomActionSent extends WireEvent {
   action: RoomAction;
 }
 
-export interface RoomInvitation extends Event {
+export interface RoomInvitation extends WireEvent {
   inviter: ID;
   room: Room;
 }
 
-export interface RoomMark extends Event {
+export interface RoomMark extends WireEvent {
   timestamp: Timestamp;
 }
 
-export interface RoomMedia extends Event {
+export interface RoomMedia extends WireEvent {
   media: Media;
 }
 
-export interface RoomMessage extends Event {
+export interface RoomMessage extends WireEvent {
   message: Message;
 }
 
-export interface RoomMetadata extends Event {
+export interface RoomMetadata extends WireEvent {
   metadata: Metadata;
 }
 
-export interface RoomStartTyping extends Event {
+export interface RoomStartTyping extends WireEvent {
 }
 
-export interface RoomTyping extends Event {
+export interface RoomTyping extends WireEvent {
   user: ID;
   timestamp: Timestamp;
 }
 
 export type Candidate = RTCIceCandidate;
 
-export interface RTCCandidate extends Event {
+export interface RTCCandidate extends WireEvent {
   peer: ID;
   candidate: Candidate;
 }
 
 export type SDP = RTCSessionDescriptionInit;
 
-export interface RTCDescription extends Event {
+export interface RTCDescription extends WireEvent {
   peer: ID;
   description: SDP;
 }
 
-export interface StreamUpdate extends Event {
+export interface StreamUpdate extends WireEvent {
 }
 export interface UnmuteAudio extends StreamUpdate {
 }
@@ -174,7 +174,7 @@ export interface UnpauseVideo extends StreamUpdate {
 }
 
 // Internal events:
-export interface Disconnect extends Event {
+export interface Disconnect extends WireEvent {
   reason: string;
   code: number;
 }
@@ -293,16 +293,16 @@ export function disconnect(code: number, reason: string): Disconnect {
 }
 
 // Reading & writing:
-export function read(bytes: string): Event {
+export function read(bytes: string): WireEvent {
   return JSON.parse(bytes);
 }
 
-export function write(event: Event): string {
+export function write(event: WireEvent): string {
   return JSON.stringify(event);
 }
 
 // Backend fixer-uppers:
-export function fix(e: Event): Event {
+export function fix(e: WireEvent): WireEvent {
   // NOTE Use this function to fix any backend crap.
   switch (e.type) {
     case eventTypes.CALL_END:
@@ -320,7 +320,7 @@ export function fix(e: Event): Event {
   }
 }
 
-export function unfix(e: Event): Event {
+export function unfix(e: WireEvent): WireEvent {
   // NOTE Use this function to reverse fix(e).
   switch (e.type) {
     case eventTypes.CALL_END:

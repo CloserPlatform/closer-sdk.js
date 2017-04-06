@@ -16,7 +16,7 @@ import {
   RichPresenceUpdate,
   RichRoomInvitation
 } from "./protocol/rich-events";
-import { Event, eventTypes, Status } from "./protocol/wire-events";
+import { eventTypes, Status, WireEvent } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
 
@@ -62,7 +62,7 @@ export class Artichoke {
   connect() {
     this.api.connect();
 
-    this.api.onEvent((e: Event) => {
+    this.api.onEvent((e: WireEvent) => {
       const richEvent: RichEvent = richEvents.upgrade(e, this.config, this.log, this.events, this.api);
       this.events.notify(richEvent);
     });

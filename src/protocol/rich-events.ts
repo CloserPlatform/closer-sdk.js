@@ -9,7 +9,7 @@ import { createRoom, Room } from "../room";
 import * as proto from "./wire-events";
 import { eventTypes } from "./wire-events";
 
-export interface RichEvent extends proto.Event {
+export interface RichEvent extends proto.WireEvent {
 }
 
 export interface RichBotUpdated extends RichEvent, proto.BotUpdated {
@@ -109,7 +109,7 @@ export interface RichDisconnect extends RichEvent, proto.Disconnect {
 
 export namespace richEvents {
 
-  export function upgrade(e: proto.Event, config: ChatConfig, log: Logger,
+  export function upgrade(e: proto.WireEvent, config: ChatConfig, log: Logger,
                           events: EventHandler, api: ArtichokeAPI): RichEvent {
     if (isCallInvitation(e)) {
       const call = createCall(e.call, config.rtc, log, events, api);
@@ -141,23 +141,23 @@ export namespace richEvents {
     return richEvent;
   }
 
-  function isCallInvitation(e: proto.Event): e is proto.CallInvitation {
+  function isCallInvitation(e: proto.WireEvent): e is proto.CallInvitation {
     return e.type === eventTypes.CALL_INVITATION;
   }
 
-  function isChatReceived(e: proto.Event): e is proto.ChatReceived {
+  function isChatReceived(e: proto.WireEvent): e is proto.ChatReceived {
     return e.type === eventTypes.CHAT_RECEIVED;
   }
 
-  function isRoomInvitation(e: proto.Event): e is proto.RoomInvitation {
+  function isRoomInvitation(e: proto.WireEvent): e is proto.RoomInvitation {
     return e.type === eventTypes.ROOM_INVITATION;
   }
 
-  function isRoomMedia(e: proto.Event): e is proto.RoomMedia {
+  function isRoomMedia(e: proto.WireEvent): e is proto.RoomMedia {
     return e.type === eventTypes.ROOM_MEDIA;
   }
 
-  function isRoomMessage(e: proto.Event): e is proto.RoomMessage {
+  function isRoomMessage(e: proto.WireEvent): e is proto.RoomMessage {
     return e.type === eventTypes.ROOM_MESSAGE;
   }
 }

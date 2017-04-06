@@ -11,7 +11,6 @@ import {
   ChatReceived,
   chatRequest,
   Error,
-  Event,
   fix,
   mark,
   muteAudio,
@@ -24,7 +23,8 @@ import {
   Status,
   unfix,
   unmuteAudio,
-  unpauseVideo
+  unpauseVideo,
+  WireEvent
 } from "./protocol/wire-events";
 
 export class HeaderValue {
@@ -108,7 +108,7 @@ export interface PromiseResolve<T> extends Callback<T> {}
 export interface PromiseReject extends Callback<Error> {}
 
 interface PromiseFunctions {
-  resolve: PromiseResolve<Event>;
+  resolve: PromiseResolve<WireEvent>;
   reject: PromiseReject;
 }
 
@@ -129,11 +129,11 @@ export class APIWithWebsocket extends RESTfulAPI {
     this.socket.disconnect();
   }
 
-  send(event: Event) {
+  send(event: WireEvent) {
     this.socket.send(unfix(event));
   }
 
-  ask<Response>(event: Event): Promise<Response> {
+  ask<Response>(event: WireEvent): Promise<Response> {
     return new Promise((resolve, reject) => {
       let ref = "ref" + Date.now(); // FIXME Use UUID instead.
       this.promises[ref] = {
@@ -145,12 +145,12 @@ export class APIWithWebsocket extends RESTfulAPI {
     });
   }
 
-  onEvent(callback: Callback<Event>) {
+  onEvent(callback: Callback<WireEvent>) {
     this.socket.onDisconnect(callback);
 
     this.socket.onError(callback);
 
-    this.socket.onEvent((event: Event) => {
+    this.socket.onEvent((event: WireEvent) => {
       let e = fix(event);
       if (e.type === "error") {
         this.reject(e.ref, e as Error);
@@ -161,7 +161,7 @@ export class APIWithWebsocket extends RESTfulAPI {
     });
   }
 
-  private resolve(ref: proto.Ref, event: Event) {
+  private resolve(ref: proto.Ref, event: WireEvent) {
     if (ref && ref in this.promises) {
       this.promises[ref].resolve(event);
       delete this.promises[ref];

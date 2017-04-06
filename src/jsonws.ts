@@ -1,6 +1,6 @@
 import { Callback } from "./events";
 import { Logger } from "./logger";
-import { disconnect, Disconnect, error, Error, Event, read, write } from "./protocol/wire-events";
+import { disconnect, Disconnect, error, Error, read, WireEvent, write } from "./protocol/wire-events";
 
 export class JSONWebSocket {
   private log: Logger;
@@ -36,14 +36,14 @@ export class JSONWebSocket {
     };
   }
 
-  onEvent(callback: Callback<Event>) {
+  onEvent(callback: Callback<WireEvent>) {
     this.socket.onmessage = (event) => {
       this.log("WS received: " + event.data);
-      callback(read(event.data) as Event);
+      callback(read(event.data) as WireEvent);
     };
   }
 
-  send(event: Event) {
+  send(event: WireEvent) {
     let json = write(event);
     this.log("WS sent: " + json);
     this.socket.send(json);

@@ -8,7 +8,7 @@ const msgId = "345";
 const alice = "321";
 const bob = "987";
 
-const events: Array<proto.Event> = [{
+const events: Array<proto.WireEvent> = [{
   type: eventTypes.HEARTBEAT,
   timestamp: Date.now()
 } as proto.Heartbeat, {
