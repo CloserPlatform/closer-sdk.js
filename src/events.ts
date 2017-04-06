@@ -1,5 +1,5 @@
 import { Logger } from "./logger";
-import { RichError, RichEvent } from "./protocol/events";
+import { Event, RichError } from "./protocol/events";
 import { ID, Type } from "./protocol/protocol";
 import { error, eventTypes, write } from "./protocol/wire-events";
 
@@ -9,8 +9,8 @@ export interface Callback<T> {
 
 export class EventHandler {
   private log: Logger;
-  private perType: { [type: string]: Array<Callback<RichEvent>> } = {};
-  private perId: { [type: string]: { [id: string]: Callback<RichEvent> } } = {};
+  private perType: { [type: string]: Array<Callback<Event>> } = {};
+  private perId: { [type: string]: { [id: string]: Callback<Event> } } = {};
 
   constructor(log: Logger) {
     this.log = log;
@@ -25,14 +25,14 @@ export class EventHandler {
     });
   }
 
-  notify(event: RichEvent) {
+  notify(event: Event) {
     if ([this.notifyById(event), this.notifyByType(event)].every((r) => !r)) {
       this.log("Unhandled event " + event.type + ": " + write(event));
       this.raise("Unhandled event: " + event.type, event);
     }
   }
 
-  private notifyByType(event: RichEvent): boolean {
+  private notifyByType(event: Event): boolean {
     if (event.type in this.perType) {
       this.log("Running callbacks for event type " + event.type);
       this.perType[event.type].forEach(function(cb) {
@@ -43,7 +43,7 @@ export class EventHandler {
     return false;
   }
 
-  private notifyById(event: RichEvent): boolean {
+  private notifyById(event: Event): boolean {
     if (event.id && event.type in this.perId && event.id in this.perId[event.type]) {
       this.log("Running callbacks for event type " + event.type + ", id " + event.id);
       this.perId[event.type][event.id](event);
@@ -56,7 +56,7 @@ export class EventHandler {
     this.onEvent(eventTypes.ERROR, callback);
   }
 
-  onEvent(type: Type, callback: Callback<RichEvent>) {
+  onEvent(type: Type, callback: Callback<Event>) {
     this.log("Registered callback for event type " + type);
 
     if (!(type in this.perType)) {
@@ -65,7 +65,7 @@ export class EventHandler {
     this.perType[type].push(callback);
   }
 
-  onConcreteEvent(type: Type, id: ID, callback: Callback<RichEvent>) {
+  onConcreteEvent(type: Type, id: ID, callback: Callback<Event>) {
     this.log("Registered callback for event type " + type + ", id " + id);
 
     if (!(type in this.perId)) {

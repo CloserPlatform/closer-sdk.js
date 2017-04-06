@@ -4,11 +4,11 @@ import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import {
+  Event,
   RichBotUpdated,
   RichCallInvitation,
   RichDisconnect,
   RichError,
-  RichEvent,
   richEvents,
   RichHeartbeat,
   RichHello,
@@ -33,7 +33,7 @@ export class Artichoke {
     this.events = events;
 
     // NOTE Disable some events by default.
-    let nop = (e: RichEvent) => {
+    let nop = (e: Event) => {
       // Do nothing.
     };
     events.onEvent(eventTypes.ERROR, nop);
@@ -63,7 +63,7 @@ export class Artichoke {
     this.api.connect();
 
     this.api.onEvent((e: WireEvent) => {
-      const richEvent: RichEvent = richEvents.upgrade(e, this.config, this.log, this.events, this.api);
+      const richEvent: Event = richEvents.upgrade(e, this.config, this.log, this.events, this.api);
       this.events.notify(richEvent);
     });
   }

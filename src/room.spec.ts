@@ -3,7 +3,7 @@ import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
 import { eventTypes, mark, typing } from "./protocol/wire-events";
 import * as proto from "./protocol/protocol";
-import { RichEvent } from "./protocol/events";
+import { Event } from "./protocol/events";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 
 import RoomType = roomType.RoomType;
@@ -189,7 +189,7 @@ function makeRoom(roomType: RoomType) {
         type: eventTypes.ROOM_MESSAGE,
         id: room.id,
         message: m
-      } as RichEvent);
+      } as Event);
     });
 
     it("should run a callback on incoming metadata", (done) => {
@@ -207,7 +207,7 @@ function makeRoom(roomType: RoomType) {
         type: eventTypes.ROOM_METADATA,
         id: room.id,
         metadata: meta(meta1, payload)
-      } as RichEvent);
+      } as Event);
     });
 
     it("should run a callback on incoming media", (done) => {
@@ -223,7 +223,7 @@ function makeRoom(roomType: RoomType) {
         type: eventTypes.ROOM_MEDIA,
         id: room.id,
         media: media(media1, descr)
-      } as RichEvent);
+      } as Event);
     });
 
     it("should run a callback on incoming mark", (done) => {
@@ -349,7 +349,7 @@ describe("GroupRoom", () => {
             reason: "no reason",
             timestamp: Date.now()
           }
-        } as RichEvent);
+        } as Event);
       });
     });
 
@@ -363,7 +363,7 @@ describe("GroupRoom", () => {
         user: bob,
         timestamp: Date.now()
       }
-    } as RichEvent);
+    } as Event);
   });
 
   it("should run callback on room joined", (done) => {
@@ -382,7 +382,7 @@ describe("GroupRoom", () => {
         user: alice,
         timestamp: Date.now()
       }
-    } as RichEvent);
+    } as Event);
   });
 
   it("should run callback on room left", (done) => {
@@ -403,7 +403,7 @@ describe("GroupRoom", () => {
         reason: "reason",
         timestamp: Date.now()
       }
-    } as RichEvent);
+    } as Event);
   });
 
   it("should run callback on room invite", (done) => {
@@ -424,7 +424,7 @@ describe("GroupRoom", () => {
         invitee: bob,
         timestamp: Date.now()
       }
-    } as RichEvent);
+    } as Event);
   });
 
   // FIXME These should be moved to integration tests:

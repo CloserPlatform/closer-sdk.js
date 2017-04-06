@@ -12,20 +12,20 @@ import {
   whenever
 } from "./fixtures.spec";
 import { ID } from "./protocol/protocol";
-import { RichEvent } from "./protocol/events";
+import { Event } from "./protocol/events";
 import { Candidate, eventTypes, SDP } from "./protocol/wire-events";
 import { createRTCConnection, createRTCPool } from "./rtc";
 
 const callId = "123";
 const peerId = "321";
 
-function descr(sdp): RichEvent {
+function descr(sdp): Event {
   return {
     type: eventTypes.RTC_DESCRIPTION,
     id: callId,
     peer: peerId,
     description: sdp
-  } as RichEvent;
+  } as Event;
 }
 
 class APIMock extends ArtichokeAPI {
