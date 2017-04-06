@@ -6,110 +6,110 @@ import { Logger } from "../logger";
 import { createMedia, Media } from "../media";
 import { createMessage, Message } from "../message";
 import { createRoom, Room } from "../room";
-import * as proto from "./wire-events";
+import * as wireEvents from "./wire-events";
 import { eventTypes } from "./wire-events";
 
-export interface Event extends proto.WireEvent {
+export interface Event extends wireEvents.WireEvent {
 }
 
-export interface BotUpdated extends Event, proto.WireBotUpdated {
+export interface BotUpdated extends Event, wireEvents.WireBotUpdated {
 }
 
-export interface CallActionSent extends Event, proto.WireCallActionSent {
+export interface CallActionSent extends Event, wireEvents.WireCallActionSent {
 }
 
-export interface CallInvitation extends Event, proto.WireCallInvitation {
+export interface CallInvitation extends Event, wireEvents.WireCallInvitation {
   call: BaseCall;
 }
 
-export interface CallEnd extends Event, proto.WireCallEnd {
+export interface CallEnd extends Event, wireEvents.WireCallEnd {
 }
 
-export interface ChatDelivered extends Event, proto.WireChatDelivered {
+export interface ChatDelivered extends Event, wireEvents.WireChatDelivered {
 }
 
-export interface ChatEdited extends Event, proto.WireChatEdited {
+export interface ChatEdited extends Event, wireEvents.WireChatEdited {
 }
 
-export interface ChatReceived extends Event, proto.WireChatReceived {
+export interface ChatReceived extends Event, wireEvents.WireChatReceived {
   message: Message;
 }
 
-export interface ChatRequest extends Event, proto.WireChatRequest {
+export interface ChatRequest extends Event, wireEvents.WireChatRequest {
 }
 
-export interface Error extends Event, proto.WireError {
+export interface Error extends Event, wireEvents.WireError {
 }
 
-export interface ServerInfo extends Event, proto.WireServerInfo {
+export interface ServerInfo extends Event, wireEvents.WireServerInfo {
 }
 
-export interface Heartbeat extends ServerInfo, proto.WireHeartbeat {
+export interface Heartbeat extends ServerInfo, wireEvents.WireHeartbeat {
 }
 
-export interface Hello extends ServerInfo, proto.WireHello {
+export interface Hello extends ServerInfo, wireEvents.WireHello {
 }
 
-export interface MuteAudio extends StreamUpdate, proto.WireMuteAudio {
+export interface MuteAudio extends StreamUpdate, wireEvents.WireMuteAudio {
 }
 
-export interface PauseVideo extends StreamUpdate, proto.WirePauseVideo {
+export interface PauseVideo extends StreamUpdate, wireEvents.WirePauseVideo {
 }
 
-export interface PresenceRequest extends Event, proto.WirePresenceRequest {
+export interface PresenceRequest extends Event, wireEvents.WirePresenceRequest {
 }
 
-export interface PresenceUpdate extends Event, proto.WirePresenceUpdate {
+export interface PresenceUpdate extends Event, wireEvents.WirePresenceUpdate {
 }
 
-export interface RoomActionSent extends Event, proto.WireRoomActionSent {
+export interface RoomActionSent extends Event, wireEvents.WireRoomActionSent {
 }
 
-export interface RoomInvitation extends Event, proto.WireRoomInvitation {
+export interface RoomInvitation extends Event, wireEvents.WireRoomInvitation {
   room: Room;
 }
 
-export interface RoomMark extends Event, proto.WireRoomMark {
+export interface RoomMark extends Event, wireEvents.WireRoomMark {
 }
 
-export interface RoomMedia extends Event, proto.WireRoomMedia {
+export interface RoomMedia extends Event, wireEvents.WireRoomMedia {
   media: Media;
 }
 
-export interface RoomMessage extends Event, proto.WireRoomMessage {
+export interface RoomMessage extends Event, wireEvents.WireRoomMessage {
   message: Message;
 }
 
-export interface RoomMetadata extends Event, proto.WireRoomMetadata {
+export interface RoomMetadata extends Event, wireEvents.WireRoomMetadata {
 }
 
-export interface RoomStartTyping extends Event, proto.WireRoomStartTyping {
+export interface RoomStartTyping extends Event, wireEvents.WireRoomStartTyping {
 }
 
-export interface RoomTyping extends Event, proto.WireRoomTyping {
+export interface RoomTyping extends Event, wireEvents.WireRoomTyping {
 }
 
-export interface RTCCandidate extends Event, proto.WireRTCCandidate {
+export interface RTCCandidate extends Event, wireEvents.WireRTCCandidate {
 }
 
-export interface RTCDescription extends Event, proto.WireRTCDescription {
+export interface RTCDescription extends Event, wireEvents.WireRTCDescription {
 }
 
-export interface StreamUpdate extends Event, proto.WireStreamUpdate {
+export interface StreamUpdate extends Event, wireEvents.WireStreamUpdate {
 }
 
-export interface UnmuteAudio extends StreamUpdate, proto.WireUnmuteAudio {
+export interface UnmuteAudio extends StreamUpdate, wireEvents.WireUnmuteAudio {
 }
 
-export interface UnpauseVideo extends StreamUpdate, proto.WireUnpauseVideo {
+export interface UnpauseVideo extends StreamUpdate, wireEvents.WireUnpauseVideo {
 }
 
-export interface RichDisconnect extends Event, proto.WireDisconnect {
+export interface RichDisconnect extends Event, wireEvents.WireDisconnect {
 }
 
-export namespace richEvents {
+export namespace eventUtils {
 
-  export function upgrade(e: proto.WireEvent, config: ChatConfig, log: Logger,
+  export function upgrade(e: wireEvents.WireEvent, config: ChatConfig, log: Logger,
                           events: EventHandler, api: ArtichokeAPI): Event {
     if (isCallInvitation(e)) {
       const call = createCall(e.call, config.rtc, log, events, api);
@@ -141,23 +141,23 @@ export namespace richEvents {
     return richEvent;
   }
 
-  function isCallInvitation(e: proto.WireEvent): e is proto.WireCallInvitation {
+  function isCallInvitation(e: wireEvents.WireEvent): e is wireEvents.WireCallInvitation {
     return e.type === eventTypes.CALL_INVITATION;
   }
 
-  function isChatReceived(e: proto.WireEvent): e is proto.WireChatReceived {
+  function isChatReceived(e: wireEvents.WireEvent): e is wireEvents.WireChatReceived {
     return e.type === eventTypes.CHAT_RECEIVED;
   }
 
-  function isRoomInvitation(e: proto.WireEvent): e is proto.WireRoomInvitation {
+  function isRoomInvitation(e: wireEvents.WireEvent): e is wireEvents.WireRoomInvitation {
     return e.type === eventTypes.ROOM_INVITATION;
   }
 
-  function isRoomMedia(e: proto.WireEvent): e is proto.WireRoomMedia {
+  function isRoomMedia(e: wireEvents.WireEvent): e is wireEvents.WireRoomMedia {
     return e.type === eventTypes.ROOM_MEDIA;
   }
 
-  function isRoomMessage(e: proto.WireEvent): e is proto.WireRoomMessage {
+  function isRoomMessage(e: wireEvents.WireEvent): e is wireEvents.WireRoomMessage {
     return e.type === eventTypes.ROOM_MESSAGE;
   }
 }

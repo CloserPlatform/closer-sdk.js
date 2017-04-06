@@ -1,4 +1,4 @@
-import * as proto from "./wire-events";
+import * as wireEvents from "./wire-events";
 import { eventTypes } from "./wire-events";
 
 const actionId = "567";
@@ -8,10 +8,10 @@ const msgId = "345";
 const alice = "321";
 const bob = "987";
 
-const events: Array<proto.WireEvent> = [{
+const events: Array<wireEvents.WireEvent> = [{
   type: eventTypes.HEARTBEAT,
   timestamp: Date.now()
-} as proto.WireHeartbeat, {
+} as wireEvents.WireHeartbeat, {
   type: eventTypes.ROOM_INVITATION,
   inviter: bob,
   room: {
@@ -19,24 +19,24 @@ const events: Array<proto.WireEvent> = [{
     name: "room",
     direct: false
   }
-} as proto.WireRoomInvitation, {
+} as wireEvents.WireRoomInvitation, {
   type: eventTypes.ROOM_TYPING,
   id: roomId,
   user: alice,
   timestamp: Date.now(),
-} as proto.WireRoomTyping, proto.presenceRequest("available"), {
+} as wireEvents.WireRoomTyping, wireEvents.presenceRequest("available"), {
   type: eventTypes.PRESENCE_UPDATE,
   user: alice,
   status: "away",
   timestamp: Date.now(),
-} as proto.WirePresenceUpdate, proto.error("Because!", {
+} as wireEvents.WirePresenceUpdate, wireEvents.error("Because!", {
   error: "error",
   text: "string"
 }, "23425"), {
   type: eventTypes.ROOM_MARK,
   id: roomId,
   timestamp: Date.now()
-} as proto.WireRoomMark, {
+} as wireEvents.WireRoomMark, {
   type: eventTypes.ROOM_MESSAGE,
   id: roomId,
   message: {
@@ -47,7 +47,7 @@ const events: Array<proto.WireEvent> = [{
     room: roomId,
     timestamp: Date.now(),
   }
-} as proto.WireRoomMessage, {
+} as wireEvents.WireRoomMessage, {
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
@@ -58,7 +58,7 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.WireRoomActionSent, {
+} as wireEvents.WireRoomActionSent, {
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
@@ -70,7 +70,7 @@ const events: Array<proto.WireEvent> = [{
     invitee: bob,
     timestamp: Date.now()
   }
-} as proto.WireRoomActionSent, {
+} as wireEvents.WireRoomActionSent, {
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
@@ -82,7 +82,7 @@ const events: Array<proto.WireEvent> = [{
     reason: "reason",
     timestamp: Date.now()
   }
-} as proto.WireRoomActionSent, {
+} as wireEvents.WireRoomActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -93,7 +93,7 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.WireCallActionSent, {
+} as wireEvents.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -105,7 +105,7 @@ const events: Array<proto.WireEvent> = [{
     invitee: bob,
     timestamp: Date.now()
   }
-} as proto.WireCallActionSent, {
+} as wireEvents.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -117,7 +117,7 @@ const events: Array<proto.WireEvent> = [{
     reason: "reason",
     timestamp: Date.now()
   }
-} as proto.WireCallActionSent, {
+} as wireEvents.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -128,7 +128,7 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.WireCallActionSent, {
+} as wireEvents.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -139,7 +139,7 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.WireCallActionSent, {
+} as wireEvents.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -150,7 +150,7 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.WireCallActionSent, {
+} as wireEvents.WireCallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -161,14 +161,14 @@ const events: Array<proto.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as proto.WireCallActionSent,
-proto.muteAudio(callId),
-proto.unmuteAudio(callId),
-proto.pauseVideo(callId),
-proto.unpauseVideo(callId)];
+} as wireEvents.WireCallActionSent,
+wireEvents.muteAudio(callId),
+wireEvents.unmuteAudio(callId),
+wireEvents.pauseVideo(callId),
+wireEvents.unpauseVideo(callId)];
 
 describe("Protocol", () => {
   it("should be reversible", () => {
-    events.forEach((e) => expect(proto.read(proto.write(e))).toEqual(e));
+    events.forEach((e) => expect(wireEvents.read(wireEvents.write(e))).toEqual(e));
   });
 });

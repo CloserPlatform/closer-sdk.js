@@ -1,19 +1,5 @@
 import { deepcopy } from "../utils";
-import {
-  Archivable,
-  Bot,
-  Call,
-  CallAction,
-  ID,
-  Media,
-  Message,
-  Metadata,
-  Ref,
-  Room,
-  RoomAction,
-  Timestamp,
-  Type
-} from "./protocol";
+import * as proto from "./protocol";
 
 export namespace eventTypes {
   export const BOT_UPDATED = "bot_updated";
@@ -47,45 +33,45 @@ export namespace eventTypes {
 
 // JSON Events:
 export interface WireEvent {
-  type: Type;
-  ref?: Ref;
-  id?: ID;
+  type: proto.Type;
+  ref?: proto.Ref;
+  id?: proto.ID;
 }
 
 export interface WireBotUpdated extends WireEvent {
-  bot: Bot;
+  bot: proto.Bot;
 }
 
 export interface WireCallActionSent extends WireEvent {
-  action: CallAction;
+  action: proto.CallAction;
 }
 
 export interface WireCallInvitation extends WireEvent {
-  call: Call;
-  inviter: ID;
+  call: proto.Call;
+  inviter: proto.ID;
 }
 
 export interface WireCallEnd extends WireEvent {
   reason: string;
-  timestamp: Timestamp;
+  timestamp: proto.Timestamp;
 }
 
 export interface WireChatDelivered extends WireEvent {
-  timestamp: Timestamp;
-  user?: ID;
+  timestamp: proto.Timestamp;
+  user?: proto.ID;
 }
 
 export interface WireChatEdited extends WireEvent {
-  archivable: Archivable;
+  archivable: proto.Archivable;
 }
 
 export interface WireChatReceived extends WireEvent {
-  message: Message;
+  message: proto.Message;
 }
 
 export interface WireChatRequest extends WireEvent {
   body: string;
-  room: ID;
+  room: proto.ID;
 }
 
 export interface WireError extends WireEvent {
@@ -94,7 +80,7 @@ export interface WireError extends WireEvent {
 }
 
 export interface WireServerInfo extends WireEvent {
-  timestamp: Timestamp;
+  timestamp: proto.Timestamp;
 }
 
 export interface WireHeartbeat extends WireServerInfo {
@@ -114,55 +100,55 @@ export interface WirePresenceRequest extends WireEvent {
 }
 
 export interface WirePresenceUpdate extends WireEvent {
-  user: ID;
+  user: proto.ID;
   status: Status;
-  timestamp: Timestamp;
+  timestamp: proto.Timestamp;
 }
 
 export interface WireRoomActionSent extends WireEvent {
-  action: RoomAction;
+  action: proto.RoomAction;
 }
 
 export interface WireRoomInvitation extends WireEvent {
-  inviter: ID;
-  room: Room;
+  inviter: proto.ID;
+  room: proto.Room;
 }
 
 export interface WireRoomMark extends WireEvent {
-  timestamp: Timestamp;
+  timestamp: proto.Timestamp;
 }
 
 export interface WireRoomMedia extends WireEvent {
-  media: Media;
+  media: proto.Media;
 }
 
 export interface WireRoomMessage extends WireEvent {
-  message: Message;
+  message: proto.Message;
 }
 
 export interface WireRoomMetadata extends WireEvent {
-  metadata: Metadata;
+  metadata: proto.Metadata;
 }
 
 export interface WireRoomStartTyping extends WireEvent {
 }
 
 export interface WireRoomTyping extends WireEvent {
-  user: ID;
-  timestamp: Timestamp;
+  user: proto.ID;
+  timestamp: proto.Timestamp;
 }
 
 export type Candidate = RTCIceCandidate;
 
 export interface WireRTCCandidate extends WireEvent {
-  peer: ID;
+  peer: proto.ID;
   candidate: Candidate;
 }
 
 export type SDP = RTCSessionDescriptionInit;
 
 export interface WireRTCDescription extends WireEvent {
-  peer: ID;
+  peer: proto.ID;
   description: SDP;
 }
 
@@ -180,7 +166,7 @@ export interface WireDisconnect extends WireEvent {
 }
 
 // WS API:
-export function chatRequest(room: ID, body: string, ref?: Ref): WireChatRequest {
+export function chatRequest(room: proto.ID, body: string, ref?: proto.Ref): WireChatRequest {
   return {
     type: eventTypes.CHAT_REQUEST,
     room,
@@ -189,7 +175,7 @@ export function chatRequest(room: ID, body: string, ref?: Ref): WireChatRequest 
   };
 }
 
-export function chatDelivered(id: ID, timestamp: Timestamp): WireChatDelivered {
+export function chatDelivered(id: proto.ID, timestamp: proto.Timestamp): WireChatDelivered {
   return {
     type: eventTypes.CHAT_DELIVERED,
     id,
@@ -197,35 +183,35 @@ export function chatDelivered(id: ID, timestamp: Timestamp): WireChatDelivered {
   };
 }
 
-export function muteAudio(id: ID): WireMuteAudio {
+export function muteAudio(id: proto.ID): WireMuteAudio {
   return {
     type: eventTypes.STREAM_MUTE,
     id
   };
 }
 
-export function unmuteAudio(id: ID): WireUnmuteAudio {
+export function unmuteAudio(id: proto.ID): WireUnmuteAudio {
   return {
     type: eventTypes.STREAM_UNMUTE,
     id
   };
 }
 
-export function pauseVideo(id: ID): WirePauseVideo {
+export function pauseVideo(id: proto.ID): WirePauseVideo {
   return {
     type: eventTypes.STREAM_PAUSE,
     id
   };
 }
 
-export function unpauseVideo(id: ID): WireUnpauseVideo {
+export function unpauseVideo(id: proto.ID): WireUnpauseVideo {
   return {
     type: eventTypes.STREAM_UNPAUSE,
     id
   };
 }
 
-export function mark(id: ID, timestamp: Timestamp): WireRoomMark {
+export function mark(id: proto.ID, timestamp: proto.Timestamp): WireRoomMark {
   return {
     type: eventTypes.ROOM_MARK,
     id,
@@ -240,7 +226,7 @@ export function presenceRequest(status: Status): WirePresenceRequest {
   };
 }
 
-export function rtcDescription(id: ID, peer: ID, description: SDP): WireRTCDescription {
+export function rtcDescription(id: proto.ID, peer: proto.ID, description: SDP): WireRTCDescription {
   return {
     type: eventTypes.RTC_DESCRIPTION,
     id,
@@ -249,7 +235,7 @@ export function rtcDescription(id: ID, peer: ID, description: SDP): WireRTCDescr
   };
 }
 
-export function rtcCandidate(id: ID, peer: ID, candidate: Candidate): WireRTCCandidate {
+export function rtcCandidate(id: proto.ID, peer: proto.ID, candidate: Candidate): WireRTCCandidate {
   return {
     type: eventTypes.RTC_CANDIDATE,
     id,
@@ -258,14 +244,14 @@ export function rtcCandidate(id: ID, peer: ID, candidate: Candidate): WireRTCCan
   };
 }
 
-export function startTyping(id: ID): WireRoomStartTyping {
+export function startTyping(id: proto.ID): WireRoomStartTyping {
   return {
     type: eventTypes.ROOM_START_TYPING,
     id
   };
 }
 
-export function typing(id: ID, user: ID, timestamp: Timestamp): WireRoomTyping {
+export function typing(id: proto.ID, user: proto.ID, timestamp: proto.Timestamp): WireRoomTyping {
   return {
     type: eventTypes.ROOM_TYPING,
     id,

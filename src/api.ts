@@ -5,27 +5,7 @@ import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
 import * as proto from "./protocol/protocol";
-import {
-  Candidate,
-  chatDelivered,
-  chatRequest,
-  fix,
-  mark,
-  muteAudio,
-  pauseVideo,
-  presenceRequest,
-  rtcCandidate,
-  rtcDescription,
-  SDP,
-  startTyping,
-  Status,
-  unfix,
-  unmuteAudio,
-  unpauseVideo,
-  WireChatReceived,
-  WireError,
-  WireEvent
-} from "./protocol/wire-events";
+import * as wireEvents from "./protocol/wire-events";
 
 export class HeaderValue {
   header: string;
@@ -105,10 +85,10 @@ export class RESTfulAPI {
 }
 
 export interface PromiseResolve<T> extends Callback<T> {}
-export interface PromiseReject extends Callback<WireError> {}
+export interface PromiseReject extends Callback<wireEvents.WireError> {}
 
 interface PromiseFunctions {
-  resolve: PromiseResolve<WireEvent>;
+  resolve: PromiseResolve<wireEvents.WireEvent>;
   reject: PromiseReject;
 }
 
@@ -129,11 +109,11 @@ export class APIWithWebsocket extends RESTfulAPI {
     this.socket.disconnect();
   }
 
-  send(event: WireEvent) {
-    this.socket.send(unfix(event));
+  send(event: wireEvents.WireEvent) {
+    this.socket.send(wireEvents.unfix(event));
   }
 
-  ask<Response>(event: WireEvent): Promise<Response> {
+  ask<Response>(event: wireEvents.WireEvent): Promise<Response> {
     return new Promise((resolve, reject) => {
       let ref = "ref" + Date.now(); // FIXME Use UUID instead.
       this.promises[ref] = {
@@ -145,15 +125,15 @@ export class APIWithWebsocket extends RESTfulAPI {
     });
   }
 
-  onEvent(callback: Callback<WireEvent>) {
+  onEvent(callback: Callback<wireEvents.WireEvent>) {
     this.socket.onDisconnect(callback);
 
     this.socket.onError(callback);
 
-    this.socket.onEvent((event: WireEvent) => {
-      let e = fix(event);
+    this.socket.onEvent((event: wireEvents.WireEvent) => {
+      let e = wireEvents.fix(event);
       if (e.type === "error") {
-        this.reject(e.ref, e as WireError);
+        this.reject(e.ref, e as wireEvents.WireError);
       } else {
         this.resolve(e.ref, e);
       }
@@ -161,14 +141,14 @@ export class APIWithWebsocket extends RESTfulAPI {
     });
   }
 
-  private resolve(ref: proto.Ref, event: WireEvent) {
+  private resolve(ref: proto.Ref, event: wireEvents.WireEvent) {
     if (ref && ref in this.promises) {
       this.promises[ref].resolve(event);
       delete this.promises[ref];
     }
   }
 
-  private reject(ref: proto.Ref, error: WireError) {
+  private reject(ref: proto.Ref, error: wireEvents.WireError) {
     if (ref && ref in this.promises) {
       this.promises[ref].reject(error);
       delete this.promises[ref];
@@ -203,12 +183,12 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   // Call API:
-  sendDescription(callId: proto.ID, sessionId: proto.ID, description: SDP) {
-    this.send(rtcDescription(callId, sessionId, description));
+  sendDescription(callId: proto.ID, sessionId: proto.ID, description: wireEvents.SDP) {
+    this.send(wireEvents.rtcDescription(callId, sessionId, description));
   }
 
-  sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: Candidate) {
-    this.send(rtcCandidate(callId, sessionId, candidate));
+  sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: wireEvents.Candidate) {
+    this.send(wireEvents.rtcCandidate(callId, sessionId, candidate));
   }
 
   createCall(sessionIds: Array<proto.ID>): Promise<proto.Call> {
@@ -256,10 +236,10 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   updateStream(callId: proto.ID, update: "mute" | "unmute" | "pause" | "unpause") {
     const updates = {
-      mute: muteAudio(callId),
-      unmute: unmuteAudio(callId),
-      pause: pauseVideo(callId),
-      unpause: unpauseVideo(callId)
+      mute: wireEvents.muteAudio(callId),
+      unmute: wireEvents.unmuteAudio(callId),
+      pause: wireEvents.pauseVideo(callId),
+      unpause: wireEvents.unpauseVideo(callId)
     };
     this.send(updates[update]);
   }
@@ -307,7 +287,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   sendMessage(roomId: proto.ID, body: string): Promise<proto.Message> {
-    return this.ask<WireChatReceived>(chatRequest(roomId, body)).then((ack) => ack.message);
+    return this.ask<wireEvents.WireChatReceived>(wireEvents.chatRequest(roomId, body)).then((ack) => ack.message);
   }
 
   sendMetadata(roomId: proto.ID, payload: any): Promise<proto.Metadata> {
@@ -319,16 +299,16 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   sendTyping(roomId: proto.ID) {
-    this.send(startTyping(roomId));
+    this.send(wireEvents.startTyping(roomId));
   }
 
   setMark(roomId: proto.ID, timestamp: proto.Timestamp) {
-    this.send(mark(roomId, timestamp));
+    this.send(wireEvents.mark(roomId, timestamp));
   }
 
   // Archivable API:
   setDelivered(archivableId: proto.ID, timestamp: proto.Timestamp) {
-    this.send(chatDelivered(archivableId, timestamp));
+    this.send(wireEvents.chatDelivered(archivableId, timestamp));
   }
 
   updateArchivable(archivable: proto.Archivable, timestamp: proto.Timestamp): Promise<proto.Archivable> {
@@ -336,8 +316,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   // Presence API:
-  setStatus(status: Status) {
-    this.send(presenceRequest(status));
+  setStatus(status: wireEvents.Status) {
+    this.send(wireEvents.presenceRequest(status));
   }
 
   // Bot API:

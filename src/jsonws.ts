@@ -1,6 +1,6 @@
 import { Callback } from "./events";
 import { Logger } from "./logger";
-import { disconnect, error, read, WireDisconnect, WireError, WireEvent, write } from "./protocol/wire-events";
+import * as wireEvents from "./protocol/wire-events";
 
 export class JSONWebSocket {
   private log: Logger;
@@ -22,29 +22,29 @@ export class JSONWebSocket {
     this.socket.close();
   }
 
-  onDisconnect(callback: Callback<WireDisconnect>) {
+  onDisconnect(callback: Callback<wireEvents.WireDisconnect>) {
     this.socket.onclose = (close) => {
       this.log("WS disconnected: " + close.reason);
-      callback(disconnect(close.code, close.reason));
+      callback(wireEvents.disconnect(close.code, close.reason));
     };
   }
 
-  onError(callback: Callback<WireError>) {
+  onError(callback: Callback<wireEvents.WireError>) {
     this.socket.onerror = (err) => {
       this.log("WS error: " + err);
-      callback(error("Websocket connection error.", err));
+      callback(wireEvents.error("Websocket connection error.", err));
     };
   }
 
-  onEvent(callback: Callback<WireEvent>) {
+  onEvent(callback: Callback<wireEvents.WireEvent>) {
     this.socket.onmessage = (event) => {
       this.log("WS received: " + event.data);
-      callback(read(event.data) as WireEvent);
+      callback(wireEvents.read(event.data) as wireEvents.WireEvent);
     };
   }
 
-  send(event: WireEvent) {
-    let json = write(event);
+  send(event: wireEvents.WireEvent) {
+    let json = wireEvents.write(event);
     this.log("WS sent: " + json);
     this.socket.send(json);
   }

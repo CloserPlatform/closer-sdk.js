@@ -2,19 +2,19 @@ import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { CallActionSent, CallEnd } from "./protocol/events";
-import { Call as ProtoCall, CallAction, CallArchivable, ID, Timestamp } from "./protocol/protocol";
+import * as proto from "./protocol/protocol";
 import { eventTypes } from "./protocol/wire-events";
 import { createRTCPool, RTCPool } from "./rtc";
 
 export interface RemoteStreamCallback {
-  (peer: ID, stream: MediaStream): void;
+  (peer: proto.ID, stream: MediaStream): void;
 }
 
-export class BaseCall implements ProtoCall {
-  public id: ID;
-  public created: Timestamp;
-  public ended: Timestamp;
-  public users: Array<ID>;
+export class BaseCall implements proto.Call {
+  public id: proto.ID;
+  public created: proto.Timestamp;
+  public ended: proto.Timestamp;
+  public users: Array<proto.ID>;
   public direct: boolean;
 
   protected api: ArtichokeAPI;
@@ -23,17 +23,17 @@ export class BaseCall implements ProtoCall {
   private log: Logger;
   protected pool: RTCPool;
   private onRemoteStreamCallback: RemoteStreamCallback;
-  private onLeftCallback: Callback<CallAction>;
-  private onJoinedCallback: Callback<CallAction>;
-  protected onInvitedCallback: Callback<CallAction>;
-  private onAnsweredCallback: Callback<CallAction>;
-  private onRejectedCallback: Callback<CallAction>;
-  private onMutedCallback: Callback<CallAction>;
-  private onUnmutedCallback: Callback<CallAction>;
-  private onPausedCallback: Callback<CallAction>;
-  private onUnpausedCallback: Callback<CallAction>;
+  private onLeftCallback: Callback<proto.CallAction>;
+  private onJoinedCallback: Callback<proto.CallAction>;
+  protected onInvitedCallback: Callback<proto.CallAction>;
+  private onAnsweredCallback: Callback<proto.CallAction>;
+  private onRejectedCallback: Callback<proto.CallAction>;
+  private onMutedCallback: Callback<proto.CallAction>;
+  private onUnmutedCallback: Callback<proto.CallAction>;
+  private onPausedCallback: Callback<proto.CallAction>;
+  private onUnpausedCallback: Callback<proto.CallAction>;
 
-  constructor(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler,
+  constructor(call: proto.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
               api: ArtichokeAPI, stream?: MediaStream) {
     this.id = call.id;
     this.created = call.created;
@@ -60,7 +60,7 @@ export class BaseCall implements ProtoCall {
       rtc.onRemoteStream((s) => this.onRemoteStreamCallback(peer, s));
     });
 
-    let nop = (a: CallAction) => {
+    let nop = (a: proto.CallAction) => {
       // Do nothing.
     };
 
@@ -122,11 +122,11 @@ export class BaseCall implements ProtoCall {
     });
   }
 
-  getUsers(): Promise<Array<ID>> {
+  getUsers(): Promise<Array<proto.ID>> {
     return Promise.resolve(this.users);
   }
 
-  getHistory(): Promise<Array<CallArchivable>> {
+  getHistory(): Promise<Array<proto.CallArchivable>> {
     return this.api.getCallHistory(this.id);
   }
 
@@ -160,19 +160,19 @@ export class BaseCall implements ProtoCall {
     this.pool.unpauseStream();
   }
 
-  onAnswered(callback: Callback<CallAction>) {
+  onAnswered(callback: Callback<proto.CallAction>) {
     this.onAnsweredCallback = callback;
   }
 
-  onRejected(callback: Callback<CallAction>) {
+  onRejected(callback: Callback<proto.CallAction>) {
     this.onRejectedCallback = callback;
   }
 
-  onLeft(callback: Callback<CallAction>) {
+  onLeft(callback: Callback<proto.CallAction>) {
     this.onLeftCallback = callback;
   }
 
-  onJoined(callback: Callback<CallAction>) {
+  onJoined(callback: Callback<proto.CallAction>) {
     this.onJoinedCallback = callback;
   }
 
@@ -180,19 +180,19 @@ export class BaseCall implements ProtoCall {
     this.onRemoteStreamCallback = callback;
   }
 
-  onStreamMuted(callback: Callback<CallAction>) {
+  onStreamMuted(callback: Callback<proto.CallAction>) {
     this.onMutedCallback = callback;
   }
 
-  onStreamUnmuted(callback: Callback<CallAction>) {
+  onStreamUnmuted(callback: Callback<proto.CallAction>) {
     this.onUnmutedCallback = callback;
   }
 
-  onStreamPaused(callback: Callback<CallAction>) {
+  onStreamPaused(callback: Callback<proto.CallAction>) {
     this.onPausedCallback = callback;
   }
 
-  onStreamUnpaused(callback: Callback<CallAction>) {
+  onStreamUnpaused(callback: Callback<proto.CallAction>) {
     this.onUnpausedCallback = callback;
   }
 
@@ -207,7 +207,7 @@ export class BaseCall implements ProtoCall {
 export class DirectCall extends BaseCall {}
 
 export class Call extends BaseCall {
-  invite(user: ID): Promise<void> {
+  invite(user: proto.ID): Promise<void> {
     return this.api.inviteToCall(this.id, user);
   }
 
@@ -216,12 +216,12 @@ export class Call extends BaseCall {
     return this.api.joinCall(this.id);
   }
 
-  onInvited(callback: Callback<CallAction>) {
+  onInvited(callback: Callback<proto.CallAction>) {
     this.onInvitedCallback = callback;
   }
 }
 
-export function createCall(call: ProtoCall, config: RTCConfiguration, log: Logger, events: EventHandler,
+export function createCall(call: proto.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
                            api: ArtichokeAPI, stream?: MediaStream): DirectCall | Call {
   if (call.direct) {
     return new DirectCall(call, config, log, events, api, stream);
