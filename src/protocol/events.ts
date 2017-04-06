@@ -1,5 +1,5 @@
 import { ArtichokeAPI } from "../api";
-import { BaseCall, createCall } from "../call";
+import { Call, createCall } from "../call";
 import { ChatConfig } from "../config";
 import { EventHandler } from "../events";
 import { Logger } from "../logger";
@@ -19,7 +19,7 @@ export interface CallActionSent extends Event, wireEvents.WireCallActionSent {
 }
 
 export interface CallInvitation extends Event, wireEvents.WireCallInvitation {
-  call: BaseCall;
+  call: Call;
 }
 
 export interface CallEnd extends Event, wireEvents.WireCallEnd {

@@ -10,7 +10,7 @@ export interface RemoteStreamCallback {
   (peer: proto.ID, stream: MediaStream): void;
 }
 
-export class BaseCall implements proto.Call {
+export class Call implements proto.Call {
   public id: proto.ID;
   public created: proto.Timestamp;
   public ended: proto.Timestamp;
@@ -204,9 +204,9 @@ export class BaseCall implements proto.Call {
   }
 }
 
-export class DirectCall extends BaseCall {}
+export class DirectCall extends Call {}
 
-export class GroupCall extends BaseCall {
+export class GroupCall extends Call {
   invite(user: proto.ID): Promise<void> {
     return this.api.inviteToCall(this.id, user);
   }
