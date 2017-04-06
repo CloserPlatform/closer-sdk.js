@@ -3,7 +3,6 @@ import { Call, createCall, DirectCall } from "./call";
 import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import * as proto from "./protocol/protocol";
 import {
   RichBotUpdated,
   RichCallInvitation,
@@ -15,7 +14,8 @@ import {
   RichHello,
   RichPresenceUpdate,
   RichRoomInvitation
-} from "./protocol/rich-events";
+} from "./protocol/events";
+import * as proto from "./protocol/protocol";
 import { eventTypes, Status, WireEvent } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";

@@ -3,7 +3,6 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMedia, Media } from "./media";
 import { createMessage, Message } from "./message";
-import * as proto from "./protocol/protocol";
 import {
   RichRoomActionSent,
   RichRoomMark,
@@ -11,7 +10,8 @@ import {
   RichRoomMessage,
   RichRoomMetadata,
   RichRoomTyping
-} from "./protocol/rich-events";
+} from "./protocol/events";
+import * as proto from "./protocol/protocol";
 import { eventTypes } from "./protocol/wire-events";
 import { wrapPromise } from "./utils";
 

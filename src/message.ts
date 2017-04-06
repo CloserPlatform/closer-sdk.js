@@ -1,8 +1,8 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
+import { RichChatDelivered, RichChatEdited } from "./protocol/events";
 import * as proto from "./protocol/protocol";
-import { RichChatDelivered, RichChatEdited } from "./protocol/rich-events";
 import { eventTypes } from "./protocol/wire-events";
 import { RichMessage } from "./rich";
 

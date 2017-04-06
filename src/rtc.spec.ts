@@ -12,7 +12,7 @@ import {
   whenever
 } from "./fixtures.spec";
 import { ID } from "./protocol/protocol";
-import { RichEvent } from "./protocol/rich-events";
+import { RichEvent } from "./protocol/events";
 import { Candidate, eventTypes, SDP } from "./protocol/wire-events";
 import { createRTCConnection, createRTCPool } from "./rtc";
 

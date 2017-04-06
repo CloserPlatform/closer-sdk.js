@@ -4,7 +4,7 @@ import { apiKey, config, log, sleep } from "./fixtures.spec";
 import { createMessage } from "./message";
 import { eventTypes } from "./protocol/wire-events";
 import { Delivered, Message } from "./protocol/protocol";
-import { RichChatDelivered, RichChatEdited } from "./protocol/rich-events";
+import { RichChatDelivered, RichChatEdited } from "./protocol/events";
 
 const roomId = "123";
 const bob = "456";

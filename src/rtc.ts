@@ -1,8 +1,8 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
+import { RichRTCCandidate, RichRTCDescription } from "./protocol/events";
 import { ID } from "./protocol/protocol";
-import { RichRTCCandidate, RichRTCDescription } from "./protocol/rich-events";
 import { Candidate, eventTypes, SDP } from "./protocol/wire-events";
 
 // Cross-browser support:

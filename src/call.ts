@@ -1,8 +1,8 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
+import { RichCallActionSent, RichCallEnd } from "./protocol/events";
 import { Call as ProtoCall, CallAction, CallArchivable, ID, Timestamp } from "./protocol/protocol";
-import { RichCallActionSent, RichCallEnd } from "./protocol/rich-events";
 import { eventTypes } from "./protocol/wire-events";
 import { createRTCPool, RTCPool } from "./rtc";
 

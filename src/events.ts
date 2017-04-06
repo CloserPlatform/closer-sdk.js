@@ -1,6 +1,6 @@
 import { Logger } from "./logger";
+import { RichError, RichEvent } from "./protocol/events";
 import { ID, Type } from "./protocol/protocol";
-import { RichError, RichEvent } from "./protocol/rich-events";
 import { error, eventTypes, write } from "./protocol/wire-events";
 
 export interface Callback<T> {
