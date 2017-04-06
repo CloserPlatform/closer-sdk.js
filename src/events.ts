@@ -1,5 +1,5 @@
 import { Logger } from "./logger";
-import { Event, RichError } from "./protocol/events";
+import { Error, Event } from "./protocol/events";
 import { ID, Type } from "./protocol/protocol";
 import { error, eventTypes, write } from "./protocol/wire-events";
 
@@ -14,7 +14,7 @@ export class EventHandler {
 
   constructor(log: Logger) {
     this.log = log;
-    this.onError((e: RichError) => {
+    this.onError((e: Error) => {
       // Do nothing.
     });
   }
@@ -52,7 +52,7 @@ export class EventHandler {
     return false;
   }
 
-  onError(callback: Callback<RichError>) {
+  onError(callback: Callback<Error>) {
     this.onEvent(eventTypes.ERROR, callback);
   }
 

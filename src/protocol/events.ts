@@ -12,96 +12,96 @@ import { eventTypes } from "./wire-events";
 export interface Event extends proto.WireEvent {
 }
 
-export interface RichBotUpdated extends Event, proto.WireBotUpdated {
+export interface BotUpdated extends Event, proto.WireBotUpdated {
 }
 
-export interface RichCallActionSent extends Event, proto.WireCallActionSent {
+export interface CallActionSent extends Event, proto.WireCallActionSent {
 }
 
-export interface RichCallInvitation extends Event, proto.WireCallInvitation {
+export interface CallInvitation extends Event, proto.WireCallInvitation {
   call: BaseCall;
 }
 
-export interface RichCallEnd extends Event, proto.WireCallEnd {
+export interface CallEnd extends Event, proto.WireCallEnd {
 }
 
-export interface RichChatDelivered extends Event, proto.WireChatDelivered {
+export interface ChatDelivered extends Event, proto.WireChatDelivered {
 }
 
-export interface RichChatEdited extends Event, proto.WireChatEdited {
+export interface ChatEdited extends Event, proto.WireChatEdited {
 }
 
-export interface RichChatReceived extends Event, proto.WireChatReceived {
+export interface ChatReceived extends Event, proto.WireChatReceived {
   message: Message;
 }
 
-export interface RichChatRequest extends Event, proto.WireChatRequest {
+export interface ChatRequest extends Event, proto.WireChatRequest {
 }
 
-export interface RichError extends Event, proto.WireError {
+export interface Error extends Event, proto.WireError {
 }
 
-export interface RichServerInfo extends Event, proto.WireServerInfo {
+export interface ServerInfo extends Event, proto.WireServerInfo {
 }
 
-export interface RichHeartbeat extends RichServerInfo, proto.WireHeartbeat {
+export interface Heartbeat extends ServerInfo, proto.WireHeartbeat {
 }
 
-export interface RichHello extends RichServerInfo, proto.WireHello {
+export interface Hello extends ServerInfo, proto.WireHello {
 }
 
-export interface RichMuteAudio extends RichStreamUpdate, proto.WireMuteAudio {
+export interface MuteAudio extends StreamUpdate, proto.WireMuteAudio {
 }
 
-export interface RichPauseVideo extends RichStreamUpdate, proto.WirePauseVideo {
+export interface PauseVideo extends StreamUpdate, proto.WirePauseVideo {
 }
 
-export interface RichPresenceRequest extends Event, proto.WirePresenceRequest {
+export interface PresenceRequest extends Event, proto.WirePresenceRequest {
 }
 
-export interface RichPresenceUpdate extends Event, proto.WirePresenceUpdate {
+export interface PresenceUpdate extends Event, proto.WirePresenceUpdate {
 }
 
-export interface RichRoomActionSent extends Event, proto.WireRoomActionSent {
+export interface RoomActionSent extends Event, proto.WireRoomActionSent {
 }
 
-export interface RichRoomInvitation extends Event, proto.WireRoomInvitation {
+export interface RoomInvitation extends Event, proto.WireRoomInvitation {
   room: Room;
 }
 
-export interface RichRoomMark extends Event, proto.WireRoomMark {
+export interface RoomMark extends Event, proto.WireRoomMark {
 }
 
-export interface RichRoomMedia extends Event, proto.WireRoomMedia {
+export interface RoomMedia extends Event, proto.WireRoomMedia {
   media: Media;
 }
 
-export interface RichRoomMessage extends Event, proto.WireRoomMessage {
+export interface RoomMessage extends Event, proto.WireRoomMessage {
   message: Message;
 }
 
-export interface RichRoomMetadata extends Event, proto.WireRoomMetadata {
+export interface RoomMetadata extends Event, proto.WireRoomMetadata {
 }
 
-export interface RichRoomStartTyping extends Event, proto.WireRoomStartTyping {
+export interface RoomStartTyping extends Event, proto.WireRoomStartTyping {
 }
 
-export interface RichRoomTyping extends Event, proto.WireRoomTyping {
+export interface RoomTyping extends Event, proto.WireRoomTyping {
 }
 
-export interface RichRTCCandidate extends Event, proto.WireRTCCandidate {
+export interface RTCCandidate extends Event, proto.WireRTCCandidate {
 }
 
-export interface RichRTCDescription extends Event, proto.WireRTCDescription {
+export interface RTCDescription extends Event, proto.WireRTCDescription {
 }
 
-export interface RichStreamUpdate extends Event, proto.WireStreamUpdate {
+export interface StreamUpdate extends Event, proto.WireStreamUpdate {
 }
 
-export interface RichUnmuteAudio extends RichStreamUpdate, proto.WireUnmuteAudio {
+export interface UnmuteAudio extends StreamUpdate, proto.WireUnmuteAudio {
 }
 
-export interface RichUnpauseVideo extends RichStreamUpdate, proto.WireUnpauseVideo {
+export interface UnpauseVideo extends StreamUpdate, proto.WireUnpauseVideo {
 }
 
 export interface RichDisconnect extends Event, proto.WireDisconnect {
@@ -113,27 +113,27 @@ export namespace richEvents {
                           events: EventHandler, api: ArtichokeAPI): Event {
     if (isCallInvitation(e)) {
       const call = createCall(e.call, config.rtc, log, events, api);
-      const richEvent: RichCallInvitation = {...e, call};
+      const richEvent: CallInvitation = {...e, call};
       return richEvent;
     }
     if (isChatReceived(e)) {
       const message: Message = createMessage(e.message, log, events, api);
-      const richEvent: RichChatReceived = {...e, message};
+      const richEvent: ChatReceived = {...e, message};
       return richEvent;
     }
     if (isRoomInvitation(e)) {
       const room: Room = createRoom(e.room, log, events, api);
-      const richEvent: RichRoomInvitation = {...e, room};
+      const richEvent: RoomInvitation = {...e, room};
       return richEvent;
     }
     if (isRoomMedia(e)) {
       const media: Media = createMedia(e.media, log, events, api);
-      const richEvent: RichRoomMedia = {...e, media};
+      const richEvent: RoomMedia = {...e, media};
       return richEvent;
     }
     if (isRoomMessage(e)) {
       const message: Message = createMessage(e.message, log, events, api);
-      const richEvent: RichRoomMessage = {...e, message};
+      const richEvent: RoomMessage = {...e, message};
       return richEvent;
     }
 

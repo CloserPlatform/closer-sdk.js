@@ -3,7 +3,7 @@ import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
 import { createMedia } from "./media";
 import { Media } from "./protocol/protocol";
-import { RichChatEdited } from "./protocol/events";
+import { ChatEdited } from "./protocol/events";
 
 const roomId = "123";
 const bob = "456";
@@ -77,6 +77,6 @@ describe("Media", () => {
       type: "chat_edited",
       id: media.id,
       archivable: edited
-    } as RichChatEdited);
+    } as ChatEdited);
   });
 });

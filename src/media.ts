@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { RichChatEdited } from "./protocol/events";
+import { ChatEdited } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import { eventTypes } from "./protocol/wire-events";
 import { RichMedia } from "./rich";
@@ -47,7 +47,7 @@ export class Media implements RichMedia {
   }
 
   onEdit(callback: Callback<Media>) {
-    this.events.onConcreteEvent(eventTypes.CHAT_EDITED, this.id, (msg: RichChatEdited) => {
+    this.events.onConcreteEvent(eventTypes.CHAT_EDITED, this.id, (msg: ChatEdited) => {
       let m = (msg.archivable as proto.Media);
       this.description = m.description;
       this.edited = m.edited;

@@ -4,16 +4,16 @@ import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import {
+  BotUpdated,
+  CallInvitation,
+  Error,
   Event,
-  RichBotUpdated,
-  RichCallInvitation,
+  Heartbeat,
+  Hello,
+  PresenceUpdate,
   RichDisconnect,
-  RichError,
   richEvents,
-  RichHeartbeat,
-  RichHello,
-  RichPresenceUpdate,
-  RichRoomInvitation
+  RoomInvitation
 } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import { eventTypes, Status, WireEvent } from "./protocol/wire-events";
@@ -42,11 +42,11 @@ export class Artichoke {
   }
 
   // Callbacks:
-  onConnect(callback: Callback<RichHello>) {
+  onConnect(callback: Callback<Hello>) {
     this.events.onEvent(eventTypes.HELLO, callback);
   }
 
-  onHeartbeat(callback: Callback<RichHeartbeat>) {
+  onHeartbeat(callback: Callback<Heartbeat>) {
     this.events.onEvent(eventTypes.HEARTBEAT, callback);
   }
 
@@ -54,7 +54,7 @@ export class Artichoke {
     this.events.onEvent("disconnect", callback);
   }
 
-  onError(callback: Callback<RichError>) {
+  onError(callback: Callback<Error>) {
     this.events.onError(callback);
   }
 
@@ -73,7 +73,7 @@ export class Artichoke {
   }
 
   // Bot API:
-  onBotUpdate(callback: Callback<RichBotUpdated>) {
+  onBotUpdate(callback: Callback<BotUpdated>) {
     this.events.onEvent(eventTypes.BOT_UPDATED, callback);
   }
 
@@ -90,7 +90,7 @@ export class Artichoke {
   }
 
   // Call API:
-  onCall(callback: Callback<RichCallInvitation>) {
+  onCall(callback: Callback<CallInvitation>) {
     this.events.onEvent(eventTypes.CALL_INVITATION, callback);
   }
 
@@ -111,7 +111,7 @@ export class Artichoke {
   }
 
   // Chat room API:
-  onRoom(callback: Callback<RichRoomInvitation>) {
+  onRoom(callback: Callback<RoomInvitation>) {
     this.events.onEvent(eventTypes.ROOM_INVITATION, callback);
   }
 
@@ -136,7 +136,7 @@ export class Artichoke {
   }
 
   // Presence API:
-  onStatusUpdate(callback: Callback<RichPresenceUpdate>) {
+  onStatusUpdate(callback: Callback<PresenceUpdate>) {
     this.events.onEvent(eventTypes.PRESENCE_UPDATE, callback);
   }
 

@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { RichCallActionSent, RichCallEnd } from "./protocol/events";
+import { CallActionSent, CallEnd } from "./protocol/events";
 import { Call as ProtoCall, CallAction, CallArchivable, ID, Timestamp } from "./protocol/protocol";
 import { eventTypes } from "./protocol/wire-events";
 import { createRTCPool, RTCPool } from "./rtc";
@@ -74,7 +74,7 @@ export class BaseCall implements ProtoCall {
     this.onPausedCallback = nop;
     this.onUnpausedCallback = nop;
 
-    this.events.onConcreteEvent(eventTypes.CALL_ACTION, this.id, (e: RichCallActionSent) => {
+    this.events.onConcreteEvent(eventTypes.CALL_ACTION, this.id, (e: CallActionSent) => {
       switch (e.action.action) {
       case "joined":
         this.users.push(e.action.user);
@@ -196,8 +196,8 @@ export class BaseCall implements ProtoCall {
     this.onUnpausedCallback = callback;
   }
 
-  onEnd(callback: Callback<RichCallEnd>) {
-    this.events.onConcreteEvent(eventTypes.CALL_END, this.id, (e: RichCallEnd) => {
+  onEnd(callback: Callback<CallEnd>) {
+    this.events.onConcreteEvent(eventTypes.CALL_END, this.id, (e: CallEnd) => {
       this.ended = e.timestamp;
       callback(e);
     });

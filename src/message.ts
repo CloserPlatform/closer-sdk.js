@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { RichChatDelivered, RichChatEdited } from "./protocol/events";
+import { ChatDelivered, ChatEdited } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import { eventTypes } from "./protocol/wire-events";
 import { RichMessage } from "./rich";
@@ -47,7 +47,7 @@ export class Message implements RichMessage {
   }
 
   onDelivery(callback: Callback<Message>) {
-    this.events.onConcreteEvent(eventTypes.CHAT_DELIVERED, this.id, (msg: RichChatDelivered) => {
+    this.events.onConcreteEvent(eventTypes.CHAT_DELIVERED, this.id, (msg: ChatDelivered) => {
       this.delivered = {
         user: msg.user,
         timestamp: msg.timestamp
@@ -67,7 +67,7 @@ export class Message implements RichMessage {
   }
 
   onEdit(callback: Callback<Message>) {
-    this.events.onConcreteEvent(eventTypes.CHAT_EDITED, this.id, (msg: RichChatEdited) => {
+    this.events.onConcreteEvent(eventTypes.CHAT_EDITED, this.id, (msg: ChatEdited) => {
       let m = (msg.archivable as proto.Message);
       this.body = m.body;
       this.edited = m.edited;

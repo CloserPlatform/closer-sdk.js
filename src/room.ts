@@ -4,12 +4,12 @@ import { Logger } from "./logger";
 import { createMedia, Media } from "./media";
 import { createMessage, Message } from "./message";
 import {
-  RichRoomActionSent,
-  RichRoomMark,
-  RichRoomMedia,
-  RichRoomMessage,
-  RichRoomMetadata,
-  RichRoomTyping
+  RoomActionSent,
+  RoomMark,
+  RoomMedia,
+  RoomMessage,
+  RoomMetadata,
+  RoomTyping
 } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import { eventTypes } from "./protocol/wire-events";
@@ -114,32 +114,32 @@ export abstract class Room implements proto.Room {
     this.api.sendTyping(this.id);
   }
 
-  onMark(callback: Callback<RichRoomMark>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MARK, this.id, (mark: RichRoomMark) => {
+  onMark(callback: Callback<RoomMark>) {
+    this.events.onConcreteEvent(eventTypes.ROOM_MARK, this.id, (mark: RoomMark) => {
       this.mark = mark.timestamp;
       callback(mark);
     });
   }
 
   onMessage(callback: Callback<Message>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (msg: RichRoomMessage) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (msg: RoomMessage) => {
       callback(msg.message);
     });
   }
 
   onMetadata(callback: Callback<proto.Metadata>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_METADATA, this.id, (msg: RichRoomMetadata) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_METADATA, this.id, (msg: RoomMetadata) => {
       callback(msg.metadata);
     });
   }
 
   onMedia(callback: Callback<Media>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MEDIA, this.id, (msg: RichRoomMedia) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_MEDIA, this.id, (msg: RoomMedia) => {
       callback(msg.media);
     });
   }
 
-  onTyping(callback: Callback<RichRoomTyping>) {
+  onTyping(callback: Callback<RoomTyping>) {
     this.events.onConcreteEvent(eventTypes.ROOM_TYPING, this.id, callback);
   }
 }
@@ -165,7 +165,7 @@ export class GroupRoom extends Room {
     this.onJoinedCallback = nop;
     this.onInvitedCallback = nop;
 
-    this.events.onConcreteEvent(eventTypes.ROOM_ACTION, this.id, (e: RichRoomActionSent) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_ACTION, this.id, (e: RoomActionSent) => {
       switch (e.action.action) {
       case "joined":
         this.users.push(e.action.user);

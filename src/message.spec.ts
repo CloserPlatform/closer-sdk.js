@@ -4,7 +4,7 @@ import { apiKey, config, log, sleep } from "./fixtures.spec";
 import { createMessage } from "./message";
 import { eventTypes } from "./protocol/wire-events";
 import { Delivered, Message } from "./protocol/protocol";
-import { RichChatDelivered, RichChatEdited } from "./protocol/events";
+import { ChatDelivered, ChatEdited } from "./protocol/events";
 
 const roomId = "123";
 const bob = "456";
@@ -97,7 +97,7 @@ describe("Message", () => {
       id: msg.id,
       user: bob,
       timestamp: 12345
-    } as RichChatDelivered);
+    } as ChatDelivered);
   });
 
   it("should run a callback on each delivery", (done) => {
@@ -116,7 +116,7 @@ describe("Message", () => {
       id: msg.id,
       user: bob,
       timestamp: t
-    } as RichChatDelivered));
+    } as ChatDelivered));
   });
 
   it("should allow editing", () => {
@@ -146,6 +146,6 @@ describe("Message", () => {
       type: eventTypes.CHAT_EDITED,
       id: msg.id,
       archivable: edited
-    } as RichChatEdited);
+    } as ChatEdited);
   });
 });
