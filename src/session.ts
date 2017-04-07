@@ -10,7 +10,6 @@ import { WheelHouse } from "./wheelhouse";
 export class Session {
   public id: ID;
   public chat: Artichoke;
-  public events: EventHandler;
   public campaign: WheelHouse;
 
   constructor(id: ID, apiKey: ApiKey, config: Config) {
@@ -19,10 +18,10 @@ export class Session {
     log("Configuration: " + JSON.stringify(config));
 
     this.id = id;
-    this.events = new EventHandler(log);
+    const events: EventHandler = new EventHandler(log);
     const chatApi = new ArtichokeAPI(apiKey, config.chat, log);
-    this.chat = new Artichoke(config.chat, log, this.events, chatApi);
+    this.chat = new Artichoke(config.chat, log, events, chatApi);
     const wheelHouseApi = new WheelHouseAPI(apiKey, config.resource, log);
-    this.campaign = new WheelHouse(config.resource, log, this.events, wheelHouseApi, chatApi);
+    this.campaign = new WheelHouse(config.resource, log, events, wheelHouseApi, chatApi);
   }
 }

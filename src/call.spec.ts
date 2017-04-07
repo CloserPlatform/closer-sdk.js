@@ -383,7 +383,7 @@ describe("DirectCall, GroupCall", () => {
   const events = new EventHandler(log);
   const api = new APIMock();
 
-  it("should have proper callTYpe filed defined", () => {
+  it("should have proper callType field defined", () => {
     const directCall: Call = createCall(makeCall(CallType.DIRECT), config.chat.rtc, log, events, api);
     const groupCall: Call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api);
     expect(directCall.callType).toEqual(CallType.DIRECT);
