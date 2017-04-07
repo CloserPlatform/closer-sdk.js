@@ -3,27 +3,56 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMedia, Media } from "./media";
 import { createMessage, Message } from "./message";
-import * as proto from "./protocol";
+import * as events from "./protocol/events";
+import * as proto from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
+import { actionTypes, eventTypes } from "./protocol/wire-events";
 import { wrapPromise } from "./utils";
 
-export class BaseRoom implements proto.Room {
+export namespace roomType {
+  export enum RoomType {
+    GROUP,
+    DIRECT,
+    BUSINESS,
+  }
+
+  export function isDirect(room: Room): room is DirectRoom {
+    return room.roomType === RoomType.DIRECT;
+  }
+
+  export function isGroup(room: Room): room is GroupRoom {
+    return room.roomType === RoomType.GROUP;
+  }
+
+  export function isBusiness(room: Room): room is BusinessRoom {
+    return room.roomType === RoomType.BUSINESS;
+  }
+}
+
+export abstract class Room implements wireEntities.Room {
   public id: proto.ID;
   public name: string;
   public created: proto.Timestamp;
   public users: Array<proto.ID>;
   public direct: boolean;
+  public orgId: proto.ID;
+  public externalId: string;
   public mark: proto.Timestamp;
 
   private log: Logger;
   protected events: EventHandler;
   protected api: ArtichokeAPI;
 
-  constructor(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  public abstract readonly roomType: roomType.RoomType;
+
+  constructor(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = room.id;
     this.name = room.name;
     this.created = room.created;
     this.users = room.users;
     this.direct = room.direct;
+    this.orgId = room.orgId;
+    this.externalId = room.externalId;
     this.mark = room.mark || 0;
     this.log = log;
     this.events = events;
@@ -34,11 +63,11 @@ export class BaseRoom implements proto.Room {
     return wrapPromise(this.api.getRoomHistory(this.id), (a: proto.RoomArchivable) => {
       switch (a.type) {
       case "media":
-        let media = a as proto.Media;
+        const media = a as wireEntities.Media;
         return createMedia(media, this.log, this.events, this.api);
 
       case "message":
-        let msg = a as proto.Message;
+        const msg = a as wireEntities.Message;
         return createMessage(msg, this.log, this.events, this.api);
 
       default:
@@ -79,64 +108,70 @@ export class BaseRoom implements proto.Room {
     this.api.sendTyping(this.id);
   }
 
-  onMark(callback: Callback<proto.RoomMark>) {
-    this.events.onConcreteEvent("room_mark", this.id, (mark: proto.RoomMark) => {
+  onMark(callback: Callback<events.RoomMark>) {
+    this.events.onConcreteEvent(eventTypes.ROOM_MARK, this.id, (mark: events.RoomMark) => {
       this.mark = mark.timestamp;
       callback(mark);
     });
   }
 
-  onMessage(callback: Callback<proto.Message>) {
-    this.events.onConcreteEvent("room_message", this.id, (msg: proto.RoomMessage) => {
-      callback(createMessage(msg.message, this.log, this.events, this.api));
+  onMessage(callback: Callback<Message>) {
+    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (msg: events.RoomMessage) => {
+      callback(msg.message);
     });
   }
 
   onMetadata(callback: Callback<proto.Metadata>) {
-    this.events.onConcreteEvent("room_metadata", this.id, (msg: proto.RoomMetadata) => callback(msg.metadata));
-  }
-
-  onMedia(callback: Callback<proto.Media>) {
-    this.events.onConcreteEvent("room_media", this.id, (msg: proto.RoomMedia) => {
-      callback(createMedia(msg.media, this.log, this.events, this.api));
+    this.events.onConcreteEvent(eventTypes.ROOM_METADATA, this.id, (msg: events.RoomMetadata) => {
+      callback(msg.metadata);
     });
   }
 
-  onTyping(callback: Callback<proto.RoomTyping>) {
-    this.events.onConcreteEvent("room_typing", this.id, callback);
+  onMedia(callback: Callback<Media>) {
+    this.events.onConcreteEvent(eventTypes.ROOM_MEDIA, this.id, (msg: events.RoomMedia) => {
+      callback(msg.media);
+    });
+  }
+
+  onTyping(callback: Callback<events.RoomTyping>) {
+    this.events.onConcreteEvent(eventTypes.ROOM_TYPING, this.id, callback);
   }
 }
 
-export class DirectRoom extends BaseRoom {}
+export class DirectRoom extends Room {
+  public readonly roomType: roomType.RoomType = roomType.RoomType.DIRECT;
+}
 
-export class Room extends BaseRoom {
+export class GroupRoom extends Room {
+  public readonly roomType: roomType.RoomType = roomType.RoomType.GROUP;
+
   private onJoinedCallback: Callback<proto.RoomAction>;
   private onLeftCallback: Callback<proto.RoomAction>;
   private onInvitedCallback: Callback<proto.RoomAction>;
 
-  constructor(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     super(room, log, events, api);
 
-    let nop = (a: proto.RoomAction) => {
+    const nop = (a: proto.RoomAction) => {
       // Do nothing.
     };
     this.onLeftCallback = nop;
     this.onJoinedCallback = nop;
     this.onInvitedCallback = nop;
 
-    this.events.onConcreteEvent("room_action", this.id, (e: proto.RoomActionSent) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_ACTION, this.id, (e: events.RoomActionSent) => {
       switch (e.action.action) {
-      case "joined":
+      case actionTypes.JOINED:
         this.users.push(e.action.user);
         this.onJoinedCallback(e.action);
         break;
 
-      case "left":
+      case actionTypes.LEFT:
         this.users = this.users.filter((u) => u !== e.action.user);
         this.onLeftCallback(e.action);
         break;
 
-      case "invited":
+      case actionTypes.INVITED:
         this.onInvitedCallback(e.action);
         break;
 
@@ -176,10 +211,16 @@ export class Room extends BaseRoom {
   }
 }
 
-export function createRoom(room: proto.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): DirectRoom | Room {
+export class BusinessRoom extends GroupRoom {
+  public readonly roomType: roomType.RoomType = roomType.RoomType.BUSINESS;
+}
+
+export function createRoom(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): Room {
   if (room.direct) {
     return new DirectRoom(room, log, events, api);
+  } else if (room.orgId) {
+    return new BusinessRoom(room, log, events, api);
   } else {
-    return new Room(room, log, events, api);
+    return new GroupRoom(room, log, events, api);
   }
 }

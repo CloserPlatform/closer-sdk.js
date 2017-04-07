@@ -2,11 +2,13 @@ import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
 import { createMedia } from "./media";
-import { ChatEdited, Media } from "./protocol";
+import * as wireEntities from "./protocol/wire-entities";
+import { ChatEdited } from "./protocol/events";
+import { eventTypes } from "./protocol/wire-events";
 
 const roomId = "123";
 const bob = "456";
-function makeMedia(): Media {
+function makeMedia(): wireEntities.Media {
   return {
     type: "media",
     id: "2323",
@@ -73,7 +75,7 @@ describe("Media", () => {
     });
 
     events.notify({
-      type: "chat_edited",
+      type: eventTypes.CHAT_EDITED,
       id: media.id,
       archivable: edited
     } as ChatEdited);

@@ -1,5 +1,7 @@
 import { Logger } from "./logger";
-import { error, Error, Event, ID, Type, write } from "./protocol";
+import { Error, Event } from "./protocol/events";
+import { ID, Type } from "./protocol/protocol";
+import { error, eventTypes, write } from "./protocol/wire-events";
 
 export interface Callback<T> {
   (arg: T): void;
@@ -51,7 +53,7 @@ export class EventHandler {
   }
 
   onError(callback: Callback<Error>) {
-    this.onEvent("error", callback);
+    this.onEvent(eventTypes.ERROR, callback);
   }
 
   onEvent(type: Type, callback: Callback<Event>) {

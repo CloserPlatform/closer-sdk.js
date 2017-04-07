@@ -1,8 +1,11 @@
 import { ArtichokeAPI } from "./api";
-import { Call, createCall } from "./call";
+import { GroupCall, createCall, callType, Call } from "./call";
 import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
-import { Call as ProtoCall, Event } from "./protocol";
+import { Call as ProtoCall } from "./protocol/wire-entities";
+import { Event } from "./protocol/events";
+import { actionTypes, eventTypes } from "./protocol/wire-events";
+import CallType = callType.CallType;
 
 const callId = "123";
 const alice = "321";
@@ -59,16 +62,28 @@ class APIMock extends ArtichokeAPI {
   }
 }
 
-function makeCall(direct = false) {
-  return {
+function makeCall(callType: CallType) {
+  const call = {
     id: callId,
     created: 123,
     users: [alice],
-    direct
   } as ProtoCall;
+
+  switch(callType) {
+    case CallType.DIRECT:
+      call.direct = true;
+      return call;
+
+    case CallType.GROUP:
+      call.direct = false;
+      return call;
+
+    default:
+      throw Error("invalid CallType")
+  }
 }
 
-["DirectCall", "Call"].forEach((d) => {
+["DirectCall", "GroupCall"].forEach((d) => {
   describe(d, () => {
     let events;
     let api;
@@ -77,7 +92,8 @@ function makeCall(direct = false) {
     beforeEach(() => {
       events = new EventHandler(log);
       api = new APIMock();
-      call = createCall(makeCall(d === "DirectCall"), config.chat.rtc, log, events, api);
+      const callType = d === "DirectCall" ? CallType.DIRECT : CallType.GROUP;
+      call = createCall(makeCall(callType), config.chat.rtc, log, events, api);
     });
 
     it("should allow rejecting", (done) => {
@@ -101,10 +117,10 @@ function makeCall(direct = false) {
         });
 
         events.notify({
-          type: "call_action",
+          type: eventTypes.CALL_ACTION,
           id: call.id,
           action: {
-            action: "joined",
+            action: actionTypes.JOINED,
             call: call.id,
             user: chad,
             timestamp: Date.now()
@@ -122,10 +138,10 @@ function makeCall(direct = false) {
       });
 
       events.notify({
-        type: "call_action",
+        type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
-          action: "left",
+          action: actionTypes.LEFT,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
@@ -143,10 +159,10 @@ function makeCall(direct = false) {
       });
 
       events.notify({
-        type: "call_action",
+        type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
-          action: "answered",
+          action: actionTypes.ANSWERED,
           call: call.id,
           user: alice,
           timestamp: Date.now()
@@ -163,10 +179,10 @@ function makeCall(direct = false) {
       });
 
       events.notify({
-        type: "call_action",
+        type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
-          action: "rejected",
+          action: actionTypes.REJECTED,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
@@ -199,10 +215,10 @@ function makeCall(direct = false) {
             });
 
             events.notify({
-              type: "call_action",
+              type: eventTypes.CALL_ACTION,
               id: call.id,
               action: {
-                action: "left",
+                action: actionTypes.LEFT,
                 call: call.id,
                 user: alice,
                 timestamp: Date.now(),
@@ -213,10 +229,10 @@ function makeCall(direct = false) {
         });
 
         events.notify({
-          type: "call_action",
+          type: eventTypes.CALL_ACTION,
           id: call.id,
           action: {
-            action: "joined",
+            action: actionTypes.JOINED,
             call: call.id,
             user: bob,
             timestamp: Date.now()
@@ -284,10 +300,10 @@ function makeCall(direct = false) {
         });
 
         events.notify({
-          type: "call_action",
+          type: eventTypes.CALL_ACTION,
           id: call.id,
           action: {
-            action: "video_paused",
+            action: actionTypes.VIDEO_PAUSED,
             call: call.id,
             user: alice,
             timestamp: Date.now()
@@ -296,10 +312,10 @@ function makeCall(direct = false) {
       });
 
       events.notify({
-        type: "call_action",
+        type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
-          action: "audio_muted",
+          action: actionTypes.AUDIO_MUTED,
           call: call.id,
           user: alice,
           timestamp: Date.now()
@@ -309,7 +325,7 @@ function makeCall(direct = false) {
   });
 });
 
-describe("Call", () => {
+describe("GroupCall", () => {
   let events;
   let api;
   let call;
@@ -317,7 +333,7 @@ describe("Call", () => {
   beforeEach(() => {
     events = new EventHandler(log);
     api = new APIMock();
-    call = createCall(makeCall(), config.chat.rtc, log, events, api) as Call;
+    call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api) as GroupCall;
   });
 
   it("should run a callback on invitation", (done) => {
@@ -330,10 +346,10 @@ describe("Call", () => {
     });
 
     events.notify({
-      type: "call_action",
+      type: eventTypes.CALL_ACTION,
       id: call.id,
       action: {
-        action: "invited",
+        action: actionTypes.INVITED,
         call: call.id,
         user: alice,
         invitee: chad
@@ -361,4 +377,16 @@ describe("Call", () => {
       done();
     });
   });
+});
+
+describe("DirectCall, GroupCall", () => {
+  const events = new EventHandler(log);
+  const api = new APIMock();
+
+  it("should have proper callType field defined", () => {
+    const directCall: Call = createCall(makeCall(CallType.DIRECT), config.chat.rtc, log, events, api);
+    const groupCall: Call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api);
+    expect(directCall.callType).toEqual(CallType.DIRECT);
+    expect(groupCall.callType).toEqual(CallType.GROUP);
+  })
 });

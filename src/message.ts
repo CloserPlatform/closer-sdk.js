@@ -1,10 +1,13 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import * as proto from "./protocol";
-import { RichMessage } from "./rich";
+import { ChatDelivered, ChatEdited } from "./protocol/events";
+import * as proto from "./protocol/protocol";
+import { RichDeliverable, RichEditable } from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
+import { eventTypes } from "./protocol/wire-events";
 
-export class Message implements RichMessage {
+export class Message implements wireEntities.Message, RichDeliverable, RichEditable<string> {
   public type: proto.Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
   public id: proto.ID;
   public body: string;
@@ -18,7 +21,7 @@ export class Message implements RichMessage {
   private events: EventHandler;
   private api: ArtichokeAPI;
 
-  constructor(message: proto.Message, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(message: wireEntities.Message, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = message.id;
     this.body = message.body;
     this.user = message.user;
@@ -45,7 +48,7 @@ export class Message implements RichMessage {
   }
 
   onDelivery(callback: Callback<Message>) {
-    this.events.onConcreteEvent("chat_delivered", this.id, (msg: proto.ChatDelivered) => {
+    this.events.onConcreteEvent(eventTypes.CHAT_DELIVERED, this.id, (msg: ChatDelivered) => {
       this.delivered = {
         user: msg.user,
         timestamp: msg.timestamp
@@ -65,8 +68,8 @@ export class Message implements RichMessage {
   }
 
   onEdit(callback: Callback<Message>) {
-    this.events.onConcreteEvent("chat_edited", this.id, (msg: proto.ChatEdited) => {
-      let m = (msg.archivable as proto.Message);
+    this.events.onConcreteEvent(eventTypes.CHAT_EDITED, this.id, (msg: ChatEdited) => {
+      let m = (msg.archivable as wireEntities.Message);
       this.body = m.body;
       this.edited = m.edited;
       callback(this);
@@ -76,6 +79,7 @@ export class Message implements RichMessage {
   // TODO markRead, onRead
 }
 
-export function createMessage(message: proto.Message, log: Logger, events: EventHandler, api: ArtichokeAPI): Message {
+export function createMessage(message: wireEntities.Message, log: Logger,
+                              events: EventHandler, api: ArtichokeAPI): Message {
   return new Message(message, log, events, api);
 }

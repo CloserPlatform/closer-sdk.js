@@ -1,5 +1,5 @@
 import { ApiKey } from "./auth";
-import { ID } from "./protocol";
+import { ID } from "./protocol/protocol";
 import { deepcopy } from "./utils";
 
 export interface URLConfig {

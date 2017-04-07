@@ -1,7 +1,7 @@
 import { RatelAPI } from "./api";
 import { Config, load } from "./config";
 import { debugConsole } from "./logger";
-import { ID, Timestamp } from "./protocol";
+import { ID, Timestamp } from "./protocol/protocol";
 import { Session } from "./session";
 
 export type ApiKey = string;

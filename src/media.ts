@@ -1,10 +1,13 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import * as proto from "./protocol";
-import { RichMedia } from "./rich";
+import { ChatEdited } from "./protocol/events";
+import * as proto from "./protocol/protocol";
+import { RichEditable } from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
+import { eventTypes } from "./protocol/wire-events";
 
-export class Media implements RichMedia {
+export class Media implements wireEntities.Media, RichEditable<string> {
   public type: proto.Type = "media";
   public id: proto.ID;
   public user: proto.ID;
@@ -19,7 +22,7 @@ export class Media implements RichMedia {
   private events: EventHandler;
   private api: ArtichokeAPI;
 
-  constructor(media: proto.Media, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(media: wireEntities.Media, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = media.id;
     this.user = media.user;
     this.room = media.room;
@@ -45,8 +48,8 @@ export class Media implements RichMedia {
   }
 
   onEdit(callback: Callback<Media>) {
-    this.events.onConcreteEvent("chat_edited", this.id, (msg: proto.ChatEdited) => {
-      let m = (msg.archivable as proto.Media);
+    this.events.onConcreteEvent(eventTypes.CHAT_EDITED, this.id, (msg: ChatEdited) => {
+      let m = (msg.archivable as wireEntities.Media);
       this.description = m.description;
       this.edited = m.edited;
       callback(this);
@@ -54,6 +57,6 @@ export class Media implements RichMedia {
   }
 }
 
-export function createMedia(media: proto.Media, log: Logger, events: EventHandler, api: ArtichokeAPI): Media {
+export function createMedia(media: wireEntities.Media, log: Logger, events: EventHandler, api: ArtichokeAPI): Media {
   return new Media(media, log, events, api);
 }

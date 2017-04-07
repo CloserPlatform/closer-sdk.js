@@ -2,7 +2,10 @@ import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log, sleep } from "./fixtures.spec";
 import { createMessage } from "./message";
-import { ChatDelivered, ChatEdited, Delivered, Message } from "./protocol";
+import { ChatDelivered, ChatEdited } from "./protocol/events";
+import { Delivered } from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
+import { eventTypes } from "./protocol/wire-events";
 
 const roomId = "123";
 const bob = "456";
@@ -26,7 +29,7 @@ class APIMock extends ArtichokeAPI {
   }
 }
 
-function makeMsg(delivered?: Delivered): Message {
+function makeMsg(delivered?: Delivered): wireEntities.Message {
   return {
     type: "message",
     id: msg1,
@@ -91,7 +94,7 @@ describe("Message", () => {
     });
 
     events.notify({
-      type: "chat_delivered",
+      type: eventTypes.CHAT_DELIVERED,
       id: msg.id,
       user: bob,
       timestamp: 12345
@@ -110,7 +113,7 @@ describe("Message", () => {
     });
 
     [123, 456].forEach((t) => events.notify({
-      type: "chat_delivered",
+      type: eventTypes.CHAT_DELIVERED,
       id: msg.id,
       user: bob,
       timestamp: t
@@ -141,7 +144,7 @@ describe("Message", () => {
     });
 
     events.notify({
-      type: "chat_edited",
+      type: eventTypes.CHAT_EDITED,
       id: msg.id,
       archivable: edited
     } as ChatEdited);

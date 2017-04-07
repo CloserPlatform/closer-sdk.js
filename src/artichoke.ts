@@ -1,11 +1,14 @@
 import { ArtichokeAPI } from "./api";
-import { Call, createCall, DirectCall } from "./call";
+import { Call, createCall, DirectCall, GroupCall } from "./call";
 import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { createMessage } from "./message";
-import * as proto from "./protocol";
-import { createRoom, DirectRoom, Room } from "./room";
+import * as events from "./protocol/events";
+import * as proto from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
+import * as wireEvents from "./protocol/wire-events";
+import { eventTypes } from "./protocol/wire-events";
+import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
 
 export class Artichoke {
@@ -21,28 +24,28 @@ export class Artichoke {
     this.events = events;
 
     // NOTE Disable some events by default.
-    let nop = (e: proto.Event) => {
+    let nop = (e: events.Event) => {
       // Do nothing.
     };
-    events.onEvent("error", nop);
-    events.onEvent("chat_received", nop);
-    events.onEvent("chat_delivered", nop);
+    events.onEvent(eventTypes.ERROR, nop);
+    events.onEvent(eventTypes.CHAT_RECEIVED, nop);
+    events.onEvent(eventTypes.CHAT_DELIVERED, nop);
   }
 
   // Callbacks:
-  onConnect(callback: Callback<proto.Hello>) {
-    this.events.onEvent("hello", callback);
+  onConnect(callback: Callback<events.Hello>) {
+    this.events.onEvent(eventTypes.HELLO, callback);
   }
 
-  onHeartbeat(callback: Callback<proto.Heartbeat>) {
-    this.events.onEvent("heartbeat", callback);
+  onHeartbeat(callback: Callback<events.Heartbeat>) {
+    this.events.onEvent(eventTypes.HEARTBEAT, callback);
   }
 
-  onDisconnect(callback: Callback<proto.Disconnect>) {
-    this.events.onEvent("disconnect", callback);
+  onDisconnect(callback: Callback<events.Disconnect>) {
+    this.events.onEvent(eventTypes.DISCONNECT, callback);
   }
 
-  onError(callback: Callback<proto.Error>) {
+  onError(callback: Callback<events.Error>) {
     this.events.onError(callback);
   }
 
@@ -50,35 +53,19 @@ export class Artichoke {
   connect() {
     this.api.connect();
 
-    this.api.onEvent((e: proto.Event) => {
-      switch (e.type) {
-      case "call_invitation":
-        let c = e as proto.CallInvitation;
-        c.call = createCall(c.call, this.config.rtc, this.log, this.events, this.api);
-        this.events.notify(c);
-        break;
-
-      case "room_invitation":
-        let i = e as proto.RoomInvitation;
-        i.room = createRoom(i.room, this.log, this.events, this.api);
-        this.events.notify(i);
-        break;
-
-      case "room_message":
-        let m = e as proto.RoomMessage;
-        m.message = createMessage(m.message, this.log, this.events, this.api);
-        this.events.notify(m);
-        break;
-
-      default:
-        this.events.notify(e);
-      }
+    this.api.onEvent((e: wireEvents.Event) => {
+      const richEvent: events.Event = events.eventUtils.upgrade(e, this.config, this.log, this.events, this.api);
+      this.events.notify(richEvent);
     });
   }
 
+  disconnect() {
+    this.api.disconnect();
+  }
+
   // Bot API:
-  onBotUpdate(callback: Callback<proto.BotUpdated>) {
-    this.events.onEvent("bot_updated", callback);
+  onBotUpdate(callback: Callback<events.BotUpdated>) {
+    this.events.onEvent(eventTypes.BOT_UPDATED, callback);
   }
 
   createBot(name: string, callback?: string): Promise<proto.Bot> {
@@ -93,33 +80,33 @@ export class Artichoke {
     return this.api.getBots();
   }
 
-  // Call API:
-  onCall(callback: Callback<proto.CallInvitation>) {
-    this.events.onEvent("call_invitation", callback);
+  // GroupCall API:
+  onCall(callback: Callback<events.CallInvitation>) {
+    this.events.onEvent(eventTypes.CALL_INVITATION, callback);
   }
 
   createDirectCall(stream: MediaStream, peer: proto.ID, timeout?: number): Promise<DirectCall> {
     return this.wrapCall(this.api.createDirectCall(peer, timeout), stream);
   }
 
-  createCall(stream: MediaStream, users: Array<proto.ID>): Promise<Call> {
+  createCall(stream: MediaStream, users: Array<proto.ID>): Promise<GroupCall> {
     return this.wrapCall(this.api.createCall(users), stream);
   }
 
-  getCall(call: proto.ID): Promise<Call | DirectCall> {
+  getCall(call: proto.ID): Promise<Call> {
     return this.wrapCall(this.api.getCall(call));
   }
 
-  getCalls(): Promise<Array<Call | DirectCall>> {
+  getCalls(): Promise<Array<Call>> {
     return this.wrapCall(this.api.getCalls());
   }
 
   // Chat room API:
-  onRoom(callback: Callback<proto.RoomInvitation>) {
-    this.events.onEvent("room_invitation", callback);
+  onRoom(callback: Callback<events.RoomInvitation>) {
+    this.events.onEvent(eventTypes.ROOM_INVITATION, callback);
   }
 
-  createRoom(name: string): Promise<Room> {
+  createRoom(name: string): Promise<GroupRoom> {
     return this.wrapRoom(this.api.createRoom(name));
   }
 
@@ -127,33 +114,33 @@ export class Artichoke {
     return this.wrapRoom(this.api.createDirectRoom(peer));
   }
 
-  getRoom(room: proto.ID): Promise<Room | DirectRoom> {
+  getRoom(room: proto.ID): Promise<Room> {
     return this.wrapRoom(this.api.getRoom(room));
   }
 
-  getRooms(): Promise<Array<Room | DirectRoom>> {
+  getRooms(): Promise<Array<Room>> {
     return this.wrapRoom(this.api.getRooms());
   }
 
-  getRoster(): Promise<Array<Room | DirectRoom>> {
+  getRoster(): Promise<Array<Room>> {
     return this.wrapRoom(this.api.getRoster());
   }
 
   // Presence API:
-  onStatusUpdate(callback: Callback<proto.PresenceUpdate>) {
-    this.events.onEvent("presence_update", callback);
+  onStatusUpdate(callback: Callback<events.PresenceUpdate>) {
+    this.events.onEvent(eventTypes.PRESENCE_UPDATE, callback);
   }
 
-  setStatus(status: proto.Status) {
+  setStatus(status: wireEvents.Status) {
     this.api.setStatus(status);
   }
 
   // Utils:
-  private wrapCall(promise: Promise<proto.Call | Array<proto.Call>>, stream?: MediaStream) {
+  private wrapCall(promise: Promise<wireEntities.Call | Array<wireEntities.Call>>, stream?: MediaStream) {
     return wrapPromise(promise, (call) => createCall(call, this.config.rtc, this.log, this.events, this.api, stream));
   }
 
-  private wrapRoom(promise: Promise<proto.Room | Array<proto.Room>>) {
-    return wrapPromise(promise, (room: proto.Room) => createRoom(room, this.log, this.events, this.api));
+  private wrapRoom(promise: Promise<wireEntities.Room | Array<wireEntities.Room>>) {
+    return wrapPromise(promise, (room: wireEntities.Room) => createRoom(room, this.log, this.events, this.api));
   }
 }

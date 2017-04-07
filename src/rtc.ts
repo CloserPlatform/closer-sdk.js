@@ -1,7 +1,10 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { Logger } from "./logger";
-import { Candidate, ID, RTCCandidate, RTCDescription, SDP } from "./protocol";
+import { RTCCandidate, RTCDescription } from "./protocol/events";
+import { ID } from "./protocol/protocol";
+import * as wireEvents from "./protocol/wire-events";
+import { eventTypes } from "./protocol/wire-events";
 
 // Cross-browser support:
 function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {
@@ -10,7 +13,7 @@ function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {
   } else {
     // FIXME Add support for more browsers.
     throw Error("Browser not supported!");
-  };
+  }
 }
 
 interface RTCPeerConnectionWithOnTrack extends RTCPeerConnection {
@@ -41,24 +44,24 @@ export class RTCConnection {
     this.conn.close();
   }
 
-  addCandidate(candidate: Candidate) {
+  addCandidate(candidate: wireEvents.Candidate) {
     this.conn.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
-  offer(callId: ID, peer: ID): Promise<SDP> {
+  offer(callId: ID, peer: ID): Promise<wireEvents.SDP> {
     this.log("Creating RTC offer.");
 
     return new Promise((resolve, reject) => {
       this.conn.createOffer((offer) => {
         this.conn.setLocalDescription(offer);
         this.initOnICECandidate(callId, peer);
-        this.api.sendDescription(callId, peer, offer as SDP);
+        this.api.sendDescription(callId, peer, offer as wireEvents.SDP);
         resolve(offer);
       }, reject);
     });
   }
 
-  answer(callId: ID, peer: ID, remoteDescription: SDP): Promise<SDP> {
+  answer(callId: ID, peer: ID, remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
     this.log("Creating RTC answer.");
     this.setRemoteDescription(remoteDescription);
 
@@ -66,7 +69,7 @@ export class RTCConnection {
       this.conn.createAnswer((answer) => {
         this.conn.setLocalDescription(answer);
         this.initOnICECandidate(callId, peer);
-        this.api.sendDescription(callId, peer, answer as SDP);
+        this.api.sendDescription(callId, peer, answer as wireEvents.SDP);
         resolve(answer);
       }, reject);
     });
@@ -76,7 +79,7 @@ export class RTCConnection {
     this.onRemoteStreamCallback = callback;
   }
 
-  setRemoteDescription(remoteDescription: SDP) {
+  setRemoteDescription(remoteDescription: wireEvents.SDP) {
     this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription));
   }
 
@@ -133,7 +136,7 @@ export class RTCPool {
       // Do Nothing.
     };
 
-    events.onConcreteEvent("rtc_description", callId, (msg: RTCDescription) => {
+    events.onConcreteEvent(eventTypes.RTC_DESCRIPTION, callId, (msg: RTCDescription) => {
       this.log("Received an RTC description: " + msg.description.sdp);
       if (msg.peer in this.connections) {
         this.connections[msg.peer].setRemoteDescription(msg.description);
@@ -148,7 +151,7 @@ export class RTCPool {
       }
     });
 
-    events.onConcreteEvent("rtc_candidate", callId, (msg: RTCCandidate) => {
+    events.onConcreteEvent(eventTypes.RTC_CANDIDATE, callId, (msg: RTCCandidate) => {
       this.log("Received an RTC candidate: " + msg.candidate);
       if (msg.peer in this.connections) {
         this.connections[msg.peer].addCandidate(msg.candidate);

@@ -1,6 +1,7 @@
 import { EventHandler } from "./events";
 import { log } from "./fixtures.spec";
-import { Error, mark, RoomMark} from "./protocol";
+import { eventTypes, mark } from "./protocol/wire-events";
+import { Error, RoomMark } from "./protocol/events";
 
 interface ErrorWithCause extends Error {
   cause: boolean;
@@ -40,7 +41,7 @@ describe("Event Handler", () => {
   it("should allow defining event handlers", () => {
     let ok = 0;
 
-    events.onEvent("room_mark", (msg: RoomMark) => ok++);
+    events.onEvent(eventTypes.ROOM_MARK, (msg: RoomMark) => ok++);
     expect(ok).toBe(0);
 
     [1, 2, 3, 4, 5].forEach((i) => {
@@ -53,8 +54,8 @@ describe("Event Handler", () => {
     let first = 0;
     let second = 0;
 
-    events.onEvent("room_mark", (msg: RoomMark) => first++);
-    events.onEvent("room_mark", (msg: RoomMark) => second++);
+    events.onEvent(eventTypes.ROOM_MARK, (msg: RoomMark) => first++);
+    events.onEvent(eventTypes.ROOM_MARK, (msg: RoomMark) => second++);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -65,7 +66,7 @@ describe("Event Handler", () => {
   it("should allow defining concrete event handlers", () => {
     let ok = "0";
 
-    events.onConcreteEvent("room_mark", "3", (msg: RoomMark) => ok = msg.id);
+    events.onConcreteEvent(eventTypes.ROOM_MARK, "3", (msg: RoomMark) => ok = msg.id);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -76,8 +77,8 @@ describe("Event Handler", () => {
     let first = false;
     let second = false;
 
-    events.onConcreteEvent("room_mark", "3", (msg: RoomMark) => first = true);
-    events.onConcreteEvent("room_mark", "1", (msg: RoomMark) => second = true);
+    events.onConcreteEvent(eventTypes.ROOM_MARK, "3", (msg: RoomMark) => first = true);
+    events.onConcreteEvent(eventTypes.ROOM_MARK, "1", (msg: RoomMark) => second = true);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -89,8 +90,8 @@ describe("Event Handler", () => {
     let first = false;
     let second = 0;
 
-    events.onConcreteEvent("room_mark", "3", (msg: RoomMark) => first = true);
-    events.onEvent("room_mark", (msg: RoomMark) => second++);
+    events.onConcreteEvent(eventTypes.ROOM_MARK, "3", (msg: RoomMark) => first = true);
+    events.onEvent(eventTypes.ROOM_MARK, (msg: RoomMark) => second++);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -102,8 +103,8 @@ describe("Event Handler", () => {
     let first: RoomMark = undefined;
     let second: RoomMark = undefined;
 
-    events.onConcreteEvent("room_mark", "3", (msg: RoomMark) => first = msg);
-    events.onEvent("room_mark", (msg: RoomMark) => {
+    events.onConcreteEvent(eventTypes.ROOM_MARK, "3", (msg: RoomMark) => first = msg);
+    events.onEvent(eventTypes.ROOM_MARK, (msg: RoomMark) => {
       if (msg.id === "3") {
         second = msg;
       }

@@ -4,7 +4,10 @@ import { ChatConfig, RatelConfig, ResourceConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
-import * as proto from "./protocol";
+import * as proto from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
+import * as wireEvents from "./protocol/wire-events";
+import { eventTypes } from "./protocol/wire-events";
 
 export class HeaderValue {
   header: string;
@@ -84,10 +87,10 @@ export class RESTfulAPI {
 }
 
 export interface PromiseResolve<T> extends Callback<T> {}
-export interface PromiseReject extends Callback<proto.Error> {}
+export interface PromiseReject extends Callback<wireEvents.Error> {}
 
 interface PromiseFunctions {
-  resolve: PromiseResolve<proto.Event>;
+  resolve: PromiseResolve<wireEvents.Event>;
   reject: PromiseReject;
 }
 
@@ -108,11 +111,11 @@ export class APIWithWebsocket extends RESTfulAPI {
     this.socket.disconnect();
   }
 
-  send(event: proto.Event) {
-    this.socket.send(proto.unfix(event));
+  send(event: wireEvents.Event) {
+    this.socket.send(event);
   }
 
-  ask<Response>(event: proto.Event): Promise<Response> {
+  ask<Response>(event: wireEvents.Event): Promise<Response> {
     return new Promise((resolve, reject) => {
       let ref = "ref" + Date.now(); // FIXME Use UUID instead.
       this.promises[ref] = {
@@ -124,30 +127,29 @@ export class APIWithWebsocket extends RESTfulAPI {
     });
   }
 
-  onEvent(callback: Callback<proto.Event>) {
+  onEvent(callback: Callback<wireEvents.Event>) {
     this.socket.onDisconnect(callback);
 
     this.socket.onError(callback);
 
-    this.socket.onEvent((event: proto.Event) => {
-      let e = proto.fix(event);
-      if (e.type === "error") {
-        this.reject(e.ref, e as proto.Error);
+    this.socket.onEvent((event: wireEvents.Event) => {
+      if (event.type === eventTypes.ERROR) {
+        this.reject(event.ref, event as wireEvents.Error);
       } else {
-        this.resolve(e.ref, e);
+        this.resolve(event.ref, event);
       }
-      callback(e);
+      callback(event);
     });
   }
 
-  private resolve(ref: proto.Ref, event: proto.Event) {
+  private resolve(ref: proto.Ref, event: wireEvents.Event) {
     if (ref && ref in this.promises) {
       this.promises[ref].resolve(event);
       delete this.promises[ref];
     }
   }
 
-  private reject(ref: proto.Ref, error: proto.Error) {
+  private reject(ref: proto.Ref, error: wireEvents.Error) {
     if (ref && ref in this.promises) {
       this.promises[ref].reject(error);
       delete this.promises[ref];
@@ -181,30 +183,30 @@ export class ArtichokeAPI extends APIWithWebsocket {
     super.connect(this.wsUrl);
   }
 
-  // Call API:
-  sendDescription(callId: proto.ID, sessionId: proto.ID, description: proto.SDP) {
-    this.send(proto.rtcDescription(callId, sessionId, description));
+  // GroupCall API:
+  sendDescription(callId: proto.ID, sessionId: proto.ID, description: wireEvents.SDP) {
+    this.send(wireEvents.rtcDescription(callId, sessionId, description));
   }
 
-  sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: proto.Candidate) {
-    this.send(proto.rtcCandidate(callId, sessionId, candidate));
+  sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: wireEvents.Candidate) {
+    this.send(wireEvents.rtcCandidate(callId, sessionId, candidate));
   }
 
-  createCall(sessionIds: Array<proto.ID>): Promise<proto.Call> {
-    return this.postAuth<proto.CreateCall, proto.Call>([this.url, this.callPath], proto.createCall(sessionIds));
+  createCall(sessionIds: Array<proto.ID>): Promise<wireEntities.Call> {
+    return this.postAuth<proto.CreateCall, wireEntities.Call>([this.url, this.callPath], proto.createCall(sessionIds));
   }
 
-  createDirectCall(sessionId: proto.ID, timeout?: number): Promise<proto.Call> {
-    return this.postAuth<proto.CreateDirectCall, proto.Call>([this.url, this.callPath],
+  createDirectCall(sessionId: proto.ID, timeout?: number): Promise<wireEntities.Call> {
+    return this.postAuth<proto.CreateDirectCall, wireEntities.Call>([this.url, this.callPath],
                                                              proto.createDirectCall(sessionId, timeout));
   }
 
-  getCall(callId: proto.ID): Promise<proto.Call> {
-    return this.getAuth<proto.Call>([this.url, this.callPath, callId]);
+  getCall(callId: proto.ID): Promise<wireEntities.Call> {
+    return this.getAuth<wireEntities.Call>([this.url, this.callPath, callId]);
   }
 
-  getCalls(): Promise<Array<proto.Call>> {
-    return this.getAuth<Array<proto.Call>>([this.url, this.callPath]);
+  getCalls(): Promise<Array<wireEntities.Call>> {
+    return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath]);
   }
 
   getCallHistory(callId: proto.ID): Promise<Array<proto.CallArchivable>> {
@@ -235,34 +237,34 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   updateStream(callId: proto.ID, update: "mute" | "unmute" | "pause" | "unpause") {
     const updates = {
-      mute: proto.muteAudio(callId),
-      unmute: proto.unmuteAudio(callId),
-      pause: proto.pauseVideo(callId),
-      unpause: proto.unpauseVideo(callId)
+      mute: wireEvents.muteAudio(callId),
+      unmute: wireEvents.unmuteAudio(callId),
+      pause: wireEvents.pauseVideo(callId),
+      unpause: wireEvents.unpauseVideo(callId)
     };
     this.send(updates[update]);
   }
 
-  // Room API:
-  createRoom(name: string): Promise<proto.Room> {
-    return this.postAuth<proto.CreateRoom, proto.Room>([this.url, this.roomPath], proto.createRoom(name));
+  // GroupRoom API:
+  createRoom(name: string): Promise<wireEntities.Room> {
+    return this.postAuth<proto.CreateRoom, wireEntities.Room>([this.url, this.roomPath], proto.createRoom(name));
   }
 
-  createDirectRoom(sessionId: proto.ID): Promise<proto.Room> {
-    return this.postAuth<proto.CreateDirectRoom, proto.Room>([this.url, this.roomPath],
+  createDirectRoom(sessionId: proto.ID): Promise<wireEntities.Room> {
+    return this.postAuth<proto.CreateDirectRoom, wireEntities.Room>([this.url, this.roomPath],
                                                              proto.createDirectRoom(sessionId));
   }
 
-  getRoom(roomId: proto.ID): Promise<proto.Room> {
-    return this.getAuth<proto.Room>([this.url, this.roomPath, roomId]);
+  getRoom(roomId: proto.ID): Promise<wireEntities.Room> {
+    return this.getAuth<wireEntities.Room>([this.url, this.roomPath, roomId]);
   }
 
-  getRooms(): Promise<Array<proto.Room>> {
-    return this.getAuth<Array<proto.Room>>([this.url, this.roomPath]);
+  getRooms(): Promise<Array<wireEntities.Room>> {
+    return this.getAuth<Array<wireEntities.Room>>([this.url, this.roomPath]);
   }
 
-  getRoster(): Promise<Array<proto.Room>> {
-    return this.getAuth<Array<proto.Room>>([this.url, this.roomPath, "roster"]);
+  getRoster(): Promise<Array<wireEntities.Room>> {
+    return this.getAuth<Array<wireEntities.Room>>([this.url, this.roomPath, "roster"]);
   }
 
   getRoomUsers(roomId: proto.ID): Promise<Array<proto.ID>> {
@@ -285,29 +287,29 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<proto.Invite, void>([this.url, this.roomPath, roomId, "invite"], proto.invite(sessionId));
   }
 
-  sendMessage(roomId: proto.ID, body: string): Promise<proto.Message> {
-    return this.ask<proto.ChatReceived>(proto.chatRequest(roomId, body)).then((ack) => ack.message);
+  sendMessage(roomId: proto.ID, body: string): Promise<wireEntities.Message> {
+    return this.ask<wireEvents.ChatReceived>(wireEvents.chatRequest(roomId, body)).then((ack) => ack.message);
   }
 
   sendMetadata(roomId: proto.ID, payload: any): Promise<proto.Metadata> {
     return this.postAuth<any, proto.Metadata>([this.url, this.roomPath, roomId, "metadata"], payload);
   }
 
-  sendMedia(roomId: proto.ID, media: proto.MediaItem): Promise<proto.Media> {
-    return this.postAuth<proto.MediaItem, proto.Media>([this.url, this.roomPath, roomId, "media"], media);
+  sendMedia(roomId: proto.ID, media: proto.MediaItem): Promise<wireEntities.Media> {
+    return this.postAuth<proto.MediaItem, wireEntities.Media>([this.url, this.roomPath, roomId, "media"], media);
   }
 
   sendTyping(roomId: proto.ID) {
-    this.send(proto.startTyping(roomId));
+    this.send(wireEvents.startTyping(roomId));
   }
 
   setMark(roomId: proto.ID, timestamp: proto.Timestamp) {
-    this.send(proto.mark(roomId, timestamp));
+    this.send(wireEvents.mark(roomId, timestamp));
   }
 
   // Archivable API:
   setDelivered(archivableId: proto.ID, timestamp: proto.Timestamp) {
-    this.send(proto.chatDelivered(archivableId, timestamp));
+    this.send(wireEvents.chatDelivered(archivableId, timestamp));
   }
 
   updateArchivable(archivable: proto.Archivable, timestamp: proto.Timestamp): Promise<proto.Archivable> {
@@ -315,8 +317,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   // Presence API:
-  setStatus(status: proto.Status) {
-    this.send(proto.presenceRequest(status));
+  setStatus(status: wireEvents.Status) {
+    this.send(wireEvents.presenceRequest(status));
   }
 
   // Bot API:
@@ -374,8 +376,8 @@ export class WheelHouseAPI extends RESTfulAPI {
     return this.post<CampaignSpawnData, void>([this.url, this.spawnCampaignPath, "/spawn"], [], campaignSpawnData);
   }
 
-  createRoom(createRoomData: CreateRoomData): Promise<proto.Room> {
-    return this.post<CreateRoomData, proto.Room>([this.url, this.spawnCampaignPath, "/createRoom"],
+  createRoom(createRoomData: CreateRoomData): Promise<wireEntities.Room> {
+    return this.post<CreateRoomData, wireEntities.Room>([this.url, this.spawnCampaignPath, "/createRoom"],
       this.authHeaders, createRoomData);
   }
 }

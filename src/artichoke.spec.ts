@@ -2,7 +2,8 @@ import { ArtichokeAPI } from "./api";
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
-import { disconnect, error, Event } from "./protocol";
+import { disconnect, error, eventTypes } from "./protocol/wire-events";
+import { Event, Hello } from "./protocol/events";
 
 class APIMock extends ArtichokeAPI {
   cb;
@@ -32,10 +33,10 @@ describe("Artichoke", () => {
   });
 
   it("should notify on a new event", (done) => {
-    events.onEvent("hello", (msg) => done());
+    events.onEvent(eventTypes.HELLO, (msg: Hello) => done());
     chat.connect();
     api.cb({
-      type: "hello"
+      type: eventTypes.HELLO,
     } as Event);
   });
 
@@ -43,7 +44,7 @@ describe("Artichoke", () => {
     chat.onConnect((msg) => done());
     chat.connect();
     api.cb({
-      type: "hello"
+      type: eventTypes.HELLO,
     } as Event);
   });
 

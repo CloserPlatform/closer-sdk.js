@@ -1,8 +1,13 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
-import * as proto from "./protocol";
-import { createRoom, DirectRoom, Room } from "./room";
+import { Event } from "./protocol/events";
+import * as proto from "./protocol/protocol";
+import * as wireEntities from "./protocol/wire-entities";
+import { actionTypes, eventTypes, mark, typing } from "./protocol/wire-events";
+import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
+
+import RoomType = roomType.RoomType;
 
 const actionId = "567";
 const roomId = "123";
@@ -15,7 +20,7 @@ const msg3 = "4545";
 const meta1 = "576";
 const media1 = "365";
 
-function msg(id: string): proto.Message {
+function msg(id: string): wireEntities.Message {
   return {
     type: "message",
     id,
@@ -37,7 +42,7 @@ function meta(id: string, payload: any): proto.Metadata {
   };
 }
 
-function media(id: string, description: string): proto.Media {
+function media(id: string, description: string): wireEntities.Media {
   return {
     type: "media",
     id,
@@ -107,17 +112,34 @@ class APIMock extends ArtichokeAPI {
   }
 }
 
-function makeRoom(direct = false) {
-  return {
+function makeRoom(roomType: RoomType) {
+  const room = {
     id: roomId,
     name: "room",
     created: 123,
     users: [alice],
-    direct
-  } as proto.Room;
+    direct: false,
+  } as wireEntities.Room;
+
+  switch (roomType) {
+    case RoomType.DIRECT:
+      room.direct = true;
+      return room;
+
+    case RoomType.BUSINESS:
+      room.orgId = "1234";
+      room.externalId = "5678";
+      return room;
+
+    case RoomType.GROUP:
+      return room;
+
+    default:
+      throw Error("invalid RoomType");
+  }
 }
 
-["DirectRoom", "Room"].forEach((d) => {
+["DirectRoom", "GroupRoom"].forEach((d) => {
   describe(d, () => {
     let events;
     let api;
@@ -126,7 +148,8 @@ function makeRoom(direct = false) {
     beforeEach(() => {
       events = new EventHandler(log);
       api = new APIMock();
-      room = createRoom(makeRoom(d === "DirectRoom"), log, events, api);
+      const roomType = d === "DirectRoom" ? RoomType.DIRECT : RoomType.GROUP;
+      room = createRoom(makeRoom(roomType), log, events, api);
     });
 
     it("should maintain a high water mark", (done) => {
@@ -151,7 +174,7 @@ function makeRoom(direct = false) {
         done();
       });
 
-      events.notify(proto.typing(room.id, chad, Date.now()));
+      events.notify(typing(room.id, chad, Date.now()));
     });
 
     it("should run a callback on incoming message", (done) => {
@@ -164,10 +187,10 @@ function makeRoom(direct = false) {
       m.room = room.id;
       m.user = chad;
       events.notify({
-        type: "room_message",
+        type: eventTypes.ROOM_MESSAGE,
         id: room.id,
         message: m
-      } as proto.Event);
+      } as Event);
     });
 
     it("should run a callback on incoming metadata", (done) => {
@@ -182,10 +205,10 @@ function makeRoom(direct = false) {
       });
 
       events.notify({
-        type: "room_metadata",
+        type: eventTypes.ROOM_METADATA,
         id: room.id,
         metadata: meta(meta1, payload)
-      } as proto.Event);
+      } as Event);
     });
 
     it("should run a callback on incoming media", (done) => {
@@ -198,10 +221,10 @@ function makeRoom(direct = false) {
       });
 
       events.notify({
-        type: "room_media",
+        type: eventTypes.ROOM_MEDIA,
         id: room.id,
         media: media(media1, descr)
-      } as proto.Event);
+      } as Event);
     });
 
     it("should run a callback on incoming mark", (done) => {
@@ -215,7 +238,7 @@ function makeRoom(direct = false) {
         });
       });
 
-      events.notify(proto.mark(room.id, t));
+      events.notify(mark(room.id, t));
     });
 
     // FIXME These should be moved to integration tests:
@@ -274,7 +297,7 @@ describe("DirectRoom", () => {
   beforeEach(() => {
     events = new EventHandler(log);
     api = new APIMock();
-    room = createRoom(makeRoom(true), log, events, api) as DirectRoom;
+    room = createRoom(makeRoom(RoomType.DIRECT), log, events, api) as DirectRoom;
   });
 
   it("should retrieve users", (done) => {
@@ -285,7 +308,7 @@ describe("DirectRoom", () => {
   });
 });
 
-describe("Room", () => {
+describe("GroupRoom", () => {
   let events;
   let api;
   let room;
@@ -293,7 +316,7 @@ describe("Room", () => {
   beforeEach(() => {
     events = new EventHandler(log);
     api = new APIMock();
-    room = createRoom(makeRoom(), log, events, api) as Room;
+    room = createRoom(makeRoom(RoomType.GROUP), log, events, api) as GroupRoom;
   });
 
   it("should maintain the user list", (done) => {
@@ -317,31 +340,31 @@ describe("Room", () => {
         });
 
         events.notify({
-          type: "room_action",
+          type: eventTypes.ROOM_ACTION,
           id: room.id,
           action: {
-            action: "left",
+            action: actionTypes.LEFT,
             id: actionId,
             room: room.id,
             user: alice,
             reason: "no reason",
             timestamp: Date.now()
           }
-        } as proto.Event);
+        } as Event);
       });
     });
 
     events.notify({
-      type: "room_action",
+      type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
-        action: "joined",
+        action: actionTypes.JOINED,
         id: actionId,
         room: room.id,
         user: bob,
         timestamp: Date.now()
       }
-    } as proto.Event);
+    } as Event);
   });
 
   it("should run callback on room joined", (done) => {
@@ -351,16 +374,16 @@ describe("Room", () => {
     });
 
     events.notify({
-      type: "room_action",
+      type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
-        action: "joined",
+        action: actionTypes.JOINED,
         id: actionId,
         room: room.id,
         user: alice,
         timestamp: Date.now()
       }
-    } as proto.Event);
+    } as Event);
   });
 
   it("should run callback on room left", (done) => {
@@ -371,17 +394,17 @@ describe("Room", () => {
     });
 
     events.notify({
-      type: "room_action",
+      type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
-        action: "left",
+        action: actionTypes.LEFT,
         id: actionId,
         room: room.id,
         user: alice,
         reason: "reason",
         timestamp: Date.now()
       }
-    } as proto.Event);
+    } as Event);
   });
 
   it("should run callback on room invite", (done) => {
@@ -392,17 +415,17 @@ describe("Room", () => {
     });
 
     events.notify({
-      type: "room_action",
+      type: eventTypes.ROOM_ACTION,
       id: room.id,
       action: {
-        action: "invited",
+        action: actionTypes.INVITED,
         id: actionId,
         room: room.id,
         user: alice,
         invitee: bob,
         timestamp: Date.now()
       }
-    } as proto.Event);
+    } as Event);
   });
 
   // FIXME These should be moved to integration tests:
@@ -419,5 +442,20 @@ describe("Room", () => {
   it("should allow inviting others", () => {
     room.invite(chad);
     expect(api.invited).toBe(chad);
+  });
+});
+
+describe("GroupRoom, BusinessRoom, DirectRoom", () => {
+  const events = new EventHandler(log);
+  const api = new APIMock();
+
+  it("should have proper roomType field defined", (done) => {
+    const businessRoom: Room = createRoom(makeRoom(RoomType.BUSINESS), log, events, api);
+    const directRoom: Room = createRoom(makeRoom(RoomType.DIRECT), log, events, api);
+    const groupRoom: Room = createRoom(makeRoom(RoomType.GROUP), log, events, api);
+    expect(businessRoom.roomType).toEqual(RoomType.BUSINESS);
+    expect(directRoom.roomType).toEqual(RoomType.DIRECT);
+    expect(groupRoom.roomType).toEqual(RoomType.GROUP);
+    done();
   });
 });
