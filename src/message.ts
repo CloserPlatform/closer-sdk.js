@@ -3,11 +3,11 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { ChatDelivered, ChatEdited } from "./protocol/events";
 import * as proto from "./protocol/protocol";
+import { RichDeliverable, RichEditable } from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { eventTypes } from "./protocol/wire-events";
-import { RichMessage } from "./rich";
 
-export class Message implements RichMessage {
+export class Message implements wireEntities.Message, RichDeliverable, RichEditable<string> {
   public type: proto.Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
   public id: proto.ID;
   public body: string;

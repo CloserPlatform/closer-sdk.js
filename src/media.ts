@@ -3,11 +3,11 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { ChatEdited } from "./protocol/events";
 import * as proto from "./protocol/protocol";
+import { RichEditable } from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { eventTypes } from "./protocol/wire-events";
-import { RichMedia } from "./rich";
 
-export class Media implements RichMedia {
+export class Media implements wireEntities.Media, RichEditable<string> {
   public type: proto.Type = "media";
   public id: proto.ID;
   public user: proto.ID;

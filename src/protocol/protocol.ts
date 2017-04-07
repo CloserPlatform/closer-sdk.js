@@ -1,3 +1,4 @@
+import { Callback } from "../events";
 // Common types:
 import { actionTypes } from "./wire-events";
 export type Type = string;
@@ -46,10 +47,20 @@ export interface Deliverable {
   delivered?: Delivered;
 }
 
+export interface RichDeliverable extends Deliverable {
+  markDelivered: () => void;
+  onDelivery: (cb: Callback<Deliverable>) => void;
+}
+
 export interface Delivered extends UserTimestamp {}
 
 export interface Editable {
   edited?: Edited;
+}
+
+export interface RichEditable<T> extends Editable {
+  edit: (arg: T) => void;
+  onEdit: (cb: Callback<Editable>) => void;
 }
 
 export interface Edited extends UserTimestamp {}
