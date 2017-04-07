@@ -3,7 +3,8 @@ import { EventHandler } from "./events";
 import { Logger } from "./logger";
 import { RTCCandidate, RTCDescription } from "./protocol/events";
 import { ID } from "./protocol/protocol";
-import { Candidate, eventTypes, SDP } from "./protocol/wire-events";
+import * as wireEvents from "./protocol/wire-events";
+import { eventTypes } from "./protocol/wire-events";
 
 // Cross-browser support:
 function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {
@@ -43,24 +44,24 @@ export class RTCConnection {
     this.conn.close();
   }
 
-  addCandidate(candidate: Candidate) {
+  addCandidate(candidate: wireEvents.Candidate) {
     this.conn.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
-  offer(callId: ID, peer: ID): Promise<SDP> {
+  offer(callId: ID, peer: ID): Promise<wireEvents.SDP> {
     this.log("Creating RTC offer.");
 
     return new Promise((resolve, reject) => {
       this.conn.createOffer((offer) => {
         this.conn.setLocalDescription(offer);
         this.initOnICECandidate(callId, peer);
-        this.api.sendDescription(callId, peer, offer as SDP);
+        this.api.sendDescription(callId, peer, offer as wireEvents.SDP);
         resolve(offer);
       }, reject);
     });
   }
 
-  answer(callId: ID, peer: ID, remoteDescription: SDP): Promise<SDP> {
+  answer(callId: ID, peer: ID, remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
     this.log("Creating RTC answer.");
     this.setRemoteDescription(remoteDescription);
 
@@ -68,7 +69,7 @@ export class RTCConnection {
       this.conn.createAnswer((answer) => {
         this.conn.setLocalDescription(answer);
         this.initOnICECandidate(callId, peer);
-        this.api.sendDescription(callId, peer, answer as SDP);
+        this.api.sendDescription(callId, peer, answer as wireEvents.SDP);
         resolve(answer);
       }, reject);
     });
@@ -78,7 +79,7 @@ export class RTCConnection {
     this.onRemoteStreamCallback = callback;
   }
 
-  setRemoteDescription(remoteDescription: SDP) {
+  setRemoteDescription(remoteDescription: wireEvents.SDP) {
     this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription));
   }
 

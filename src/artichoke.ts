@@ -6,7 +6,8 @@ import { Logger } from "./logger";
 import * as events from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import { eventTypes, Status, WireEvent } from "./protocol/wire-events";
+import * as wireEvents from "./protocol/wire-events";
+import { eventTypes } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
 
@@ -52,7 +53,7 @@ export class Artichoke {
   connect() {
     this.api.connect();
 
-    this.api.onEvent((e: WireEvent) => {
+    this.api.onEvent((e: wireEvents.Event) => {
       const richEvent: events.Event = events.eventUtils.upgrade(e, this.config, this.log, this.events, this.api);
       this.events.notify(richEvent);
     });
@@ -130,7 +131,7 @@ export class Artichoke {
     this.events.onEvent(eventTypes.PRESENCE_UPDATE, callback);
   }
 
-  setStatus(status: Status) {
+  setStatus(status: wireEvents.Status) {
     this.api.setStatus(status);
   }
 

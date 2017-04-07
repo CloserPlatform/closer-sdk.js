@@ -4,6 +4,7 @@ import { apiKey, config, log } from "./fixtures.spec";
 import { createMedia } from "./media";
 import * as wireEntities from "./protocol/wire-entities";
 import { ChatEdited } from "./protocol/events";
+import { eventTypes } from "./protocol/wire-events";
 
 const roomId = "123";
 const bob = "456";
@@ -74,7 +75,7 @@ describe("Media", () => {
     });
 
     events.notify({
-      type: "chat_edited",
+      type: eventTypes.CHAT_EDITED,
       id: media.id,
       archivable: edited
     } as ChatEdited);

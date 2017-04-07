@@ -8,10 +8,10 @@ const msgId = "345";
 const alice = "321";
 const bob = "987";
 
-const events: Array<wireEvents.WireEvent> = [{
+const events: Array<wireEvents.Event> = [{
   type: eventTypes.HEARTBEAT,
   timestamp: Date.now()
-} as wireEvents.WireHeartbeat, {
+} as wireEvents.Heartbeat, {
   type: eventTypes.ROOM_INVITATION,
   inviter: bob,
   room: {
@@ -19,24 +19,24 @@ const events: Array<wireEvents.WireEvent> = [{
     name: "room",
     direct: false
   }
-} as wireEvents.WireRoomInvitation, {
+} as wireEvents.RoomInvitation, {
   type: eventTypes.ROOM_TYPING,
   id: roomId,
   user: alice,
   timestamp: Date.now(),
-} as wireEvents.WireRoomTyping, wireEvents.presenceRequest("available"), {
+} as wireEvents.RoomTyping, wireEvents.presenceRequest("available"), {
   type: eventTypes.PRESENCE_UPDATE,
   user: alice,
   status: "away",
   timestamp: Date.now(),
-} as wireEvents.WirePresenceUpdate, wireEvents.error("Because!", {
+} as wireEvents.PresenceUpdate, wireEvents.error("Because!", {
   error: "error",
   text: "string"
 }, "23425"), {
   type: eventTypes.ROOM_MARK,
   id: roomId,
   timestamp: Date.now()
-} as wireEvents.WireRoomMark, {
+} as wireEvents.RoomMark, {
   type: eventTypes.ROOM_MESSAGE,
   id: roomId,
   message: {
@@ -47,7 +47,7 @@ const events: Array<wireEvents.WireEvent> = [{
     room: roomId,
     timestamp: Date.now(),
   }
-} as wireEvents.WireRoomMessage, {
+} as wireEvents.RoomMessage, {
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
@@ -58,7 +58,7 @@ const events: Array<wireEvents.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as wireEvents.WireRoomActionSent, {
+} as wireEvents.RoomActionSent, {
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
@@ -70,7 +70,7 @@ const events: Array<wireEvents.WireEvent> = [{
     invitee: bob,
     timestamp: Date.now()
   }
-} as wireEvents.WireRoomActionSent, {
+} as wireEvents.RoomActionSent, {
   type: eventTypes.ROOM_ACTION,
   id: roomId,
   action: {
@@ -82,7 +82,7 @@ const events: Array<wireEvents.WireEvent> = [{
     reason: "reason",
     timestamp: Date.now()
   }
-} as wireEvents.WireRoomActionSent, {
+} as wireEvents.RoomActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -93,7 +93,7 @@ const events: Array<wireEvents.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as wireEvents.WireCallActionSent, {
+} as wireEvents.CallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -105,7 +105,7 @@ const events: Array<wireEvents.WireEvent> = [{
     invitee: bob,
     timestamp: Date.now()
   }
-} as wireEvents.WireCallActionSent, {
+} as wireEvents.CallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -117,7 +117,7 @@ const events: Array<wireEvents.WireEvent> = [{
     reason: "reason",
     timestamp: Date.now()
   }
-} as wireEvents.WireCallActionSent, {
+} as wireEvents.CallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -128,7 +128,7 @@ const events: Array<wireEvents.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as wireEvents.WireCallActionSent, {
+} as wireEvents.CallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -139,7 +139,7 @@ const events: Array<wireEvents.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as wireEvents.WireCallActionSent, {
+} as wireEvents.CallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -150,7 +150,7 @@ const events: Array<wireEvents.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as wireEvents.WireCallActionSent, {
+} as wireEvents.CallActionSent, {
   type: eventTypes.CALL_ACTION,
   id: callId,
   action: {
@@ -161,7 +161,7 @@ const events: Array<wireEvents.WireEvent> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as wireEvents.WireCallActionSent,
+} as wireEvents.CallActionSent,
 wireEvents.muteAudio(callId),
 wireEvents.unmuteAudio(callId),
 wireEvents.pauseVideo(callId),

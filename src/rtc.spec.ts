@@ -11,9 +11,10 @@ import {
   validSDP,
   whenever
 } from "./fixtures.spec";
-import { ID } from "./protocol/protocol";
 import { Event } from "./protocol/events";
-import { Candidate, eventTypes, SDP } from "./protocol/wire-events";
+import { ID } from "./protocol/protocol";
+import * as wireEvents from "./protocol/wire-events";
+import { eventTypes } from "./protocol/wire-events";
 import { createRTCConnection, createRTCPool } from "./rtc";
 
 const callId = "123";
@@ -30,27 +31,27 @@ function descr(sdp): Event {
 
 class APIMock extends ArtichokeAPI {
   descriptionSent = false;
-  onDescription: (call: ID, peer: ID, sdp: SDP) => void;
+  onDescription: (call: ID, peer: ID, sdp: wireEvents.SDP) => void;
 
   constructor() {
     super(apiKey, config.chat, log);
   }
 
-  sendDescription(call: ID, peer: ID, sdp: SDP) {
+  sendDescription(call: ID, peer: ID, sdp: wireEvents.SDP) {
     this.descriptionSent = true;
     if (this.onDescription) {
       this.onDescription(call, peer, sdp);
     }
   }
 
-  sendCandidate(call: ID, peer: ID, candidate: Candidate) {
+  sendCandidate(call: ID, peer: ID, candidate: wireEvents.Candidate) {
     // Do nothing.
   }
 }
 
 function nop(stream: MediaStream) {
   // Do nothing.
-};
+}
 
 // FIXME Unfuck whenever WebRTC is standarized.
 describe("RTCConnection", () => {
@@ -76,7 +77,7 @@ describe("RTCConnection", () => {
 
   whenever(isWebRTCSupported())("should create valid SDP answer", (done) => {
     getStream((stream) => {
-      let sdp: SDP = {
+      let sdp: wireEvents.SDP = {
         type: "offer",
         sdp: validSDP
       };
@@ -94,7 +95,7 @@ describe("RTCConnection", () => {
 
   whenever(!isChrome() && isWebRTCSupported())("should fail to create SDP answers for invalid offers", (done) => {
     getStream((stream) => {
-      let sdp: SDP = {
+      let sdp: wireEvents.SDP = {
         type: "offer",
         sdp: invalidSDP
       };

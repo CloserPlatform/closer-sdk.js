@@ -87,10 +87,10 @@ export class RESTfulAPI {
 }
 
 export interface PromiseResolve<T> extends Callback<T> {}
-export interface PromiseReject extends Callback<wireEvents.WireError> {}
+export interface PromiseReject extends Callback<wireEvents.Error> {}
 
 interface PromiseFunctions {
-  resolve: PromiseResolve<wireEvents.WireEvent>;
+  resolve: PromiseResolve<wireEvents.Event>;
   reject: PromiseReject;
 }
 
@@ -111,11 +111,11 @@ export class APIWithWebsocket extends RESTfulAPI {
     this.socket.disconnect();
   }
 
-  send(event: wireEvents.WireEvent) {
+  send(event: wireEvents.Event) {
     this.socket.send(event);
   }
 
-  ask<Response>(event: wireEvents.WireEvent): Promise<Response> {
+  ask<Response>(event: wireEvents.Event): Promise<Response> {
     return new Promise((resolve, reject) => {
       let ref = "ref" + Date.now(); // FIXME Use UUID instead.
       this.promises[ref] = {
@@ -127,14 +127,14 @@ export class APIWithWebsocket extends RESTfulAPI {
     });
   }
 
-  onEvent(callback: Callback<wireEvents.WireEvent>) {
+  onEvent(callback: Callback<wireEvents.Event>) {
     this.socket.onDisconnect(callback);
 
     this.socket.onError(callback);
 
-    this.socket.onEvent((event: wireEvents.WireEvent) => {
+    this.socket.onEvent((event: wireEvents.Event) => {
       if (event.type === eventTypes.ERROR) {
-        this.reject(event.ref, event as wireEvents.WireError);
+        this.reject(event.ref, event as wireEvents.Error);
       } else {
         this.resolve(event.ref, event);
       }
@@ -142,14 +142,14 @@ export class APIWithWebsocket extends RESTfulAPI {
     });
   }
 
-  private resolve(ref: proto.Ref, event: wireEvents.WireEvent) {
+  private resolve(ref: proto.Ref, event: wireEvents.Event) {
     if (ref && ref in this.promises) {
       this.promises[ref].resolve(event);
       delete this.promises[ref];
     }
   }
 
-  private reject(ref: proto.Ref, error: wireEvents.WireError) {
+  private reject(ref: proto.Ref, error: wireEvents.Error) {
     if (ref && ref in this.promises) {
       this.promises[ref].reject(error);
       delete this.promises[ref];
@@ -288,7 +288,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   sendMessage(roomId: proto.ID, body: string): Promise<wireEntities.Message> {
-    return this.ask<wireEvents.WireChatReceived>(wireEvents.chatRequest(roomId, body)).then((ack) => ack.message);
+    return this.ask<wireEvents.ChatReceived>(wireEvents.chatRequest(roomId, body)).then((ack) => ack.message);
   }
 
   sendMetadata(roomId: proto.ID, payload: any): Promise<proto.Metadata> {

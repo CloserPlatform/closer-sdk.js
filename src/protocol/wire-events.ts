@@ -55,141 +55,141 @@ export namespace actionTypes {
 }
 
 // JSON Events:
-export interface WireEvent {
+export interface Event {
   type: proto.Type;
   ref?: proto.Ref;
   id?: proto.ID;
 }
 
-export interface WireBotUpdated extends WireEvent {
+export interface BotUpdated extends Event {
   bot: proto.Bot;
 }
 
-export interface WireCallActionSent extends WireEvent {
+export interface CallActionSent extends Event {
   action: proto.CallAction;
 }
 
-export interface WireCallInvitation extends WireEvent {
+export interface CallInvitation extends Event {
   call: wireEntities.Call;
   inviter: proto.ID;
 }
 
-export interface WireCallEnd extends WireEvent {
+export interface CallEnd extends Event {
   reason: string;
   timestamp: proto.Timestamp;
 }
 
-export interface WireChatDelivered extends WireEvent {
+export interface ChatDelivered extends Event {
   timestamp: proto.Timestamp;
   user?: proto.ID;
 }
 
-export interface WireChatEdited extends WireEvent {
+export interface ChatEdited extends Event {
   archivable: proto.Archivable;
 }
 
-export interface WireChatReceived extends WireEvent {
+export interface ChatReceived extends Event {
   message: wireEntities.Message;
 }
 
-export interface WireChatRequest extends WireEvent {
+export interface ChatRequest extends Event {
   body: string;
   room: proto.ID;
 }
 
-export interface WireError extends WireEvent {
+export interface Error extends Event {
   reason: string;
   cause?: any;
 }
 
-export interface WireServerInfo extends WireEvent {
+export interface ServerInfo extends Event {
   timestamp: proto.Timestamp;
 }
 
-export interface WireHeartbeat extends WireServerInfo {
+export interface Heartbeat extends ServerInfo {
 }
-export interface WireHello extends WireServerInfo {
+export interface Hello extends ServerInfo {
 }
 
-export interface WireMuteAudio extends WireStreamUpdate {
+export interface MuteAudio extends StreamUpdate {
 }
-export interface WirePauseVideo extends WireStreamUpdate {
+export interface PauseVideo extends StreamUpdate {
 }
 
 export type Status = "away" | "available" | "unavailable";
 
-export interface WirePresenceRequest extends WireEvent {
+export interface PresenceRequest extends Event {
   status: Status;
 }
 
-export interface WirePresenceUpdate extends WireEvent {
+export interface PresenceUpdate extends Event {
   user: proto.ID;
   status: Status;
   timestamp: proto.Timestamp;
 }
 
-export interface WireRoomActionSent extends WireEvent {
+export interface RoomActionSent extends Event {
   action: proto.RoomAction;
 }
 
-export interface WireRoomInvitation extends WireEvent {
+export interface RoomInvitation extends Event {
   inviter: proto.ID;
   room: wireEntities.Room;
 }
 
-export interface WireRoomMark extends WireEvent {
+export interface RoomMark extends Event {
   timestamp: proto.Timestamp;
 }
 
-export interface WireRoomMedia extends WireEvent {
+export interface RoomMedia extends Event {
   media: wireEntities.Media;
 }
 
-export interface WireRoomMessage extends WireEvent {
+export interface RoomMessage extends Event {
   message: wireEntities.Message;
 }
 
-export interface WireRoomMetadata extends WireEvent {
+export interface RoomMetadata extends Event {
   metadata: proto.Metadata;
 }
 
-export interface WireRoomStartTyping extends WireEvent {
+export interface RoomStartTyping extends Event {
 }
 
-export interface WireRoomTyping extends WireEvent {
+export interface RoomTyping extends Event {
   user: proto.ID;
   timestamp: proto.Timestamp;
 }
 
 export type Candidate = RTCIceCandidate;
 
-export interface WireRTCCandidate extends WireEvent {
+export interface RTCCandidate extends Event {
   peer: proto.ID;
   candidate: Candidate;
 }
 
 export type SDP = RTCSessionDescriptionInit;
 
-export interface WireRTCDescription extends WireEvent {
+export interface RTCDescription extends Event {
   peer: proto.ID;
   description: SDP;
 }
 
-export interface WireStreamUpdate extends WireEvent {
+export interface StreamUpdate extends Event {
 }
-export interface WireUnmuteAudio extends WireStreamUpdate {
+export interface UnmuteAudio extends StreamUpdate {
 }
-export interface WireUnpauseVideo extends WireStreamUpdate {
+export interface UnpauseVideo extends StreamUpdate {
 }
 
 // Internal events:
-export interface WireDisconnect extends WireEvent {
+export interface Disconnect extends Event {
   reason: string;
   code: number;
 }
 
 // WS API:
-export function chatRequest(room: proto.ID, body: string, ref?: proto.Ref): WireChatRequest {
+export function chatRequest(room: proto.ID, body: string, ref?: proto.Ref): ChatRequest {
   return {
     type: eventTypes.CHAT_REQUEST,
     room,
@@ -198,7 +198,7 @@ export function chatRequest(room: proto.ID, body: string, ref?: proto.Ref): Wire
   };
 }
 
-export function chatDelivered(id: proto.ID, timestamp: proto.Timestamp): WireChatDelivered {
+export function chatDelivered(id: proto.ID, timestamp: proto.Timestamp): ChatDelivered {
   return {
     type: eventTypes.CHAT_DELIVERED,
     id,
@@ -206,35 +206,35 @@ export function chatDelivered(id: proto.ID, timestamp: proto.Timestamp): WireCha
   };
 }
 
-export function muteAudio(id: proto.ID): WireMuteAudio {
+export function muteAudio(id: proto.ID): MuteAudio {
   return {
     type: eventTypes.STREAM_MUTE,
     id
   };
 }
 
-export function unmuteAudio(id: proto.ID): WireUnmuteAudio {
+export function unmuteAudio(id: proto.ID): UnmuteAudio {
   return {
     type: eventTypes.STREAM_UNMUTE,
     id
   };
 }
 
-export function pauseVideo(id: proto.ID): WirePauseVideo {
+export function pauseVideo(id: proto.ID): PauseVideo {
   return {
     type: eventTypes.STREAM_PAUSE,
     id
   };
 }
 
-export function unpauseVideo(id: proto.ID): WireUnpauseVideo {
+export function unpauseVideo(id: proto.ID): UnpauseVideo {
   return {
     type: eventTypes.STREAM_UNPAUSE,
     id
   };
 }
 
-export function mark(id: proto.ID, timestamp: proto.Timestamp): WireRoomMark {
+export function mark(id: proto.ID, timestamp: proto.Timestamp): RoomMark {
   return {
     type: eventTypes.ROOM_MARK,
     id,
@@ -242,14 +242,14 @@ export function mark(id: proto.ID, timestamp: proto.Timestamp): WireRoomMark {
   };
 }
 
-export function presenceRequest(status: Status): WirePresenceRequest {
+export function presenceRequest(status: Status): PresenceRequest {
   return {
     type: eventTypes.PRESENCE_REQUEST,
     status
   };
 }
 
-export function rtcDescription(id: proto.ID, peer: proto.ID, description: SDP): WireRTCDescription {
+export function rtcDescription(id: proto.ID, peer: proto.ID, description: SDP): RTCDescription {
   return {
     type: eventTypes.RTC_DESCRIPTION,
     id,
@@ -258,7 +258,7 @@ export function rtcDescription(id: proto.ID, peer: proto.ID, description: SDP): 
   };
 }
 
-export function rtcCandidate(id: proto.ID, peer: proto.ID, candidate: Candidate): WireRTCCandidate {
+export function rtcCandidate(id: proto.ID, peer: proto.ID, candidate: Candidate): RTCCandidate {
   return {
     type: eventTypes.RTC_CANDIDATE,
     id,
@@ -267,14 +267,14 @@ export function rtcCandidate(id: proto.ID, peer: proto.ID, candidate: Candidate)
   };
 }
 
-export function startTyping(id: proto.ID): WireRoomStartTyping {
+export function startTyping(id: proto.ID): RoomStartTyping {
   return {
     type: eventTypes.ROOM_START_TYPING,
     id
   };
 }
 
-export function typing(id: proto.ID, user: proto.ID, timestamp: proto.Timestamp): WireRoomTyping {
+export function typing(id: proto.ID, user: proto.ID, timestamp: proto.Timestamp): RoomTyping {
   return {
     type: eventTypes.ROOM_TYPING,
     id,
@@ -284,7 +284,7 @@ export function typing(id: proto.ID, user: proto.ID, timestamp: proto.Timestamp)
 }
 
 // Internal API:
-export function error(reason: string, cause?: any, ref?: string): WireError {
+export function error(reason: string, cause?: any, ref?: string): Error {
   return {
     type: eventTypes.ERROR,
     reason,
@@ -293,7 +293,7 @@ export function error(reason: string, cause?: any, ref?: string): WireError {
   };
 }
 
-export function disconnect(code: number, reason: string): WireDisconnect {
+export function disconnect(code: number, reason: string): Disconnect {
   return {
     type: eventTypes.DISCONNECT,
     reason,
@@ -302,10 +302,10 @@ export function disconnect(code: number, reason: string): WireDisconnect {
 }
 
 // Reading & writing:
-export function read(bytes: string): WireEvent {
+export function read(bytes: string): Event {
   return JSON.parse(bytes);
 }
 
-export function write(event: WireEvent): string {
+export function write(event: Event): string {
   return JSON.stringify(event);
 }
