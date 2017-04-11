@@ -179,6 +179,19 @@ export class ArtichokeAPI extends APIWithWebsocket {
     this.wsUrl = [wsProtocol, "//", host, "/ws/", apiKey].join("");
   }
 
+  onEvent(callback: Callback<wireEvents.Event>) {
+    super.onEvent((event: wireEvents.Event) => {
+      // FIXME Apply this bandaid elsewhere.
+      if (event.type === eventTypes.HELLO) {
+        this.authHeaders = this.authHeaders.concat(
+          new HeaderValue("X-Device-Id", (event as wireEvents.Hello).deviceId)
+        );
+      }
+
+      callback(event);
+    });
+  }
+
   connect() {
     super.connect(this.wsUrl);
   }

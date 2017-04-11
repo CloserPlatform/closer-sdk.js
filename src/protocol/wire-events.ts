@@ -109,6 +109,7 @@ export interface ServerInfo extends Event {
 export interface Heartbeat extends ServerInfo {
 }
 export interface Hello extends ServerInfo {
+  deviceId: proto.ID;
 }
 
 export interface MuteAudio extends StreamUpdate {

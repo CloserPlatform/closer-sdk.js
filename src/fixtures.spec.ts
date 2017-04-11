@@ -16,6 +16,7 @@ export const config: Config = load({
 } as Config);
 
 export const sessionId = "12345678";
+export const deviceId = "6515ea03-7421-4fa5-b02c-bf339c18abbf";
 export const apiKey = "8615ea03-7421-4fa5-b02c-bf339c18abbf";
 
 export function sleep(time: number): Promise<void> {
