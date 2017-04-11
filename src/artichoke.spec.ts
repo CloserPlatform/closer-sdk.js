@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
-import { apiKey, config, log } from "./fixtures.spec";
+import { apiKey, config, deviceId, log } from "./fixtures.spec";
 import { disconnect, error, eventTypes } from "./protocol/wire-events";
 import { Event, Hello } from "./protocol/events";
 
@@ -37,6 +37,7 @@ describe("Artichoke", () => {
     chat.connect();
     api.cb({
       type: eventTypes.HELLO,
+      deviceId,
     } as Event);
   });
 
@@ -45,6 +46,7 @@ describe("Artichoke", () => {
     chat.connect();
     api.cb({
       type: eventTypes.HELLO,
+      deviceId,
     } as Event);
   });
 
