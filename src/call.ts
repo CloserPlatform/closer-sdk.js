@@ -49,7 +49,6 @@ export abstract class Call implements wireEntities.Call {
   private onUnmutedCallback: Callback<proto.CallAction>;
   private onPausedCallback: Callback<proto.CallAction>;
   private onUnpausedCallback: Callback<proto.CallAction>;
-  private onActiveDeviceCallback: Callback<CallActiveDevice>;
 
   public abstract readonly callType: callType.CallType;
 
@@ -94,7 +93,6 @@ export abstract class Call implements wireEntities.Call {
     this.onUnmutedCallback = nop;
     this.onPausedCallback = nop;
     this.onUnpausedCallback = nop;
-    this.onActiveDeviceCallback = (a: CallActiveDevice) => {};
 
     this.events.onConcreteEvent(eventTypes.CALL_ACTION, this.id, (e: CallActionSent) => {
       switch (e.action.action) {
@@ -234,7 +232,9 @@ export abstract class Call implements wireEntities.Call {
   }
 
   onActiveDevice(callback: Callback<CallActiveDevice>) {
-    this.onActiveDeviceCallback = callback;
+    this.events.onConcreteEvent(eventTypes.CALL_ACTIVE_DEVICE, this.id, (e: CallActiveDevice) => {
+      callback(e);
+    });
   }
 
   onEnd(callback: Callback<CallEnd>) {

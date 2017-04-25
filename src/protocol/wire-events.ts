@@ -78,8 +78,7 @@ export interface CallInvitation extends Event {
 }
 
 export interface CallActiveDevice extends Event {
-  callId: proto.ID;
-  deviceId: proto.ID;
+  device: proto.ID;
 }
 
 export interface CallEnd extends Event {
@@ -310,11 +309,11 @@ export function disconnect(code: number, reason: string): Disconnect {
   };
 }
 
-export function activeDevice(callId: proto.ID, deviceId: proto.ID): CallActiveDevice {
+export function activeDevice(id: proto.ID, device: proto.ID): CallActiveDevice {
   return {
     type: eventTypes.CALL_ACTIVE_DEVICE,
-    callId,
-    deviceId
+    id,
+    device
   };
 }
 

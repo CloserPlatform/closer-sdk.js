@@ -215,6 +215,24 @@ function makeCall(callType: CallType) {
       } as Event);
     });
 
+    it("should run a callback on ActiveDevice", (done) => {
+      events.onError((error) => done.fail());
+      const deviceId = "aliceDevice"
+
+      call.onActiveDevice((msg) => {
+        expect(msg.id).toBe(call.id);
+        expect(msg.device).toBe(deviceId);
+        done();
+      });
+
+      events.notify({
+        type: eventTypes.CALL_ACTIVE_DEVICE,
+        id: call.id,
+        device: deviceId
+      } as Event);
+    });
+
+
     whenever(isWebRTCSupported())("should maintain the user list", (done) => {
       getStream((stream) => {
         (call as any).pool.addLocalStream(stream);
