@@ -6,6 +6,7 @@ export namespace eventTypes {
   export const CALL_ACTION = "call_action";
   export const CALL_END = "call_end";
   export const CALL_INVITATION = "call_invitation";
+  export const CALL_ACTIVE_DEVICE = "call_active_device";
   export const CHAT_REQUEST = "chat_request";
   export const CHAT_RECEIVED = "chat_received";
   export const CHAT_DELIVERED = "chat_delivered";
@@ -34,8 +35,10 @@ export namespace eventTypes {
 }
 
 export namespace actionTypes {
-  export type JOINED = "joined"
+  export type JOINED = "joined";
   export const JOINED = "joined";
+  export type TRANSFERRED = "transferred";
+  export const TRANSFERRED = "transferred";
   export type LEFT = "left";
   export const LEFT = "left";
   export type INVITED = "invited";
@@ -72,6 +75,11 @@ export interface CallActionSent extends Event {
 export interface CallInvitation extends Event {
   call: wireEntities.Call;
   inviter: proto.ID;
+}
+
+export interface CallActiveDevice extends Event {
+  callId: proto.ID;
+  deviceId: proto.ID;
 }
 
 export interface CallEnd extends Event {
@@ -299,6 +307,14 @@ export function disconnect(code: number, reason: string): Disconnect {
     type: eventTypes.DISCONNECT,
     reason,
     code
+  };
+}
+
+export function activeDevice(callId: proto.ID, deviceId: proto.ID): CallActiveDevice {
+  return {
+    type: eventTypes.CALL_ACTIVE_DEVICE,
+    callId,
+    deviceId
   };
 }
 

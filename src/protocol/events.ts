@@ -22,6 +22,9 @@ export interface CallInvitation extends Event, wireEvents.CallInvitation {
   call: Call;
 }
 
+export interface CallActiveDevice extends Event, wireEvents.CallActiveDevice {
+}
+
 export interface CallEnd extends Event, wireEvents.CallEnd {
 }
 
