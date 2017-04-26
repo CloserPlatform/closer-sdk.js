@@ -55,6 +55,9 @@
     "webpack": "^1.14.0",
     "webpack-split-by-path": "0.0.10"
   },
+  "optionalDependencies": {
+    "webrtc-adapter": "^3.3.4"
+  },
   "publishConfig": {
     "registry": "https://nexus.contactis.pl/repository/npm-internal"
   }

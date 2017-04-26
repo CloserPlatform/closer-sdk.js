@@ -1,5 +1,11 @@
 $(document).ready(function() {
     displayVersion();
+
+    if(!RatelSDK.isBrowserSupported()) {
+        alert("This browser is not supported :(");
+        throw new Error("Unsupported browser.");
+    }
+
     // Cross-browser support:
     navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
 
