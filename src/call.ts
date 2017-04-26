@@ -38,6 +38,7 @@ export abstract class Call implements wireEntities.Call {
 
   private log: Logger;
   protected pool: RTCPool;
+  private onActiveDeviceCallback: Callback<CallActiveDevice>;
   private onRemoteStreamCallback: RemoteStreamCallback;
   private onLeftCallback: Callback<proto.CallAction>;
   private onJoinedCallback: Callback<proto.CallAction>;
@@ -77,6 +78,15 @@ export abstract class Call implements wireEntities.Call {
 
     this.pool.onConnection((peer, rtc) => {
       rtc.onRemoteStream((s) => this.onRemoteStreamCallback(peer, s));
+    });
+
+    this.onActiveDeviceCallback = (e: CallActiveDevice) => {
+      // Do nothing.
+    };
+
+    this.events.onConcreteEvent(eventTypes.CALL_ACTIVE_DEVICE, this.id, (e: CallActiveDevice) => {
+      this.pool.destroyAll();
+      this.onActiveDeviceCallback(e);
     });
 
     let nop = (a: proto.CallAction) => {
@@ -232,9 +242,7 @@ export abstract class Call implements wireEntities.Call {
   }
 
   onActiveDevice(callback: Callback<CallActiveDevice>) {
-    this.events.onConcreteEvent(eventTypes.CALL_ACTIVE_DEVICE, this.id, (e: CallActiveDevice) => {
-      callback(e);
-    });
+    this.onActiveDeviceCallback = callback;
   }
 
   onEnd(callback: Callback<CallEnd>) {
