@@ -6,15 +6,6 @@ $(document).ready(function() {
         throw new Error("Unsupported browser.");
     }
 
-    // Cross-browser support:
-    navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
-
-    if (navigator.mediaDevices.getUserMedia) {
-        navigator.getUserMedia = function(arg, t, c) {
-            return navigator.mediaDevices.getUserMedia(arg).then(t).catch(c);
-        };
-    }
-
     var sessionId = undefined;
     var loginBox = makeLoginBox();
     var chat = makeChat();
@@ -603,13 +594,13 @@ $(document).ready(function() {
     }
 
     function createStream(callback) {
-        navigator.getUserMedia({
+        navigator.mediaDevices.getUserMedia({
             "video": true,
             "audio": true
-        }, function(stream) {
+        }).then(function(stream) {
             console.log("Local stream started!");
             callback(stream);
-        }, function(error) {
+        }).catch(function(error) {
             console.log("Could not start stream: ", error);
         });
     }

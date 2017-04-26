@@ -52,9 +52,5 @@ export function getStream(onStream, onError) {
     video: true,
     audio: true
   };
-  if (typeof navigator.getUserMedia !== "undefined") {
-    navigator.getUserMedia(constraints, onStream, onError);
-  } else if (typeof navigator.mediaDevices.getUserMedia !== "undefined") {
-    navigator.mediaDevices.getUserMedia(constraints).then(onStream).catch(onError);
-  }
+  navigator.mediaDevices.getUserMedia(constraints).then(onStream).catch(onError);
 }
