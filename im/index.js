@@ -25,6 +25,8 @@ $(document).ready(function() {
     var status = "available";
     var statusSwitch = $("#status-switch").click(function() { return false; }).html("Status: " + status).hide();
 
+    var stealSwitch = $("#steal-switch").click(function() { return false; }).hide();
+
     var killSwitch = $("#kill-switch").click(function() { return false; }).hide();
     $('#demo-name').click(function() {
         killSwitch.show();
@@ -673,7 +675,20 @@ $(document).ready(function() {
 
         call.onEnd(function(e) {
             console.log("Call ended: ", e.reason);
+            stealSwitch.hide();
             endCall("ended");
+        });
+
+        call.onTransferred(function(e) {
+            console.log("Call was transferred to another device: ", e);
+        });
+
+        call.onActiveDevice(function(e) {
+            console.log("Call is in progress on another device: ", e);
+            enableStealSwitch(call);
+            stopStreams();
+            onTeardownCallback();
+            chat.remove(call.id);
         });
 
         function endCall(reason) {
@@ -767,6 +782,9 @@ $(document).ready(function() {
             answer: function() {
                 call.answer(localStream);
             },
+            pull: function() {
+                call.pull(localStream);
+            },
             onTeardown: function(callback) {
                 onTeardownCallback = callback;
             },
@@ -811,6 +829,18 @@ $(document).ready(function() {
                 });
             });
         }
+    }
+
+    function enableStealSwitch(call) {
+        stealSwitch.click(function() {
+            createStream(function(stream) {
+                var callbox = addCall(call, stream);
+                callbox.pull();
+                callbox.switchTo();
+            });
+            stealSwitch.hide();
+        });
+        stealSwitch.show();
     }
 
     function randomGif() {
@@ -999,7 +1029,13 @@ $(document).ready(function() {
                         var closeModal = function() {};
                         m.call.onEnd(function(e) {
                             console.log("Call ended: ", e.reason);
+                            stealSwitch.hide();
                             closeModal();
+                        });
+                        m.call.onActiveDevice(function(e) {
+                            console.log("Call in progress on another device: ", e);
+                            closeModal();
+                            enableStealSwitch(m.call);
                         });
                         var line = "";
                         if(m.call.direct) {
