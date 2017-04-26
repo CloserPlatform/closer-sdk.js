@@ -675,8 +675,8 @@ $(document).ready(function() {
 
         call.onEnd(function(e) {
             console.log("Call ended: ", e.reason);
-            endCall("ended");
             stealSwitch.hide();
+            endCall("ended");
         });
 
         call.onTransferred(function(e) {
@@ -1029,8 +1029,8 @@ $(document).ready(function() {
                         var closeModal = function() {};
                         m.call.onEnd(function(e) {
                             console.log("Call ended: ", e.reason);
-                            closeModal();
                             stealSwitch.hide();
+                            closeModal();
                         });
                         m.call.onActiveDevice(function(e) {
                             console.log("Call in progress on another device: ", e);
