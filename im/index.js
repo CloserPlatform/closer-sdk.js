@@ -685,15 +685,7 @@ $(document).ready(function() {
 
         call.onActiveDevice(function(e) {
             console.log("Call is in progress on another device: ", e);
-            stealSwitch.click(function() {
-                createStream(function(stream) {
-                    var callbox = addCall(call, stream);
-                    callbox.pull();
-                    callbox.switchTo();
-                });
-                stealSwitch.hide();
-            });
-            stealSwitch.show();
+            enableStealSwitch(call);
             stopStreams();
             onTeardownCallback();
             chat.remove(call.id);
@@ -837,6 +829,18 @@ $(document).ready(function() {
                 });
             });
         }
+    }
+
+    function enableStealSwitch(call) {
+        stealSwitch.click(function() {
+            createStream(function(stream) {
+                var callbox = addCall(call, stream);
+                callbox.pull();
+                callbox.switchTo();
+            });
+            stealSwitch.hide();
+        });
+        stealSwitch.show();
     }
 
     function randomGif() {
@@ -1031,16 +1035,7 @@ $(document).ready(function() {
                         m.call.onActiveDevice(function(e) {
                             console.log("Call in progress on another device: ", e);
                             closeModal();
-
-                            stealSwitch.click(function() {
-                                createStream(function(stream) {
-                                    var callbox = addCall(m.call, stream);
-                                    callbox.pull();
-                                    callbox.switchTo();
-                                });
-                                stealSwitch.hide();
-                            });
-                            stealSwitch.show();
+                            enableStealSwitch(m.call);
                         });
                         var line = "";
                         if(m.call.direct) {
