@@ -239,6 +239,10 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<void, void>([this.url, this.callPath, callId, "join"]);
   }
 
+  pullCall(callId: proto.ID): Promise<void> {
+    return this.postAuth<void, void>([this.url, this.callPath, callId, "pull"]);
+  }
+
   leaveCall(callId: proto.ID, reason: string): Promise<void> {
     return this.postAuth<proto.LeaveReason, void>([this.url, this.callPath, callId, "leave"],
                                                   proto.leaveReason(reason));
