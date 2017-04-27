@@ -6,8 +6,9 @@ import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
 import { eventTypes } from "./protocol/wire-events";
 
-interface RTCPeerConnectionWithOnTrack extends RTCPeerConnection {
-  ontrack?: (event: MediaStreamEvent) => void; // NOTE Hackaround for unstable API.
+interface HackedRTCPeerConnection extends RTCPeerConnection { // NOTE Hackaround for unstable API.
+  ontrack?: (event: MediaStreamEvent) => void;
+  addTrack: (track: MediaStreamTrack, stream?: MediaStream) => void;
 }
 
 export interface RemoteStreamCallback {
@@ -25,13 +26,17 @@ export class RTCConnection {
     this.api = api;
     this.log = log;
     this.conn = new RTCPeerConnection(config);
-    this.conn.addStream(stream);
+    this.addLocalStream(stream);
     this.initOnRemoteStream();
   }
 
   disconnect() {
     this.log("Disconnecting an RTC connection.");
     this.conn.close();
+  }
+
+  addLocalStream(stream: MediaStream) {
+    stream.getTracks().forEach((track) => (this.conn as HackedRTCPeerConnection).addTrack(track, stream));
   }
 
   addCandidate(candidate: wireEvents.Candidate) {
@@ -88,7 +93,7 @@ export class RTCConnection {
       this.onRemoteStreamCallback(event.stream || event.streams[0]);
     };
 
-    let hackedConn = (this.conn as RTCPeerConnectionWithOnTrack);
+    let hackedConn = (this.conn as HackedRTCPeerConnection);
     if (typeof hackedConn.ontrack !== "undefined") {
       hackedConn.ontrack = onstream;
     } else {
@@ -157,6 +162,7 @@ export class RTCPool {
 
   addLocalStream(stream: MediaStream) {
     this.localStream = stream;
+    Object.keys(this.connections).forEach((key) => this.connections[key].addLocalStream(stream));
   }
 
   create(peer: ID): RTCConnection {
