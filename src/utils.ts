@@ -21,5 +21,5 @@ export function deepcopy<T>(obj: T): T {
 }
 
 export function isBrowserSupported(): boolean {
-  return ["firefox", "chrome"].some((b) => adapter.browserDetails.browser === b);
+  return adapter.browserDetails.version !== null; // tslint:disable-line
 }
