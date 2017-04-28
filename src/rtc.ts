@@ -6,8 +6,13 @@ import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
 import { eventTypes } from "./protocol/wire-events";
 
-interface HackedRTCPeerConnection extends RTCPeerConnection { // NOTE Hackaround for unstable API.
-  ontrack?: (event: MediaStreamEvent) => void;
+// FIXME Hackarounds for unstable API.
+interface HackedMediaStreamEvent extends MediaStreamEvent {
+  streams: Array<MediaStream>;
+}
+
+interface HackedRTCPeerConnection extends RTCPeerConnection {
+  ontrack: (event: HackedMediaStreamEvent) => void;
   addTrack: (track: MediaStreamTrack, stream?: MediaStream) => void;
 }
 
@@ -35,9 +40,12 @@ export class RTCConnection {
       // Do nothing.
     };
 
-    (this.conn as HackedRTCPeerConnection).ontrack = (event) => {
+    (this.conn as HackedRTCPeerConnection).ontrack = (event: HackedMediaStreamEvent) => {
       this.log("Received a remote stream.");
-      this.onRemoteStreamCallback(event.stream);
+      const streams = (typeof event.streams !== "undefined") ? event.streams : [event.stream];
+      streams.forEach((stream) => {
+        this.onRemoteStreamCallback(stream);
+      });
     };
   }
 
@@ -136,16 +144,23 @@ export class RTCPool {
 
     events.onConcreteEvent(eventTypes.RTC_DESCRIPTION, this.call, (msg: RTCDescription) => {
       this.log("Received an RTC description: " + msg.description.sdp);
-      if (msg.peer in this.connections) {
-        this.connections[msg.peer].setRemoteDescription(msg.description);
+
+      if (msg.description.type === "offer") {
+        if (msg.peer in this.connections) {
+          this.sendAnswer(this.connections[msg.peer], msg.description);
+        } else {
+          let rtc = this.createRTC(msg.peer);
+          this.sendAnswer(rtc, msg.description);
+          this.onConnectionCallback(msg.peer, rtc);
+        }
+      } else if (msg.description.type === "answer") {
+        if (msg.peer in this.connections) {
+          this.connections[msg.peer].setRemoteDescription(msg.description);
+        } else {
+          events.raise("Received an invalid RTC answer from " + msg.peer);
+        }
       } else {
-        let rtc = this.createRTC(msg.peer);
-        rtc.answer(msg.description).then((answer) => {
-          this.log("Sent an RTC description: " + answer.sdp);
-        }).catch(function(error) {
-          events.raise("Could not create an RTC answer.", error);
-        });
-        this.onConnectionCallback(msg.peer, rtc);
+        events.raise("Received an invalid RTC description type " + msg.description.type);
       }
     });
 
@@ -167,16 +182,13 @@ export class RTCPool {
     this.localStream = stream;
     Object.keys(this.connections).forEach((key) => {
       this.connections[key].addLocalStream(stream);
+      this.sendOffer(this.connections[key]); // FIXME Move this to RCTConnection.onNegotiationNeeded
     });
   }
 
   create(peer: ID): RTCConnection {
     let rtc = this.createRTC(peer);
-    rtc.offer().then((offer) => {
-      this.log("Sent an RTC description: " + offer.sdp);
-    }).catch(function(error) {
-      this.events.raise("Could not create an RTC offer.", error);
-    });
+    this.sendOffer(rtc);
     return rtc;
   }
 
@@ -232,6 +244,22 @@ export class RTCPool {
     rtc.addLocalStream(this.localStream);
     this.connections[peer] = rtc;
     return rtc;
+  }
+
+  private sendAnswer(rtc: RTCConnection, remoteDescription: wireEvents.SDP) {
+    rtc.answer(remoteDescription).then((answer) => {
+      this.log("Sent an RTC description: " + answer.sdp);
+    }).catch((error) => {
+      this.events.raise("Could not create an RTC answer.", error);
+    });
+  }
+
+  private sendOffer(rtc: RTCConnection) {
+    rtc.offer().then((offer) => {
+      this.log("Sent an RTC description: " + offer.sdp);
+    }).catch((error) => {
+      this.events.raise("Could not create an RTC offer.", error);
+    });
   }
 }
 
