@@ -224,7 +224,7 @@ function makeStreamBox(id, name, stream, muted) {
             class: 'video-stream',
             autoplay: true,
             muted: muted,
-            src: window.URL.createObjectURL(stream.stream)
+            srcObject: stream.stream
         });
 
     var status = "";
