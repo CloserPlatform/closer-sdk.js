@@ -88,17 +88,10 @@ export class RTCConnection {
   }
 
   private initOnRemoteStream() {
-    let onstream = (event) => {
+    (this.conn as HackedRTCPeerConnection).ontrack = (event) => {
       this.log("Received a remote stream.");
-      this.onRemoteStreamCallback(event.stream || event.streams[0]);
+      this.onRemoteStreamCallback(event.stream);
     };
-
-    let hackedConn = (this.conn as HackedRTCPeerConnection);
-    if (typeof hackedConn.ontrack !== "undefined") {
-      hackedConn.ontrack = onstream;
-    } else {
-      this.conn.onaddstream = onstream;
-    }
   }
 }
 
