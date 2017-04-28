@@ -107,7 +107,7 @@ function makeCall(callType: CallType) {
 
     whenever(isWebRTCSupported())("should run a callback on join", (done) => {
       getStream((stream) => {
-        (call as any).pool.addLocalStream(stream);
+        call.addLocalStream(stream);
 
         events.onError((error) => done.fail());
 

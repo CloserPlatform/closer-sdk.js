@@ -49,10 +49,6 @@ class APIMock extends ArtichokeAPI {
   }
 }
 
-function nop(stream: MediaStream) {
-  // Do nothing.
-}
-
 // FIXME Unfuck whenever WebRTC is standarized.
 describe("RTCConnection", () => {
   let api;
@@ -63,12 +59,12 @@ describe("RTCConnection", () => {
 
   whenever(isWebRTCSupported())("should create SDP offers", (done) => {
     getStream((stream) => {
-      let rtc = createRTCConnection(stream, config.chat.rtc, log, api);
-      rtc.onRemoteStream(nop);
+      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, api);
+      rtc.addLocalStream(stream);
 
       expect(api.descriptionSent).toBe(false);
 
-      rtc.offer(callId, peerId).then(function(offer) {
+      rtc.offer().then(function(offer) {
         expect(api.descriptionSent).toBe(true);
         done();
       }).catch((error) => done.fail());
@@ -81,12 +77,12 @@ describe("RTCConnection", () => {
         type: "offer",
         sdp: validSDP
       };
-      let rtc = createRTCConnection(stream, config.chat.rtc, log, api);
-      rtc.onRemoteStream(nop);
+      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, api);
+      rtc.addLocalStream(stream);
 
       expect(api.descriptionSent).toBe(false);
 
-      rtc.answer(callId, peerId, sdp).then(function(offer) {
+      rtc.answer(sdp).then(function(offer) {
         expect(api.descriptionSent).toBe(true);
         done();
       }).catch((error) => done.fail());
@@ -99,12 +95,12 @@ describe("RTCConnection", () => {
         type: "offer",
         sdp: invalidSDP
       };
-      let rtc = createRTCConnection(stream, config.chat.rtc, log, api);
-      rtc.onRemoteStream(nop);
+      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, api);
+      rtc.addLocalStream(stream);
 
       expect(api.descriptionSent).toBe(false);
 
-      rtc.answer(callId, peerId, sdp).then((answer) => done.fail()).catch(function(offer) {
+      rtc.answer(sdp).then((answer) => done.fail()).catch(function(offer) {
         expect(api.descriptionSent).toBe(false);
         done();
       });
@@ -136,7 +132,7 @@ describe("RTCPool", () => {
       events.onError((error) => done.fail());
 
       pool.addLocalStream(stream);
-      pool.create(peerId).onRemoteStream(nop);
+      pool.create(peerId);
     }, (error) => done.fail());
   });
 
@@ -154,7 +150,6 @@ describe("RTCPool", () => {
 
       pool.addLocalStream(stream);
       pool.onConnection(function(peer, rtc) {
-        rtc.onRemoteStream(nop);
         expect(peer).toBe(peerId);
       });
 
@@ -201,7 +196,7 @@ describe("RTCPool", () => {
       };
 
       pool.addLocalStream(stream);
-      pool.create(peerId).onRemoteStream(nop);
+      pool.create(peerId);
     }, (error) => done.fail());
   });
 
