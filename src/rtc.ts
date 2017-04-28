@@ -36,7 +36,13 @@ export class RTCConnection {
   }
 
   addLocalStream(stream: MediaStream) {
-    stream.getTracks().forEach((track) => (this.conn as HackedRTCPeerConnection).addTrack(track, stream));
+    const hackedConn = this.conn as HackedRTCPeerConnection;
+    // FIXME Needs https://github.com/webrtc/adapter/pull/503
+    if (hackedConn.addTrack !== undefined) {
+      stream.getTracks().forEach((track) => (this.conn as HackedRTCPeerConnection).addTrack(track, stream));
+    } else {
+      this.conn.addStream(stream);
+    }
   }
 
   addCandidate(candidate: wireEvents.Candidate) {
