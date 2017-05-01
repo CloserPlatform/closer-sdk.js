@@ -683,14 +683,16 @@ $(document).ready(function() {
         call.onActiveDevice(function(e) {
             console.log("Call is in progress on another device: ", e);
             enableStealSwitch(call);
-            stopStreams();
+            callbox.hide();
+            stopStream();
             onTeardownCallback();
             chat.remove(call.id);
         });
 
         function endCall(reason) {
             call.leave(reason);
-            stopStreams();
+            callbox.hide();
+            stopStream();
             onTeardownCallback();
             chat.remove(call.id);
         }
@@ -704,8 +706,7 @@ $(document).ready(function() {
             callbox.append(grid);
         }
 
-        function stopStreams() {
-            callbox.hide();
+        function stopStream() {
             if(localStream.stop) localStream.stop();
             else localStream.getTracks().map(function(t) { t.stop(); });
         }
@@ -717,7 +718,17 @@ $(document).ready(function() {
             endCall("closed");
         });
 
-        var toggle = makeButton('btn-info', "Toggle stream", function() {
+        var toggle = makeButton('btn-warning', "Toggle stream", function() {
+            createImageStream(randomGif(), 10, function(stream) {
+                call.addLocalStream(stream);
+                streams["You"].stream = stream;
+                stopStream();
+                localStream = stream;
+                renderStreams();
+            });
+        });
+
+        var mute = makeButton('btn-info', "(Un)mute stream", function() {
             if(streams["You"].muted) {
               call.unmute();
               call.unpause();
@@ -748,7 +759,7 @@ $(document).ready(function() {
             }, function() {});
         }
 
-        var buttons = makeButtonGroup().append([hangup, toggle]);
+        var buttons = makeButtonGroup().append([hangup, mute, toggle]);
         var panel = makePanel(users.element).addClass('controls-wrapper');
         var controls = makeControls(call.id, [panel, input, buttons]).addClass('text-center').hide();
         renderStreams();

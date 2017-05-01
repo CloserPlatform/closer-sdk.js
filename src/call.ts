@@ -68,7 +68,7 @@ export abstract class Call implements wireEntities.Call {
     this.pool = createRTCPool(this.id, config, log, events, api);
 
     if (stream) {
-      this.pool.addLocalStream(stream);
+      this.addLocalStream(stream);
     }
 
     // By default do nothing:
@@ -158,6 +158,10 @@ export abstract class Call implements wireEntities.Call {
     });
   }
 
+  addLocalStream(stream: MediaStream) {
+    this.pool.addLocalStream(stream);
+  }
+
   getUsers(): Promise<Array<proto.ID>> {
     return Promise.resolve(this.users);
   }
@@ -167,7 +171,7 @@ export abstract class Call implements wireEntities.Call {
   }
 
   answer(stream: MediaStream): Promise<void> {
-    this.pool.addLocalStream(stream);
+    this.addLocalStream(stream);
     return this.api.answerCall(this.id);
   }
 
@@ -176,7 +180,7 @@ export abstract class Call implements wireEntities.Call {
   }
 
   pull(stream: MediaStream): Promise<void> {
-    this.pool.addLocalStream(stream);
+    this.addLocalStream(stream);
     return this.api.pullCall(this.id);
   }
 
@@ -265,7 +269,7 @@ export class GroupCall extends Call {
   }
 
   join(stream: MediaStream): Promise<void> {
-    this.pool.addLocalStream(stream);
+    this.addLocalStream(stream);
     return this.api.joinCall(this.id);
   }
 

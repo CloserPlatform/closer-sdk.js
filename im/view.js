@@ -224,7 +224,7 @@ function makeStreamBox(id, name, stream, muted) {
             class: 'video-stream',
             autoplay: true,
             muted: muted,
-            src: window.URL.createObjectURL(stream.stream)
+            srcObject: stream.stream
         });
 
     var status = "";
@@ -329,4 +329,16 @@ function confirmModal(title, text, confirmText, onConfirm, cancelText, onCancel)
   return function() {
     modal.dialog("close");
   };
+}
+
+function createImageStream(url, fps, onLoad) {
+  var canvas = $('<canvas>');
+  var ctx = canvas.get(0).getContext("2d");
+  var img = new Image();
+  img.onload = function() {
+    ctx.drawImage(img, 0, 0);
+    onLoad(canvas.get(0).captureStream(fps));
+  };
+  img.crossOrigin = "anonymous";
+  img.src = url;
 }
