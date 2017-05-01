@@ -15,6 +15,8 @@ export { BusinessRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 export { Session } from "./session";
 
 // Other useful crap:
+export { isBrowserSupported } from "./utils";
+
 import * as api from "./api";
 import * as logger from "./logger";
 import * as events from "./protocol/events";

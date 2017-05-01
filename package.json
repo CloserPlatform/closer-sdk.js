@@ -23,6 +23,9 @@
   },
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
   "license": "MIT",
+  "dependencies": {
+    "webrtc-adapter": "^3.3.4"
+  },
   "devDependencies": {
     "@types/es6-shim": "^0.31.32",
     "@types/jasmine": "^2.5.43",

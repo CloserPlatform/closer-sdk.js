@@ -6,16 +6,6 @@ import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
 import { eventTypes } from "./protocol/wire-events";
 
-// Cross-browser support:
-function newRTCPeerConnection(config: RTCConfiguration): RTCPeerConnection {
-  if (typeof RTCPeerConnection !== "undefined") {
-    return new RTCPeerConnection(config);
-  } else {
-    // FIXME Add support for more browsers.
-    throw Error("Browser not supported!");
-  }
-}
-
 interface RTCPeerConnectionWithOnTrack extends RTCPeerConnection {
   ontrack?: (event: MediaStreamEvent) => void; // NOTE Hackaround for unstable API.
 }
@@ -34,7 +24,7 @@ export class RTCConnection {
     log("Connecting an RTC connection.");
     this.api = api;
     this.log = log;
-    this.conn = newRTCPeerConnection(config);
+    this.conn = new RTCPeerConnection(config);
     this.conn.addStream(stream);
     this.initOnRemoteStream();
   }

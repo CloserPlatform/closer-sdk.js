@@ -1,4 +1,5 @@
-import { deepcopy, wrapPromise } from "./utils";
+import { isChrome, isFirefox } from "./fixtures.spec";
+import { deepcopy, isBrowserSupported, wrapPromise } from "./utils";
 
 describe("Utils", () => {
   it("wrapPromise should replace a Promise", (done) => {
@@ -34,5 +35,15 @@ describe("Utils", () => {
 
     obj.bar.baz = 42;
     expect(cpy.bar.baz).toEqual(5);
+  });
+
+  it("isBrowserSupported should check if browser is supported", () => {
+    if(isChrome()) {
+      expect(isBrowserSupported()).toEqual(true);
+    } else if(isFirefox()) {
+      expect(isBrowserSupported()).toEqual(true);
+    } else {
+      expect(isBrowserSupported()).toEqual(false);
+    }
   });
 });
