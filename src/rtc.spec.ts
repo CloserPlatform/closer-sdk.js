@@ -71,6 +71,33 @@ describe("RTCConnection", () => {
     }, (error) => done.fail());
   });
 
+  whenever(isWebRTCSupported())("should renegotiate SDP", (done) => {
+    getStream((stream) => {
+      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, api);
+      rtc.addLocalStream(stream);
+
+      expect(api.descriptionSent).toBe(false);
+
+      rtc.offer().then(function(offer) {
+        expect(api.descriptionSent).toBe(true);
+        api.descriptionSent = false;
+        log("First description sent.");
+        getStream((newStream) => {
+          rtc.addLocalStream(newStream);
+          log("Got new stream.");
+          rtc.renegotiate().then(function(offer) {
+            expect(api.descriptionSent).toBe(true);
+            log("Second description sent.");
+            done();
+          }).catch((error) => {
+            log(error);
+            done.fail();
+          });
+        }, (error) => done.fail());
+      }).catch((error) => done.fail());
+    }, (error) => done.fail());
+  });
+
   whenever(isWebRTCSupported())("should create valid SDP answer", (done) => {
     getStream((stream) => {
       let sdp: wireEvents.SDP = {

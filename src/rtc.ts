@@ -47,6 +47,13 @@ export class RTCConnection {
         this.onRemoteStreamCallback(stream);
       });
     };
+
+    this.conn.onicecandidate = (event) => {
+      if (event.candidate) {
+        this.log("Created ICE candidate: " + event.candidate.candidate);
+        this.api.sendCandidate(this.call, this.peer, event.candidate);
+      }
+    };
   }
 
   disconnect() {
@@ -68,13 +75,20 @@ export class RTCConnection {
     this.conn.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
+  renegotiate(): Promise<wireEvents.SDP> {
+    this.conn.onicecandidate = (event) => {
+      // FIXME Chrome requires not propagating ICE during renegotiation.
+      // Do nothing.
+    };
+    return this.offer();
+  }
+
   offer(): Promise<wireEvents.SDP> {
     this.log("Creating RTC offer.");
 
     return new Promise((resolve, reject) => {
       this.conn.createOffer((offer) => {
         this.conn.setLocalDescription(offer);
-        this.initOnICECandidate();
         this.api.sendDescription(this.call, this.peer, offer as wireEvents.SDP);
         resolve(offer);
       }, reject);
@@ -88,7 +102,6 @@ export class RTCConnection {
     return new Promise((resolve, reject) => {
       this.conn.createAnswer((answer) => {
         this.conn.setLocalDescription(answer);
-        this.initOnICECandidate();
         this.api.sendDescription(this.call, this.peer, answer as wireEvents.SDP);
         resolve(answer);
       }, reject);
@@ -101,15 +114,6 @@ export class RTCConnection {
 
   setRemoteDescription(remoteDescription: wireEvents.SDP) {
     this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription));
-  }
-
-  private initOnICECandidate() {
-    this.conn.onicecandidate = (event) => {
-      if (event.candidate) {
-        this.log("Created ICE candidate: " + event.candidate.candidate);
-        this.api.sendCandidate(this.call, this.peer, event.candidate);
-      }
-    };
   }
 }
 
@@ -182,7 +186,7 @@ export class RTCPool {
     this.localStream = stream;
     Object.keys(this.connections).forEach((key) => {
       this.connections[key].addLocalStream(stream);
-      this.sendOffer(this.connections[key]); // FIXME Move this to RCTConnection.onNegotiationNeeded
+      this.resendOffer(this.connections[key]); // FIXME Move this to RCTConnection.onNegotiationNeeded
     });
   }
 
@@ -255,7 +259,15 @@ export class RTCPool {
   }
 
   private sendOffer(rtc: RTCConnection) {
-    rtc.offer().then((offer) => {
+    this.handleOffer(rtc.offer());
+  }
+
+  private resendOffer(rtc: RTCConnection) {
+    this.handleOffer(rtc.renegotiate());
+  }
+
+  private handleOffer(promise: Promise<wireEvents.SDP>) {
+    promise.then((offer) => {
       this.log("Sent an RTC description: " + offer.sdp);
     }).catch((error) => {
       this.events.raise("Could not create an RTC offer.", error);
