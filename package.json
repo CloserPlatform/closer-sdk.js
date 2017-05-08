@@ -55,8 +55,7 @@
     "tslint-loader": "^2.1.5",
     "typescript": "^2.2.1",
     "watchify": "^3.9.0",
-    "webpack": "^1.14.0",
-    "webpack-split-by-path": "0.0.10"
+    "webpack": "^1.14.0"
   },
   "publishConfig": {
     "registry": "https://nexus.contactis.pl/repository/npm-internal"

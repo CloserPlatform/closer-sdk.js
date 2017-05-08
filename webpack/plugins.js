@@ -2,7 +2,6 @@
 
 const path = require('path');
 const webpack = require('webpack');
-const SplitByPathPlugin = require('webpack-split-by-path');
 
 const sourceMap = process.env.TEST || process.env.NODE_ENV !== 'production'
   ? [new webpack.SourceMapDevToolPlugin({ filename: null, test: /\.tsx?$/ })]
@@ -20,9 +19,6 @@ const basePlugins = [
 const devPlugins = [];
 
 const prodPlugins = [
-  new SplitByPathPlugin([
-    { name: 'vendor', path: [path.join(__dirname, '..', 'node_modules/')] },
-  ]),
   // // FIXME UglifyJS doesn't work well with ts-loader.
   // new webpack.optimize.UglifyJsPlugin({
   //   compress: {
