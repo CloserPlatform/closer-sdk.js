@@ -40,7 +40,7 @@ export class RTCConnection {
 
     this.onICECandidate((candidate) => {
       this.log("Created ICE candidate: " + candidate.candidate);
-      this.api.sendCandidate(this.call, this.peer, candidate)
+      this.api.sendCandidate(this.call, this.peer, candidate);
     });
 
     (this.conn as HackedRTCPeerConnection).ontrack = (event: HackedMediaStreamEvent) => {
