@@ -120,9 +120,13 @@ describe("RTCConnection", () => {
             done();
           };
           rtc.addLocalStream(newStream);
-      }, (error) => done.fail());
+        }, (error) => done.fail(), {
+          audio: true
+        });
       }).catch((error) => done.fail());
-    }, (error) => done.fail());
+    }, (error) => done.fail(), {
+      video: true
+    });
   });
 
   whenever(isWebRTCSupported())("should renegotiate SDP answers", (done) => {
@@ -150,13 +154,16 @@ describe("RTCConnection", () => {
             done();
           };
           rtc.addLocalStream(newStream);
-        }, (error) => done.fail());
+        }, (error) => done.fail(), {
+          audio: true
+        });
       };
 
       rtc.onOffer(sdp);
-    }, (error) => done.fail());
+    }, (error) => done.fail(), {
+      video: true
+    });
   });
-
 
   whenever(!isChrome() && isWebRTCSupported())("should fail to create SDP answers for invalid offers", (done) => {
     getStream((stream) => {

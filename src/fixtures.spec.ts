@@ -46,11 +46,11 @@ export function isWebRTCSupported(): boolean {
   return isBrowserSupported();
 }
 
-export function getStream(onStream, onError) {
-  let constraints = {
-    fake: true, // NOTE For FireFox.
+export function getStream(onStream, onError, constraints?) {
+  let cs = constraints || {
     video: true,
     audio: true
   };
-  navigator.mediaDevices.getUserMedia(constraints).then(onStream).catch(onError);
+  cs.fake = true; // NOTE For FireFox.
+  navigator.mediaDevices.getUserMedia(cs).then(onStream).catch(onError);
 }
