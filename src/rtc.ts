@@ -1,5 +1,5 @@
 import { ArtichokeAPI } from "./api";
-import { EventHandler } from "./events";
+import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { RTCCandidate, RTCDescription } from "./protocol/events";
 import { ID } from "./protocol/protocol";
@@ -16,23 +16,21 @@ interface HackedRTCPeerConnection extends RTCPeerConnection {
   addTrack: (track: MediaStreamTrack, stream?: MediaStream) => void;
 }
 
-export interface RemoteStreamCallback {
-  (stream: MediaStream): void;
-}
-
 export class RTCConnection {
   private call: ID;
   private peer: ID;
   private api: ArtichokeAPI;
+  private events: EventHandler;
   private log: Logger;
   private conn: RTCPeerConnection;
-  private onRemoteStreamCallback: RemoteStreamCallback;
+  private onRemoteStreamCallback: Callback<MediaStream>;
 
-  constructor(call: ID, peer: ID, config: RTCConfiguration, log: Logger, api: ArtichokeAPI) {
+  constructor(call: ID, peer: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     log("Connecting an RTC connection to " + peer + " on " + call);
     this.call = call;
     this.peer = peer;
     this.api = api;
+    this.events = events;
     this.log = log;
     this.conn = new RTCPeerConnection(config);
 
@@ -40,19 +38,17 @@ export class RTCConnection {
       // Do nothing.
     };
 
+    this.onICECandidate((candidate) => {
+      this.log("Created ICE candidate: " + candidate.candidate);
+      this.api.sendCandidate(this.call, this.peer, candidate)
+    });
+
     (this.conn as HackedRTCPeerConnection).ontrack = (event: HackedMediaStreamEvent) => {
       this.log("Received a remote stream.");
       const streams = (typeof event.streams !== "undefined") ? event.streams : [event.stream];
       streams.forEach((stream) => {
         this.onRemoteStreamCallback(stream);
       });
-    };
-
-    this.conn.onicecandidate = (event) => {
-      if (event.candidate) {
-        this.log("Created ICE candidate: " + event.candidate.candidate);
-        this.api.sendCandidate(this.call, this.peer, event.candidate);
-      }
     };
   }
 
@@ -75,45 +71,84 @@ export class RTCConnection {
     this.conn.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
-  renegotiate(): Promise<wireEvents.SDP> {
-    this.conn.onicecandidate = (event) => {
-      // FIXME Chrome requires not propagating ICE during renegotiation.
-      // Do nothing.
-    };
-    return this.offer();
-  }
-
   offer(): Promise<wireEvents.SDP> {
-    this.log("Creating RTC offer.");
+    this.log("Creating an RTC offer.");
 
     return new Promise((resolve, reject) => {
       this.conn.createOffer((offer) => {
         this.conn.setLocalDescription(offer);
         this.api.sendDescription(this.call, this.peer, offer as wireEvents.SDP);
+        this.log("Sent an RTC offer: " + offer.sdp);
         resolve(offer);
       }, reject);
     });
   }
 
-  answer(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
-    this.log("Creating RTC answer.");
+  onOffer(remoteDescription: wireEvents.SDP) {
+    this.log("Received an RTC offer.");
     this.setRemoteDescription(remoteDescription);
+
+    this.onRenegotiation((event) => {
+      this.log("Renegotiating an RTC connection.");
+      this.offer().catch((error) => {
+        this.events.raise("Could not renegotiate the connection.", error);
+      });
+    });
+
+    this.answer().catch((error) => {
+      this.events.raise("Could not create an RTC answer.", error);
+    });
+  }
+
+  answer(): Promise<wireEvents.SDP> {
+    this.log("Creating an RTC answer.");
 
     return new Promise((resolve, reject) => {
       this.conn.createAnswer((answer) => {
         this.conn.setLocalDescription(answer);
         this.api.sendDescription(this.call, this.peer, answer as wireEvents.SDP);
+        this.log("Sent an RTC description: " + answer.sdp);
         resolve(answer);
       }, reject);
     });
   }
 
-  onRemoteStream(callback: RemoteStreamCallback) {
+  onAnswer(remoteDescription: wireEvents.SDP) {
+    this.log("Received an RTC answer.");
+    this.setRemoteDescription(remoteDescription);
+
+    this.onRenegotiation((event) => {
+      this.log("Renegotiating an RTC connection.");
+      this.offer().catch((error) => {
+        this.events.raise("Could not renegotiate the connection.", error);
+      });
+    });
+  }
+
+  onRemoteStream(callback: Callback<MediaStream>) {
     this.onRemoteStreamCallback = callback;
   }
 
   setRemoteDescription(remoteDescription: wireEvents.SDP) {
     this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription));
+  }
+
+  private onRenegotiation(callback: Callback<Event>) {
+    this.conn.onnegotiationneeded = (event) => {
+      // FIXME Chrome triggers renegotiation on... Initial negotiation...
+      if (this.conn.signalingState === "stable") {
+        this.log("Renegotiation triggerd.");
+        callback(event);
+      }
+    };
+  }
+
+  private onICECandidate(callback: Callback<RTCIceCandidate>) {
+    this.conn.onicecandidate = (event) => {
+      if (event.candidate) {
+        callback(event.candidate);
+      }
+    };
   }
 }
 
@@ -151,15 +186,15 @@ export class RTCPool {
 
       if (msg.description.type === "offer") {
         if (msg.peer in this.connections) {
-          this.sendAnswer(this.connections[msg.peer], msg.description);
+          this.connections[msg.peer].onOffer(msg.description);
         } else {
           let rtc = this.createRTC(msg.peer);
-          this.sendAnswer(rtc, msg.description);
+          rtc.onOffer(msg.description);
           this.onConnectionCallback(msg.peer, rtc);
         }
       } else if (msg.description.type === "answer") {
         if (msg.peer in this.connections) {
-          this.connections[msg.peer].setRemoteDescription(msg.description);
+          this.connections[msg.peer].onAnswer(msg.description);
         } else {
           events.raise("Received an invalid RTC answer from " + msg.peer);
         }
@@ -186,13 +221,14 @@ export class RTCPool {
     this.localStream = stream;
     Object.keys(this.connections).forEach((key) => {
       this.connections[key].addLocalStream(stream);
-      this.resendOffer(this.connections[key]); // FIXME Move this to RCTConnection.onNegotiationNeeded
     });
   }
 
   create(peer: ID): RTCConnection {
     let rtc = this.createRTC(peer);
-    this.sendOffer(rtc);
+    rtc.offer().catch((error) => {
+      this.events.raise("Could not create an RTC offer.", error);
+    });
     return rtc;
   }
 
@@ -244,40 +280,16 @@ export class RTCPool {
   }
 
   private createRTC(peer: ID): RTCConnection {
-    let rtc = createRTCConnection(this.call, peer, this.config, this.log, this.api);
+    let rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events, this.api);
     rtc.addLocalStream(this.localStream);
     this.connections[peer] = rtc;
     return rtc;
   }
-
-  private sendAnswer(rtc: RTCConnection, remoteDescription: wireEvents.SDP) {
-    rtc.answer(remoteDescription).then((answer) => {
-      this.log("Sent an RTC description: " + answer.sdp);
-    }).catch((error) => {
-      this.events.raise("Could not create an RTC answer.", error);
-    });
-  }
-
-  private sendOffer(rtc: RTCConnection) {
-    this.handleOffer(rtc.offer());
-  }
-
-  private resendOffer(rtc: RTCConnection) {
-    this.handleOffer(rtc.renegotiate());
-  }
-
-  private handleOffer(promise: Promise<wireEvents.SDP>) {
-    promise.then((offer) => {
-      this.log("Sent an RTC description: " + offer.sdp);
-    }).catch((error) => {
-      this.events.raise("Could not create an RTC offer.", error);
-    });
-  }
 }
 
-export function createRTCConnection(call: ID, peer: ID, config: RTCConfiguration,
-                                    log: Logger, api: ArtichokeAPI): RTCConnection {
-  return new RTCConnection(call, peer, config, log, api);
+export function createRTCConnection(call: ID, peer: ID, config: RTCConfiguration, log: Logger,
+                                    events: EventHandler, api: ArtichokeAPI): RTCConnection {
+  return new RTCConnection(call, peer, config, log, events, api);
 }
 
 export function createRTCPool(call: ID, config: RTCConfiguration, log: Logger,

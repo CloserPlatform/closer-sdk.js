@@ -51,15 +51,17 @@ class APIMock extends ArtichokeAPI {
 
 // FIXME Unfuck whenever WebRTC is standarized.
 describe("RTCConnection", () => {
+  let events;
   let api;
 
   beforeEach(() => {
     api = new APIMock();
+    events = new EventHandler(log);
   });
 
   whenever(isWebRTCSupported())("should create SDP offers", (done) => {
     getStream((stream) => {
-      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, api);
+      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, events, api);
       rtc.addLocalStream(stream);
 
       expect(api.descriptionSent).toBe(false);
@@ -67,33 +69,6 @@ describe("RTCConnection", () => {
       rtc.offer().then(function(offer) {
         expect(api.descriptionSent).toBe(true);
         done();
-      }).catch((error) => done.fail());
-    }, (error) => done.fail());
-  });
-
-  whenever(isWebRTCSupported())("should renegotiate SDP", (done) => {
-    getStream((stream) => {
-      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, api);
-      rtc.addLocalStream(stream);
-
-      expect(api.descriptionSent).toBe(false);
-
-      rtc.offer().then(function(offer) {
-        expect(api.descriptionSent).toBe(true);
-        api.descriptionSent = false;
-        log("First description sent.");
-        getStream((newStream) => {
-          rtc.addLocalStream(newStream);
-          log("Got new stream.");
-          rtc.renegotiate().then(function(offer) {
-            expect(api.descriptionSent).toBe(true);
-            log("Second description sent.");
-            done();
-          }).catch((error) => {
-            log(error);
-            done.fail();
-          });
-        }, (error) => done.fail());
       }).catch((error) => done.fail());
     }, (error) => done.fail());
   });
@@ -104,17 +79,84 @@ describe("RTCConnection", () => {
         type: "offer",
         sdp: validSDP
       };
-      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, api);
+      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, events, api);
       rtc.addLocalStream(stream);
 
       expect(api.descriptionSent).toBe(false);
 
-      rtc.answer(sdp).then(function(offer) {
+      rtc.setRemoteDescription(sdp);
+      rtc.answer().then(function(offer) {
         expect(api.descriptionSent).toBe(true);
         done();
       }).catch((error) => done.fail());
     }, (error) => done.fail());
   });
+
+  whenever(isWebRTCSupported())("should renegotiate SDP offers", (done) => {
+    getStream((stream) => {
+      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, events, api);
+      rtc.addLocalStream(stream);
+
+      expect(api.descriptionSent).toBe(false);
+
+      rtc.offer().then(function(offer) {
+        expect(api.descriptionSent).toBe(true);
+
+        let sdp: wireEvents.SDP = {
+          type: "answer",
+          sdp: validSDP
+        };
+
+        rtc.onAnswer(sdp);
+
+        // Connection is established.
+
+        api.descriptionSent = false;
+
+        getStream((newStream) => {
+          api.onDescription = (id, peer, description) => {
+            expect(api.descriptionSent).toBe(true);
+            expect(description.type).toBe("offer");
+            done();
+          };
+          rtc.addLocalStream(newStream);
+      }, (error) => done.fail());
+      }).catch((error) => done.fail());
+    }, (error) => done.fail());
+  });
+
+  whenever(isWebRTCSupported())("should renegotiate SDP answers", (done) => {
+    getStream((stream) => {
+      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, events, api);
+      rtc.addLocalStream(stream);
+
+      let sdp: wireEvents.SDP = {
+        type: "offer",
+        sdp: validSDP
+      };
+
+      expect(api.descriptionSent).toBe(false);
+
+      api.onDescription = (id, peer, description) => {
+        expect(api.descriptionSent).toBe(true);
+        expect(description.type).toBe("answer");
+
+        api.descriptionSent = false;
+
+        getStream((newStream) => {
+          api.onDescription = (id, peer, description) => {
+            expect(api.descriptionSent).toBe(true);
+            expect(description.type).toBe("offer");
+            done();
+          };
+          rtc.addLocalStream(newStream);
+        }, (error) => done.fail());
+      };
+
+      rtc.onOffer(sdp);
+    }, (error) => done.fail());
+  });
+
 
   whenever(!isChrome() && isWebRTCSupported())("should fail to create SDP answers for invalid offers", (done) => {
     getStream((stream) => {
@@ -122,12 +164,12 @@ describe("RTCConnection", () => {
         type: "offer",
         sdp: invalidSDP
       };
-      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, api);
+      let rtc = createRTCConnection(callId, peerId, config.chat.rtc, log, events, api);
       rtc.addLocalStream(stream);
 
       expect(api.descriptionSent).toBe(false);
 
-      rtc.answer(sdp).then((answer) => done.fail()).catch(function(offer) {
+      rtc.answer().then((answer) => done.fail()).catch(function(offer) {
         expect(api.descriptionSent).toBe(false);
         done();
       });
