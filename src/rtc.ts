@@ -74,19 +74,17 @@ export class RTCConnection {
   offer(): Promise<wireEvents.SDP> {
     this.log("Creating an RTC offer.");
 
-    return new Promise((resolve, reject) => {
-      this.conn.createOffer((offer) => {
-        this.conn.setLocalDescription(offer);
-        this.api.sendDescription(this.call, this.peer, offer as wireEvents.SDP);
-        this.log("Sent an RTC offer: " + offer.sdp);
-        resolve(offer);
-      }, reject);
+    return this.conn.createOffer().then((offer) => {
+      return this.conn.setLocalDescription(offer).then(() => offer);
+    }).then((offer) => {
+      this.api.sendDescription(this.call, this.peer, offer as wireEvents.SDP);
+      this.log("Sent an RTC offer: " + offer.sdp);
+      return offer;
     });
   }
 
-  onOffer(remoteDescription: wireEvents.SDP) {
+  onOffer(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
     this.log("Received an RTC offer.");
-    this.setRemoteDescription(remoteDescription);
 
     this.onRenegotiation((event) => {
       this.log("Renegotiating an RTC connection.");
@@ -95,27 +93,23 @@ export class RTCConnection {
       });
     });
 
-    this.answer().catch((error) => {
-      this.events.raise("Could not create an RTC answer.", error);
-    });
+    return this.setRemoteDescription(remoteDescription).then(() => this.answer());
   }
 
   answer(): Promise<wireEvents.SDP> {
     this.log("Creating an RTC answer.");
 
-    return new Promise((resolve, reject) => {
-      this.conn.createAnswer((answer) => {
-        this.conn.setLocalDescription(answer);
-        this.api.sendDescription(this.call, this.peer, answer as wireEvents.SDP);
-        this.log("Sent an RTC description: " + answer.sdp);
-        resolve(answer);
-      }, reject);
+    return this.conn.createAnswer().then((answer) => {
+      return this.conn.setLocalDescription(answer).then(() => answer);
+    }).then((answer) => {
+      this.api.sendDescription(this.call, this.peer, answer as wireEvents.SDP);
+      this.log("Sent an RTC description: " + answer.sdp);
+      return answer;
     });
   }
 
-  onAnswer(remoteDescription: wireEvents.SDP) {
+  onAnswer(remoteDescription: wireEvents.SDP): Promise<void> {
     this.log("Received an RTC answer.");
-    this.setRemoteDescription(remoteDescription);
 
     this.onRenegotiation((event) => {
       this.log("Renegotiating an RTC connection.");
@@ -123,14 +117,16 @@ export class RTCConnection {
         this.events.raise("Could not renegotiate the connection.", error);
       });
     });
+
+    return this.setRemoteDescription(remoteDescription);
   }
 
   onRemoteStream(callback: Callback<MediaStream>) {
     this.onRemoteStreamCallback = callback;
   }
 
-  setRemoteDescription(remoteDescription: wireEvents.SDP) {
-    this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription));
+  setRemoteDescription(remoteDescription: wireEvents.SDP): Promise<void> {
+    return this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription));
   }
 
   private onRenegotiation(callback: Callback<Event>) {
@@ -186,15 +182,22 @@ export class RTCPool {
 
       if (msg.description.type === "offer") {
         if (msg.peer in this.connections) {
-          this.connections[msg.peer].onOffer(msg.description);
+          this.connections[msg.peer].onOffer(msg.description).catch((error) => {
+            events.raise("Could not process the RTC description: ", error);
+          });
         } else {
           let rtc = this.createRTC(msg.peer);
-          rtc.onOffer(msg.description);
-          this.onConnectionCallback(msg.peer, rtc);
+          rtc.onOffer(msg.description).then((answer) => {
+            this.onConnectionCallback(msg.peer, rtc);
+          }).catch((error) => {
+            events.raise("Could not process the RTC description: ", error);
+          });
         }
       } else if (msg.description.type === "answer") {
         if (msg.peer in this.connections) {
-          this.connections[msg.peer].onAnswer(msg.description);
+          this.connections[msg.peer].onAnswer(msg.description).catch((error) => {
+            events.raise("Could not process the RTC description: ", error);
+          });
         } else {
           events.raise("Received an invalid RTC answer from " + msg.peer);
         }

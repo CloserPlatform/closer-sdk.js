@@ -107,22 +107,21 @@ describe("RTCConnection", () => {
           sdp: validSDP
         };
 
-        rtc.onAnswer(sdp);
+        rtc.onAnswer(sdp).then(() => {
+          api.descriptionSent = false;
 
-        // Connection is established.
-
-        api.descriptionSent = false;
-
-        getStream((newStream) => {
           api.onDescription = (id, peer, description) => {
             expect(api.descriptionSent).toBe(true);
             expect(description.type).toBe("offer");
             done();
           };
-          rtc.addLocalStream(newStream);
-        }, (error) => done.fail(), {
-          audio: true
-        });
+
+          getStream((newStream) => {
+            rtc.addLocalStream(newStream);
+          }, (error) => done.fail(), {
+            audio: true
+          });
+        }).catch((error) => done.fail());
       }).catch((error) => done.fail());
     }, (error) => done.fail(), {
       video: true
@@ -141,25 +140,24 @@ describe("RTCConnection", () => {
 
       expect(api.descriptionSent).toBe(false);
 
-      api.onDescription = (id, peer, description) => {
-        expect(api.descriptionSent).toBe(true);
-        expect(description.type).toBe("answer");
+      rtc.onOffer(sdp).then((answer) => {
+        expect(api.descriptionSent).toBe(false);
 
         api.descriptionSent = false;
 
+        api.onDescription = (id, peer, description) => {
+          expect(api.descriptionSent).toBe(true);
+          expect(description.type).toBe("offer");
+          done();
+        };
+
         getStream((newStream) => {
-          api.onDescription = (id, peer, description) => {
-            expect(api.descriptionSent).toBe(true);
-            expect(description.type).toBe("offer");
-            done();
-          };
           rtc.addLocalStream(newStream);
         }, (error) => done.fail(), {
-          audio: true
+          audio: true,
         });
-      };
 
-      rtc.onOffer(sdp);
+      });
     }, (error) => done.fail(), {
       video: true
     });
