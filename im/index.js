@@ -859,7 +859,7 @@ $(document).ready(function() {
     }
 
     function getURL(server) {
-        return new URL((server.startsWith("http") ? "" : window.location.protocol) + server);
+        return new URL((server.startsWith("http") ? "" : window.location.protocol + "//") + server);
     }
 
     function getUser(url, id, apiKey) {
@@ -872,7 +872,6 @@ $(document).ready(function() {
 
     function logIn(url, phone, password) {
         var xhttp = new XMLHttpRequest();
-        var urlStr = url.protocol + "//" + url.host + (url.port === "" ? "" : ":" + url.port);
         xhttp.open("POST", url + 'api/session', false);
         xhttp.setRequestHeader('Content-Type', 'application/json');
         xhttp.send(JSON.stringify({
