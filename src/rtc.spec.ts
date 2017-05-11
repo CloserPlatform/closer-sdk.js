@@ -29,6 +29,13 @@ function descr(sdp): Event {
   } as Event;
 }
 
+function logError(done) {
+  return function (error) {
+    log("Got an error: " + error + " (" + JSON.stringify(error) + ")");
+    done.fail();
+  }
+}
+
 class APIMock extends ArtichokeAPI {
   descriptionSent = false;
   onDescription: (call: ID, peer: ID, sdp: wireEvents.SDP) => void;
@@ -69,8 +76,8 @@ describe("RTCConnection", () => {
       rtc.offer().then(function(offer) {
         expect(api.descriptionSent).toBe(true);
         done();
-      }).catch((error) => done.fail());
-    }, (error) => done.fail());
+      }).catch(logError(done));
+    }, logError(done));
   });
 
   whenever(isWebRTCSupported())("should create valid SDP answer", (done) => {
@@ -88,8 +95,8 @@ describe("RTCConnection", () => {
       rtc.answer().then(function(offer) {
         expect(api.descriptionSent).toBe(true);
         done();
-      }).catch((error) => done.fail());
-    }, (error) => done.fail());
+      }).catch(logError(done));
+    }, logError(done));
   });
 
   whenever(isWebRTCSupported())("should renegotiate SDP offers", (done) => {
@@ -118,12 +125,12 @@ describe("RTCConnection", () => {
 
           getStream((newStream) => {
             rtc.addLocalStream(newStream);
-          }, (error) => done.fail(), {
+          }, logError(done), {
             audio: true
           });
-        }).catch((error) => done.fail());
-      }).catch((error) => done.fail());
-    }, (error) => done.fail(), {
+        }).catch(logError(done));
+      }).catch(logError(done));
+    }, logError(done), {
       video: true
     });
   });
@@ -153,12 +160,12 @@ describe("RTCConnection", () => {
 
         getStream((newStream) => {
           rtc.addLocalStream(newStream);
-        }, (error) => done.fail(), {
+        }, logError(done), {
           audio: true,
         });
 
       });
-    }, (error) => done.fail(), {
+    }, logError(done), {
       video: true
     });
   });
@@ -174,11 +181,11 @@ describe("RTCConnection", () => {
 
       expect(api.descriptionSent).toBe(false);
 
-      rtc.answer().then((answer) => done.fail()).catch(function(offer) {
+      rtc.answer().then((answer) => done.fail()).catch((error) => {
         expect(api.descriptionSent).toBe(false);
         done();
       });
-    }, (error) => done.fail());
+    }, logError(done));
   });
 });
 
@@ -203,11 +210,11 @@ describe("RTCPool", () => {
         done();
       };
 
-      events.onError((error) => done.fail());
+      events.onError(logError(done));
 
       pool.addLocalStream(stream);
       pool.create(peerId);
-    }, (error) => done.fail());
+    }, logError(done));
   });
 
   whenever(isWebRTCSupported())("should spawn an RTC connection on session description", (done) => {
@@ -220,7 +227,7 @@ describe("RTCPool", () => {
         done();
       };
 
-      events.onError((error) => done.fail());
+      events.onError(logError(done));
 
       pool.addLocalStream(stream);
       pool.onConnection(function(peer, rtc) {
@@ -231,7 +238,7 @@ describe("RTCPool", () => {
         type: "offer",
         sdp: validSDP
       }));
-    }, (error) => done.fail());
+    }, logError(done));
   });
 
   whenever(!isChrome() && isWebRTCSupported())("should error on invalid session description", (done) => {
@@ -245,13 +252,13 @@ describe("RTCPool", () => {
       }));
 
       expect(api.descriptionSent).toBe(false);
-    }, (error) => done.fail());
+    }, logError(done));
   });
 
   // FIXME On chrome this test causes the next one to fail. Shit is bonkers. Send help.
   whenever(!isChrome() && isWebRTCSupported())("should not send session description on peer answer", (done) => {
     getStream((stream) => {
-      events.onError((error) => done.fail());
+      events.onError(logError(done));
 
       api.onDescription = function(id, peer, sdp) {
         expect(api.descriptionSent).toBe(true);
@@ -272,7 +279,7 @@ describe("RTCPool", () => {
 
       pool.addLocalStream(stream);
       pool.create(peerId);
-    }, (error) => done.fail());
+    }, logError(done));
   });
 
   whenever(isWebRTCSupported())("should error on invalid RTC signaling", (done) => {
@@ -285,6 +292,6 @@ describe("RTCPool", () => {
         type: "answer",
         sdp: validSDP
       }));
-    }, (error) => done.fail());
+    }, logError(done));
   });
 });
