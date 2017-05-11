@@ -173,7 +173,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
     this.authHeaders = [new HeaderValue("X-Api-Key", apiKey)];
 
-    let host = config.hostname + ":" + config.port;
+    let host = config.hostname + (config.port === "" ? "" : ":" + config.port);
     this.url = [config.protocol, "//", host, "/api"].join("");
     let wsProtocol = config.protocol === "https:" ? "wss:" : "ws:";
     this.wsUrl = [wsProtocol, "//", host, "/ws/", apiKey].join("");
