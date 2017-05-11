@@ -75,9 +75,9 @@ export class RTCConnection {
     this.log("Creating an RTC offer.");
 
     return this.conn.createOffer().then((offer) => {
-      return this.conn.setLocalDescription(offer).then(() => offer);
+      return this.setLocalDescription(offer);
     }).then((offer) => {
-      this.api.sendDescription(this.call, this.peer, offer as wireEvents.SDP);
+      this.api.sendDescription(this.call, this.peer, offer);
       this.log("Sent an RTC offer: " + offer.sdp);
       return offer;
     });
@@ -100,9 +100,9 @@ export class RTCConnection {
     this.log("Creating an RTC answer.");
 
     return this.conn.createAnswer().then((answer) => {
-      return this.conn.setLocalDescription(answer).then(() => answer);
+      return this.setLocalDescription(answer);
     }).then((answer) => {
-      this.api.sendDescription(this.call, this.peer, answer as wireEvents.SDP);
+      this.api.sendDescription(this.call, this.peer, answer);
       this.log("Sent an RTC description: " + answer.sdp);
       return answer;
     });
@@ -125,8 +125,15 @@ export class RTCConnection {
     this.onRemoteStreamCallback = callback;
   }
 
-  setRemoteDescription(remoteDescription: wireEvents.SDP): Promise<void> {
-    return this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription));
+  // FIXME This should be private.
+  setRemoteDescription(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
+    this.log("Setting remote RTC description.");
+    return this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription)).then(() => remoteDescription);
+  }
+
+  private setLocalDescription(localDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
+    this.log("Setting local RTC description.");
+    return this.conn.setLocalDescription(new RTCSessionDescription(localDescription)).then(() => localDescription);
   }
 
   private onRenegotiation(callback: Callback<Event>) {

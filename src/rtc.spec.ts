@@ -91,10 +91,11 @@ describe("RTCConnection", () => {
 
       expect(api.descriptionSent).toBe(false);
 
-      rtc.setRemoteDescription(sdp);
-      rtc.answer().then(function(offer) {
-        expect(api.descriptionSent).toBe(true);
-        done();
+      rtc.setRemoteDescription(sdp).then((sdp) => {
+        rtc.answer().then(function(offer) {
+          expect(api.descriptionSent).toBe(true);
+          done();
+        }).catch(logError(done));
       }).catch(logError(done));
     }, logError(done));
   });
