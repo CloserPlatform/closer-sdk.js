@@ -872,6 +872,7 @@ $(document).ready(function() {
 
     function logIn(url, phone, password) {
         var xhttp = new XMLHttpRequest();
+        var urlStr = url.protocol + "//" + url.host + (url.port === "" ? "" : ":" + url.port);
         xhttp.open("POST", url + 'api/session', false);
         xhttp.setRequestHeader('Content-Type', 'application/json');
         xhttp.send(JSON.stringify({
