@@ -934,7 +934,8 @@ $(document).ready(function() {
                     "rtc": {
                         "iceTransportPolicy": "relay",
                         "iceServers": [{
-                            "urls": ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
+                            // FIXME ?transport=upd is required by Edge.
+                            "urls": ["stun:turn.ratel.im:3478?transport=udp", "turn:turn.ratel.im:3478?transport=udp"],
                             "username": "test123",
                             "credential": "test456"
                         }]
