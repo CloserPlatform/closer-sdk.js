@@ -50,6 +50,17 @@ export class RTCConnection {
         this.onRemoteStreamCallback(stream);
       });
     };
+
+    this.conn.onnegotiationneeded = (event) => {
+      // FIXME Chrome triggers renegotiation on... Initial offer creation...
+      // FIXME Firefox triggers renegotiation when remote offer is received.
+      if (this.isEstablished()) {
+        this.log("Renegotiating an RTC connection.");
+        this.offer().catch((error) => {
+          this.events.raise("Could not renegotiate the connection.", error);
+        });
+      }
+    };
   }
 
   disconnect() {
@@ -86,14 +97,7 @@ export class RTCConnection {
   onOffer(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
     this.log("Received an RTC offer.");
 
-    this.onRenegotiation((event) => {
-      this.log("Renegotiating an RTC connection.");
-      this.offer().catch((error) => {
-        this.events.raise("Could not renegotiate the connection.", error);
-      });
-    });
-
-    return this.setRemoteDescription(remoteDescription).then(() => this.answer());
+    return this.setRemoteDescription(remoteDescription).then((descr) => this.answer());
   }
 
   answer(): Promise<wireEvents.SDP> {
@@ -110,15 +114,9 @@ export class RTCConnection {
 
   onAnswer(remoteDescription: wireEvents.SDP): Promise<void> {
     this.log("Received an RTC answer.");
-
-    this.onRenegotiation((event) => {
-      this.log("Renegotiating an RTC connection.");
-      this.offer().catch((error) => {
-        this.events.raise("Could not renegotiate the connection.", error);
-      });
+    return this.setRemoteDescription(remoteDescription).then((descr) => {
+      // Do nothing.
     });
-
-    return this.setRemoteDescription(remoteDescription);
   }
 
   onRemoteStream(callback: Callback<MediaStream>) {
@@ -136,14 +134,9 @@ export class RTCConnection {
     return this.conn.setLocalDescription(new RTCSessionDescription(localDescription)).then(() => localDescription);
   }
 
-  private onRenegotiation(callback: Callback<Event>) {
-    this.conn.onnegotiationneeded = (event) => {
-      // FIXME Chrome triggers renegotiation on... Initial negotiation...
-      if (this.conn.signalingState === "stable") {
-        this.log("Renegotiation triggerd.");
-        callback(event);
-      }
-    };
+  private isEstablished(): boolean {
+    // NOTE "stable" means no exchange is going on, which encompases "fresh" RTC connections as well as established ones.
+    return (this.conn.signalingState === "stable") && !!this.conn.localDescription && !!this.conn.remoteDescription;
   }
 
   private onICECandidate(callback: Callback<RTCIceCandidate>) {
