@@ -13,6 +13,7 @@ interface HackedMediaStreamEvent extends MediaStreamEvent {
 }
 
 interface HackedRTCPeerConnection extends RTCPeerConnection {
+  connectionState: string; // FIXME RTCPeerConnectionState;
   ontrack: (event: HackedMediaStreamEvent) => void;
   addTrack: (track: MediaStreamTrack, stream?: MediaStream) => void;
 }
@@ -153,7 +154,14 @@ export class RTCConnection {
 
   private isEstablished(): boolean {
     // NOTE "stable" means no exchange is going on, which encompases "fresh" RTC connections as well as established ones.
-    return (this.conn.signalingState === "stable") && !!this.conn.localDescription && !!this.conn.remoteDescription;
+    let hackedConn = this.conn as HackedRTCPeerConnection
+    if (typeof hackedConn.connectionState !== "undefined") {
+      return hackedConn.connectionState === "connected";
+    } else {
+      // FIXME Firefox does not support connectionState: https://bugzilla.mozilla.org/show_bug.cgi?id=1265827
+      return this.conn.signalingState === "stable" &&
+        (this.conn.iceConnectionState === "connected" || this.conn.iceConnectionState === "completed")
+    }
   }
 }
 
