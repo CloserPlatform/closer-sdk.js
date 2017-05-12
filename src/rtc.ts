@@ -84,7 +84,7 @@ export class RTCConnection {
     const hackedConn = this.conn as HackedRTCPeerConnection;
     // FIXME Needs https://github.com/webrtc/adapter/pull/503
     if (hackedConn.addTrack !== undefined) {
-      stream.getTracks().forEach((track) => (this.conn as HackedRTCPeerConnection).addTrack(track, stream));
+      stream.getTracks().forEach((track) => hackedConn.addTrack(track, stream));
     } else {
       this.conn.addStream(stream);
     }
@@ -153,14 +153,15 @@ export class RTCConnection {
   }
 
   private isEstablished(): boolean {
-    // NOTE "stable" means no exchange is going on, which encompases "fresh" RTC connections as well as established ones.
-    let hackedConn = this.conn as HackedRTCPeerConnection
+    // NOTE "stable" means no exchange is going on, which encompases "fresh"
+    // NOTE RTC connections as well as established ones.
+    let hackedConn = this.conn as HackedRTCPeerConnection;
     if (typeof hackedConn.connectionState !== "undefined") {
       return hackedConn.connectionState === "connected";
     } else {
       // FIXME Firefox does not support connectionState: https://bugzilla.mozilla.org/show_bug.cgi?id=1265827
       return this.conn.signalingState === "stable" &&
-        (this.conn.iceConnectionState === "connected" || this.conn.iceConnectionState === "completed")
+        (this.conn.iceConnectionState === "connected" || this.conn.iceConnectionState === "completed");
     }
   }
 }

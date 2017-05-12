@@ -90,6 +90,7 @@ describe("RTCConnection", () => {
 
   whenever(isWebRTCSupported())("should create valid SDP answers", (done) => {
     const peerB = createRTCConnection(callId, peerAId, config.chat.rtc, log, events, api);
+
     getStream((streamA) => {
       peerA.addLocalStream(streamA);
       // Peer A offers a connection.

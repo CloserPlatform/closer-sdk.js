@@ -48,7 +48,7 @@ export function isWebRTCSupported(): boolean {
 }
 
 export function getStream(onStream, onError, constraints?) {
-  let cs = constraints || {
+  let cs: MediaStreamConstraints & { fake?: boolean } = constraints ? constraints : {
     video: true,
     audio: true
   };
