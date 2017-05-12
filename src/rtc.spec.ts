@@ -33,6 +33,9 @@ function descr(sdp): Event {
 function logError(done) {
   return function (error) {
     log("Got an error: " + error + " (" + JSON.stringify(error) + ")");
+    if (typeof error.cause !== "undefined") {
+      log("Cause: " + error.cause);
+    }
     done.fail();
   }
 }
