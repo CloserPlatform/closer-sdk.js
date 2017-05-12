@@ -38,10 +38,12 @@ export class RTCConnection {
       // Do nothing.
     };
 
-    this.onICECandidate((candidate) => {
-      this.log("Created ICE candidate: " + candidate.candidate);
-      this.api.sendCandidate(this.call, this.peer, candidate);
-    });
+    this.conn.onicecandidate = (event) => {
+      if (event.candidate) {
+        this.log("Created ICE candidate: " + event.candidate.candidate);
+        this.api.sendCandidate(this.call, this.peer, event.candidate);
+      }
+    };
 
     (this.conn as HackedRTCPeerConnection).ontrack = (event: HackedMediaStreamEvent) => {
       this.log("Received a remote stream.");
@@ -78,8 +80,9 @@ export class RTCConnection {
     }
   }
 
-  addCandidate(candidate: wireEvents.Candidate) {
-    this.conn.addIceCandidate(new RTCIceCandidate(candidate));
+  addCandidate(candidate: wireEvents.Candidate): Promise<void> {
+    this.log("Received an RTC candidate: " + candidate.candidate);
+    return this.conn.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
   offer(): Promise<wireEvents.SDP> {
@@ -137,14 +140,6 @@ export class RTCConnection {
   private isEstablished(): boolean {
     // NOTE "stable" means no exchange is going on, which encompases "fresh" RTC connections as well as established ones.
     return (this.conn.signalingState === "stable") && !!this.conn.localDescription && !!this.conn.remoteDescription;
-  }
-
-  private onICECandidate(callback: Callback<RTCIceCandidate>) {
-    this.conn.onicecandidate = (event) => {
-      if (event.candidate) {
-        callback(event.candidate);
-      }
-    };
   }
 }
 
@@ -209,7 +204,9 @@ export class RTCPool {
     events.onConcreteEvent(eventTypes.RTC_CANDIDATE, this.call, (msg: RTCCandidate) => {
       this.log("Received an RTC candidate: " + msg.candidate);
       if (msg.peer in this.connections) {
-        this.connections[msg.peer].addCandidate(msg.candidate);
+        this.connections[msg.peer].addCandidate(msg.candidate).catch((error) => {
+          events.raise("Could not process the RTC candidate: ", error);
+        });
       } else {
         events.raise("Received an invalid RTC candidate. " +  msg.peer + " is not currently in this call.");
       }
