@@ -114,9 +114,9 @@ describe("RTCConnection", () => {
         getStream((streamB) => {
           peerB.addLocalStream(streamB);
           // Peer B answers it.
-          peerB.onOffer(offer).then((answer) => {
+          peerB.addOffer(offer).then((answer) => {
             // Peer A establishes a connection.
-            peerA.onAnswer(answer).then(() => {
+            peerA.addAnswer(answer).then(() => {
               api.descriptionSent = false;
 
               api.onDescription = (id, peer, description) => {
@@ -151,9 +151,9 @@ describe("RTCConnection", () => {
         getStream((streamB) => {
           peerB.addLocalStream(streamB);
           // Peer B answers it.
-          peerB.onOffer(offer).then((answer) => {
+          peerB.addOffer(offer).then((answer) => {
             // Peer A establishes a connection.
-            peerA.onAnswer(answer).then(() => {
+            peerA.addAnswer(answer).then(() => {
               api.descriptionSent = false;
 
               api.onDescription = (id, peer, description) => {

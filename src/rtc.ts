@@ -94,7 +94,7 @@ export class RTCConnection {
     });
   }
 
-  onOffer(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
+  addOffer(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
     this.log("Received an RTC offer.");
 
     return this.setRemoteDescription(remoteDescription).then((descr) => this.answer());
@@ -112,7 +112,7 @@ export class RTCConnection {
     });
   }
 
-  onAnswer(remoteDescription: wireEvents.SDP): Promise<void> {
+  addAnswer(remoteDescription: wireEvents.SDP): Promise<void> {
     this.log("Received an RTC answer.");
     return this.setRemoteDescription(remoteDescription).then((descr) => {
       // Do nothing.
@@ -182,12 +182,12 @@ export class RTCPool {
 
       if (msg.description.type === "offer") {
         if (msg.peer in this.connections) {
-          this.connections[msg.peer].onOffer(msg.description).catch((error) => {
+          this.connections[msg.peer].addOffer(msg.description).catch((error) => {
             events.raise("Could not process the RTC description: ", error);
           });
         } else {
           let rtc = this.createRTC(msg.peer);
-          rtc.onOffer(msg.description).then((answer) => {
+          rtc.addOffer(msg.description).then((answer) => {
             this.onConnectionCallback(msg.peer, rtc);
           }).catch((error) => {
             events.raise("Could not process the RTC description: ", error);
@@ -195,7 +195,7 @@ export class RTCPool {
         }
       } else if (msg.description.type === "answer") {
         if (msg.peer in this.connections) {
-          this.connections[msg.peer].onAnswer(msg.description).catch((error) => {
+          this.connections[msg.peer].addAnswer(msg.description).catch((error) => {
             events.raise("Could not process the RTC description: ", error);
           });
         } else {
