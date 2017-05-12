@@ -5,6 +5,7 @@ import { RTCCandidate, RTCDescription } from "./protocol/events";
 import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
 import { eventTypes } from "./protocol/wire-events";
+import { Thunk } from "./utils";
 
 // FIXME Hackarounds for unstable API.
 interface HackedMediaStreamEvent extends MediaStreamEvent {
@@ -23,6 +24,7 @@ export class RTCConnection {
   private events: EventHandler;
   private log: Logger;
   private conn: RTCPeerConnection;
+  private onICEDoneCallback: Thunk;
   private onRemoteStreamCallback: Callback<MediaStream>;
 
   constructor(call: ID, peer: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
@@ -38,10 +40,17 @@ export class RTCConnection {
       // Do nothing.
     };
 
+    this.onICEDoneCallback = () => {
+      // Do nothing.
+    };
+
     this.conn.onicecandidate = (event) => {
       if (event.candidate) {
         this.log("Created ICE candidate: " + event.candidate.candidate);
         this.api.sendCandidate(this.call, this.peer, event.candidate);
+      } else {
+        this.log("Done gathering ICE candidates.");
+        this.onICEDoneCallback();
       }
     };
 
@@ -124,6 +133,11 @@ export class RTCConnection {
 
   onRemoteStream(callback: Callback<MediaStream>) {
     this.onRemoteStreamCallback = callback;
+  }
+
+  // FIXME This is only used by tests...
+  onICEDone(callback: Thunk) {
+    this.onICEDoneCallback = callback;
   }
 
   // FIXME This should be private.
