@@ -205,9 +205,8 @@ export class RTCPool {
           });
         } else {
           let rtc = this.createRTC(msg.peer);
-          rtc.addOffer(msg.description).then((answer) => {
-            this.onConnectionCallback(msg.peer, rtc);
-          }).catch((error) => {
+          this.onConnectionCallback(msg.peer, rtc);
+          rtc.addOffer(msg.description).catch((error) => {
             events.raise("Could not process the RTC description: ", error);
           });
         }
