@@ -83,7 +83,7 @@ export class RTCConnection {
   addLocalStream(stream: MediaStream) {
     const hackedConn = this.conn as HackedRTCPeerConnection;
     // FIXME Needs https://github.com/webrtc/adapter/pull/503
-    if (hackedConn.addTrack !== undefined) {
+    if (typeof hackedConn.addTrack !== "undefined") {
       stream.getTracks().forEach((track) => hackedConn.addTrack(track, stream));
     } else {
       this.conn.addStream(stream);
