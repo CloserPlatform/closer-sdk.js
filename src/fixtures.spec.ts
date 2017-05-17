@@ -15,6 +15,11 @@ export const log = logger.debugConsole;
 
 export const config: Config = load({
   debug: true,
+  chat: {
+    rtc: {
+      iceServers: []
+    }
+  }
 } as Config);
 
 export const sessionId = "12345678";
