@@ -8,6 +8,7 @@ import {
   isChrome,
   isWebRTCSupported,
   log,
+  sleep,
   validSDP,
   whenever
 } from "./fixtures.spec";
@@ -131,7 +132,9 @@ describe("RTCConnection", () => {
   function testRenegotiation(peerA, peerB, caller, callee, calleeId, done) {
     // 0. Initial setup...
     getStream((streamA) => {
+      log("Got stream A.");
       getStream((streamB) => {
+        log("Got stream B.");
         caller.addLocalStream(streamA);
         callee.addLocalStream(streamB);
 
@@ -142,16 +145,38 @@ describe("RTCConnection", () => {
         };
 
         function exchange() {
+          log("Exchanging candidates.");
           Promise.all(candidates.map((c) => {
             if (c.peer === peerAId) return peerA.addCandidate(c.candidate);
             else return peerB.addCandidate(c.candidate);
           })).then(() => {
+            peerA.onICEDone(() => {
+              // Not to exchange any candidates after the renegotiation.
+            });
+
+            peerB.onICEDone(() => {
+              // Not to exchange any candidates after the renegotiation.
+            });
+
             // 5. Innitiator triggers a renegotiation.
             getStream((newStream) => {
-              caller.addLocalStream(newStream)
-            }, logError(done), {
-              audio: true
-            });
+              log("Got new stream.");
+
+              // 6. Innitiator sends an offer to the peer.
+              api.onDescription = (id, peer, description) => {
+                expect(description.type).toBe("offer");
+                expect(peer).toBe(calleeId)
+                log("Renegotiation successful.");
+                done();
+              };
+
+              // FIXME This sleep is required so that the connection has the time to
+              // FIXME transition into an established state.
+              sleep(100).then(() => {
+                log("Triggering renegotiation.");
+                caller.addLocalStream(newStream);
+              });
+            }, logError(done));
           }).catch(logError(done));
         }
 
@@ -170,26 +195,18 @@ describe("RTCConnection", () => {
 
         // 1. Peer A offers a connection.
         peerA.offer().then((offer) => {
+          log("Sent offer.");
           // 2. Peer B answers it.
           peerB.addOffer(offer).then((answer) => {
+            log("Received offer & sent answer.");
             // 3. Peer A establishes a connection.
             peerA.addAnswer(answer).then(() => {
-              api.descriptionSent = false;
-
-              // 6. Innitiator sends an offer to the peer.
-              api.onDescription = (id, peer, description) => {
-                expect(api.descriptionSent).toBe(true);
-                expect(description.type).toBe("offer");
-                expect(peer).toBe(calleeId)
-                done();
-              };
+              log("Received answer.");
             }).catch(logError(done));
           }).catch(logError(done));
         }).catch(logError(done));
       }, logError(done));
-    }, logError(done), {
-      video: true
-    });
+    }, logError(done));
   }
 
   whenever(isWebRTCSupported())("should renegotiate SDP answers", (done) => {
