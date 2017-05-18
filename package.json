@@ -24,6 +24,7 @@
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
   "license": "MIT",
   "dependencies": {
+    "typedoc": "^0.7.0",
     "webrtc-adapter": "^3.3.4"
   },
   "devDependencies": {
