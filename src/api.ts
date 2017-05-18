@@ -1,6 +1,5 @@
 import { AgentContext, ApiKey, SessionData } from "./auth";
-import { CampaignSpawnData, CreateRoomData } from "./campaign";
-import { ChatConfig, RatelConfig, ResourceConfig } from "./config";
+import { ChatConfig, RatelConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
@@ -373,28 +372,5 @@ export class RatelAPI extends RESTfulAPI {
 
   verifySignature(sessionData: SessionData): Promise<AgentContext> {
     return this.post<SessionData, AgentContext>([this.url, this.verifyPath], [], sessionData);
-  }
-}
-
-export class WheelHouseAPI extends RESTfulAPI {
-  private spawnCampaignPath = "api/campaign";
-  private url: string;
-  private authHeaders: Array<HeaderValue>;
-
-  constructor(apiKey: ApiKey, config: ResourceConfig, log: Logger) {
-    super(log);
-
-    let host = config.hostname + ":" + config.port;
-    this.url = [config.protocol, "//", host].join("");
-    this.authHeaders = [new HeaderValue("X-Api-Key", apiKey)];
-  }
-
-  spawnCampaign(campaignSpawnData: CampaignSpawnData): Promise<void> {
-    return this.post<CampaignSpawnData, void>([this.url, this.spawnCampaignPath, "/spawn"], [], campaignSpawnData);
-  }
-
-  createRoom(createRoomData: CreateRoomData): Promise<wireEntities.Room> {
-    return this.post<CreateRoomData, wireEntities.Room>([this.url, this.spawnCampaignPath, "/createRoom"],
-      this.authHeaders, createRoomData);
   }
 }

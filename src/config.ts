@@ -14,8 +14,6 @@ export interface ChatConfig extends URLConfig {
 
 export interface RatelConfig extends URLConfig {}
 
-export interface ResourceConfig extends URLConfig {}
-
 export interface Config {
   debug: boolean;
 
@@ -24,7 +22,6 @@ export interface Config {
 
   chat: ChatConfig;
   ratel: RatelConfig;
-  resource: ResourceConfig;
 }
 
 export const defaultConfig: Config = {
@@ -48,12 +45,6 @@ export const defaultConfig: Config = {
     hostname: "api.dev.ratel.io",
     port: "",
   },
-
-  resource: {
-    protocol: "https:",
-    hostname: "wheelhouse.ratel.io",
-    port: "",
-  }
 };
 
 function merge<O>(a: O, b: O): O {
