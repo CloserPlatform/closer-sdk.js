@@ -16,6 +16,7 @@ interface HackedRTCPeerConnection extends RTCPeerConnection {
   connectionState: string; // FIXME RTCPeerConnectionState;
   ontrack: (event: HackedMediaStreamEvent) => void;
   addTrack: (track: MediaStreamTrack, stream?: MediaStream) => RTCRtpSender;
+  removeTrack: (sender: RTCRtpSender) => void;
 }
 
 export type RemovableStream = Array<RTCRtpSender> | MediaStream;
@@ -90,6 +91,16 @@ export class RTCConnection {
     } else {
       this.conn.addStream(stream);
       return stream;
+    }
+  }
+
+  removeLocalStream(stream: RemovableStream) {
+    const hackedConn = this.conn as HackedRTCPeerConnection;
+    // FIXME Needs https://github.com/webrtc/adapter/pull/503
+    if (typeof hackedConn.removeTrack !== "undefined") {
+      (stream as Array<RTCRtpSender>).forEach((track) => hackedConn.removeTrack(track));
+    } else {
+      this.conn.removeStream(stream as MediaStream);
     }
   }
 
