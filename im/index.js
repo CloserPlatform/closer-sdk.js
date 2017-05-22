@@ -227,14 +227,20 @@ $(document).ready(function() {
         var avatar = makeAvatar('avatar', "http://vignette2.wikia.nocookie.net/creepypasta/images/4/4b/1287666826226.png");
         var label = makeLabel(room.id, "", getUserNickname(peer));
 
+        var video = makeCheckbox(room.id + "-video", " Video", true);
+        var audio = makeCheckbox(room.id + "-audio", " Audio", true);
+
         var call = makeButton("btn-success", "Call!", function() {
             if(!call.hasClass("disabled")) {
                 call.addClass("disabled");
-                directCallBuilder(room, peer);
+                directCallBuilder(room, peer, {
+                    "video": $("#" + room.id + "-video").is(":checked"),
+                    "audio": $("#" + room.id + "-audio").is(":checked")
+                });
             }
         });
 
-        var buttons = makeButtonGroup().append(call);
+        var buttons = makeButtonGroup().append([call, video, audio]);
         var panel = makePanel([avatar, makeLineBreak(), label]).addClass('controls-wrapper');
         var controls = makeControls(room.id, [panel, buttons]).addClass('text-center').hide();
 
@@ -595,11 +601,12 @@ $(document).ready(function() {
         users[user.id] = user;
     }
 
-    function createStream(callback) {
-        navigator.mediaDevices.getUserMedia({
+    function createStream(callback, constraints) {
+        constraints = constraints || {
             "video": true,
             "audio": true
-        }).then(function(stream) {
+        };
+        navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
             console.log("Local stream started!");
             callback(stream);
         }).catch(function(error) {
@@ -607,7 +614,7 @@ $(document).ready(function() {
         });
     }
 
-    function makeCall(call, localStream) {
+    function makeCall(call, localStream, constraints) {
         console.log("Building a call object for: ", call);
 
         var users = makeUserList(function() {});
@@ -713,6 +720,14 @@ $(document).ready(function() {
             else localStream.getTracks().map(function(t) { t.stop(); });
         }
 
+        function replaceStream(stream) {
+            call.addLocalStream(stream);
+            streams["You"].stream = stream;
+            stopStream();
+            localStream = stream;
+            renderStreams();
+        }
+
         // FIXME Use a proper name instead of call.id
         var name = "Call #" + callIndex;
         callIndex = callIndex + 1;
@@ -721,12 +736,16 @@ $(document).ready(function() {
         });
 
         var toggle = makeButton('btn-warning', "Toggle stream", function() {
-            createImageStream(randomGif(), 10, function(stream) {
-                call.addLocalStream(stream);
-                streams["You"].stream = stream;
-                stopStream();
-                localStream = stream;
-                renderStreams();
+            createImageStream(randomGif(), 10, replaceStream);
+        });
+
+        var video = makeCheckbox(call.id + "-video", " Video", constraints.video);
+        var audio = makeCheckbox(call.id + "-audio", " Audio", constraints.audio);
+
+        var add = makeButton("btn-success", "Add stream", function() {
+            createStream(replaceStream, {
+                "video": $("#" + call.id + "-video").is(":checked"),
+                "audio": $("#" + call.id + "-audio").is(":checked")
             });
         });
 
@@ -761,7 +780,7 @@ $(document).ready(function() {
             }, function() {});
         }
 
-        var buttons = makeButtonGroup().append([hangup, mute, toggle]);
+        var buttons = makeButtonGroup().append([hangup, mute, toggle, add, video, audio]);
         var panel = makePanel(users.element).addClass('controls-wrapper');
         var controls = makeControls(call.id, [panel, input, buttons]).addClass('text-center').hide();
         renderStreams();
@@ -806,45 +825,48 @@ $(document).ready(function() {
         }
     }
 
-    function addCall(call, stream) {
-        var box = makeCall(call, stream);
+    function addCall(call, stream, constraints) {
+        var box = makeCall(call, stream, constraints);
         call.getHistory(); // NOTE Just for testing purposes.
         chat.add(call.id, box);
         return box;
     }
 
     function directCallBuilder(session) {
-        return function(room, user) {
+        return function(room, user, constraints) {
             createStream(function(stream) {
                 session.chat.createDirectCall(stream, user, 10).then(function(call) {
-                    var box = addCall(call, stream);
+                    var box = addCall(call, stream, constraints);
                     chatboxes[room.id].addCall(box);
                     box.switchTo();
                 }).catch(function(error) {
                     console.log("Creating a call failed: ", error);
                 });
-            });
+            }, constraints);
         }
     }
 
     function callBuilder(session) {
-        return function(room, users) {
+        return function(room, users, constraints) {
             createStream(function(stream) {
                 session.chat.createCall(stream, users).then(function(call) {
-                    var box = addCall(call, stream);
+                    var box = addCall(call, stream, constraints);
                     chatboxes[room.id].addCall(box);
                     box.switchTo();
                 }).catch(function(error) {
                     console.log("Creating a call failed: ", error);
                 });
-            });
+            }, constraints);
         }
     }
 
     function enableStealSwitch(call) {
         stealSwitch.click(function() {
             createStream(function(stream) {
-                var callbox = addCall(call, stream);
+                var callbox = addCall(call, stream, {
+                    "video": true,
+                    "audio": true
+                });
                 callbox.pull();
                 callbox.switchTo();
             });
@@ -1057,7 +1079,10 @@ $(document).ready(function() {
                         }
                         closeModal = confirmModal("Call invitation", line, "Answer", function() {
                             createStream(function(stream) {
-                                var callbox = addCall(m.call, stream);
+                                var callbox = addCall(m.call, stream, {
+                                    "video": true,
+                                    "audio": true
+                                });
                                 callbox.answer();
                                 callbox.switchTo();
                             });

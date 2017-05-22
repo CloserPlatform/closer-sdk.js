@@ -36,6 +36,16 @@ function makeInput(id, name, placeholder, value) {
     return $('<div>').addClass('form-group').append([makeLabel(id, '', name), input]);
 }
 
+function makeCheckbox(id, value, checked) {
+    var input = $('<input>')
+        .prop({
+            id: id,
+            type: 'checkbox',
+            checked: !!checked
+        });
+    return $('<div>').append(input, [makeLabel(id, '', value)]);
+}
+
 function makeChatContainer(id, switcherId, chatboxesId, controlsId, onJoin) {
     var list = $('<ul>').prop({
         id: switcherId,
