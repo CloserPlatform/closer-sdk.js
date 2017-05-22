@@ -451,7 +451,7 @@ $(document).ready(function() {
                 content: randomGif(),
                 description: "A random gif image"
             }).then(function(media) {
-                receive.media(media).click(clickEditor(media));
+                console.log("Gif sent successfully.")
             }).catch(function(error) {
                 console.log("Could not send gif!: ", error);
             });
@@ -461,7 +461,9 @@ $(document).ready(function() {
             room.sendMetadata({
                 type: "agent",
                 agent: navigator.userAgent
-            }).then(receive.metadata).catch(function(error) {
+            }).then(function(metadata) {
+              console.log("User Agent sent successfully.")
+            }).catch(function(error) {
                 console.log("Could not send User Agent!: ", error);
             });
         });
