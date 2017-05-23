@@ -2,6 +2,10 @@ import * as adapter from "webrtc-adapter";
 
 // Various utilities.
 
+export interface Thunk {
+  (): void;
+}
+
 export interface TransferFunction<T, U> {
   (arg: T): U;
 }

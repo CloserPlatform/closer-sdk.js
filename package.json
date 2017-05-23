@@ -12,6 +12,7 @@
     "docs": "typedoc --out dist/docs --exclude '**/*.spec.ts' ./src",
     "lint": "tslint -c tslint.json src/**/*.ts",
     "prebuild": "npm run test",
+    "prebuild:ci": "npm run test:ci",
     "pretest": "npm run lint",
     "pretest:ci": "npm run lint",
     "posttest": "istanbul check-coverage --statement 75 --branch 57 --function 59",
@@ -19,7 +20,12 @@
     "start": "python3 -m http.server",
     "test": "karma start --singleRun true",
     "test:ci": "karma start --singleRun true --browsers PhantomJS",
-    "test:watch": "karma start --singleRun false"
+    "test:firefox": "karma start --singleRun true --browsers Firefox",
+    "test:chrome": "karma start --singleRun true --browsers ChromeWithFakeUserMedia",
+    "test:watch": "karma start --singleRun false",
+    "test:watch:firefox": "karma start --singleRun false --browsers Firefox",
+    "test:watch:chrome": "karma start --singleRun false --browsers ChromeWithFakeUserMedia",
+    "test:grep": "karma run -- --grep"
   },
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
   "license": "MIT",

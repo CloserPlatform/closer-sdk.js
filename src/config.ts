@@ -33,7 +33,7 @@ export const defaultConfig: Config = {
     port: "",
     rtc: {
       iceServers: [{
-        urls: ["stun:turn.ratel.im:5349", "turn:turn.ratel.im:5349"],
+        urls: ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
         username: "test123",
         credential: "test456"
       }]

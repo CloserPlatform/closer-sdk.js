@@ -50,6 +50,15 @@ describe("Artichoke", () => {
     } as Event);
   });
 
+  it("should call a callback on server heartbeat", (done) => {
+    chat.onHeartbeat((hb) => done());
+    chat.connect();
+    api.cb({
+      type: eventTypes.HEARTBEAT,
+      timestamp: 1234,
+    } as Event);
+  });
+
   it("should call a callback on server disconnection", (done) => {
     chat.onDisconnect((msg) => done());
     chat.connect();

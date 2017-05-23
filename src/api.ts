@@ -7,6 +7,7 @@ import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import * as wireEvents from "./protocol/wire-events";
 import { eventTypes } from "./protocol/wire-events";
+import { Thunk } from "./utils";
 
 export class HeaderValue {
   header: string;
@@ -16,10 +17,6 @@ export class HeaderValue {
     this.header = header;
     this.value = value;
   }
-}
-
-interface Thunk {
-  (): void;
 }
 
 export class RESTfulAPI {
