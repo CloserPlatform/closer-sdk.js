@@ -4,12 +4,9 @@ import {
   apiKey,
   config,
   getStream,
-  invalidSDP,
-  isChrome,
   isWebRTCSupported,
   log,
   sleep,
-  validSDP,
   whenever
 } from "./fixtures.spec";
 import { Event } from "./protocol/events";
@@ -17,6 +14,8 @@ import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
 import { eventTypes } from "./protocol/wire-events";
 import { createRTCConnection, createRTCPool } from "./rtc";
+
+const invalidSDP = "this is not a valid SDP";
 
 const callId = "123";
 const peerAId = "321";
@@ -64,7 +63,6 @@ class APIMock extends ArtichokeAPI {
   }
 }
 
-// FIXME Unfuck whenever WebRTC is standarized.
 describe("RTCConnection", () => {
   let events;
   let api;
@@ -112,7 +110,7 @@ describe("RTCConnection", () => {
     }, logError(done));
   });
 
-  whenever(!isChrome() && isWebRTCSupported())("should fail to create SDP answers for invalid offers", (done) => {
+  whenever(isWebRTCSupported())("should fail to create SDP answers for invalid offers", (done) => {
     getStream((stream) => {
       let sdp: wireEvents.SDP = {
         type: "offer",
@@ -122,7 +120,7 @@ describe("RTCConnection", () => {
 
       expect(api.descriptionSent).toBe(false);
 
-      peerA.answer().then((answer) => done.fail()).catch((error) => {
+      peerA.addOffer(sdp).then((answer) => done.fail()).catch((error) => {
         expect(api.descriptionSent).toBe(false);
         done();
       });
@@ -277,7 +275,7 @@ describe("RTCPool", () => {
     }, logError(done));
   });
 
-  whenever(!isChrome() && isWebRTCSupported())("should error on invalid session description", (done) => {
+  whenever(isWebRTCSupported())("should error on invalid session description", (done) => {
     getStream((stream) => {
       pool.addLocalStream(stream);
       events.onError((error) => done());
