@@ -193,6 +193,7 @@ export class RTCPool {
   private localStream: MediaStream;
   private config: RTCConfiguration;
   private connections: { [user: string]: RTCConnection };
+  private streams: { [user: string]: RemovableStream };
   private onConnectionCallback: ConnectionCallback;
 
   constructor(call: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
@@ -204,6 +205,7 @@ export class RTCPool {
     this.config = config;
 
     this.connections = {};
+    this.streams = {};
     this.localStream = undefined;
     this.onConnectionCallback = (peer, conn) => {
       // Do Nothing.
@@ -256,7 +258,14 @@ export class RTCPool {
   addLocalStream(stream: MediaStream) {
     this.localStream = stream;
     Object.keys(this.connections).forEach((key) => {
-      this.connections[key].addLocalStream(stream);
+      this.streams[key] = this.connections[key].addLocalStream(stream);
+    });
+  }
+
+  removeLocalStream() {
+    this.localStream = undefined;
+    Object.keys(this.streams).forEach((key) => {
+      this.connections[key].removeLocalStream(this.streams[key]);
     });
   }
 

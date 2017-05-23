@@ -721,6 +721,7 @@ $(document).ready(function() {
         }
 
         function replaceStream(stream) {
+            call.removeLocalStream();
             call.addLocalStream(stream);
             streams["You"].stream = stream;
             stopStream();
