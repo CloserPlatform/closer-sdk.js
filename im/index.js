@@ -963,7 +963,11 @@ $(document).ready(function() {
                             "urls": ["stun:turn.ratel.im:3478?transport=udp", "turn:turn.ratel.im:3478?transport=udp"],
                             "username": "test123",
                             "credential": "test456"
-                        }]
+                        }],
+                        "defaultOfferOptions": {
+                            "offerToReceiveAudio": true,
+                            "offerToReceiveVideo": true
+                        }
                     }
                 }
             }).then(function (session) {

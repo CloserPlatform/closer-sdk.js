@@ -1,4 +1,5 @@
 import { ArtichokeAPI } from "./api";
+import { RTCConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { CallActionSent, CallActiveDevice, CallEnd } from "./protocol/events";
@@ -53,7 +54,7 @@ export abstract class Call implements wireEntities.Call {
 
   public abstract readonly callType: callType.CallType;
 
-  constructor(call: wireEntities.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
+  constructor(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
               api: ArtichokeAPI, stream?: MediaStream) {
     this.id = call.id;
     this.created = call.created;
@@ -282,7 +283,7 @@ export class GroupCall extends Call {
   }
 }
 
-export function createCall(call: wireEntities.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
+export function createCall(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
                            api: ArtichokeAPI, stream?: MediaStream): Call {
   if (call.direct) {
     return new DirectCall(call, config, log, events, api, stream);

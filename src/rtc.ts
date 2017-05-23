@@ -1,4 +1,5 @@
 import { ArtichokeAPI } from "./api";
+import { RTCConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { RTCCandidate, RTCDescription } from "./protocol/events";
@@ -7,16 +8,29 @@ import * as wireEvents from "./protocol/wire-events";
 import { eventTypes } from "./protocol/wire-events";
 import { Thunk } from "./utils";
 
+export interface RTCAnswerOptions {
+  // FIXME @types/webrtc currently does not have this interface defined.
+}
+
+export interface HackedRTCOfferOptions {
+  // FIXME @types/webrtc defines this interface to use numbers instead of booleans.
+  offerToReceiveAudio: boolean;
+  offerToReceiveVideo: boolean;
+}
+
 // FIXME Hackarounds for unstable API.
 interface HackedMediaStreamEvent extends MediaStreamEvent {
   streams: Array<MediaStream>;
 }
 
-interface HackedRTCPeerConnection extends RTCPeerConnection {
+// FIXME Can't extends RTCPeerConnection, cause createOffer & createAnswer are of the wrong type.
+type HackedRTCPeerConnection = RTCPeerConnection & {
   connectionState: string; // FIXME RTCPeerConnectionState;
   ontrack: (event: HackedMediaStreamEvent) => void;
   addTrack: (track: MediaStreamTrack, stream?: MediaStream) => RTCRtpSender;
   removeTrack: (sender: RTCRtpSender) => void;
+  createOffer: (options?: HackedRTCOfferOptions) => Promise<RTCSessionDescription>;
+  createAnswer: (options?: RTCAnswerOptions) => Promise<RTCSessionDescription>;
 }
 
 function supportsTracks(pc: HackedRTCPeerConnection): boolean {
@@ -32,21 +46,21 @@ export class RTCConnection {
   private api: ArtichokeAPI;
   private events: EventHandler;
   private log: Logger;
-  private conn: RTCPeerConnection;
+  private conn: HackedRTCPeerConnection;
   private onICEDoneCallback: Thunk;
   private onRemoteStreamCallback: Callback<MediaStream>;
 
   // FIXME Required by the various hacks:
   private localRole: string;
 
-  constructor(call: ID, peer: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     log("Connecting an RTC connection to " + peer + " on " + call);
     this.call = call;
     this.peer = peer;
     this.api = api;
     this.events = events;
     this.log = log;
-    this.conn = new RTCPeerConnection(config);
+    this.conn = new RTCPeerConnection(config) as HackedRTCPeerConnection;
 
     this.onRemoteStreamCallback = (stream) => {
       // Do nothing.
@@ -66,7 +80,7 @@ export class RTCConnection {
       }
     };
 
-    (this.conn as HackedRTCPeerConnection).ontrack = (event: HackedMediaStreamEvent) => {
+    this.conn.ontrack = (event: HackedMediaStreamEvent) => {
       this.log("Received a remote stream.");
       const streams = (typeof event.streams !== "undefined") ? event.streams : [event.stream];
       streams.forEach((stream) => {
@@ -79,6 +93,7 @@ export class RTCConnection {
       // FIXME Firefox triggers renegotiation when remote offer is received.
       if (this.isEstablished()) {
         this.log("Renegotiating an RTC connection.");
+        // FIXME Needs offerOptions.
         this.offer().catch((error) => {
           this.events.raise("Could not renegotiate the connection.", error);
         });
@@ -93,10 +108,9 @@ export class RTCConnection {
 
   addLocalStream(stream: MediaStream): RemovableStream {
     this.log("Removing a local stream.");
-    const hackedConn = this.conn as HackedRTCPeerConnection;
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
-    if (supportsTracks(hackedConn)) {
-      return stream.getTracks().map((track) => hackedConn.addTrack(track, stream));
+    if (supportsTracks(this.conn)) {
+      return stream.getTracks().map((track) => this.conn.addTrack(track, stream));
     } else {
       this.conn.addStream(stream);
       return stream;
@@ -105,10 +119,9 @@ export class RTCConnection {
 
   removeLocalStream(stream: RemovableStream) {
     this.log("Removing a local stream.");
-    const hackedConn = this.conn as HackedRTCPeerConnection;
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
-    if (supportsTracks(hackedConn)) {
-      (stream as Array<RTCRtpSender>).forEach((track) => hackedConn.removeTrack(track));
+    if (supportsTracks(this.conn)) {
+      (stream as Array<RTCRtpSender>).forEach((track) => this.conn.removeTrack(track));
     } else {
       this.conn.removeStream(stream as MediaStream);
     }
@@ -119,10 +132,10 @@ export class RTCConnection {
     return this.conn.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
-  offer(): Promise<wireEvents.SDP> {
+  offer(options?: HackedRTCOfferOptions): Promise<wireEvents.SDP> {
     this.log("Creating an RTC offer.");
 
-    return this.conn.createOffer().then((offer) => {
+    return this.conn.createOffer(options).then((offer) => {
       return this.setLocalDescription(offer);
     }).then((offer) => {
       this.api.sendDescription(this.call, this.peer, offer);
@@ -131,16 +144,16 @@ export class RTCConnection {
     });
   }
 
-  addOffer(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
+  addOffer(remoteDescription: wireEvents.SDP, options?: RTCAnswerOptions): Promise<wireEvents.SDP> {
     this.log("Received an RTC offer.");
 
-    return this.setRemoteDescription(remoteDescription).then((descr) => this.answer());
+    return this.setRemoteDescription(remoteDescription).then((descr) => this.answer(options));
   }
 
-  answer(): Promise<wireEvents.SDP> {
+  answer(options?: RTCAnswerOptions): Promise<wireEvents.SDP> {
     this.log("Creating an RTC answer.");
 
-    return this.conn.createAnswer().then((answer) => {
+    return this.conn.createAnswer(options).then((answer) => {
       // FIXME Chrome does not support DTLS role changes.
       return this.setLocalDescription(this.patchSDP(answer));
     }).then((answer) => {
@@ -181,9 +194,8 @@ export class RTCConnection {
   private isEstablished(): boolean {
     // NOTE "stable" means no exchange is going on, which encompases "fresh"
     // NOTE RTC connections as well as established ones.
-    const hackedConn = this.conn as HackedRTCPeerConnection;
-    if (typeof hackedConn.connectionState !== "undefined") {
-      return hackedConn.connectionState === "connected";
+    if (typeof this.conn.connectionState !== "undefined") {
+      return this.conn.connectionState === "connected";
     } else {
       // FIXME Firefox does not support connectionState: https://bugzilla.mozilla.org/show_bug.cgi?id=1265827
       return this.conn.signalingState === "stable" &&
@@ -228,18 +240,23 @@ export class RTCPool {
 
   private call: ID;
   private localStream: MediaStream;
-  private config: RTCConfiguration;
+  private config: RTCConfig;
+  private offerOptions: HackedRTCOfferOptions;
+  private answerOptions: RTCAnswerOptions;
+
   private connections: { [user: string]: RTCConnection };
   private streams: { [user: string]: RemovableStream };
   private onConnectionCallback: ConnectionCallback;
 
-  constructor(call: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(call: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.api = api;
     this.events = events;
     this.log = log;
 
     this.call = call;
     this.config = config;
+    this.offerOptions = config.defaultOfferOptions;
+    this.answerOptions = config.defaultAnswerOptions;
 
     this.connections = {};
     this.streams = {};
@@ -253,13 +270,13 @@ export class RTCPool {
 
       if (msg.description.type === "offer") {
         if (msg.peer in this.connections) {
-          this.connections[msg.peer].addOffer(msg.description).catch((error) => {
+          this.connections[msg.peer].addOffer(msg.description, this.answerOptions).catch((error) => {
             events.raise("Could not process the RTC description: ", error);
           });
         } else {
           const rtc = this.createRTC(msg.peer);
           this.onConnectionCallback(msg.peer, rtc);
-          rtc.addOffer(msg.description).catch((error) => {
+          rtc.addOffer(msg.description, this.answerOptions).catch((error) => {
             events.raise("Could not process the RTC description: ", error);
           });
         }
@@ -309,7 +326,7 @@ export class RTCPool {
 
   create(peer: ID): RTCConnection {
     const rtc = this.createRTC(peer);
-    rtc.offer().catch((error) => {
+    rtc.offer(this.offerOptions).catch((error) => {
       this.events.raise("Could not create an RTC offer.", error);
     });
     return rtc;
@@ -374,12 +391,12 @@ export class RTCPool {
   }
 }
 
-export function createRTCConnection(call: ID, peer: ID, config: RTCConfiguration, log: Logger,
+export function createRTCConnection(call: ID, peer: ID, config: RTCConfig, log: Logger,
                                     events: EventHandler, api: ArtichokeAPI): RTCConnection {
   return new RTCConnection(call, peer, config, log, events, api);
 }
 
-export function createRTCPool(call: ID, config: RTCConfiguration, log: Logger,
+export function createRTCPool(call: ID, config: RTCConfig, log: Logger,
                               events: EventHandler, api: ArtichokeAPI): RTCPool {
   return new RTCPool(call, config, log, events, api);
 }

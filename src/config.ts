@@ -1,5 +1,6 @@
 import { ApiKey } from "./auth";
 import { ID } from "./protocol/protocol";
+import { HackedRTCOfferOptions as RTCOfferOptions, RTCAnswerOptions } from "./rtc";
 import { deepcopy } from "./utils";
 
 export interface URLConfig {
@@ -8,9 +9,14 @@ export interface URLConfig {
   port: string;
 }
 
+export interface RTCConfig extends RTCConfiguration {
+  defaultOfferOptions?: RTCOfferOptions;
+  defaultAnswerOptions?: RTCAnswerOptions;
+  rtcpMuxPolicy: "require" | "negotiate";
+}
+
 export interface ChatConfig extends URLConfig {
-  // FIXME @types/webrtc is lacking latest additions to the standard.
-  rtc: RTCConfiguration & { rtcpMuxPolicy: "require" | "negotiate" };
+  rtc: RTCConfig;
 }
 
 export interface RatelConfig extends URLConfig {}
@@ -38,7 +44,11 @@ export const defaultConfig: Config = {
         urls: ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
         username: "test123",
         credential: "test456"
-      }]
+      }],
+      defaultOfferOptions: {
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      }
     }
   },
 
