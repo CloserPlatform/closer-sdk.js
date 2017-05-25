@@ -19,6 +19,10 @@ interface HackedRTCPeerConnection extends RTCPeerConnection {
   removeTrack: (sender: RTCRtpSender) => void;
 }
 
+function supportsTracks(pc: HackedRTCPeerConnection): boolean {
+  return (typeof pc.addTrack !== "undefined") && (typeof pc.removeTrack !== "undefined");
+}
+
 export type RemovableStream = Array<RTCRtpSender> | MediaStream;
 
 export class RTCConnection {
@@ -84,9 +88,10 @@ export class RTCConnection {
   }
 
   addLocalStream(stream: MediaStream): RemovableStream {
+    console.log("Removing a local stream.");
     const hackedConn = this.conn as HackedRTCPeerConnection;
-    // FIXME Needs https://github.com/webrtc/adapter/pull/503
-    if (typeof hackedConn.addTrack !== "undefined") {
+    // FIXME Chrome's shim still doesn't implement removeTrack().
+    if (supportsTracks(hackedConn)) {
       return stream.getTracks().map((track) => hackedConn.addTrack(track, stream));
     } else {
       this.conn.addStream(stream);
@@ -95,9 +100,10 @@ export class RTCConnection {
   }
 
   removeLocalStream(stream: RemovableStream) {
+    console.log("Removing a local stream.");
     const hackedConn = this.conn as HackedRTCPeerConnection;
-    // FIXME Needs https://github.com/webrtc/adapter/pull/503
-    if (typeof hackedConn.removeTrack !== "undefined") {
+    // FIXME Chrome's shim still doesn't implement removeTrack().
+    if (supportsTracks(hackedConn)) {
       (stream as Array<RTCRtpSender>).forEach((track) => hackedConn.removeTrack(track));
     } else {
       this.conn.removeStream(stream as MediaStream);
@@ -257,15 +263,16 @@ export class RTCPool {
 
   addLocalStream(stream: MediaStream) {
     this.localStream = stream;
-    Object.keys(this.connections).forEach((key) => {
-      this.streams[key] = this.connections[key].addLocalStream(stream);
+    Object.keys(this.connections).forEach((peer) => {
+      this.updateConnectionStream(peer, stream);
     });
   }
 
   removeLocalStream() {
     this.localStream = undefined;
-    Object.keys(this.streams).forEach((key) => {
-      this.connections[key].removeLocalStream(this.streams[key]);
+    Object.keys(this.streams).forEach((peer) => {
+      this.connections[peer].removeLocalStream(this.streams[peer]);
+      delete this.streams[peer];
     });
   }
 
@@ -324,10 +331,14 @@ export class RTCPool {
     }
   }
 
+  private updateConnectionStream(peer: string, stream: MediaStream) {
+    this.streams[peer] = this.connections[peer].addLocalStream(stream);
+  }
+
   private createRTC(peer: ID): RTCConnection {
     let rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events, this.api);
-    rtc.addLocalStream(this.localStream);
     this.connections[peer] = rtc;
+    this.updateConnectionStream(peer, this.localStream);
     return rtc;
   }
 }
