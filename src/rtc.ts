@@ -130,7 +130,7 @@ export class RTCConnection {
   addOffer(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
     this.log("Received an RTC offer.");
 
-    return this.setRemoteDescription(remoteDescription).then((descr) => this.answer());
+    return this.setRemoteDescription(this.patchSDP(remoteDescription)).then((descr) => this.answer());
   }
 
   answer(): Promise<wireEvents.SDP> {
@@ -165,6 +165,17 @@ export class RTCConnection {
   setRemoteDescription(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
     this.log("Setting remote RTC description.");
     return this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription)).then(() => remoteDescription);
+  }
+
+  private patchSDP(descr: wireEvents.SDP): wireEvents.SDP {
+    // FIXME Chrome does not support DTLS role changes.
+    let hackedDescr = descr;
+    if (this.conn.remoteDescription && this.conn.remoteDescription.type === "answer") {
+      // FIXME This should be done each time if the first remoteDescription was an answer.
+      const initialRole = /a=setup:[^\n]+/.exec(this.conn.remoteDescription.sdp)[0];
+      hackedDescr.sdp = hackedDescr.sdp.replace("a=setup:actpass", initialRole);
+    }
+    return hackedDescr;
   }
 
   private setLocalDescription(localDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
