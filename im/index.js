@@ -603,7 +603,6 @@ $(document).ready(function() {
 
     function createStream(callback, constraints) {
         constraints = constraints || {
-            "video": true,
             "audio": true
         };
         navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
@@ -865,7 +864,7 @@ $(document).ready(function() {
         stealSwitch.click(function() {
             createStream(function(stream) {
                 var callbox = addCall(call, stream, {
-                    "video": true,
+                    "video": false,
                     "audio": true
                 });
                 callbox.pull();
@@ -1082,7 +1081,7 @@ $(document).ready(function() {
                         closeModal = confirmModal("Call invitation", line, "Answer", function() {
                             createStream(function(stream) {
                                 var callbox = addCall(m.call, stream, {
-                                    "video": true,
+                                    "video": false,
                                     "audio": true
                                 });
                                 callbox.answer();
