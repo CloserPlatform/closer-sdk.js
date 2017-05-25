@@ -958,6 +958,7 @@ $(document).ready(function() {
                     "port": chatUrl.port,
                     "rtc": {
                         "iceTransportPolicy": "relay",
+                        "rtcpMuxPolicy": "negotiate",
                         "iceServers": [{
                             // FIXME ?transport=upd is required by Edge.
                             "urls": ["stun:turn.ratel.im:3478?transport=udp", "turn:turn.ratel.im:3478?transport=udp"],
