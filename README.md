@@ -1,3 +1,5 @@
+![SDK](./sdk.png)
+
 # Ratel JavaScript SDK
 Building:
 
