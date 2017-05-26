@@ -25,6 +25,7 @@ function supportsTracks(pc: HackedRTCPeerConnection): boolean {
 
 export type RemovableStream = Array<RTCRtpSender> | MediaStream;
 
+// FIXME Unfuck when Chrome transitions to the Unified Plan.
 export class RTCConnection {
   private call: ID;
   private peer: ID;
@@ -34,6 +35,9 @@ export class RTCConnection {
   private conn: RTCPeerConnection;
   private onICEDoneCallback: Thunk;
   private onRemoteStreamCallback: Callback<MediaStream>;
+
+  // FIXME Required by the various hacks:
+  private initialRemoteDescription: wireEvents.SDP;
 
   constructor(call: ID, peer: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     log("Connecting an RTC connection to " + peer + " on " + call);
@@ -130,7 +134,7 @@ export class RTCConnection {
   addOffer(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
     this.log("Received an RTC offer.");
 
-    return this.setRemoteDescription(this.patchSDP(remoteDescription)).then((descr) => this.answer());
+    return this.setRemoteDescription(remoteDescription).then((descr) => this.answer());
   }
 
   answer(): Promise<wireEvents.SDP> {
@@ -164,16 +168,17 @@ export class RTCConnection {
   // FIXME This should be private.
   setRemoteDescription(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
     this.log("Setting remote RTC description.");
-    return this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription)).then(() => remoteDescription);
+    const hackedDescr = this.patchSDP(remoteDescription);
+    this.initialRemoteDescription = this.initialRemoteDescription || remoteDescription;
+    return this.conn.setRemoteDescription(new RTCSessionDescription(hackedDescr)).then(() => hackedDescr);
   }
 
   private patchSDP(descr: wireEvents.SDP): wireEvents.SDP {
     // FIXME Chrome does not support DTLS role changes.
     let hackedDescr = descr;
-    if (this.conn.remoteDescription && this.conn.remoteDescription.type === "answer") {
-      // FIXME This should be done each time if the first remoteDescription was an answer.
+    if (this.initialRemoteDescription && this.initialRemoteDescription.type !== descr.type) {
       const initialRole = /a=setup:[^\n]+/.exec(this.conn.remoteDescription.sdp)[0];
-      hackedDescr.sdp = hackedDescr.sdp.replace("a=setup:actpass", initialRole);
+      hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\n]+/, initialRole);
     }
     return hackedDescr;
   }
