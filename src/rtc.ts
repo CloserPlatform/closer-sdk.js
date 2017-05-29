@@ -94,7 +94,7 @@ export class RTCConnection {
   addLocalStream(stream: MediaStream): RemovableStream {
     console.log("Removing a local stream.");
     const hackedConn = this.conn as HackedRTCPeerConnection;
-    // FIXME Chrome's shim still doesn't implement removeTrack().
+    // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (supportsTracks(hackedConn)) {
       return stream.getTracks().map((track) => hackedConn.addTrack(track, stream));
     } else {
@@ -106,7 +106,7 @@ export class RTCConnection {
   removeLocalStream(stream: RemovableStream) {
     console.log("Removing a local stream.");
     const hackedConn = this.conn as HackedRTCPeerConnection;
-    // FIXME Chrome's shim still doesn't implement removeTrack().
+    // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (supportsTracks(hackedConn)) {
       (stream as Array<RTCRtpSender>).forEach((track) => hackedConn.removeTrack(track));
     } else {
@@ -212,7 +212,6 @@ export class RTCConnection {
       return this.updateRole(descr, this.localRole);
     } else {
       this.localRole = this.getRole(descr);
-      this.log("Setting local role to " + this.localRole);
       return descr;
     }
   }

@@ -715,15 +715,15 @@ $(document).ready(function() {
         }
 
         function stopStream() {
-            if(localStream.stop) localStream.stop();
+            if(typeof localStream.stop !== "undefined") localStream.stop();
             else localStream.getTracks().map(function(t) { t.stop(); });
         }
 
         function replaceStream(stream) {
+            stopStream();
             call.removeLocalStream();
             call.addLocalStream(stream);
             streams["You"].stream = stream;
-            stopStream();
             localStream = stream;
             renderStreams();
         }
