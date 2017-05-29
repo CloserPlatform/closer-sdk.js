@@ -37,7 +37,7 @@ export class RTCConnection {
   private onRemoteStreamCallback: Callback<MediaStream>;
 
   // FIXME Required by the various hacks:
-  private initialRemoteDescription: wireEvents.SDP;
+  private localRole: string;
 
   constructor(call: ID, peer: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     log("Connecting an RTC connection to " + peer + " on " + call);
@@ -141,7 +141,8 @@ export class RTCConnection {
     this.log("Creating an RTC answer.");
 
     return this.conn.createAnswer().then((answer) => {
-      return this.setLocalDescription(answer);
+      // FIXME Chrome does not support DTLS role changes.
+      return this.setLocalDescription(this.patchSDP(answer));
     }).then((answer) => {
       this.api.sendDescription(this.call, this.peer, answer);
       this.log("Sent an RTC description: " + answer.sdp);
@@ -152,7 +153,8 @@ export class RTCConnection {
   addAnswer(remoteDescription: wireEvents.SDP): Promise<void> {
     this.log("Received an RTC answer.");
     return this.setRemoteDescription(remoteDescription).then((descr) => {
-      // Do nothing.
+      // FIXME Chrome does not support DTLS role changes.
+      this.extractRole(descr);
     });
   }
 
@@ -168,19 +170,7 @@ export class RTCConnection {
   // FIXME This should be private.
   setRemoteDescription(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
     this.log("Setting remote RTC description.");
-    const hackedDescr = this.patchSDP(remoteDescription);
-    this.initialRemoteDescription = this.initialRemoteDescription || remoteDescription;
-    return this.conn.setRemoteDescription(new RTCSessionDescription(hackedDescr)).then(() => hackedDescr);
-  }
-
-  private patchSDP(descr: wireEvents.SDP): wireEvents.SDP {
-    // FIXME Chrome does not support DTLS role changes.
-    let hackedDescr = descr;
-    if (this.initialRemoteDescription && this.initialRemoteDescription.type !== descr.type) {
-      const initialRole = /a=setup:[^\n]+/.exec(this.conn.remoteDescription.sdp)[0];
-      hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\n]+/, initialRole);
-    }
-    return hackedDescr;
+    return this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription)).then(() => remoteDescription);
   }
 
   private setLocalDescription(localDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
@@ -198,6 +188,32 @@ export class RTCConnection {
       // FIXME Firefox does not support connectionState: https://bugzilla.mozilla.org/show_bug.cgi?id=1265827
       return this.conn.signalingState === "stable" &&
         (this.conn.iceConnectionState === "connected" || this.conn.iceConnectionState === "completed");
+    }
+  }
+
+  private getRole(descr: wireEvents.SDP): string {
+    return /a=setup:([^\r\n]+)/.exec(descr.sdp)[1];
+  }
+
+  private updateRole(descr: wireEvents.SDP, role: string): wireEvents.SDP {
+    let hackedDescr = descr;
+    hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\r\n]+/, "a=setup:" + role);
+    return hackedDescr;
+  }
+
+  private extractRole(descr: wireEvents.SDP) {
+    if (this.localRole === undefined) {
+      this.localRole = (this.getRole(descr) === "active") ? "passive" : "active";
+    }
+  }
+
+  private patchSDP(descr: wireEvents.SDP): wireEvents.SDP {
+    if (this.localRole !== undefined) {
+      return this.updateRole(descr, this.localRole);
+    } else {
+      this.localRole = this.getRole(descr);
+      this.log("Setting local role to " + this.localRole);
+      return descr;
     }
   }
 }
