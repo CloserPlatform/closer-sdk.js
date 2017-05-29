@@ -1,5 +1,4 @@
-import { isChrome, isFirefox } from "./fixtures.spec";
-import { deepcopy, isBrowserSupported, wrapPromise } from "./utils";
+import { deepcopy, isBrowserSupported, isChrome, isFirefox, wrapPromise } from "./utils";
 
 describe("Utils", () => {
   it("wrapPromise should replace a Promise", (done) => {

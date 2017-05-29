@@ -2,8 +2,7 @@
 
 import { Config, load } from "../src/config";
 import * as logger from "../src/logger";
-import { isBrowserSupported } from "./utils";
-import * as adapter from "webrtc-adapter";
+import { isBrowserSupported, isChrome, isFirefox } from "./utils";
 
 export const log = logger.debugConsole;
 
@@ -28,14 +27,6 @@ export function sleep(time: number): Promise<void> {
 
 export function whenever(condition: boolean) {
   return condition ? it : xit;
-}
-
-export function isChrome() {
-  return adapter.browserDetails.browser === "chrome";
-}
-
-export function isFirefox() {
-  return adapter.browserDetails.browser === "firefox";
 }
 
 export function isPhantomJS() {
