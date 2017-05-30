@@ -13,6 +13,7 @@ export interface RTCConfig extends RTCConfiguration {
   defaultOfferOptions?: RTCOfferOptions;
   defaultAnswerOptions?: RTCAnswerOptions;
   rtcpMuxPolicy: "require" | "negotiate";
+  bundlePolicy: "balanced" | "max-compat" | "max-bundle";
 }
 
 export interface ChatConfig extends URLConfig {
@@ -40,6 +41,7 @@ export const defaultConfig: Config = {
     port: "",
     rtc: {
       rtcpMuxPolicy: "negotiate",
+      bundlePolicy: "balanced",
       iceServers: [{
         urls: ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
         username: "test123",
