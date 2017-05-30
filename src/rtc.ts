@@ -379,6 +379,14 @@ export class RTCPool {
     }
   }
 
+  setAnswerOptions(options: RTCAnswerOptions) {
+    this.answerOptions = options;
+  }
+
+  setOfferOptions(options: HackedRTCOfferOptions) {
+    this.offerOptions = options;
+  }
+
   private updateConnectionStream(peer: string, stream: MediaStream) {
     this.streams[peer] = this.connections[peer].addLocalStream(stream);
   }

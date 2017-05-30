@@ -628,6 +628,16 @@ $(document).ready(function() {
         var callbox = makeCallbox(call.id, "callbox");
         var onTeardownCallback = function() {};
 
+        call.setOfferOptions({
+           "offerToReceiveAudio": true,
+           "offerToReceiveVideo": true
+        });
+
+        call.setAnswerOptions({
+           "offerToReceiveAudio": true,
+           "offerToReceiveVideo": true
+        });
+
         call.onRemoteStream(function(user, stream) {
             console.log("Remote stream for user " + user +  " started!");
             streams[user] = {
@@ -966,7 +976,7 @@ $(document).ready(function() {
                         }],
                         "defaultOfferOptions": {
                             "offerToReceiveAudio": true,
-                            "offerToReceiveVideo": true
+                            "offerToReceiveVideo": false
                         }
                     }
                 }

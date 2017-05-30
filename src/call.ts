@@ -167,6 +167,14 @@ export abstract class Call implements wireEntities.Call {
     this.pool.removeLocalStream();
   }
 
+  setAnswerOptions(options: RTCAnswerOptions) {
+    this.pool.setAnswerOptions(options);
+  }
+
+  setOfferOptions(options: HackedRTCOfferOptions) {
+    this.pool.setOfferOptions(options);
+  }
+
   getUsers(): Promise<Array<proto.ID>> {
     return Promise.resolve(this.users);
   }
