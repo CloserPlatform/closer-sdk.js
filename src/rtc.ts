@@ -1,5 +1,4 @@
 import { ArtichokeAPI } from "./api";
-import { RTCConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { RTCCandidate, RTCDescription } from "./protocol/events";
@@ -7,6 +6,10 @@ import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
 import { eventTypes } from "./protocol/wire-events";
 import { Thunk } from "./utils";
+
+export interface RTCConnectionConstraints {
+  // FIXME @types/webrtc currently does not have this interface defined.
+}
 
 export interface RTCAnswerOptions {
   // FIXME @types/webrtc currently does not have this interface defined.
@@ -23,8 +26,17 @@ interface HackedMediaStreamEvent extends MediaStreamEvent {
   streams: Array<MediaStream>;
 }
 
+export interface RTCConfig extends RTCConfiguration {
+  defaultOfferOptions?: HackedRTCOfferOptions;
+  defaultAnswerOptions?: RTCAnswerOptions;
+  defaultConnectionConstraints?: RTCConnectionConstraints;
+  rtcpMuxPolicy: "require" | "negotiate";
+  bundlePolicy: "balanced" | "max-compat" | "max-bundle";
+}
+
 // FIXME Can't extends RTCPeerConnection, cause createOffer & createAnswer are of the wrong type.
 type HackedRTCPeerConnection = RTCPeerConnection & {
+  new (config: RTCConfiguration, constraints?: RTCConnectionConstraints);
   connectionState: string; // FIXME RTCPeerConnectionState;
   ontrack: (event: HackedMediaStreamEvent) => void;
   addTrack: (track: MediaStreamTrack, stream?: MediaStream) => RTCRtpSender;
@@ -53,14 +65,15 @@ export class RTCConnection {
   // FIXME Required by the various hacks:
   private localRole: string;
 
-  constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler,
+              api: ArtichokeAPI, constraints?: RTCConnectionConstraints) {
     log("Connecting an RTC connection to " + peer + " on " + call);
     this.call = call;
     this.peer = peer;
     this.api = api;
     this.events = events;
     this.log = log;
-    this.conn = new RTCPeerConnection(config) as HackedRTCPeerConnection;
+    this.conn = new (RTCPeerConnection as HackedRTCPeerConnection)(config, constraints);
 
     this.onRemoteStreamCallback = (stream) => {
       // Do nothing.
@@ -241,6 +254,7 @@ export class RTCPool {
   private call: ID;
   private localStream: MediaStream;
   private config: RTCConfig;
+  private connectionConstraints: RTCConnectionConstraints;
   private offerOptions: HackedRTCOfferOptions;
   private answerOptions: RTCAnswerOptions;
 
@@ -255,6 +269,7 @@ export class RTCPool {
 
     this.call = call;
     this.config = config;
+    this.connectionConstraints = config.defaultConnectionConstraints;
     this.offerOptions = config.defaultOfferOptions;
     this.answerOptions = config.defaultAnswerOptions;
 
@@ -387,21 +402,26 @@ export class RTCPool {
     this.offerOptions = options;
   }
 
+  setConnectionConstraints(constraints: RTCConnectionConstraints) {
+    this.connectionConstraints = constraints;
+  }
+
   private updateConnectionStream(peer: string, stream: MediaStream) {
     this.streams[peer] = this.connections[peer].addLocalStream(stream);
   }
 
   private createRTC(peer: ID): RTCConnection {
-    const rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events, this.api);
+    const rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events,
+                                    this.api, this.connectionConstraints);
     this.connections[peer] = rtc;
     this.updateConnectionStream(peer, this.localStream);
     return rtc;
   }
 }
 
-export function createRTCConnection(call: ID, peer: ID, config: RTCConfig, log: Logger,
-                                    events: EventHandler, api: ArtichokeAPI): RTCConnection {
-  return new RTCConnection(call, peer, config, log, events, api);
+export function createRTCConnection(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler,
+                                    api: ArtichokeAPI, constraints?: RTCConnectionConstraints): RTCConnection {
+  return new RTCConnection(call, peer, config, log, events, api, constraints);
 }
 
 export function createRTCPool(call: ID, config: RTCConfig, log: Logger,

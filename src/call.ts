@@ -1,12 +1,18 @@
 import { ArtichokeAPI } from "./api";
-import { RTCConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { CallActionSent, CallActiveDevice, CallEnd } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { actionTypes, eventTypes } from "./protocol/wire-events";
-import { createRTCPool, RTCPool } from "./rtc";
+import {
+  createRTCPool,
+  HackedRTCOfferOptions as RTCOfferOptions,
+  RTCAnswerOptions,
+  RTCConfig,
+  RTCConnectionConstraints,
+  RTCPool
+} from "./rtc";
 
 export interface RemoteStreamCallback {
   (peer: proto.ID, stream: MediaStream): void;
@@ -171,8 +177,12 @@ export abstract class Call implements wireEntities.Call {
     this.pool.setAnswerOptions(options);
   }
 
-  setOfferOptions(options: HackedRTCOfferOptions) {
+  setOfferOptions(options: RTCOfferOptions) {
     this.pool.setOfferOptions(options);
+  }
+
+  setConnectionConstraints(constraints: RTCConnectionConstraints) {
+    this.pool.setConnectionConstraints(constraints);
   }
 
   getUsers(): Promise<Array<proto.ID>> {

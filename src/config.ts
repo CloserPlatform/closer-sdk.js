@@ -1,19 +1,12 @@
 import { ApiKey } from "./auth";
 import { ID } from "./protocol/protocol";
-import { HackedRTCOfferOptions as RTCOfferOptions, RTCAnswerOptions } from "./rtc";
+import { RTCConfig } from "./rtc";
 import { deepcopy } from "./utils";
 
 export interface URLConfig {
   protocol: string;
   hostname: string;
   port: string;
-}
-
-export interface RTCConfig extends RTCConfiguration {
-  defaultOfferOptions?: RTCOfferOptions;
-  defaultAnswerOptions?: RTCAnswerOptions;
-  rtcpMuxPolicy: "require" | "negotiate";
-  bundlePolicy: "balanced" | "max-compat" | "max-bundle";
 }
 
 export interface ChatConfig extends URLConfig {

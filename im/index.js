@@ -629,13 +629,30 @@ $(document).ready(function() {
         var onTeardownCallback = function() {};
 
         call.setOfferOptions({
-           "offerToReceiveAudio": true,
-           "offerToReceiveVideo": true
+            "offerToReceiveAudio": true,
+            "offerToReceiveVideo": true
         });
 
         call.setAnswerOptions({
-           "offerToReceiveAudio": true,
-           "offerToReceiveVideo": true
+            "offerToReceiveAudio": true,
+            "offerToReceiveVideo": true
+        });
+
+        call.setConnectionConstraints({
+            "mandatory": {
+                "DtlsSrtpKeyAgreement": true,
+                "RtpDataChannels": true
+            },
+            "optional": [
+                { "googDscp": true },
+                { "googCpuOveruseDetection": true },
+                { "googCpuOveruseEncodeUsage": true },
+                { "googCpuUnderuseThreshold": 30 },
+                { "googCpuOveruseThreshold": 50 },
+                { "googScreencastMinBitrate": 400 },
+                { "googHighStartBitrate": 0 },
+                { "googPayloadPadding": true }
+            ]
         });
 
         call.onRemoteStream(function(user, stream) {
