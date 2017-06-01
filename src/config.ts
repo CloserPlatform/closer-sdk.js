@@ -9,7 +9,8 @@ export interface URLConfig {
 }
 
 export interface ChatConfig extends URLConfig {
-  rtc: RTCConfiguration;
+  // FIXME @types/webrtc is lacking latest additions to the standard.
+  rtc: RTCConfiguration & { rtcpMuxPolicy: "require" | "negotiate" };
 }
 
 export interface RatelConfig extends URLConfig {}
@@ -32,6 +33,7 @@ export const defaultConfig: Config = {
     hostname: "artichoke.ratel.io",
     port: "",
     rtc: {
+      rtcpMuxPolicy: "negotiate",
       iceServers: [{
         urls: ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
         username: "test123",

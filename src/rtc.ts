@@ -15,9 +15,17 @@ interface HackedMediaStreamEvent extends MediaStreamEvent {
 interface HackedRTCPeerConnection extends RTCPeerConnection {
   connectionState: string; // FIXME RTCPeerConnectionState;
   ontrack: (event: HackedMediaStreamEvent) => void;
-  addTrack: (track: MediaStreamTrack, stream?: MediaStream) => void;
+  addTrack: (track: MediaStreamTrack, stream?: MediaStream) => RTCRtpSender;
+  removeTrack: (sender: RTCRtpSender) => void;
 }
 
+function supportsTracks(pc: HackedRTCPeerConnection): boolean {
+  return (typeof pc.addTrack !== "undefined") && (typeof pc.removeTrack !== "undefined");
+}
+
+export type RemovableStream = Array<RTCRtpSender> | MediaStream;
+
+// FIXME Unfuck when Chrome transitions to the Unified Plan.
 export class RTCConnection {
   private call: ID;
   private peer: ID;
@@ -27,6 +35,9 @@ export class RTCConnection {
   private conn: RTCPeerConnection;
   private onICEDoneCallback: Thunk;
   private onRemoteStreamCallback: Callback<MediaStream>;
+
+  // FIXME Required by the various hacks:
+  private localRole: string;
 
   constructor(call: ID, peer: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     log("Connecting an RTC connection to " + peer + " on " + call);
@@ -80,13 +91,26 @@ export class RTCConnection {
     this.conn.close();
   }
 
-  addLocalStream(stream: MediaStream) {
+  addLocalStream(stream: MediaStream): RemovableStream {
+    this.log("Removing a local stream.");
     const hackedConn = this.conn as HackedRTCPeerConnection;
-    // FIXME Needs https://github.com/webrtc/adapter/pull/503
-    if (typeof hackedConn.addTrack !== "undefined") {
-      stream.getTracks().forEach((track) => hackedConn.addTrack(track, stream));
+    // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
+    if (supportsTracks(hackedConn)) {
+      return stream.getTracks().map((track) => hackedConn.addTrack(track, stream));
     } else {
       this.conn.addStream(stream);
+      return stream;
+    }
+  }
+
+  removeLocalStream(stream: RemovableStream) {
+    this.log("Removing a local stream.");
+    const hackedConn = this.conn as HackedRTCPeerConnection;
+    // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
+    if (supportsTracks(hackedConn)) {
+      (stream as Array<RTCRtpSender>).forEach((track) => hackedConn.removeTrack(track));
+    } else {
+      this.conn.removeStream(stream as MediaStream);
     }
   }
 
@@ -117,7 +141,8 @@ export class RTCConnection {
     this.log("Creating an RTC answer.");
 
     return this.conn.createAnswer().then((answer) => {
-      return this.setLocalDescription(answer);
+      // FIXME Chrome does not support DTLS role changes.
+      return this.setLocalDescription(this.patchSDP(answer));
     }).then((answer) => {
       this.api.sendDescription(this.call, this.peer, answer);
       this.log("Sent an RTC description: " + answer.sdp);
@@ -128,7 +153,8 @@ export class RTCConnection {
   addAnswer(remoteDescription: wireEvents.SDP): Promise<void> {
     this.log("Received an RTC answer.");
     return this.setRemoteDescription(remoteDescription).then((descr) => {
-      // Do nothing.
+      // FIXME Chrome does not support DTLS role changes.
+      this.extractRole(descr);
     });
   }
 
@@ -155,13 +181,38 @@ export class RTCConnection {
   private isEstablished(): boolean {
     // NOTE "stable" means no exchange is going on, which encompases "fresh"
     // NOTE RTC connections as well as established ones.
-    let hackedConn = this.conn as HackedRTCPeerConnection;
+    const hackedConn = this.conn as HackedRTCPeerConnection;
     if (typeof hackedConn.connectionState !== "undefined") {
       return hackedConn.connectionState === "connected";
     } else {
       // FIXME Firefox does not support connectionState: https://bugzilla.mozilla.org/show_bug.cgi?id=1265827
       return this.conn.signalingState === "stable" &&
         (this.conn.iceConnectionState === "connected" || this.conn.iceConnectionState === "completed");
+    }
+  }
+
+  private getRole(descr: wireEvents.SDP): string {
+    return /a=setup:([^\r\n]+)/.exec(descr.sdp)[1];
+  }
+
+  private updateRole(descr: wireEvents.SDP, role: string): wireEvents.SDP {
+    const hackedDescr = descr;
+    hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\r\n]+/, "a=setup:" + role);
+    return hackedDescr;
+  }
+
+  private extractRole(descr: wireEvents.SDP) {
+    if (this.localRole === undefined) {
+      this.localRole = (this.getRole(descr) === "active") ? "passive" : "active";
+    }
+  }
+
+  private patchSDP(descr: wireEvents.SDP): wireEvents.SDP {
+    if (this.localRole !== undefined) {
+      return this.updateRole(descr, this.localRole);
+    } else {
+      this.localRole = this.getRole(descr);
+      return descr;
     }
   }
 }
@@ -179,6 +230,7 @@ export class RTCPool {
   private localStream: MediaStream;
   private config: RTCConfiguration;
   private connections: { [user: string]: RTCConnection };
+  private streams: { [user: string]: RemovableStream };
   private onConnectionCallback: ConnectionCallback;
 
   constructor(call: ID, config: RTCConfiguration, log: Logger, events: EventHandler, api: ArtichokeAPI) {
@@ -190,6 +242,7 @@ export class RTCPool {
     this.config = config;
 
     this.connections = {};
+    this.streams = {};
     this.localStream = undefined;
     this.onConnectionCallback = (peer, conn) => {
       // Do Nothing.
@@ -204,7 +257,7 @@ export class RTCPool {
             events.raise("Could not process the RTC description: ", error);
           });
         } else {
-          let rtc = this.createRTC(msg.peer);
+          const rtc = this.createRTC(msg.peer);
           this.onConnectionCallback(msg.peer, rtc);
           rtc.addOffer(msg.description).catch((error) => {
             events.raise("Could not process the RTC description: ", error);
@@ -241,13 +294,21 @@ export class RTCPool {
 
   addLocalStream(stream: MediaStream) {
     this.localStream = stream;
-    Object.keys(this.connections).forEach((key) => {
-      this.connections[key].addLocalStream(stream);
+    Object.keys(this.connections).forEach((peer) => {
+      this.updateConnectionStream(peer, stream);
+    });
+  }
+
+  removeLocalStream() {
+    this.localStream = undefined;
+    Object.keys(this.streams).forEach((peer) => {
+      this.connections[peer].removeLocalStream(this.streams[peer]);
+      delete this.streams[peer];
     });
   }
 
   create(peer: ID): RTCConnection {
-    let rtc = this.createRTC(peer);
+    const rtc = this.createRTC(peer);
     rtc.offer().catch((error) => {
       this.events.raise("Could not create an RTC offer.", error);
     });
@@ -301,10 +362,14 @@ export class RTCPool {
     }
   }
 
+  private updateConnectionStream(peer: string, stream: MediaStream) {
+    this.streams[peer] = this.connections[peer].addLocalStream(stream);
+  }
+
   private createRTC(peer: ID): RTCConnection {
-    let rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events, this.api);
-    rtc.addLocalStream(this.localStream);
+    const rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events, this.api);
     this.connections[peer] = rtc;
+    this.updateConnectionStream(peer, this.localStream);
     return rtc;
   }
 }

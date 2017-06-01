@@ -83,6 +83,7 @@ module.exports = (config) => {
             src: [
                 'coverage/phantomjs/coverage-final.json',
                 'coverage/chrome/coverage-final.json',
+                'coverage/headlesschrome/coverage-final.json',
                 'coverage/firefox/coverage-final.json'
             ],
             reports: {
@@ -96,9 +97,7 @@ module.exports = (config) => {
         coverageReporter: {
             type: 'json',
             dir: './coverage/',
-            subdir: (browser) => {
-                return browser.toLowerCase().split(/[ /-]/)[0]; // returns 'chrome' etc
-            }
+            subdir: (browser) => browser.toLowerCase().split(/[ /-]/)[0] // returns 'chrome' etc
         },
 
         port: 9876,
@@ -115,6 +114,11 @@ module.exports = (config) => {
             ChromeWithFakeUserMedia: {
                 base: 'Chrome',
                 flags: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream']
+            },
+            HeadlessChrome: {
+                base: 'Chrome',
+                flags: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream',
+                        '--headless', '--disable-gpu', '--remote-debugging-port=9222']
             }
         }
     });

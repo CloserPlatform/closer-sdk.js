@@ -162,6 +162,10 @@ export abstract class Call implements wireEntities.Call {
     this.pool.addLocalStream(stream);
   }
 
+  removeLocalStream() {
+    this.pool.removeLocalStream();
+  }
+
   getUsers(): Promise<Array<proto.ID>> {
     return Promise.resolve(this.users);
   }
