@@ -8,15 +8,12 @@ import { actionTypes, eventTypes } from "./protocol/wire-events";
 import {
   createRTCPool,
   HackedRTCOfferOptions as RTCOfferOptions,
+  RemoteStreamCallback,
   RTCAnswerOptions,
   RTCConfig,
   RTCConnectionConstraints,
   RTCPool
 } from "./rtc";
-
-export interface RemoteStreamCallback {
-  (peer: proto.ID, stream: MediaStream): void;
-}
 
 export namespace callType {
   export enum CallType {
@@ -46,7 +43,6 @@ export abstract class Call implements wireEntities.Call {
   private log: Logger;
   protected pool: RTCPool;
   private onActiveDeviceCallback: Callback<CallActiveDevice>;
-  private onRemoteStreamCallback: RemoteStreamCallback;
   private onLeftCallback: Callback<proto.CallAction>;
   private onJoinedCallback: Callback<proto.CallAction>;
   private onTransferredCallback: Callback<proto.CallAction>;
@@ -79,14 +75,6 @@ export abstract class Call implements wireEntities.Call {
     }
 
     // By default do nothing:
-    this.onRemoteStreamCallback = (peer, s) => {
-      // Do nothing.
-    };
-
-    this.pool.onConnection((peer, rtc) => {
-      rtc.onRemoteStream((s) => this.onRemoteStreamCallback(peer, s));
-    });
-
     this.onActiveDeviceCallback = (e: CallActiveDevice) => {
       // Do nothing.
     };
@@ -115,13 +103,13 @@ export abstract class Call implements wireEntities.Call {
       switch (e.action.action) {
         case actionTypes.JOINED:
           this.users.push(e.action.user);
-          this.pool.create(e.action.user).onRemoteStream((s) => this.onRemoteStreamCallback(e.action.user, s));
+          this.pool.create(e.action.user);
           this.onJoinedCallback(e.action);
           break;
 
         case actionTypes.TRANSFERRED:
           this.pool.destroy(e.action.user);
-          this.pool.create(e.action.user).onRemoteStream((s) => this.onRemoteStreamCallback(e.action.user, s));
+          this.pool.create(e.action.user);
           this.onTransferredCallback(e.action);
           break;
 
@@ -249,7 +237,7 @@ export abstract class Call implements wireEntities.Call {
   }
 
   onRemoteStream(callback: RemoteStreamCallback) {
-    this.onRemoteStreamCallback = callback;
+    this.pool.onRemoteStream(callback);
   }
 
   onStreamMuted(callback: Callback<proto.CallAction>) {

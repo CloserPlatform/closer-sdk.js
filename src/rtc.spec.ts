@@ -265,7 +265,7 @@ describe("RTCPool", () => {
           events.onError(logError(done));
 
           pool.addLocalStream(streamPool);
-          pool.onConnection((peer, rtc) => {
+          pool.onRemoteStream((peer, stream) => {
             expect(peer).toBe(peerAId);
           });
 

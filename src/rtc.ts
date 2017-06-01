@@ -242,8 +242,8 @@ export class RTCConnection {
   }
 }
 
-export interface ConnectionCallback {
-  (peer: ID, connection: RTCConnection): void;
+export interface RemoteStreamCallback {
+  (peer: ID, stream: MediaStream): void;
 }
 
 export class RTCPool {
@@ -260,7 +260,7 @@ export class RTCPool {
 
   private connections: { [user: string]: RTCConnection };
   private streams: { [user: string]: RemovableStream };
-  private onConnectionCallback: ConnectionCallback;
+  private onRemoteStreamCallback: RemoteStreamCallback;
 
   constructor(call: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.api = api;
@@ -276,8 +276,9 @@ export class RTCPool {
     this.connections = {};
     this.streams = {};
     this.localStream = undefined;
-    this.onConnectionCallback = (peer, conn) => {
-      // Do Nothing.
+
+    this.onRemoteStreamCallback = (peer, stream) => {
+      // Do nothing.
     };
 
     events.onConcreteEvent(eventTypes.RTC_DESCRIPTION, this.call, (msg: RTCDescription) => {
@@ -290,7 +291,6 @@ export class RTCPool {
           });
         } else {
           const rtc = this.createRTC(msg.peer);
-          this.onConnectionCallback(msg.peer, rtc);
           rtc.addOffer(msg.description, this.answerOptions).catch((error) => {
             events.raise("Could not process the RTC description: ", error);
           });
@@ -320,8 +320,8 @@ export class RTCPool {
     });
   }
 
-  onConnection(callback: ConnectionCallback) {
-    this.onConnectionCallback = callback;
+  onRemoteStream(callback: RemoteStreamCallback) {
+    this.onRemoteStreamCallback = callback;
   }
 
   addLocalStream(stream: MediaStream) {
@@ -413,6 +413,7 @@ export class RTCPool {
   private createRTC(peer: ID): RTCConnection {
     const rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events,
                                     this.api, this.connectionConstraints);
+    rtc.onRemoteStream((s) => this.onRemoteStreamCallback(peer, s));
     this.connections[peer] = rtc;
     this.updateConnectionStream(peer, this.localStream);
     return rtc;
