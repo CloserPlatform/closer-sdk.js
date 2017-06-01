@@ -92,7 +92,7 @@ export class RTCConnection {
   }
 
   addLocalStream(stream: MediaStream): RemovableStream {
-    console.log("Removing a local stream.");
+    this.log("Removing a local stream.");
     const hackedConn = this.conn as HackedRTCPeerConnection;
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (supportsTracks(hackedConn)) {
@@ -104,7 +104,7 @@ export class RTCConnection {
   }
 
   removeLocalStream(stream: RemovableStream) {
-    console.log("Removing a local stream.");
+    this.log("Removing a local stream.");
     const hackedConn = this.conn as HackedRTCPeerConnection;
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (supportsTracks(hackedConn)) {
@@ -181,7 +181,7 @@ export class RTCConnection {
   private isEstablished(): boolean {
     // NOTE "stable" means no exchange is going on, which encompases "fresh"
     // NOTE RTC connections as well as established ones.
-    let hackedConn = this.conn as HackedRTCPeerConnection;
+    const hackedConn = this.conn as HackedRTCPeerConnection;
     if (typeof hackedConn.connectionState !== "undefined") {
       return hackedConn.connectionState === "connected";
     } else {
@@ -196,7 +196,7 @@ export class RTCConnection {
   }
 
   private updateRole(descr: wireEvents.SDP, role: string): wireEvents.SDP {
-    let hackedDescr = descr;
+    const hackedDescr = descr;
     hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\r\n]+/, "a=setup:" + role);
     return hackedDescr;
   }
@@ -257,7 +257,7 @@ export class RTCPool {
             events.raise("Could not process the RTC description: ", error);
           });
         } else {
-          let rtc = this.createRTC(msg.peer);
+          const rtc = this.createRTC(msg.peer);
           this.onConnectionCallback(msg.peer, rtc);
           rtc.addOffer(msg.description).catch((error) => {
             events.raise("Could not process the RTC description: ", error);
@@ -308,7 +308,7 @@ export class RTCPool {
   }
 
   create(peer: ID): RTCConnection {
-    let rtc = this.createRTC(peer);
+    const rtc = this.createRTC(peer);
     rtc.offer().catch((error) => {
       this.events.raise("Could not create an RTC offer.", error);
     });
@@ -367,7 +367,7 @@ export class RTCPool {
   }
 
   private createRTC(peer: ID): RTCConnection {
-    let rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events, this.api);
+    const rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events, this.api);
     this.connections[peer] = rtc;
     this.updateConnectionStream(peer, this.localStream);
     return rtc;
