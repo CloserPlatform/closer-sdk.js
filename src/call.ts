@@ -5,7 +5,14 @@ import { CallActionSent, CallActiveDevice, CallEnd } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { actionTypes, eventTypes } from "./protocol/wire-events";
-import { createRTCPool, RTCPool } from "./rtc";
+import {
+  createRTCPool,
+  HackedRTCOfferOptions as RTCOfferOptions,
+  RTCAnswerOptions,
+  RTCConfig,
+  RTCConnectionConstraints,
+  RTCPool
+} from "./rtc";
 
 export interface RemoteStreamCallback {
   (peer: proto.ID, stream: MediaStream): void;
@@ -53,7 +60,7 @@ export abstract class Call implements wireEntities.Call {
 
   public abstract readonly callType: callType.CallType;
 
-  constructor(call: wireEntities.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
+  constructor(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
               api: ArtichokeAPI, stream?: MediaStream) {
     this.id = call.id;
     this.created = call.created;
@@ -164,6 +171,18 @@ export abstract class Call implements wireEntities.Call {
 
   removeLocalStream() {
     this.pool.removeLocalStream();
+  }
+
+  setAnswerOptions(options: RTCAnswerOptions) {
+    this.pool.setAnswerOptions(options);
+  }
+
+  setOfferOptions(options: RTCOfferOptions) {
+    this.pool.setOfferOptions(options);
+  }
+
+  setConnectionConstraints(constraints: RTCConnectionConstraints) {
+    this.pool.setConnectionConstraints(constraints);
   }
 
   getUsers(): Promise<Array<proto.ID>> {
@@ -282,7 +301,7 @@ export class GroupCall extends Call {
   }
 }
 
-export function createCall(call: wireEntities.Call, config: RTCConfiguration, log: Logger, events: EventHandler,
+export function createCall(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
                            api: ArtichokeAPI, stream?: MediaStream): Call {
   if (call.direct) {
     return new DirectCall(call, config, log, events, api, stream);

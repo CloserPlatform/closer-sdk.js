@@ -628,6 +628,33 @@ $(document).ready(function() {
         var callbox = makeCallbox(call.id, "callbox");
         var onTeardownCallback = function() {};
 
+        call.setOfferOptions({
+            "offerToReceiveAudio": true,
+            "offerToReceiveVideo": true
+        });
+
+        call.setAnswerOptions({
+            "offerToReceiveAudio": true,
+            "offerToReceiveVideo": true
+        });
+
+        call.setConnectionConstraints({
+            "mandatory": {
+                "DtlsSrtpKeyAgreement": true,
+                "RtpDataChannels": true
+            },
+            "optional": [
+                { "googDscp": true },
+                { "googCpuOveruseDetection": true },
+                { "googCpuOveruseEncodeUsage": true },
+                { "googCpuUnderuseThreshold": 30 },
+                { "googCpuOveruseThreshold": 50 },
+                { "googScreencastMinBitrate": 400 },
+                { "googHighStartBitrate": 0 },
+                { "googPayloadPadding": true }
+            ]
+        });
+
         call.onRemoteStream(function(user, stream) {
             console.log("Remote stream for user " + user +  " started!");
             streams[user] = {
@@ -958,12 +985,17 @@ $(document).ready(function() {
                     "rtc": {
                         "iceTransportPolicy": "relay",
                         "rtcpMuxPolicy": "negotiate",
+                        "bundlePolicy": "balanced",
                         "iceServers": [{
                             // FIXME ?transport=upd is required by Edge.
                             "urls": ["stun:turn.ratel.im:3478?transport=udp", "turn:turn.ratel.im:3478?transport=udp"],
                             "username": "test123",
                             "credential": "test456"
-                        }]
+                        }],
+                        "defaultOfferOptions": {
+                            "offerToReceiveAudio": true,
+                            "offerToReceiveVideo": false
+                        }
                     }
                 }
             }).then(function (session) {

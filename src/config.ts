@@ -1,5 +1,6 @@
 import { ApiKey } from "./auth";
 import { ID } from "./protocol/protocol";
+import { RTCConfig } from "./rtc";
 import { deepcopy } from "./utils";
 
 export interface URLConfig {
@@ -9,8 +10,7 @@ export interface URLConfig {
 }
 
 export interface ChatConfig extends URLConfig {
-  // FIXME @types/webrtc is lacking latest additions to the standard.
-  rtc: RTCConfiguration & { rtcpMuxPolicy: "require" | "negotiate" };
+  rtc: RTCConfig;
 }
 
 export interface RatelConfig extends URLConfig {}
@@ -34,11 +34,16 @@ export const defaultConfig: Config = {
     port: "",
     rtc: {
       rtcpMuxPolicy: "negotiate",
+      bundlePolicy: "balanced",
       iceServers: [{
         urls: ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
         username: "test123",
         credential: "test456"
-      }]
+      }],
+      defaultOfferOptions: {
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      }
     }
   },
 
