@@ -41,6 +41,7 @@ type HackedRTCPeerConnection = RTCPeerConnection & {
   ontrack: (event: HackedMediaStreamEvent) => void;
   addTrack: (track: MediaStreamTrack, stream?: MediaStream) => RTCRtpSender;
   removeTrack: (sender: RTCRtpSender) => void;
+  getSenders: () => Array<RTCRtpSender>;
   createOffer: (options?: HackedRTCOfferOptions) => Promise<RTCSessionDescription>;
   createAnswer: (options?: RTCAnswerOptions) => Promise<RTCSessionDescription>;
 }
@@ -48,8 +49,6 @@ type HackedRTCPeerConnection = RTCPeerConnection & {
 function supportsTracks(pc: HackedRTCPeerConnection): boolean {
   return (typeof pc.addTrack !== "undefined") && (typeof pc.removeTrack !== "undefined");
 }
-
-export type RemovableStream = Array<RTCRtpSender> | MediaStream;
 
 // FIXME Unfuck when Chrome transitions to the Unified Plan.
 export class RTCConnection {
@@ -64,6 +63,7 @@ export class RTCConnection {
 
   // FIXME Required by the various hacks:
   private localRole: string;
+  private attachedStreams: { [trackId: string]: MediaStream };
 
   constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler,
               api: ArtichokeAPI, constraints?: RTCConnectionConstraints) {
@@ -74,6 +74,9 @@ export class RTCConnection {
     this.events = events;
     this.log = log;
     this.conn = new (RTCPeerConnection as HackedRTCPeerConnection)(config, constraints);
+
+    this.localRole = undefined;
+    this.attachedStreams = {};
 
     this.onRemoteStreamCallback = (stream) => {
       // Do nothing.
@@ -119,24 +122,25 @@ export class RTCConnection {
     this.conn.close();
   }
 
-  addLocalStream(stream: MediaStream): RemovableStream {
-    this.log("Removing a local stream.");
+  addTrack(track: MediaStreamTrack, stream?: MediaStream) {
+    this.log("Adding a stream track.");
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (supportsTracks(this.conn)) {
-      return stream.getTracks().map((track) => this.conn.addTrack(track, stream));
+      this.conn.addTrack(track, stream);
     } else {
+      stream = stream || new MediaStream([track]);
+      this.attachedStreams[track.id] = stream;
       this.conn.addStream(stream);
-      return stream;
     }
   }
 
-  removeLocalStream(stream: RemovableStream) {
-    this.log("Removing a local stream.");
+  removeTrack(track: MediaStreamTrack) {
+    this.log("Removing a stream track.");
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (supportsTracks(this.conn)) {
-      (stream as Array<RTCRtpSender>).forEach((track) => this.conn.removeTrack(track));
-    } else {
-      this.conn.removeStream(stream as MediaStream);
+      this.conn.getSenders().filter((s) => s.track === track).forEach((t) => this.conn.removeTrack(t));
+    } else if (track.id in this.attachedStreams) {
+      this.conn.removeStream(this.attachedStreams[track.id]);
     }
   }
 
@@ -246,21 +250,27 @@ export interface RemoteStreamCallback {
   (peer: ID, stream: MediaStream): void;
 }
 
+interface MediaStreamAndTrack {
+  track: MediaStreamTrack;
+  stream?: MediaStream;
+}
+
 export class RTCPool {
   private api: ArtichokeAPI;
   private events: EventHandler;
   private log: Logger;
 
   private call: ID;
-  private localStream: MediaStream;
   private config: RTCConfig;
   private connectionConstraints: RTCConnectionConstraints;
   private offerOptions: HackedRTCOfferOptions;
   private answerOptions: RTCAnswerOptions;
 
   private connections: { [user: string]: RTCConnection };
-  private streams: { [user: string]: RemovableStream };
+  private tracks: Array<MediaStreamAndTrack>;
   private onRemoteStreamCallback: RemoteStreamCallback;
+
+  private localStream: MediaStream; // FIXME Remove.
 
   constructor(call: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.api = api;
@@ -274,8 +284,8 @@ export class RTCPool {
     this.answerOptions = config.defaultAnswerOptions;
 
     this.connections = {};
-    this.streams = {};
-    this.localStream = undefined;
+    this.tracks = [];
+    this.localStream = undefined; // FIXME Remove.
 
     this.onRemoteStreamCallback = (peer, stream) => {
       // Do nothing.
@@ -324,18 +334,20 @@ export class RTCPool {
     this.onRemoteStreamCallback = callback;
   }
 
-  addLocalStream(stream: MediaStream) {
-    this.localStream = stream;
+  addTrack(track: MediaStreamTrack, stream?: MediaStream) {
+    this.tracks.push({
+      track,
+      stream
+    });
     Object.keys(this.connections).forEach((peer) => {
-      this.updateConnectionStream(peer, stream);
+      this.connections[peer].addTrack(track, stream);
     });
   }
 
-  removeLocalStream() {
-    this.localStream = undefined;
-    Object.keys(this.streams).forEach((peer) => {
-      this.connections[peer].removeLocalStream(this.streams[peer]);
-      delete this.streams[peer];
+  removeTrack(track: MediaStreamTrack) {
+    this.tracks = this.tracks.filter((t) => t.track !== track);
+    Object.keys(this.connections).forEach((peer) => {
+      this.connections[peer].removeTrack(track);
     });
   }
 
@@ -406,16 +418,12 @@ export class RTCPool {
     this.connectionConstraints = constraints;
   }
 
-  private updateConnectionStream(peer: string, stream: MediaStream) {
-    this.streams[peer] = this.connections[peer].addLocalStream(stream);
-  }
-
   private createRTC(peer: ID): RTCConnection {
     const rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events,
                                     this.api, this.connectionConstraints);
     rtc.onRemoteStream((s) => this.onRemoteStreamCallback(peer, s));
     this.connections[peer] = rtc;
-    this.updateConnectionStream(peer, this.localStream);
+    this.tracks.forEach((t) => rtc.addTrack(t.track, t.stream));
     return rtc;
   }
 }

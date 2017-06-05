@@ -153,12 +153,12 @@ export abstract class Call implements wireEntities.Call {
     });
   }
 
-  addLocalStream(stream: MediaStream) {
-    this.pool.addLocalStream(stream);
+  addTrack(track: MediaStreamTrack, stream?: MediaStream) {
+    this.pool.addTrack(track, stream);
   }
 
-  removeLocalStream() {
-    this.pool.removeLocalStream();
+  removeTrack(track: MediaStreamTrack) {
+    this.pool.removeTrack(track);
   }
 
   setAnswerOptions(options: RTCAnswerOptions) {
@@ -265,6 +265,10 @@ export abstract class Call implements wireEntities.Call {
       this.ended = e.timestamp;
       callback(e);
     });
+  }
+
+  protected addLocalStream(stream: MediaStream) {
+    stream.getTracks().forEach((t) => this.addTrack(t, stream))
   }
 }
 
