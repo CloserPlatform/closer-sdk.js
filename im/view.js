@@ -36,13 +36,16 @@ function makeInput(id, name, placeholder, value) {
     return $('<div>').addClass('form-group').append([makeLabel(id, '', name), input]);
 }
 
-function makeCheckbox(id, value, checked) {
+function makeCheckbox(id, value, checked, onClick) {
     var input = $('<input>')
         .prop({
             id: id,
             type: 'checkbox',
             checked: !!checked
         });
+    input.click(function() {
+        if(onClick) onClick(input.is(":checked"));
+    });
     return $('<div>').append(input, [makeLabel(id, '', value)]);
 }
 

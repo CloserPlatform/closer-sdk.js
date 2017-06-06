@@ -722,15 +722,6 @@ $(document).ready(function() {
             else localStream.getTracks().map(function(t) { t.stop(); });
         }
 
-        function replaceStream(stream) {
-            stopStream();
-            call.removeStream(localStream);
-            call.addStream(stream);
-            streams["You"].stream = stream;
-            localStream = stream;
-            renderStreams();
-        }
-
         // FIXME Use a proper name instead of call.id
         var name = "Call #" + callIndex;
         callIndex = callIndex + 1;
@@ -739,17 +730,48 @@ $(document).ready(function() {
         });
 
         var toggle = makeButton('btn-warning', "Toggle stream", function() {
-            createImageStream(randomGif(), 10, replaceStream);
+            createImageStream(randomGif(), 10, function (stream) {
+                stopStream();
+                call.removeStream(localStream);
+                call.addStream(stream);
+                streams["You"].stream = stream;
+                localStream = stream;
+                renderStreams();
+            });
         });
 
-        var video = makeCheckbox(call.id + "-video", " Video", constraints.video);
-        var audio = makeCheckbox(call.id + "-audio", " Audio", constraints.audio);
-
-        var add = makeButton("btn-success", "Add stream", function() {
-            createStream(replaceStream, {
-                "video": $("#" + call.id + "-video").is(":checked"),
-                "audio": $("#" + call.id + "-audio").is(":checked")
+        var video = makeCheckbox(call.id + "-video", " Video", constraints.video, function(isChecked) {
+          if(isChecked) {
+            createStream(function(stream) {
+              var track = stream.getVideoTracks()[0];
+              localStream.addTrack(track);
+              call.addTrack(track, localStream);
+            }, {
+              "video": true
             });
+          } else {
+            var track = localStream.getVideoTracks()[0];
+            localStream.removeTrack(track);
+            call.removeTrack(track);
+            track.stop();
+          }
+        });
+
+        var audio = makeCheckbox(call.id + "-audio", " Audio", constraints.audio, function(isChecked) {
+          if(isChecked) {
+            createStream(function(stream) {
+              var track = stream.getAudioTracks()[0];
+              localStream.addTrack(track);
+              call.addTrack(track, localStream);
+            }, {
+              "audio": true
+            });
+          } else {
+            var track = localStream.getAudioTracks()[0];
+            localStream.removeTrack(track);
+            call.removeTrack(track);
+            track.stop();
+          }
         });
 
         var hangup = makeButton('btn-danger', "Hangup!", function() {
@@ -770,7 +792,7 @@ $(document).ready(function() {
             }, function() {});
         }
 
-        var buttons = makeButtonGroup().append([hangup, toggle, add, video, audio]);
+        var buttons = makeButtonGroup().append([hangup, toggle, video, audio]);
         var panel = makePanel(users.element).addClass('controls-wrapper');
         var controls = makeControls(call.id, [panel, input, buttons]).addClass('text-center').hide();
         renderStreams();
