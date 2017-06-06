@@ -620,8 +620,6 @@ $(document).ready(function() {
         var streams = {
             "You": {
                "stream": localStream,
-               "muted": false,
-               "paused": false
             }
         };
 
@@ -659,29 +657,7 @@ $(document).ready(function() {
             console.log("Remote stream for user " + user +  " started!");
             streams[user] = {
                 "stream": stream,
-                "muted": false,
-                "paused": false
             };
-            renderStreams();
-        });
-
-        call.onStreamMuted(function(m) {
-            streams[m.user].muted = true;
-            renderStreams();
-        });
-
-        call.onStreamUnmuted(function(m) {
-            streams[m.user].muted = false;
-            renderStreams();
-        });
-
-        call.onStreamPaused(function(m) {
-            streams[m.user].paused = true;
-            renderStreams();
-        });
-
-        call.onStreamUnpaused(function(m) {
-            streams[m.user].paused = false;
             renderStreams();
         });
 
@@ -776,19 +752,6 @@ $(document).ready(function() {
             });
         });
 
-        var mute = makeButton('btn-info', "(Un)mute stream", function() {
-            if(streams["You"].muted) {
-              call.unmute();
-              call.unpause();
-            } else {
-              call.mute();
-              call.pause();
-            }
-            streams["You"].muted = !streams["You"].muted;
-            streams["You"].paused = !streams["You"].paused;
-            renderStreams();
-        });
-
         var hangup = makeButton('btn-danger', "Hangup!", function() {
             endCall("hangup");
         });
@@ -807,7 +770,7 @@ $(document).ready(function() {
             }, function() {});
         }
 
-        var buttons = makeButtonGroup().append([hangup, mute, toggle, add, video, audio]);
+        var buttons = makeButtonGroup().append([hangup, toggle, add, video, audio]);
         var panel = makePanel(users.element).addClass('controls-wrapper');
         var controls = makeControls(call.id, [panel, input, buttons]).addClass('text-center').hide();
         renderStreams();

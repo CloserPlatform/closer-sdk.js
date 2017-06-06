@@ -117,55 +117,7 @@ const events: Array<wireEvents.Event> = [{
     reason: "reason",
     timestamp: Date.now()
   }
-} as wireEvents.CallActionSent, {
-  type: eventTypes.CALL_ACTION,
-  id: callId,
-  action: {
-    type: eventTypes.CALL_ACTION,
-    action: actionTypes.AUDIO_MUTED,
-    id: actionId,
-    call: callId,
-    user: alice,
-    timestamp: Date.now()
-  }
-} as wireEvents.CallActionSent, {
-  type: eventTypes.CALL_ACTION,
-  id: callId,
-  action: {
-    type: eventTypes.CALL_ACTION,
-    action: actionTypes.AUDIO_UNMUTED,
-    id: actionId,
-    call: callId,
-    user: alice,
-    timestamp: Date.now()
-  }
-} as wireEvents.CallActionSent, {
-  type: eventTypes.CALL_ACTION,
-  id: callId,
-  action: {
-    type: eventTypes.CALL_ACTION,
-    action: actionTypes.VIDEO_PAUSED,
-    id: actionId,
-    call: callId,
-    user: alice,
-    timestamp: Date.now()
-  }
-} as wireEvents.CallActionSent, {
-  type: eventTypes.CALL_ACTION,
-  id: callId,
-  action: {
-    type: eventTypes.CALL_ACTION,
-    action: actionTypes.VIDEO_UNPAUSED,
-    id: actionId,
-    call: callId,
-    user: alice,
-    timestamp: Date.now()
-  }
-} as wireEvents.CallActionSent,
-wireEvents.muteAudio(callId),
-wireEvents.unmuteAudio(callId),
-wireEvents.pauseVideo(callId),
-wireEvents.unpauseVideo(callId)];
+} as wireEvents.CallActionSent];
 
 describe("Protocol", () => {
   it("should be reversible", () => {

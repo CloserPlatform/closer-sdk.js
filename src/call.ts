@@ -49,10 +49,6 @@ export abstract class Call implements wireEntities.Call {
   protected onInvitedCallback: Callback<proto.CallAction>;
   private onAnsweredCallback: Callback<proto.CallAction>;
   private onRejectedCallback: Callback<proto.CallAction>;
-  private onMutedCallback: Callback<proto.CallAction>;
-  private onUnmutedCallback: Callback<proto.CallAction>;
-  private onPausedCallback: Callback<proto.CallAction>;
-  private onUnpausedCallback: Callback<proto.CallAction>;
 
   public abstract readonly callType: callType.CallType;
 
@@ -94,10 +90,6 @@ export abstract class Call implements wireEntities.Call {
     this.onInvitedCallback = nop;
     this.onAnsweredCallback = nop;
     this.onRejectedCallback = nop;
-    this.onMutedCallback = nop;
-    this.onUnmutedCallback = nop;
-    this.onPausedCallback = nop;
-    this.onUnpausedCallback = nop;
 
     this.events.onConcreteEvent(eventTypes.CALL_ACTION, this.id, (e: CallActionSent) => {
       switch (e.action.action) {
@@ -131,22 +123,6 @@ export abstract class Call implements wireEntities.Call {
           this.onRejectedCallback(e.action);
           break;
 
-        case actionTypes.AUDIO_MUTED:
-          this.onMutedCallback(e.action);
-          break;
-
-        case actionTypes.AUDIO_UNMUTED:
-          this.onUnmutedCallback(e.action);
-          break;
-
-        case actionTypes.VIDEO_PAUSED:
-          this.onPausedCallback(e.action);
-          break;
-
-        case actionTypes.VIDEO_UNPAUSED:
-          this.onUnpausedCallback(e.action);
-          break;
-
         default:
           this.events.raise("Invalid call_action event", e);
       }
@@ -167,6 +143,10 @@ export abstract class Call implements wireEntities.Call {
 
   removeTrack(track: MediaStreamTrack) {
     this.pool.removeTrack(track);
+  }
+
+  onRemoteStream(callback: RemoteStreamCallback) {
+    this.pool.onRemoteStream(callback);
   }
 
   setAnswerOptions(options: RTCAnswerOptions) {
@@ -208,22 +188,6 @@ export abstract class Call implements wireEntities.Call {
     return this.api.leaveCall(this.id, reason);
   }
 
-  mute() {
-    this.pool.muteStream();
-  }
-
-  unmute() {
-    this.pool.unmuteStream();
-  }
-
-  pause() {
-    this.pool.pauseStream();
-  }
-
-  unpause() {
-    this.pool.unpauseStream();
-  }
-
   onAnswered(callback: Callback<proto.CallAction>) {
     this.onAnsweredCallback = callback;
   }
@@ -242,26 +206,6 @@ export abstract class Call implements wireEntities.Call {
 
   onTransferred(callback: Callback<proto.CallAction>) {
     this.onTransferredCallback = callback;
-  }
-
-  onRemoteStream(callback: RemoteStreamCallback) {
-    this.pool.onRemoteStream(callback);
-  }
-
-  onStreamMuted(callback: Callback<proto.CallAction>) {
-    this.onMutedCallback = callback;
-  }
-
-  onStreamUnmuted(callback: Callback<proto.CallAction>) {
-    this.onUnmutedCallback = callback;
-  }
-
-  onStreamPaused(callback: Callback<proto.CallAction>) {
-    this.onPausedCallback = callback;
-  }
-
-  onStreamUnpaused(callback: Callback<proto.CallAction>) {
-    this.onUnpausedCallback = callback;
   }
 
   onActiveDevice(callback: Callback<CallActiveDevice>) {

@@ -370,42 +370,6 @@ export class RTCPool {
     Object.keys(this.connections).forEach((key) => this.destroy(key));
   }
 
-  muteStream() {
-    if (this.localStream && this.localStream.getAudioTracks().some((t) => t.enabled)) {
-      this.localStream.getAudioTracks().forEach((t) => {
-        t.enabled = false;
-      });
-      this.api.updateStream(this.call, "mute");
-    }
-  }
-
-  unmuteStream() {
-    if (this.localStream && this.localStream.getAudioTracks().some((t) => !t.enabled)) {
-      this.localStream.getAudioTracks().forEach((t) => {
-        t.enabled = true;
-      });
-      this.api.updateStream(this.call, "unmute");
-    }
-  }
-
-  pauseStream() {
-    if (this.localStream && this.localStream.getVideoTracks().some((t) => t.enabled)) {
-      this.localStream.getVideoTracks().forEach((t) => {
-        t.enabled = false;
-      });
-      this.api.updateStream(this.call, "pause");
-    }
-  }
-
-  unpauseStream() {
-    if (this.localStream && this.localStream.getVideoTracks().some((t) => !t.enabled)) {
-      this.localStream.getVideoTracks().forEach((t) => {
-        t.enabled = true;
-      });
-      this.api.updateStream(this.call, "unpause");
-    }
-  }
-
   setAnswerOptions(options: RTCAnswerOptions) {
     this.answerOptions = options;
   }

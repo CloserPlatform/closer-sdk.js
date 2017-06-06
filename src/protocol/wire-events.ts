@@ -26,10 +26,6 @@ export namespace eventTypes {
   export const ROOM_START_TYPING = "room_start_typing";
   export const RTC_DESCRIPTION = "rtc_description";
   export const RTC_CANDIDATE = "rtc_candidate";
-  export const STREAM_MUTE = "stream_mute";
-  export const STREAM_PAUSE = "stream_pause";
-  export const STREAM_UNMUTE = "stream_unmute";
-  export const STREAM_UNPAUSE = "stream_unpause";
 
   export const DISCONNECT = "disconnect";
 }
@@ -47,14 +43,6 @@ export namespace actionTypes {
   export const ANSWERED = "answered";
   export type REJECTED = "rejected";
   export const REJECTED = "rejected";
-  export type AUDIO_MUTED = "audio_muted";
-  export const AUDIO_MUTED = "audio_muted";
-  export type AUDIO_UNMUTED = "audio_unmuted";
-  export const AUDIO_UNMUTED = "audio_unmuted";
-  export type VIDEO_PAUSED = "video_paused";
-  export const VIDEO_PAUSED = "video_paused";
-  export type VIDEO_UNPAUSED = "video_unpaused";
-  export const VIDEO_UNPAUSED = "video_unpaused";
 }
 
 // JSON Events:
@@ -119,11 +107,6 @@ export interface Hello extends ServerInfo {
   deviceId: proto.ID;
 }
 
-export interface MuteAudio extends StreamUpdate {
-}
-export interface PauseVideo extends StreamUpdate {
-}
-
 export type Status = "away" | "available" | "unavailable";
 
 export interface PresenceRequest extends Event {
@@ -183,13 +166,6 @@ export interface RTCDescription extends Event {
   description: SDP;
 }
 
-export interface StreamUpdate extends Event {
-}
-export interface UnmuteAudio extends StreamUpdate {
-}
-export interface UnpauseVideo extends StreamUpdate {
-}
-
 // Internal events:
 export interface Disconnect extends Event {
   reason: string;
@@ -211,34 +187,6 @@ export function chatDelivered(id: proto.ID, timestamp: proto.Timestamp): ChatDel
     type: eventTypes.CHAT_DELIVERED,
     id,
     timestamp
-  };
-}
-
-export function muteAudio(id: proto.ID): MuteAudio {
-  return {
-    type: eventTypes.STREAM_MUTE,
-    id
-  };
-}
-
-export function unmuteAudio(id: proto.ID): UnmuteAudio {
-  return {
-    type: eventTypes.STREAM_UNMUTE,
-    id
-  };
-}
-
-export function pauseVideo(id: proto.ID): PauseVideo {
-  return {
-    type: eventTypes.STREAM_PAUSE,
-    id
-  };
-}
-
-export function unpauseVideo(id: proto.ID): UnpauseVideo {
-  return {
-    type: eventTypes.STREAM_UNPAUSE,
-    id
   };
 }
 
