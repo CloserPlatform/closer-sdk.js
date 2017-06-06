@@ -71,7 +71,7 @@ export abstract class Call implements wireEntities.Call {
     this.pool = createRTCPool(this.id, config, log, events, api);
 
     if (stream) {
-      this.addLocalStream(stream);
+      this.addStream(stream);
     }
 
     // By default do nothing:
@@ -153,6 +153,14 @@ export abstract class Call implements wireEntities.Call {
     });
   }
 
+  addStream(stream: MediaStream) {
+    stream.getTracks().forEach((track) => this.addTrack(track, stream));
+  }
+
+  removeStream(stream: MediaStream) {
+    stream.getTracks().forEach((track) => this.removeTrack(track));
+  }
+
   addTrack(track: MediaStreamTrack, stream?: MediaStream) {
     this.pool.addTrack(track, stream);
   }
@@ -182,7 +190,7 @@ export abstract class Call implements wireEntities.Call {
   }
 
   answer(stream: MediaStream): Promise<void> {
-    this.addLocalStream(stream);
+    this.addStream(stream);
     return this.api.answerCall(this.id);
   }
 
@@ -191,7 +199,7 @@ export abstract class Call implements wireEntities.Call {
   }
 
   pull(stream: MediaStream): Promise<void> {
-    this.addLocalStream(stream);
+    this.addStream(stream);
     return this.api.pullCall(this.id);
   }
 
@@ -266,10 +274,6 @@ export abstract class Call implements wireEntities.Call {
       callback(e);
     });
   }
-
-  protected addLocalStream(stream: MediaStream) {
-    stream.getTracks().forEach((t) => this.addTrack(t, stream))
-  }
 }
 
 export class DirectCall extends Call {
@@ -284,7 +288,7 @@ export class GroupCall extends Call {
   }
 
   join(stream: MediaStream): Promise<void> {
-    this.addLocalStream(stream);
+    this.addStream(stream);
     return this.api.joinCall(this.id);
   }
 

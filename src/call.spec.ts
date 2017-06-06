@@ -83,10 +83,6 @@ function makeCall(callType: CallType) {
   }
 }
 
-function addLocalStream(call: Call, stream: MediaStream) {
-  stream.getTracks().forEach((t) => call.addTrack(t, stream));
-}
-
 ["DirectCall", "GroupCall"].forEach((d) => {
   describe(d, () => {
     let events;
@@ -111,7 +107,7 @@ function addLocalStream(call: Call, stream: MediaStream) {
 
     whenever(isWebRTCSupported())("should run a callback on join", (done) => {
       getStream((stream) => {
-        addLocalStream(call, stream);
+        call.addStream(stream);
 
         events.onError((error) => done.fail());
 
@@ -239,7 +235,7 @@ function addLocalStream(call: Call, stream: MediaStream) {
 
     whenever(isWebRTCSupported())("should maintain the user list", (done) => {
       getStream((stream) => {
-        addLocalStream(call, stream);
+        call.addStream(stream);
 
         events.onError((error) => done.fail());
 

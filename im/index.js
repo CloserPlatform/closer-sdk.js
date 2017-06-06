@@ -748,8 +748,8 @@ $(document).ready(function() {
 
         function replaceStream(stream) {
             stopStream();
-            call.removeLocalStream();
-            call.addLocalStream(stream);
+            call.removeStream(localStream);
+            call.addStream(stream);
             streams["You"].stream = stream;
             localStream = stream;
             renderStreams();
