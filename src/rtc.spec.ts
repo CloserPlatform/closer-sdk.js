@@ -131,14 +131,14 @@ describe("RTCConnection", () => {
     }, logError(done));
   });
 
-  function testRenegotiation(peerA, peerB, caller, callee, calleeId, done) {
+  function testRenegotiation(peerA, peerB, trigger, calleeId, done) {
     // 0. Initial setup...
     getStream((streamA) => {
       log("Got stream A.");
       getStream((streamB) => {
         log("Got stream B.");
-        addLocalStream(caller, streamA);
-        addLocalStream(callee, streamB);
+        addLocalStream(peerA, streamA);
+        addLocalStream(peerB, streamB);
 
         // 4. Peers exchange candidates.
         let candidates = [];
@@ -160,25 +160,18 @@ describe("RTCConnection", () => {
               // Not to exchange any candidates after the renegotiation.
             });
 
+            // 6. Innitiator sends an offer to the peer.
+            api.onDescription = (id, peer, description) => {
+              expect(description.type).toBe("offer");
+              expect(peer).toBe(calleeId)
+              log("Renegotiation successful.");
+              done();
+            };
+
             // 5. Innitiator triggers a renegotiation.
-            getStream((newStream) => {
-              log("Got new stream.");
-
-              // 6. Innitiator sends an offer to the peer.
-              api.onDescription = (id, peer, description) => {
-                expect(description.type).toBe("offer");
-                expect(peer).toBe(calleeId)
-                log("Renegotiation successful.");
-                done();
-              };
-
-              // FIXME This sleep is required so that the connection has the time to
-              // FIXME transition into an established state.
-              sleep(100).then(() => {
-                log("Triggering renegotiation.");
-                addLocalStream(caller, newStream);
-              });
-            }, logError(done));
+            // FIXME This sleep is required so that the connection has the time to
+            // FIXME transition into an established state.
+            sleep(100).then(trigger);
           }).catch(logError(done));
         }
 
@@ -211,14 +204,42 @@ describe("RTCConnection", () => {
     }, logError(done));
   }
 
-  whenever(isWebRTCSupported())("should renegotiate SDP answers", (done) => {
+  whenever(isWebRTCSupported())("should renegotiate SDP on caller side", (done) => {
     const peerB = createRTCConnection(callId, peerAId, config.chat.rtc, log, events, api);
-    testRenegotiation(peerA, peerB, peerB, peerA, peerAId, done);
+    testRenegotiation(peerA, peerB, () => {
+      getStream((newStream) => {
+        log("Got new stream. Triggering renegotiation...");
+        addLocalStream(peerA, newStream);
+      }, logError(done));
+    }, peerBId, done);
   });
 
-  whenever(isWebRTCSupported())("should renegotiate SDP offers", (done) => {
+  whenever(isWebRTCSupported())("should renegotiate SDP on calee side", (done) => {
     const peerB = createRTCConnection(callId, peerAId, config.chat.rtc, log, events, api);
-    testRenegotiation(peerA, peerB, peerA, peerB, peerBId, done);
+    testRenegotiation(peerA, peerB, () => {
+      getStream((newStream) => {
+        log("Got new stream. Triggering renegotiation...");
+        addLocalStream(peerB, newStream);
+      }, logError(done));
+    }, peerAId, done);
+  });
+
+  whenever(isWebRTCSupported())("should renegotiate on addTrack", (done) => {
+    const peerB = createRTCConnection(callId, peerAId, config.chat.rtc, log, events, api);
+    testRenegotiation(peerA, peerB, () => {
+      getStream((newStream) => {
+        log("Got new stream. Adding a stream track...");
+        peerA.addTrack(newStream.getTracks()[0], newStream);
+      }, logError(done));
+    }, peerBId, done);
+  });
+
+  whenever(isWebRTCSupported())("should renegotiate on removeTrack", (done) => {
+    const peerB = createRTCConnection(callId, peerAId, config.chat.rtc, log, events, api);
+    testRenegotiation(peerA, peerB, () => {
+      log("Removing a stream track...");
+      peerA.removeTrack((peerA as any).conn.getLocalStreams()[0].getTracks()[0]);
+    }, peerBId, done);
   });
 });
 
