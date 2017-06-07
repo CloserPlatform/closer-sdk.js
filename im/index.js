@@ -619,7 +619,9 @@ $(document).ready(function() {
         var users = makeUserList(function() {});
         var streams = {
             "You": {
-               "stream": localStream,
+                "stream": localStream,
+                "muted": localStream.getAudioTracks().length === 0,
+                "paused": localStream.getVideoTracks().length === 0
             }
         };
 
@@ -657,6 +659,8 @@ $(document).ready(function() {
             console.log("Remote stream for user " + user +  " started!");
             streams[user] = {
                 "stream": stream,
+                "muted": stream.getAudioTracks().length === 0,
+                "paused": stream.getVideoTracks().length === 0
             };
             renderStreams();
         });
@@ -718,8 +722,20 @@ $(document).ready(function() {
         }
 
         function stopStream() {
-            if(typeof localStream.stop !== "undefined") localStream.stop();
-            else localStream.getTracks().map(function(t) { t.stop(); });
+            localStream.getTracks().map(function(t) { t.stop(); });
+        }
+
+        function replaceStream(stream) {
+            call.removeStream(localStream);
+            stopStream();
+            call.addStream(stream);
+            streams["You"] = {
+                "stream": stream,
+                "muted": stream.getAudioTracks().length === 0,
+                "paused": stream.getVideoTracks().length === 0,
+            };
+            localStream = stream;
+            renderStreams();
         }
 
         // FIXME Use a proper name instead of call.id
@@ -730,48 +746,21 @@ $(document).ready(function() {
         });
 
         var toggle = makeButton('btn-warning', "Toggle stream", function() {
-            createImageStream(randomGif(), 10, function (stream) {
-                stopStream();
-                call.removeStream(localStream);
-                call.addStream(stream);
-                streams["You"].stream = stream;
-                localStream = stream;
-                renderStreams();
-            });
+            createImageStream(randomGif(), 10, replaceStream);
         });
 
         var video = makeCheckbox(call.id + "-video", " Video", constraints.video, function(isChecked) {
-          if(isChecked) {
-            createStream(function(stream) {
-              var track = stream.getVideoTracks()[0];
-              localStream.addTrack(track);
-              call.addTrack(track, localStream);
-            }, {
-              "video": true
+            createStream(replaceStream, {
+                "video": isChecked,
+                "audio": $("#" + call.id + "-audio").is(":checked")
             });
-          } else {
-            var track = localStream.getVideoTracks()[0];
-            localStream.removeTrack(track);
-            call.removeTrack(track);
-            track.stop();
-          }
         });
 
         var audio = makeCheckbox(call.id + "-audio", " Audio", constraints.audio, function(isChecked) {
-          if(isChecked) {
-            createStream(function(stream) {
-              var track = stream.getAudioTracks()[0];
-              localStream.addTrack(track);
-              call.addTrack(track, localStream);
-            }, {
-              "audio": true
+            createStream(replaceStream, {
+                "video": $("#" + call.id + "-video").is(":checked"),
+                "audio": isChecked
             });
-          } else {
-            var track = localStream.getAudioTracks()[0];
-            localStream.removeTrack(track);
-            call.removeTrack(track);
-            track.stop();
-          }
         });
 
         var hangup = makeButton('btn-danger', "Hangup!", function() {
