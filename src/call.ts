@@ -22,6 +22,7 @@ export namespace callType {
   export enum CallType {
     DIRECT,
     GROUP,
+    BUSINESS,
   }
 
   export function isDirect(call: Call): call is DirectCall {
@@ -31,6 +32,10 @@ export namespace callType {
   export function isGroup(call: Call): call is GroupCall {
     return call.callType === CallType.GROUP;
   }
+
+  export function isBusiness(call: Call): call is BusinessCall {
+    return call.callType === CallType.BUSINESS;
+  }
 }
 
 export abstract class Call implements wireEntities.Call {
@@ -39,6 +44,8 @@ export abstract class Call implements wireEntities.Call {
   public ended: proto.Timestamp;
   public users: Array<proto.ID>;
   public direct: boolean;
+  public orgId: proto.ID;
+  public externalId: string;
 
   protected api: ArtichokeAPI;
   protected events: EventHandler;
@@ -67,6 +74,8 @@ export abstract class Call implements wireEntities.Call {
     this.ended = call.ended;
     this.users = call.users;
     this.direct = call.direct;
+    this.orgId = call.orgId;
+    this.externalId = call.externalId;
 
     this.log = log;
     this.events = events;
@@ -301,10 +310,16 @@ export class GroupCall extends Call {
   }
 }
 
+export class BusinessCall extends GroupCall {
+  public readonly callType: callType.CallType = callType.CallType.BUSINESS;
+}
+
 export function createCall(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
                            api: ArtichokeAPI, stream?: MediaStream): Call {
   if (call.direct) {
     return new DirectCall(call, config, log, events, api, stream);
+  } else if (call.orgId) {
+    return new BusinessCall(call, config, log, events, api, stream);
   } else {
     return new GroupCall(call, config, log, events, api, stream);
   }

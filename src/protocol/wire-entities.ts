@@ -6,6 +6,8 @@ export interface Call {
   ended?: Timestamp;
   users: Array<ID>;
   direct: boolean;
+  orgId?: ID;
+  externalId?: string;
 }
 
 export interface Media extends RoomArchivable, MediaItem, Editable {}
