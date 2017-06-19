@@ -270,8 +270,6 @@ export class RTCPool {
   private tracks: Array<MediaStreamAndTrack>;
   private onRemoteStreamCallback: RemoteStreamCallback;
 
-  private localStream: MediaStream; // FIXME Remove.
-
   constructor(call: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.api = api;
     this.events = events;
@@ -285,7 +283,6 @@ export class RTCPool {
 
     this.connections = {};
     this.tracks = [];
-    this.localStream = undefined; // FIXME Remove.
 
     this.onRemoteStreamCallback = (peer, stream) => {
       // Do nothing.
