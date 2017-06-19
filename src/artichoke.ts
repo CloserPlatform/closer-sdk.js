@@ -63,23 +63,6 @@ export class Artichoke {
     this.api.disconnect();
   }
 
-  // Bot API:
-  onBotUpdate(callback: Callback<events.BotUpdated>) {
-    this.events.onEvent(eventTypes.BOT_UPDATED, callback);
-  }
-
-  createBot(name: string, callback?: string): Promise<proto.Bot> {
-    return this.api.createBot(name, callback);
-  }
-
-  getBot(bot: proto.ID): Promise<proto.Bot> {
-    return this.api.getBot(bot);
-  }
-
-  getBots(): Promise<Array<proto.Bot>> {
-    return this.api.getBots();
-  }
-
   // GroupCall API:
   onCall(callback: Callback<events.CallInvitation>) {
     this.events.onEvent(eventTypes.CALL_INVITATION, callback);

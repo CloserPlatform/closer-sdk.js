@@ -361,7 +361,7 @@ $(document).ready(function() {
         }
     }
 
-    function makeGroupChatbox(room, directRoomBuilder, callBuilder, botBuilder) {
+    function makeGroupChatbox(room, directRoomBuilder, callBuilder) {
         console.log("Building group chatbox for room: ", room);
 
         var users = makeUserList(function(user) {
@@ -440,10 +440,6 @@ $(document).ready(function() {
             room.invite(getSessionId(user).toString());
         }, function() {});
 
-        var createBot = makeNInputField(2, "Bot!", function(args) {
-            botBuilder(args[0], args[1], room);
-        });
-
         var call = makeButton("btn-success", "Conference!", function() {
             if(!call.hasClass("disabled")) {
                 call.addClass("disabled");
@@ -476,7 +472,7 @@ $(document).ready(function() {
 
         var buttons = makeButtonGroup().append([call, gif, brag]);
         var panel = makePanel(users.element).addClass('controls-wrapper');
-        var controls = makeControls(room.id, [panel, invite, createBot, buttons]).addClass('text-center').hide();
+        var controls = makeControls(room.id, [panel, invite, buttons]).addClass('text-center').hide();
 
         return {
             element: chatbox,
@@ -533,7 +529,7 @@ $(document).ready(function() {
             if(room.direct) {
                 chatbox = makeDirectChatbox(room, directCallBuilder(session));
             } else {
-                chatbox = makeGroupChatbox(room, directRoomBuilder(session), callBuilder(session), botBuilder(session));
+                chatbox = makeGroupChatbox(room, directRoomBuilder(session), callBuilder(session));
             }
 
             room.getHistory().then(function(msgs) {
@@ -581,18 +577,6 @@ $(document).ready(function() {
                 addRoom(room, session).switchTo();
             }).catch(function(error) {
                 console.log("Creating a room failed: ", error);
-            });
-        }
-    }
-
-    function botBuilder(session) {
-        return function(name, callback, room) {
-            return session.chat.createBot(name, callback).then(function(bot) {
-                internUser(bot);
-                room.invite(bot.id);
-                alert("Bot credentials: " + bot.id + " " + bot.apiKey);
-            }).catch(function(error) {
-                console.log("Creating a bot failed: ", error);
             });
         }
     }
@@ -1008,13 +992,6 @@ $(document).ready(function() {
                         session.chat.setStatus(status);
                     });
 
-                    session.chat.getBots().then(function(bots) {
-                        console.log("Bots: ", bots);
-                        bots.forEach(internUser);
-                    }).catch(function(error) {
-                        console.log("Fetching bots failed: ", error);
-                    });
-
                     session.chat.getRoster().then(function(rooms) {
                         console.log("Roster: ", rooms);
 
@@ -1034,11 +1011,6 @@ $(document).ready(function() {
                         }
                     }).catch(function(error) {
                         console.log("Fetching roster failed:", error);
-                    });
-
-                    session.chat.onBotUpdate(function(m) {
-                        console.log("Bot " + m.bot.name + " has been updated: ", m.bot);
-                        internUser(m.bot);
                     });
 
                     session.chat.onStatusUpdate(function(m) {

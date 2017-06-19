@@ -24,13 +24,6 @@ export interface RoomArchivable extends Archivable {
     room: ID;
 }
 
-export interface Bot {
-  id: ID;
-  name: string;
-  creator: ID;
-  callback?: string;
-}
-
 export interface CallAction extends CallArchivable {
   action: actionTypes.JOINED | actionTypes.TRANSFERRED | actionTypes.LEFT| actionTypes.INVITED
     | actionTypes.REJECTED | actionTypes.ANSWERED;
@@ -106,11 +99,6 @@ export interface Invite {
   user: ID;
 }
 
-export interface CreateBot {
-  name: string;
-  callback?: string;
-}
-
 export function createCall(users: Array<ID>): CreateCall {
   return {
     users
@@ -145,12 +133,5 @@ export function createDirectRoom(user: ID): CreateDirectRoom {
 export function invite(user): Invite {
   return {
     user
-  };
-}
-
-export function createBot(name: string, callback?: string): CreateBot {
-  return {
-    name,
-    callback
   };
 }
