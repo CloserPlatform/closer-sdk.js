@@ -2,7 +2,6 @@ import * as proto from "./protocol";
 import * as wireEntities from "./wire-entities";
 
 export namespace eventTypes {
-  export const BOT_UPDATED = "bot_updated";
   export const CALL_ACTION = "call_action";
   export const CALL_END = "call_end";
   export const CALL_INVITATION = "call_invitation";
@@ -62,10 +61,6 @@ export interface Event {
   type: proto.Type;
   ref?: proto.Ref;
   id?: proto.ID;
-}
-
-export interface BotUpdated extends Event {
-  bot: proto.Bot;
 }
 
 export interface CallActionSent extends Event {

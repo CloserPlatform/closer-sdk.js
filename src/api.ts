@@ -159,7 +159,6 @@ export class ArtichokeAPI extends APIWithWebsocket {
   protected url: string;
   private archivePath = "archive/items";
   private callPath = "calls";
-  private botPath = "bots";
   private roomPath = "rooms";
 
   private wsUrl: string;
@@ -332,19 +331,6 @@ export class ArtichokeAPI extends APIWithWebsocket {
   // Presence API:
   setStatus(status: wireEvents.Status) {
     this.send(wireEvents.presenceRequest(status));
-  }
-
-  // Bot API:
-  createBot(name: string, callback?: string): Promise<proto.Bot> {
-    return this.postAuth<proto.CreateBot, proto.Bot>([this.url, this.botPath], proto.createBot(name, callback));
-  }
-
-  getBot(botId: proto.ID): Promise<proto.Bot> {
-    return this.getAuth<proto.Bot>([this.url, this.botPath, botId]);
-  }
-
-  getBots(): Promise<Array<proto.Bot>> {
-    return this.getAuth<Array<proto.Bot>>([this.url, this.botPath]);
   }
 
   private getAuth<Response>(path: Array<string>): Promise<Response> {

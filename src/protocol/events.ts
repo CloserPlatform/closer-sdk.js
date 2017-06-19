@@ -12,9 +12,6 @@ import { eventTypes } from "./wire-events";
 export interface Event extends wireEvents.Event {
 }
 
-export interface BotUpdated extends Event, wireEvents.BotUpdated {
-}
-
 export interface CallActionSent extends Event, wireEvents.CallActionSent {
 }
 
