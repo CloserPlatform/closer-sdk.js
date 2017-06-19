@@ -53,12 +53,6 @@ export interface Heartbeat extends ServerInfo, wireEvents.Heartbeat {
 export interface Hello extends ServerInfo, wireEvents.Hello {
 }
 
-export interface MuteAudio extends StreamUpdate, wireEvents.MuteAudio {
-}
-
-export interface PauseVideo extends StreamUpdate, wireEvents.PauseVideo {
-}
-
 export interface PresenceRequest extends Event, wireEvents.PresenceRequest {
 }
 
@@ -96,15 +90,6 @@ export interface RTCCandidate extends Event, wireEvents.RTCCandidate {
 }
 
 export interface RTCDescription extends Event, wireEvents.RTCDescription {
-}
-
-export interface StreamUpdate extends Event, wireEvents.StreamUpdate {
-}
-
-export interface UnmuteAudio extends StreamUpdate, wireEvents.UnmuteAudio {
-}
-
-export interface UnpauseVideo extends StreamUpdate, wireEvents.UnpauseVideo {
 }
 
 export interface Disconnect extends Event, wireEvents.Disconnect {

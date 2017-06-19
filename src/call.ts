@@ -8,15 +8,12 @@ import { actionTypes, eventTypes } from "./protocol/wire-events";
 import {
   createRTCPool,
   HackedRTCOfferOptions as RTCOfferOptions,
+  RemoteStreamCallback,
   RTCAnswerOptions,
   RTCConfig,
   RTCConnectionConstraints,
   RTCPool
 } from "./rtc";
-
-export interface RemoteStreamCallback {
-  (peer: proto.ID, stream: MediaStream): void;
-}
 
 export namespace callType {
   export enum CallType {
@@ -53,17 +50,12 @@ export abstract class Call implements wireEntities.Call {
   private log: Logger;
   protected pool: RTCPool;
   private onActiveDeviceCallback: Callback<CallActiveDevice>;
-  private onRemoteStreamCallback: RemoteStreamCallback;
   private onLeftCallback: Callback<proto.CallAction>;
   private onJoinedCallback: Callback<proto.CallAction>;
   private onTransferredCallback: Callback<proto.CallAction>;
   protected onInvitedCallback: Callback<proto.CallAction>;
   private onAnsweredCallback: Callback<proto.CallAction>;
   private onRejectedCallback: Callback<proto.CallAction>;
-  private onMutedCallback: Callback<proto.CallAction>;
-  private onUnmutedCallback: Callback<proto.CallAction>;
-  private onPausedCallback: Callback<proto.CallAction>;
-  private onUnpausedCallback: Callback<proto.CallAction>;
 
   public abstract readonly callType: callType.CallType;
 
@@ -84,18 +76,10 @@ export abstract class Call implements wireEntities.Call {
     this.pool = createRTCPool(this.id, config, log, events, api);
 
     if (stream) {
-      this.addLocalStream(stream);
+      this.addStream(stream);
     }
 
     // By default do nothing:
-    this.onRemoteStreamCallback = (peer, s) => {
-      // Do nothing.
-    };
-
-    this.pool.onConnection((peer, rtc) => {
-      rtc.onRemoteStream((s) => this.onRemoteStreamCallback(peer, s));
-    });
-
     this.onActiveDeviceCallback = (e: CallActiveDevice) => {
       // Do nothing.
     };
@@ -115,22 +99,18 @@ export abstract class Call implements wireEntities.Call {
     this.onInvitedCallback = nop;
     this.onAnsweredCallback = nop;
     this.onRejectedCallback = nop;
-    this.onMutedCallback = nop;
-    this.onUnmutedCallback = nop;
-    this.onPausedCallback = nop;
-    this.onUnpausedCallback = nop;
 
     this.events.onConcreteEvent(eventTypes.CALL_ACTION, this.id, (e: CallActionSent) => {
       switch (e.action.action) {
         case actionTypes.JOINED:
           this.users.push(e.action.user);
-          this.pool.create(e.action.user).onRemoteStream((s) => this.onRemoteStreamCallback(e.action.user, s));
+          this.pool.create(e.action.user);
           this.onJoinedCallback(e.action);
           break;
 
         case actionTypes.TRANSFERRED:
           this.pool.destroy(e.action.user);
-          this.pool.create(e.action.user).onRemoteStream((s) => this.onRemoteStreamCallback(e.action.user, s));
+          this.pool.create(e.action.user);
           this.onTransferredCallback(e.action);
           break;
 
@@ -152,34 +132,30 @@ export abstract class Call implements wireEntities.Call {
           this.onRejectedCallback(e.action);
           break;
 
-        case actionTypes.AUDIO_MUTED:
-          this.onMutedCallback(e.action);
-          break;
-
-        case actionTypes.AUDIO_UNMUTED:
-          this.onUnmutedCallback(e.action);
-          break;
-
-        case actionTypes.VIDEO_PAUSED:
-          this.onPausedCallback(e.action);
-          break;
-
-        case actionTypes.VIDEO_UNPAUSED:
-          this.onUnpausedCallback(e.action);
-          break;
-
         default:
           this.events.raise("Invalid call_action event", e);
       }
     });
   }
 
-  addLocalStream(stream: MediaStream) {
-    this.pool.addLocalStream(stream);
+  addStream(stream: MediaStream) {
+    stream.getTracks().forEach((track) => this.addTrack(track, stream));
   }
 
-  removeLocalStream() {
-    this.pool.removeLocalStream();
+  removeStream(stream: MediaStream) {
+    stream.getTracks().forEach((track) => this.removeTrack(track));
+  }
+
+  addTrack(track: MediaStreamTrack, stream?: MediaStream) {
+    this.pool.addTrack(track, stream);
+  }
+
+  removeTrack(track: MediaStreamTrack) {
+    this.pool.removeTrack(track);
+  }
+
+  onRemoteStream(callback: RemoteStreamCallback) {
+    this.pool.onRemoteStream(callback);
   }
 
   setAnswerOptions(options: RTCAnswerOptions) {
@@ -203,7 +179,7 @@ export abstract class Call implements wireEntities.Call {
   }
 
   answer(stream: MediaStream): Promise<void> {
-    this.addLocalStream(stream);
+    this.addStream(stream);
     return this.api.answerCall(this.id);
   }
 
@@ -212,29 +188,13 @@ export abstract class Call implements wireEntities.Call {
   }
 
   pull(stream: MediaStream): Promise<void> {
-    this.addLocalStream(stream);
+    this.addStream(stream);
     return this.api.pullCall(this.id);
   }
 
   leave(reason: string): Promise<void> {
     this.pool.destroyAll();
     return this.api.leaveCall(this.id, reason);
-  }
-
-  mute() {
-    this.pool.muteStream();
-  }
-
-  unmute() {
-    this.pool.unmuteStream();
-  }
-
-  pause() {
-    this.pool.pauseStream();
-  }
-
-  unpause() {
-    this.pool.unpauseStream();
   }
 
   onAnswered(callback: Callback<proto.CallAction>) {
@@ -255,26 +215,6 @@ export abstract class Call implements wireEntities.Call {
 
   onTransferred(callback: Callback<proto.CallAction>) {
     this.onTransferredCallback = callback;
-  }
-
-  onRemoteStream(callback: RemoteStreamCallback) {
-    this.onRemoteStreamCallback = callback;
-  }
-
-  onStreamMuted(callback: Callback<proto.CallAction>) {
-    this.onMutedCallback = callback;
-  }
-
-  onStreamUnmuted(callback: Callback<proto.CallAction>) {
-    this.onUnmutedCallback = callback;
-  }
-
-  onStreamPaused(callback: Callback<proto.CallAction>) {
-    this.onPausedCallback = callback;
-  }
-
-  onStreamUnpaused(callback: Callback<proto.CallAction>) {
-    this.onUnpausedCallback = callback;
   }
 
   onActiveDevice(callback: Callback<CallActiveDevice>) {
@@ -301,7 +241,7 @@ export class GroupCall extends Call {
   }
 
   join(stream: MediaStream): Promise<void> {
-    this.addLocalStream(stream);
+    this.addStream(stream);
     return this.api.joinCall(this.id);
   }
 

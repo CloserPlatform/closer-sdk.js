@@ -619,9 +619,9 @@ $(document).ready(function() {
         var users = makeUserList(function() {});
         var streams = {
             "You": {
-               "stream": localStream,
-               "muted": false,
-               "paused": false
+                "stream": localStream,
+                "muted": localStream.getAudioTracks().length === 0,
+                "paused": localStream.getVideoTracks().length === 0
             }
         };
 
@@ -659,29 +659,9 @@ $(document).ready(function() {
             console.log("Remote stream for user " + user +  " started!");
             streams[user] = {
                 "stream": stream,
-                "muted": false,
-                "paused": false
+                "muted": stream.getAudioTracks().length === 0,
+                "paused": stream.getVideoTracks().length === 0
             };
-            renderStreams();
-        });
-
-        call.onStreamMuted(function(m) {
-            streams[m.user].muted = true;
-            renderStreams();
-        });
-
-        call.onStreamUnmuted(function(m) {
-            streams[m.user].muted = false;
-            renderStreams();
-        });
-
-        call.onStreamPaused(function(m) {
-            streams[m.user].paused = true;
-            renderStreams();
-        });
-
-        call.onStreamUnpaused(function(m) {
-            streams[m.user].paused = false;
             renderStreams();
         });
 
@@ -742,15 +722,18 @@ $(document).ready(function() {
         }
 
         function stopStream() {
-            if(typeof localStream.stop !== "undefined") localStream.stop();
-            else localStream.getTracks().map(function(t) { t.stop(); });
+            localStream.getTracks().map(function(t) { t.stop(); });
         }
 
         function replaceStream(stream) {
+            call.removeStream(localStream);
             stopStream();
-            call.removeLocalStream();
-            call.addLocalStream(stream);
-            streams["You"].stream = stream;
+            call.addStream(stream);
+            streams["You"] = {
+                "stream": stream,
+                "muted": stream.getAudioTracks().length === 0,
+                "paused": stream.getVideoTracks().length === 0,
+            };
             localStream = stream;
             renderStreams();
         }
@@ -766,27 +749,18 @@ $(document).ready(function() {
             createImageStream(randomGif(), 10, replaceStream);
         });
 
-        var video = makeCheckbox(call.id + "-video", " Video", constraints.video);
-        var audio = makeCheckbox(call.id + "-audio", " Audio", constraints.audio);
-
-        var add = makeButton("btn-success", "Add stream", function() {
+        var video = makeCheckbox(call.id + "-video", " Video", constraints.video, function(isChecked) {
             createStream(replaceStream, {
-                "video": $("#" + call.id + "-video").is(":checked"),
+                "video": isChecked,
                 "audio": $("#" + call.id + "-audio").is(":checked")
             });
         });
 
-        var mute = makeButton('btn-info', "(Un)mute stream", function() {
-            if(streams["You"].muted) {
-              call.unmute();
-              call.unpause();
-            } else {
-              call.mute();
-              call.pause();
-            }
-            streams["You"].muted = !streams["You"].muted;
-            streams["You"].paused = !streams["You"].paused;
-            renderStreams();
+        var audio = makeCheckbox(call.id + "-audio", " Audio", constraints.audio, function(isChecked) {
+            createStream(replaceStream, {
+                "video": $("#" + call.id + "-video").is(":checked"),
+                "audio": isChecked
+            });
         });
 
         var hangup = makeButton('btn-danger', "Hangup!", function() {
@@ -807,7 +781,7 @@ $(document).ready(function() {
             }, function() {});
         }
 
-        var buttons = makeButtonGroup().append([hangup, mute, toggle, add, video, audio]);
+        var buttons = makeButtonGroup().append([hangup, toggle, video, audio]);
         var panel = makePanel(users.element).addClass('controls-wrapper');
         var controls = makeControls(call.id, [panel, input, buttons]).addClass('text-center').hide();
         renderStreams();

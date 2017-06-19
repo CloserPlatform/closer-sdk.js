@@ -248,16 +248,6 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<void, void>([this.url, this.callPath, callId, "invite", sessionId]);
   }
 
-  updateStream(callId: proto.ID, update: "mute" | "unmute" | "pause" | "unpause") {
-    const updates = {
-      mute: wireEvents.muteAudio(callId),
-      unmute: wireEvents.unmuteAudio(callId),
-      pause: wireEvents.pauseVideo(callId),
-      unpause: wireEvents.unpauseVideo(callId)
-    };
-    this.send(updates[update]);
-  }
-
   // GroupRoom API:
   createRoom(name: string): Promise<wireEntities.Room> {
     return this.postAuth<proto.CreateRoom, wireEntities.Room>([this.url, this.roomPath], proto.createRoom(name));

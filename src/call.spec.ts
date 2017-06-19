@@ -18,7 +18,6 @@ class APIMock extends ArtichokeAPI {
   answered = false;
   rejected: string;
   invited: string;
-  updates: Array<string> = [];
 
   constructor() {
     super(apiKey, config.chat, log);
@@ -55,10 +54,6 @@ class APIMock extends ArtichokeAPI {
 
   sendCandidate(id, peer, candidate) {
     // Do nothing.
-  }
-
-  updateStream(id, update) {
-    this.updates.push(update);
   }
 }
 
@@ -107,7 +102,7 @@ function makeCall(callType: CallType) {
 
     whenever(isWebRTCSupported())("should run a callback on join", (done) => {
       getStream((stream) => {
-        call.addLocalStream(stream);
+        call.addStream(stream);
 
         events.onError((error) => done.fail());
 
@@ -235,7 +230,7 @@ function makeCall(callType: CallType) {
 
     whenever(isWebRTCSupported())("should maintain the user list", (done) => {
       getStream((stream) => {
-        (call as any).pool.addLocalStream(stream);
+        call.addStream(stream);
 
         events.onError((error) => done.fail());
 
@@ -302,67 +297,6 @@ function makeCall(callType: CallType) {
         expect(api.left).toBe("reason");
         done();
       });
-    });
-
-    whenever(isWebRTCSupported())("should allow updating the stream", (done) => {
-      getStream((stream) => {
-        events.onError((error) => done.fail());
-
-        call.answer(stream).then(() => {
-          call.unmute();
-          call.mute();
-          call.mute();
-          call.unmute();
-          call.pause();
-          call.unpause();
-          call.unpause();
-          expect(api.updates).toEqual(["mute", "unmute", "pause", "unpause"]);
-          done();
-        });
-      }, (error) => done.fail());
-    });
-
-    it("should not send actions when no stream is available", () => {
-      call.mute();
-      call.unmute();
-      call.pause();
-      call.unpause();
-      expect(api.updates).toEqual([]);
-    });
-
-    it("should run a callback on stream updates", (done) => {
-      events.onError((error) => done.fail());
-
-      call.onStreamMuted((mute) => {
-        expect(mute.user).toBe(alice);
-
-        call.onStreamPaused((pause) => {
-          expect(pause.user).toBe(alice);
-          done();
-        });
-
-        events.notify({
-          type: eventTypes.CALL_ACTION,
-          id: call.id,
-          action: {
-            action: actionTypes.VIDEO_PAUSED,
-            call: call.id,
-            user: alice,
-            timestamp: Date.now()
-          }
-        } as Event);
-      });
-
-      events.notify({
-        type: eventTypes.CALL_ACTION,
-        id: call.id,
-        action: {
-          action: actionTypes.AUDIO_MUTED,
-          call: call.id,
-          user: alice,
-          timestamp: Date.now()
-        }
-      } as Event);
     });
   });
 });
