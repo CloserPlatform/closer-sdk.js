@@ -3,7 +3,8 @@ import {JSONWebSocket} from "./jsonws";
 
 describe("JSONWebSocket", () => {
   whenever(!isPhantomJS())("should call a callback on connection error", (done) => {
-    let jws = new JSONWebSocket("ws://invalid.url", log);
+    let jws = new JSONWebSocket(log);
     jws.onError((error) => done());
+    jws.connect("ws://invalid.url");
   });
 });

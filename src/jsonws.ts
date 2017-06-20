@@ -4,18 +4,34 @@ import * as wireEvents from "./protocol/wire-events";
 
 export class JSONWebSocket {
   private log: Logger;
-  private url: string;
   private socket: WebSocket;
 
-  constructor(url: string, log: Logger) {
-    this.log = log;
-    this.url = url;
+  private url: string;
+  private onCloseCallback: Callback<CloseEvent>;
+  private onErrorCallback: Callback<Event>;
+  private onMessageCallback: Callback<MessageEvent>;
 
-    this.log("Connecting to: " + this.url);
+  constructor(log: Logger) {
+    this.log = log;
+  }
+
+  connect(url: string) {
+    this.log("WS connecting to: " + url);
+
+    this.url = url;
     this.socket = new WebSocket(url);
+
     this.socket.onopen = () => {
       this.log("WS connected to: " + url);
     };
+
+    this.socket.onclose = this.onCloseCallback;
+    this.socket.onerror = this.onErrorCallback;
+    this.socket.onmessage = this.onMessageCallback;
+  }
+
+  reconnect() {
+    this.connect(this.url);
   }
 
   disconnect() {
@@ -23,21 +39,21 @@ export class JSONWebSocket {
   }
 
   onDisconnect(callback: Callback<wireEvents.Disconnect>) {
-    this.socket.onclose = (close) => {
+    this.onCloseCallback = (close) => {
       this.log("WS disconnected: " + close.reason);
       callback(wireEvents.disconnect(close.code, close.reason));
     };
   }
 
   onError(callback: Callback<wireEvents.Error>) {
-    this.socket.onerror = (err) => {
+    this.onErrorCallback = (err) => {
       this.log("WS error: " + err);
       callback(wireEvents.error("Websocket connection error.", err));
     };
   }
 
   onEvent(callback: Callback<wireEvents.Event>) {
-    this.socket.onmessage = (event) => {
+    this.onMessageCallback = (event) => {
       this.log("WS received: " + event.data);
       callback(wireEvents.read(event.data) as wireEvents.Event);
     };

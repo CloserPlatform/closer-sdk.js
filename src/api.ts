@@ -97,10 +97,11 @@ export class APIWithWebsocket extends RESTfulAPI {
   constructor(log: Logger) {
     super(log);
     this.promises = {};
+    this.socket = new JSONWebSocket(this.log);
   }
 
   connect(url: string) {
-    this.socket = new JSONWebSocket(url, this.log);
+    this.socket.connect(url);
   }
 
   disconnect() {
@@ -124,7 +125,13 @@ export class APIWithWebsocket extends RESTfulAPI {
   }
 
   onEvent(callback: Callback<wireEvents.Event>) {
-    this.socket.onDisconnect(callback);
+    this.socket.onDisconnect((event: wireEvents.Disconnect) => {
+      if (event.code !== 1000) { // CLOSE_NORMAL
+        // TODO Add exponential backoff not to DDoS other Artichoke nodes if one of them dies.
+        this.socket.reconnect();
+      }
+      callback(event);
+    });
 
     this.socket.onError(callback);
 
