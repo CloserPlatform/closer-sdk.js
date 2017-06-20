@@ -6,7 +6,6 @@ export class JSONWebSocket {
   private log: Logger;
   private socket: WebSocket;
 
-  private url: string;
   private onCloseCallback: Callback<CloseEvent>;
   private onErrorCallback: Callback<Event>;
   private onMessageCallback: Callback<MessageEvent>;
@@ -18,7 +17,6 @@ export class JSONWebSocket {
   connect(url: string) {
     this.log("WS connecting to: " + url);
 
-    this.url = url;
     this.socket = new WebSocket(url);
 
     this.socket.onopen = () => {
@@ -28,10 +26,6 @@ export class JSONWebSocket {
     this.socket.onclose = this.onCloseCallback;
     this.socket.onerror = this.onErrorCallback;
     this.socket.onmessage = this.onMessageCallback;
-  }
-
-  reconnect() {
-    this.connect(this.url);
   }
 
   disconnect() {

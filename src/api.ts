@@ -125,13 +125,7 @@ export class APIWithWebsocket extends RESTfulAPI {
   }
 
   onEvent(callback: Callback<wireEvents.Event>) {
-    this.socket.onDisconnect((event: wireEvents.Disconnect) => {
-      if (event.code !== 1000) { // CLOSE_NORMAL
-        // TODO Add exponential backoff not to DDoS other Artichoke nodes if one of them dies.
-        this.socket.reconnect();
-      }
-      callback(event);
-    });
+    this.socket.onDisconnect(callback);
 
     this.socket.onError(callback);
 

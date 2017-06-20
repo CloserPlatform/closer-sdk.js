@@ -973,6 +973,10 @@ $(document).ready(function() {
 
                 session.chat.onDisconnect(function(close) {
                     console.log("Session disconnected: ", close);
+                    if (close.code !== 1000) { // CLOSE_NORMAL
+                        // TODO Add exponential backoff not to DDoS other Artichoke nodes if one of them dies.
+                        session.chat.connect();
+                    }
                 });
 
                 session.chat.onConnect(function(m) {
