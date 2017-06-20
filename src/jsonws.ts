@@ -43,6 +43,10 @@ export class JSONWebSocket {
       this.log("WS disconnected: " + close.reason);
       callback(wireEvents.disconnect(close.code, close.reason));
     };
+
+    if (this.socket) {
+      this.socket.onclose = this.onCloseCallback;
+    }
   }
 
   onError(callback: Callback<wireEvents.Error>) {
@@ -50,6 +54,10 @@ export class JSONWebSocket {
       this.log("WS error: " + err);
       callback(wireEvents.error("Websocket connection error.", err));
     };
+
+    if (this.socket) {
+      this.socket.onerror = this.onErrorCallback;
+    }
   }
 
   onEvent(callback: Callback<wireEvents.Event>) {
@@ -57,6 +65,10 @@ export class JSONWebSocket {
       this.log("WS received: " + event.data);
       callback(wireEvents.read(event.data) as wireEvents.Event);
     };
+
+    if (this.socket) {
+      this.socket.onmessage = this.onMessageCallback;
+    }
   }
 
   send(event: wireEvents.Event) {
