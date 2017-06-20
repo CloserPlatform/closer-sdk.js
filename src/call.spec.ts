@@ -49,11 +49,11 @@ class APIMock extends ArtichokeAPI {
   }
 
   sendDescription(id, peer, sdp) {
-    // Do nothing.
+    return Promise.resolve();
   }
 
   sendCandidate(id, peer, candidate) {
-    // Do nothing.
+    return Promise.resolve();
   }
 }
 

@@ -65,9 +65,14 @@ export class JSONWebSocket {
     }
   }
 
-  send(event: wireEvents.Event) {
-    let json = wireEvents.write(event);
-    this.log("WS sent: " + json);
-    this.socket.send(json);
+  send(event: wireEvents.Event): Promise<void> {
+    if (this.socket) {
+      let json = wireEvents.write(event);
+      this.log("WS sent: " + json);
+      this.socket.send(json);
+      return Promise.resolve();
+    } else {
+      return Promise.reject<void>(new Error("Websocket is disconnected!"));
+    }
   }
 }

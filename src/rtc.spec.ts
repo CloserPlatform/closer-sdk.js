@@ -58,12 +58,14 @@ class APIMock extends ArtichokeAPI {
     if (this.onDescription) {
       this.onDescription(call, peer, sdp);
     }
+    return Promise.resolve();
   }
 
   sendCandidate(call: ID, peer: ID, candidate: wireEvents.Candidate) {
     if (this.onCandidate) {
       this.onCandidate(call, peer, candidate);
     }
+    return Promise.resolve();
   }
 }
 

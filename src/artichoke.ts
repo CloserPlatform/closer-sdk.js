@@ -114,8 +114,8 @@ export class Artichoke {
     this.events.onEvent(eventTypes.PRESENCE_UPDATE, callback);
   }
 
-  setStatus(status: wireEvents.Status) {
-    this.api.setStatus(status);
+  setStatus(status: wireEvents.Status): Promise<void> {
+    return this.api.setStatus(status);
   }
 
   // Utils:

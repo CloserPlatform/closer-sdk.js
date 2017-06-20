@@ -89,7 +89,9 @@ export class RTCConnection {
     this.conn.onicecandidate = (event) => {
       if (event.candidate) {
         this.log("Created ICE candidate: " + event.candidate.candidate);
-        this.api.sendCandidate(this.call, this.peer, event.candidate);
+        this.api.sendCandidate(this.call, this.peer, event.candidate).catch((error) => {
+          this.events.raise("Could not send an ICE candidate.", error);
+        });
       } else {
         this.log("Done gathering ICE candidates.");
         this.onICEDoneCallback();
@@ -155,7 +157,8 @@ export class RTCConnection {
     return this.conn.createOffer(options).then((offer) => {
       return this.setLocalDescription(offer);
     }).then((offer) => {
-      this.api.sendDescription(this.call, this.peer, offer);
+      return this.api.sendDescription(this.call, this.peer, offer).then(() => offer);
+    }).then((offer) => {
       this.log("Sent an RTC offer: " + offer.sdp);
       return offer;
     });
@@ -174,8 +177,9 @@ export class RTCConnection {
       // FIXME Chrome does not support DTLS role changes.
       return this.setLocalDescription(this.patchSDP(answer));
     }).then((answer) => {
-      this.api.sendDescription(this.call, this.peer, answer);
-      this.log("Sent an RTC description: " + answer.sdp);
+      return this.api.sendDescription(this.call, this.peer, answer).then(() => answer);
+    }).then((answer) => {
+      this.log("Sent an RTC answer: " + answer.sdp);
       return answer;
     });
   }

@@ -31,6 +31,7 @@ class APIMock extends ArtichokeAPI {
 
   setDelivered(messageId, timestamp) {
     this.setDelivery = true;
+    return Promise.resolve();
   }
 
   updateArchivable(archivable, timestamp) {

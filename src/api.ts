@@ -108,8 +108,8 @@ export class APIWithWebsocket extends RESTfulAPI {
     this.socket.disconnect();
   }
 
-  send(event: wireEvents.Event) {
-    this.socket.send(event);
+  send(event: wireEvents.Event): Promise<void> {
+    return this.socket.send(event);
   }
 
   ask<Response>(event: wireEvents.Event): Promise<Response> {
@@ -120,7 +120,7 @@ export class APIWithWebsocket extends RESTfulAPI {
         reject
       };
       event.ref = ref;
-      this.send(event);
+      this.send(event).catch((e) => this.reject(ref, wireEvents.error("Ask failed", e)));
     });
   }
 
@@ -193,12 +193,12 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   // GroupCall API:
-  sendDescription(callId: proto.ID, sessionId: proto.ID, description: wireEvents.SDP) {
-    this.send(wireEvents.rtcDescription(callId, sessionId, description));
+  sendDescription(callId: proto.ID, sessionId: proto.ID, description: wireEvents.SDP): Promise<void> {
+    return this.send(wireEvents.rtcDescription(callId, sessionId, description));
   }
 
-  sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: wireEvents.Candidate) {
-    this.send(wireEvents.rtcCandidate(callId, sessionId, candidate));
+  sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: wireEvents.Candidate): Promise<void> {
+    return this.send(wireEvents.rtcCandidate(callId, sessionId, candidate));
   }
 
   createCall(sessionIds: Array<proto.ID>): Promise<wireEntities.Call> {
@@ -302,17 +302,17 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<proto.MediaItem, wireEntities.Media>([this.url, this.roomPath, roomId, "media"], media);
   }
 
-  sendTyping(roomId: proto.ID) {
-    this.send(wireEvents.startTyping(roomId));
+  sendTyping(roomId: proto.ID): Promise<void> {
+    return this.send(wireEvents.startTyping(roomId));
   }
 
-  setMark(roomId: proto.ID, timestamp: proto.Timestamp) {
-    this.send(wireEvents.mark(roomId, timestamp));
+  setMark(roomId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
+    return this.send(wireEvents.mark(roomId, timestamp));
   }
 
   // Archivable API:
-  setDelivered(archivableId: proto.ID, timestamp: proto.Timestamp) {
-    this.send(wireEvents.chatDelivered(archivableId, timestamp));
+  setDelivered(archivableId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
+    return this.send(wireEvents.chatDelivered(archivableId, timestamp));
   }
 
   updateArchivable(archivable: proto.Archivable, timestamp: proto.Timestamp): Promise<proto.Archivable> {
@@ -320,8 +320,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   // Presence API:
-  setStatus(status: wireEvents.Status) {
-    this.send(wireEvents.presenceRequest(status));
+  setStatus(status: wireEvents.Status): Promise<void> {
+    return this.send(wireEvents.presenceRequest(status));
   }
 
   private getAuth<Response>(path: Array<string>): Promise<Response> {

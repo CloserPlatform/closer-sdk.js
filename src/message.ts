@@ -35,7 +35,7 @@ export class Message implements wireEntities.Message, RichDeliverable, RichEdita
     this.api = api;
   }
 
-  markDelivered() {
+  markDelivered(): Promise<void> {
     if (!this.delivered) {
       let ts = Date.now();
 
@@ -43,7 +43,9 @@ export class Message implements wireEntities.Message, RichDeliverable, RichEdita
         user: "FIXME", // FIXME We don't currently have the sessionId here...
         timestamp: ts
       };
-      this.api.setDelivered(this.id, ts);
+      return this.api.setDelivered(this.id, ts);
+    } else {
+      return Promise.resolve();
     }
   }
 
