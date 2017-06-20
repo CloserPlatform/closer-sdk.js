@@ -973,7 +973,6 @@ $(document).ready(function() {
 
                 session.chat.onDisconnect(function(close) {
                     console.log("Session disconnected: ", close);
-                    alert("Session disconnected: " + close.reason);
                 });
 
                 session.chat.onConnect(function(m) {
