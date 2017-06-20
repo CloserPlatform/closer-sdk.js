@@ -34,6 +34,7 @@ export class JSONWebSocket {
 
   onDisconnect(callback: Callback<wireEvents.Disconnect>) {
     this.onCloseCallback = (close) => {
+      this.socket = undefined;
       this.log("WS disconnected: " + close.reason);
       callback(wireEvents.disconnect(close.code, close.reason));
     };
@@ -66,13 +67,13 @@ export class JSONWebSocket {
   }
 
   send(event: wireEvents.Event): Promise<void> {
-    if (this.socket) {
+    if (this.socket && this.socket.readyState === 1) { // OPEN
       let json = wireEvents.write(event);
       this.log("WS sent: " + json);
       this.socket.send(json);
       return Promise.resolve();
     } else {
-      return Promise.reject<void>(new Error("Websocket is disconnected!"));
+      return Promise.reject<void>(new Error("Websocket is not connected!"));
     }
   }
 }
