@@ -91,6 +91,7 @@ class APIMock extends ArtichokeAPI {
 
   sendTyping(id) {
     this.sentTyping = true;
+    return Promise.resolve();
   }
 
   sendMessage(id, body) {
@@ -109,6 +110,7 @@ class APIMock extends ArtichokeAPI {
 
   setMark(id, timestamp) {
     this.marked = true;
+    return Promise.resolve();
   }
 }
 

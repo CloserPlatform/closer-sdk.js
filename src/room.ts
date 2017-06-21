@@ -85,9 +85,9 @@ export abstract class Room implements wireEntities.Room {
     return Promise.resolve(this.mark);
   }
 
-  setMark(timestamp: proto.Timestamp) {
+  setMark(timestamp: proto.Timestamp): Promise<void> {
     this.mark = timestamp;
-    this.api.setMark(this.id, timestamp);
+    return this.api.setMark(this.id, timestamp);
   }
 
   send(message: string): Promise<Message> {
@@ -104,8 +104,8 @@ export abstract class Room implements wireEntities.Room {
                        (m) => createMedia(m, this.log, this.events, this.api));
   }
 
-  indicateTyping() {
-    this.api.sendTyping(this.id);
+  indicateTyping(): Promise<void> {
+    return this.api.sendTyping(this.id);
   }
 
   onMark(callback: Callback<events.RoomMark>) {

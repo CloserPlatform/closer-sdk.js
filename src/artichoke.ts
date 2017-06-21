@@ -51,12 +51,12 @@ export class Artichoke {
 
   // API:
   connect() {
-    this.api.connect();
-
     this.api.onEvent((e: wireEvents.Event) => {
       const richEvent: events.Event = events.eventUtils.upgrade(e, this.config, this.log, this.events, this.api);
       this.events.notify(richEvent);
     });
+
+    this.api.connect();
   }
 
   disconnect() {
@@ -114,8 +114,8 @@ export class Artichoke {
     this.events.onEvent(eventTypes.PRESENCE_UPDATE, callback);
   }
 
-  setStatus(status: wireEvents.Status) {
-    this.api.setStatus(status);
+  setStatus(status: wireEvents.Status): Promise<void> {
+    return this.api.setStatus(status);
   }
 
   // Utils:

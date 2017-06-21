@@ -4,18 +4,28 @@ import * as wireEvents from "./protocol/wire-events";
 
 export class JSONWebSocket {
   private log: Logger;
-  private url: string;
   private socket: WebSocket;
 
-  constructor(url: string, log: Logger) {
-    this.log = log;
-    this.url = url;
+  private onCloseCallback: Callback<CloseEvent>;
+  private onErrorCallback: Callback<Event>;
+  private onMessageCallback: Callback<MessageEvent>;
 
-    this.log("Connecting to: " + this.url);
+  constructor(log: Logger) {
+    this.log = log;
+  }
+
+  connect(url: string) {
+    this.log("WS connecting to: " + url);
+
     this.socket = new WebSocket(url);
+
     this.socket.onopen = () => {
       this.log("WS connected to: " + url);
     };
+
+    this.socket.onclose = this.onCloseCallback;
+    this.socket.onerror = this.onErrorCallback;
+    this.socket.onmessage = this.onMessageCallback;
   }
 
   disconnect() {
@@ -23,29 +33,47 @@ export class JSONWebSocket {
   }
 
   onDisconnect(callback: Callback<wireEvents.Disconnect>) {
-    this.socket.onclose = (close) => {
+    this.onCloseCallback = (close) => {
+      this.socket = undefined;
       this.log("WS disconnected: " + close.reason);
       callback(wireEvents.disconnect(close.code, close.reason));
     };
+
+    if (this.socket) {
+      this.socket.onclose = this.onCloseCallback;
+    }
   }
 
   onError(callback: Callback<wireEvents.Error>) {
-    this.socket.onerror = (err) => {
+    this.onErrorCallback = (err) => {
       this.log("WS error: " + err);
       callback(wireEvents.error("Websocket connection error.", err));
     };
+
+    if (this.socket) {
+      this.socket.onerror = this.onErrorCallback;
+    }
   }
 
   onEvent(callback: Callback<wireEvents.Event>) {
-    this.socket.onmessage = (event) => {
+    this.onMessageCallback = (event) => {
       this.log("WS received: " + event.data);
       callback(wireEvents.read(event.data) as wireEvents.Event);
     };
+
+    if (this.socket) {
+      this.socket.onmessage = this.onMessageCallback;
+    }
   }
 
-  send(event: wireEvents.Event) {
-    let json = wireEvents.write(event);
-    this.log("WS sent: " + json);
-    this.socket.send(json);
+  send(event: wireEvents.Event): Promise<void> {
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      const json = wireEvents.write(event);
+      this.log("WS sent: " + json);
+      this.socket.send(json);
+      return Promise.resolve();
+    } else {
+      return Promise.reject<void>(new Error("Websocket is not connected!"));
+    }
   }
 }
