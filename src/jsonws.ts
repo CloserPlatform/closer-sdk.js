@@ -67,8 +67,8 @@ export class JSONWebSocket {
   }
 
   send(event: wireEvents.Event): Promise<void> {
-    if (this.socket && this.socket.readyState === 1) { // OPEN
-      let json = wireEvents.write(event);
+    if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+      const json = wireEvents.write(event);
       this.log("WS sent: " + json);
       this.socket.send(json);
       return Promise.resolve();
