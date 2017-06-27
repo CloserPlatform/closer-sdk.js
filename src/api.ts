@@ -179,9 +179,12 @@ export class ArtichokeAPI extends APIWithWebsocket {
     super.onEvent((event: wireEvents.Event) => {
       // FIXME Apply this bandaid elsewhere.
       if (event.type === eventTypes.HELLO) {
+        const deviceId = (event as wireEvents.Hello).deviceId;
         this.authHeaders = this.authHeaders.concat(
-          new HeaderValue("X-Device-Id", (event as wireEvents.Hello).deviceId)
+          new HeaderValue("X-Device-Id", deviceId)
         );
+
+        this.wsUrl = [this.wsUrl, "/", deviceId].join("");
       }
 
       callback(event);
