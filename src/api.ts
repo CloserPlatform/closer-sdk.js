@@ -156,6 +156,7 @@ export class APIWithWebsocket extends RESTfulAPI {
 
 export class ArtichokeAPI extends APIWithWebsocket {
   private authHeaders: Array<HeaderValue>;
+  private deviceId: proto.ID;
 
   protected url: string;
   private archivePath = "archive/items";
@@ -179,12 +180,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
     super.onEvent((event: wireEvents.Event) => {
       // FIXME Apply this bandaid elsewhere.
       if (event.type === eventTypes.HELLO) {
-        const deviceId = (event as wireEvents.Hello).deviceId;
-        this.authHeaders = this.authHeaders.concat(
-          new HeaderValue("X-Device-Id", deviceId)
-        );
-
-        this.wsUrl = [this.wsUrl, "/", deviceId].join("");
+        this.deviceId = (event as wireEvents.Hello).deviceId;
+        this.authHeaders = this.authHeaders.concat(new HeaderValue("X-Device-Id", this.deviceId));
       }
 
       callback(event);
@@ -192,7 +189,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   connect() {
-    super.connect(this.wsUrl);
+    const url = this.deviceId ? [this.wsUrl, "/", this.deviceId].join("") : this.wsUrl;
+    super.connect(url);
   }
 
   // GroupCall API:
