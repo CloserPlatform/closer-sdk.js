@@ -22,6 +22,9 @@ export interface CallInvitation extends Event, wireEvents.CallInvitation {
 export interface CallActiveDevice extends Event, wireEvents.CallActiveDevice {
 }
 
+export interface CallCreated extends Event, wireEvents.CallCreated {
+}
+
 export interface CallEnd extends Event, wireEvents.CallEnd {
 }
 
@@ -57,6 +60,9 @@ export interface PresenceUpdate extends Event, wireEvents.PresenceUpdate {
 }
 
 export interface RoomActionSent extends Event, wireEvents.RoomActionSent {
+}
+
+export interface RoomCreated extends Event, wireEvents.RoomCreated {
 }
 
 export interface RoomInvitation extends Event, wireEvents.RoomInvitation {

@@ -229,6 +229,27 @@ function makeRoom(roomType: RoomType) {
       } as Event);
     });
 
+    it("should run a callback on creating room", (done) => {
+      const roomObj = {
+        id: roomId,
+        name: "room",
+        created: 123,
+        users: [alice],
+        direct: false,
+      } as wireEntities.Room;
+
+      room.onRoomCreated((e) => {
+        expect(e.room).toBe(roomObj);
+        done();
+      });
+
+      events.notify({
+        type: eventTypes.ROOM_CREATED,
+        id: room.id,
+        room: roomObj
+      } as Event);
+    });
+
     it("should run a callback on incoming mark", (done) => {
       let t = Date.now();
 
