@@ -20,6 +20,8 @@ $(document).ready(function() {
     var newRoom = function() {};
 
     var status = "available";
+    var lektaButton = $("#lekta-button").click(function() { return false; }).html("Lekta!").hide();
+
     var statusSwitch = $("#status-switch").click(function() { return false; }).html("Status: " + status).hide();
 
     var stealSwitch = $("#steal-switch").click(function() { return false; }).hide();
@@ -960,6 +962,7 @@ $(document).ready(function() {
                 sessionId = session.id;
                 $('#demo-name').html("Ratel IM - " + user.user.name);
                 statusSwitch.show();
+                lektaButton.show();
 
                 newRoom = roomBuilder(session);
 
@@ -981,6 +984,11 @@ $(document).ready(function() {
 
                 session.chat.onConnect(function(m) {
                     console.log("Connected to Artichoke!");
+
+                    lektaButton.click(function() {
+                        // NOTE Lekta bot ID.
+                        directRoomBuilder(session)("3d8498b2-8dd7-4c16-8c45-ef09dfd265bb");
+                    });
 
                     killSwitch.click(function() {
                         // NOTE Kills the client session.
