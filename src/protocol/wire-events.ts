@@ -3,6 +3,7 @@ import * as wireEntities from "./wire-entities";
 
 export namespace eventTypes {
   export const CALL_ACTION = "call_action";
+  export const CALL_CREATED = "call_created";
   export const CALL_END = "call_end";
   export const CALL_INVITATION = "call_invitation";
   export const CALL_ACTIVE_DEVICE = "call_active_device";
@@ -16,6 +17,7 @@ export namespace eventTypes {
   export const PRESENCE_REQUEST = "presence_request";
   export const PRESENCE_UPDATE = "presence_update";
   export const ROOM_ACTION = "room_action";
+  export const ROOM_CREATED = "room_created";
   export const ROOM_INVITATION = "room_invitation";
   export const ROOM_MARK = "room_mark";
   export const ROOM_MEDIA = "room_media";
@@ -62,6 +64,10 @@ export interface CallInvitation extends Event {
 
 export interface CallActiveDevice extends Event {
   device: proto.ID;
+}
+
+export interface CallCreated extends Event {
+  call: wireEntities.Call;
 }
 
 export interface CallEnd extends Event {
@@ -116,6 +122,10 @@ export interface PresenceUpdate extends Event {
 
 export interface RoomActionSent extends Event {
   action: proto.RoomAction;
+}
+
+export interface RoomCreated extends Event {
+  room: wireEntities.Room;
 }
 
 export interface RoomInvitation extends Event {

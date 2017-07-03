@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { CallActionSent, CallActiveDevice, CallEnd } from "./protocol/events";
+import {CallActionSent, CallActiveDevice, CallCreated, CallEnd} from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { actionTypes, eventTypes } from "./protocol/wire-events";
@@ -199,6 +199,12 @@ export abstract class Call implements wireEntities.Call {
 
   onAnswered(callback: Callback<proto.CallAction>) {
     this.onAnsweredCallback = callback;
+  }
+
+  onCallCreated(callback: Callback<CallCreated>) {
+    this.events.onConcreteEvent(eventTypes.CALL_CREATED, this.id, (c: CallCreated) => {
+      callback(c);
+    });
   }
 
   onRejected(callback: Callback<proto.CallAction>) {

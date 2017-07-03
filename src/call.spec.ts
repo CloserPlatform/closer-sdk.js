@@ -64,7 +64,7 @@ function makeCall(callType: CallType) {
     users: [alice],
   } as ProtoCall;
 
-  switch(callType) {
+  switch (callType) {
     case CallType.DIRECT:
       call.direct = true;
       return call;
@@ -74,7 +74,7 @@ function makeCall(callType: CallType) {
       return call;
 
     default:
-      throw Error("invalid CallType")
+      throw Error("invalid CallType");
   }
 }
 
@@ -212,7 +212,7 @@ function makeCall(callType: CallType) {
 
     it("should run a callback on ActiveDevice", (done) => {
       events.onError((error) => done.fail());
-      const deviceId = "aliceDevice"
+      const deviceId = "aliceDevice";
 
       call.onActiveDevice((msg) => {
         expect(msg.id).toBe(call.id);
@@ -227,6 +227,27 @@ function makeCall(callType: CallType) {
       } as Event);
     });
 
+    it("should run a callback on created", (done) => {
+      events.onError((error) => done.fail());
+
+      const callObj = {
+        id: "123",
+        created: 123,
+        users: [alice],
+        direct: true
+      } as ProtoCall;
+
+      call.onCallCreated((c) => {
+        expect(c.call).toBe(callObj);
+        done();
+      });
+
+      events.notify({
+        type: eventTypes.CALL_CREATED,
+        id: call.id,
+        call: callObj
+      } as Event);
+    });
 
     whenever(isWebRTCSupported())("should maintain the user list", (done) => {
       getStream((stream) => {
@@ -364,5 +385,5 @@ describe("DirectCall, GroupCall", () => {
     const groupCall: Call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api);
     expect(directCall.callType).toEqual(CallType.DIRECT);
     expect(groupCall.callType).toEqual(CallType.GROUP);
-  })
+  });
 });
