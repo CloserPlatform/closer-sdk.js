@@ -33,10 +33,9 @@
     "webrtc-adapter": "^3.4.3"
   },
   "devDependencies": {
-    "@types/es6-shim": "^0.31.34",
     "@types/jasmine": "^2.5.53",
     "cross-env": "^3.2.4",
-    "es6-promise": "^3.3.1",
+    "es6-promise": "^4.1.1",
     "istanbul": "^1.0.0-alpha.2",
     "istanbul-instrumenter-loader": "^0.2.0",
     "jasmine-core": "^2.6.4",
@@ -60,7 +59,7 @@
     "tslint": "^3.15.1",
     "tslint-loader": "^2.1.5",
     "typedoc": "^0.7.1",
-    "typescript": "2.3.4",
+    "typescript": "^2.4.1",
     "watchify": "^3.9.0",
     "webpack": "^1.15.0"
   },

@@ -10,14 +10,8 @@ export interface TransferFunction<T, U> {
   (arg: T): U;
 }
 
-export function wrapPromise<T, U>(promise: Promise<T | Array<T>>, fun: TransferFunction<T, U>): Promise<U | Array<U>> {
-  return promise.then(function(obj) {
-    if (Array.isArray(obj)) {
-      return (obj as Array<T>).map(fun);
-    } else {
-      return fun(obj as T);
-    }
-  });
+export function wrapPromise<T, U>(promise: Promise<Array<T>>, fun: TransferFunction<T, U>): Promise<Array<U>> {
+  return promise.then((obj) => (obj as Array<T>).map(fun));
 }
 
 export function deepcopy<T>(obj: T): T {

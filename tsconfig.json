@@ -12,7 +12,11 @@
     "inlineSourceMap": true,
     "noEmitHelpers": false,
     "declaration": true,
-    "declarationDir": "."
+    "declarationDir": ".",
+    "lib": [
+        "es2016",
+        "dom"
+    ]
   },
   "exclude": [
     "node_modules",

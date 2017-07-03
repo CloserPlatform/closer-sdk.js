@@ -82,7 +82,7 @@ export class RESTfulAPI {
   }
 }
 
-export interface PromiseResolve<T> extends Callback<T> {}
+export interface PromiseResolve<T> extends Callback<T | PromiseLike<T>> {}
 export interface PromiseReject extends Callback<wireEvents.Error> {}
 
 interface PromiseFunctions {
@@ -112,8 +112,8 @@ export class APIWithWebsocket extends RESTfulAPI {
     return this.socket.send(event);
   }
 
-  ask<Response>(event: wireEvents.Event): Promise<Response> {
-    return new Promise((resolve, reject) => {
+  ask<Response extends wireEvents.Event>(event: wireEvents.Event): Promise<Response> {
+    return new Promise<Response>((resolve, reject) => {
       let ref = "ref" + Date.now(); // FIXME Use UUID instead.
       this.promises[ref] = {
         resolve,

@@ -68,12 +68,12 @@ export class Artichoke {
     this.events.onEvent(eventTypes.CALL_INVITATION, callback);
   }
 
-  createDirectCall(stream: MediaStream, peer: proto.ID, timeout?: number): Promise<DirectCall> {
-    return this.wrapCall(this.api.createDirectCall(peer, timeout), stream);
+  createCall(stream: MediaStream, users: Array<proto.ID>): Promise<GroupCall> {
+    return this.wrapCall(this.api.createCall(users), stream) as Promise<GroupCall>; // Trust me.
   }
 
-  createCall(stream: MediaStream, users: Array<proto.ID>): Promise<GroupCall> {
-    return this.wrapCall(this.api.createCall(users), stream);
+  createDirectCall(stream: MediaStream, peer: proto.ID, timeout?: number): Promise<DirectCall> {
+    return this.wrapCall(this.api.createDirectCall(peer, timeout), stream);
   }
 
   getCall(call: proto.ID): Promise<Call> {
@@ -81,7 +81,8 @@ export class Artichoke {
   }
 
   getCalls(): Promise<Array<Call>> {
-    return this.wrapCall(this.api.getCalls());
+    return wrapPromise(this.api.getCalls(),
+                       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
   // Chat room API:
@@ -90,7 +91,7 @@ export class Artichoke {
   }
 
   createRoom(name: string): Promise<GroupRoom> {
-    return this.wrapRoom(this.api.createRoom(name));
+    return this.wrapRoom(this.api.createRoom(name)) as Promise<GroupRoom>; // Trust me.
   }
 
   createDirectRoom(peer: proto.ID): Promise<DirectRoom> {
@@ -102,11 +103,11 @@ export class Artichoke {
   }
 
   getRooms(): Promise<Array<Room>> {
-    return this.wrapRoom(this.api.getRooms());
+    return wrapPromise(this.api.getRooms(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
   getRoster(): Promise<Array<Room>> {
-    return this.wrapRoom(this.api.getRoster());
+    return wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
   // Presence API:
@@ -119,11 +120,11 @@ export class Artichoke {
   }
 
   // Utils:
-  private wrapCall(promise: Promise<wireEntities.Call | Array<wireEntities.Call>>, stream?: MediaStream) {
-    return wrapPromise(promise, (call) => createCall(call, this.config.rtc, this.log, this.events, this.api, stream));
+  private wrapCall(promise: Promise<wireEntities.Call>, stream?: MediaStream) {
+    return promise.then((call) => createCall(call, this.config.rtc, this.log, this.events, this.api, stream));
   }
 
-  private wrapRoom(promise: Promise<wireEntities.Room | Array<wireEntities.Room>>) {
-    return wrapPromise(promise, (room: wireEntities.Room) => createRoom(room, this.log, this.events, this.api));
+  private wrapRoom(promise: Promise<wireEntities.Room>) {
+    return promise.then((room) => createRoom(room, this.log, this.events, this.api));
   }
 }
