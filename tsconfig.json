@@ -13,6 +13,7 @@
     "noEmitHelpers": false,
     "declaration": true,
     "declarationDir": ".",
+    "types": [],
     "lib": [
         "es2016",
         "dom"
