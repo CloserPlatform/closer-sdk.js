@@ -92,8 +92,7 @@ export abstract class Room implements wireEntities.Room {
   }
 
   send(message: string): Promise<Message> {
-    return wrapPromise(this.api.sendMessage(this.id, message),
-                       (m) => createMessage(m, this.log, this.events, this.api));
+    return this.api.sendMessage(this.id, message).then((m) => createMessage(m, this.log, this.events, this.api));
   }
 
   sendMetadata(payload: any): Promise<proto.Metadata> {
@@ -101,8 +100,7 @@ export abstract class Room implements wireEntities.Room {
   }
 
   sendMedia(media: proto.MediaItem): Promise<Media> {
-    return wrapPromise(this.api.sendMedia(this.id, media),
-                       (m) => createMedia(m, this.log, this.events, this.api));
+    return this.api.sendMedia(this.id, media).then((m) => createMedia(m, this.log, this.events, this.api));
   }
 
   indicateTyping(): Promise<void> {

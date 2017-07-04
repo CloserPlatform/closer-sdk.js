@@ -1,5 +1,3 @@
-/// <reference types="es6-shim" />
-
 // Main entry points:
 export * from "./auth";
 

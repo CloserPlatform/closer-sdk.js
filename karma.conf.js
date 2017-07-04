@@ -34,7 +34,7 @@ module.exports = (config) => {
         },
 
         files: [
-            './node_modules/es6-promise/dist/es6-promise.js',
+            './node_modules/es6-promise/dist/es6-promise.auto.js',
             {
                 pattern: './src/**/*.spec.ts',
                 served: true,
