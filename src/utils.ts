@@ -11,7 +11,7 @@ export interface TransferFunction<T, U> {
 }
 
 export function wrapPromise<T, U>(promise: Promise<Array<T>>, fun: TransferFunction<T, U>): Promise<Array<U>> {
-  return promise.then((obj) => (obj as Array<T>).map(fun));
+  return promise.then((obj: Array<T>) => obj.map(fun));
 }
 
 export function deepcopy<T>(obj: T): T {
