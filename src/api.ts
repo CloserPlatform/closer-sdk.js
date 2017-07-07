@@ -189,7 +189,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   connect() {
-    const url = this.deviceId ? [this.wsUrl, "/", this.deviceId].join("") : this.wsUrl;
+    const url = this.deviceId ? [this.wsUrl, "/reconnect/", this.deviceId].join("") : this.wsUrl;
     super.connect(url);
   }
 
