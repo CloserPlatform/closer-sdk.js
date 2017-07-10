@@ -960,7 +960,6 @@ $(document).ready(function() {
                 }
             }).then(function (session) {
                 sessionId = session.id;
-                $('#demo-name').html("Connecting - " + user.user.name);
                 statusSwitch.show();
                 lektaButton.show();
 
@@ -980,6 +979,7 @@ $(document).ready(function() {
                     if (close.code !== 1000) { // CLOSE_NORMAL
                         // TODO Add exponential backoff not to DDoS other Artichoke nodes if one of them dies.
                         session.chat.connect();
+                        $('#demo-name').html("Connecting - " + user.user.name);
                     }
                 });
 
@@ -1086,6 +1086,7 @@ $(document).ready(function() {
                 });
 
                 session.chat.connect();
+                $('#demo-name').html("Connecting - " + user.user.name);
             });
     }
 });
