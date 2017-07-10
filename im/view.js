@@ -59,18 +59,18 @@ function makeChatContainer(id, switcherId, chatboxesId, controlsId, onJoin) {
     var switchers = $('<div>')
         .prop({
             id: 'switchers-container',
-            class: 'col-lg-2'
+            class: 'col-xs-2'
         })
         .append(wrapper);
 
     var chatboxes = $('<div>').prop({
         id: chatboxesId,
-        class: 'col-lg-8'
+        class: 'col-xs-8'
     });
 
     var controls = $('<div>').prop({
         id: controlsId,
-        class: 'col-lg-2'
+        class: 'col-xs-2'
     });
 
     return $('<div>').prop('id', id).append([switchers, chatboxes, controls]);
