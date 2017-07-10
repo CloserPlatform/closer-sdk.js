@@ -960,7 +960,7 @@ $(document).ready(function() {
                 }
             }).then(function (session) {
                 sessionId = session.id;
-                $('#demo-name').html("Ratel IM - " + user.user.name);
+                $('#demo-name').html("Connecting - " + user.user.name);
                 statusSwitch.show();
                 lektaButton.show();
 
@@ -975,6 +975,7 @@ $(document).ready(function() {
                 });
 
                 session.chat.onDisconnect(function(close) {
+                    $('#demo-name').html("Disconnected - " + user.user.name);
                     console.log("Session disconnected: ", close);
                     if (close.code !== 1000) { // CLOSE_NORMAL
                         // TODO Add exponential backoff not to DDoS other Artichoke nodes if one of them dies.
@@ -983,6 +984,7 @@ $(document).ready(function() {
                 });
 
                 session.chat.onConnect(function(m) {
+                    $('#demo-name').html("Connected - " + user.user.name);
                     console.log("Connected to Artichoke!");
 
                     lektaButton.click(function() {
