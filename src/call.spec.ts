@@ -227,28 +227,6 @@ function makeCall(callType: CallType) {
       } as Event);
     });
 
-    it("should run a callback on created", (done) => {
-      events.onError((error) => done.fail());
-
-      const callObj = {
-        id: "123",
-        created: 123,
-        users: [alice],
-        direct: true
-      } as ProtoCall;
-
-      call.onCallCreated((c) => {
-        expect(c.call).toBe(callObj);
-        done();
-      });
-
-      events.notify({
-        type: eventTypes.CALL_CREATED,
-        id: call.id,
-        call: callObj
-      } as Event);
-    });
-
     whenever(isWebRTCSupported())("should maintain the user list", (done) => {
       getStream((stream) => {
         call.addStream(stream);

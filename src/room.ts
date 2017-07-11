@@ -8,7 +8,6 @@ import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { actionTypes, eventTypes } from "./protocol/wire-events";
 import { wrapPromise } from "./utils";
-import {RoomCreated} from "./protocol/events";
 
 export namespace roomType {
   export enum RoomType {
@@ -105,12 +104,6 @@ export abstract class Room implements wireEntities.Room {
 
   indicateTyping(): Promise<void> {
     return this.api.sendTyping(this.id);
-  }
-
-  onRoomCreated(callback: Callback<events.RoomCreated>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_CREATED, this.id, (r: RoomCreated) => {
-     callback(r);
-    });
   }
 
   onMark(callback: Callback<events.RoomMark>) {

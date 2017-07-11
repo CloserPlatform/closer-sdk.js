@@ -1033,7 +1033,11 @@ $(document).ready(function() {
                         });
                     });
 
-                    session.chat.onRoom(function (m) {
+                    session.chat.onRoomCreated(function (m) {
+                        console.log("Room created: ", m.room);
+                    });
+
+                    session.chat.onRoomInvitation(function (m) {
                         console.log("Received room invitation: ", m);
                         if(!m.room.direct) {
                             var line = getUserNickname(m.inviter) + " invited you to join room " + m.room.name;
@@ -1049,7 +1053,11 @@ $(document).ready(function() {
                         }
                     });
 
-                    session.chat.onCall(function(m) {
+                    session.chat.onCallCreated(function (m) {
+                        console.log("Call created: ", m.call);
+                    });
+
+                    session.chat.onCallInvitation(function(m) {
                         console.log("Received call offer: ", m);
                         var closeModal = function() {};
                         m.call.onEnd(function(e) {
