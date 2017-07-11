@@ -63,8 +63,12 @@ export class Artichoke {
     this.api.disconnect();
   }
 
-  // GroupCall API:
-  onCall(callback: Callback<events.CallInvitation>) {
+  // Call API:
+  onCallCreated(callback: Callback<events.CallCreated>) {
+    this.events.onEvent(eventTypes.CALL_CREATED, callback);
+  }
+
+  onCallInvitation(callback: Callback<events.CallInvitation>) {
     this.events.onEvent(eventTypes.CALL_INVITATION, callback);
   }
 
@@ -86,7 +90,11 @@ export class Artichoke {
   }
 
   // Chat room API:
-  onRoom(callback: Callback<events.RoomInvitation>) {
+  onRoomCreated(callback: Callback<events.RoomCreated>) {
+    this.events.onEvent(eventTypes.ROOM_CREATED, callback);
+  }
+
+  onRoomInvitation(callback: Callback<events.RoomInvitation>) {
     this.events.onEvent(eventTypes.ROOM_INVITATION, callback);
   }
 

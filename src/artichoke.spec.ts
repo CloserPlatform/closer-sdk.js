@@ -2,8 +2,13 @@ import { ArtichokeAPI } from "./api";
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
 import { apiKey, config, deviceId, log } from "./fixtures.spec";
+import { Call, Room } from "./protocol/wire-entities";
 import { disconnect, error, eventTypes } from "./protocol/wire-events";
 import { Event, Hello } from "./protocol/events";
+
+const roomId = "234";
+const callId = "123";
+const alice = "321";
 
 class APIMock extends ArtichokeAPI {
   cb;
@@ -69,5 +74,48 @@ describe("Artichoke", () => {
     chat.onError((error) => done());
     chat.connect();
     api.cb(error("why not?"));
+  });
+
+  it("should run a callback when a room is created", (done) => {
+    events.onError((error) => done.fail());
+
+    const roomObj = {
+      id: roomId,
+      name: "room",
+      created: 123,
+      users: [alice],
+      direct: false,
+    } as Room;
+
+    chat.onRoomCreated((e) => {
+      expect(e.room).toBe(roomObj);
+      done();
+    });
+
+    events.notify({
+      type: eventTypes.ROOM_CREATED,
+      room: roomObj
+    } as Event);
+  });
+
+  it("should run a callback when a call is created", (done) => {
+    events.onError((error) => done.fail());
+
+    const callObj = {
+      id: callId,
+      created: 123,
+      users: [alice],
+      direct: true
+    } as Call;
+
+    chat.onCallCreated((c) => {
+      expect(c.call).toBe(callObj);
+      done();
+    });
+
+    events.notify({
+      type: eventTypes.CALL_CREATED,
+      call: callObj
+    } as Event);
   });
 });
