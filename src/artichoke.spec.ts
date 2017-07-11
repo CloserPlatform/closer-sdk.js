@@ -76,7 +76,7 @@ describe("Artichoke", () => {
     api.cb(error("why not?"));
   });
 
-  it("should run a callback on creating room", (done) => {
+  it("should run a callback when a room is created", (done) => {
     events.onError((error) => done.fail());
 
     const roomObj = {
@@ -98,7 +98,7 @@ describe("Artichoke", () => {
     } as Event);
   });
 
-  it("should run a callback on created", (done) => {
+  it("should run a callback when a call is created", (done) => {
     events.onError((error) => done.fail());
 
     const callObj = {
