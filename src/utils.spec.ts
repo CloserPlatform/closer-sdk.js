@@ -41,8 +41,6 @@ describe("Utils", () => {
       expect(isBrowserSupported()).toEqual(true);
     } else if(isFirefox()) {
       expect(isBrowserSupported()).toEqual(true);
-    } else {
-      expect(isBrowserSupported()).toEqual(false);
     }
   });
 });

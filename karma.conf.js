@@ -25,8 +25,7 @@ module.exports = (config) => {
             'karma-remap-istanbul',
             'karma-spec-reporter',
             'karma-chrome-launcher',
-            'karma-firefox-launcher',
-            'karma-phantomjs-launcher'
+            'karma-firefox-launcher'
         ],
 
         mime: {
@@ -34,7 +33,6 @@ module.exports = (config) => {
         },
 
         files: [
-            './node_modules/es6-promise/dist/es6-promise.auto.js',
             {
                 pattern: './src/**/*.spec.ts',
                 served: true,
@@ -81,7 +79,6 @@ module.exports = (config) => {
 
         remapIstanbulReporter: {
             src: [
-                'coverage/phantomjs/coverage-final.json',
                 'coverage/chrome/coverage-final.json',
                 'coverage/headlesschrome/coverage-final.json',
                 'coverage/firefox/coverage-final.json'
@@ -108,7 +105,7 @@ module.exports = (config) => {
 
         autoWatch: true,
 
-        browsers: ['ChromeWithFakeUserMedia', 'Firefox','PhantomJS'],
+        browsers: ['ChromeWithFakeUserMedia', 'Firefox'],
 
         customLaunchers: {
             ChromeWithFakeUserMedia: {
