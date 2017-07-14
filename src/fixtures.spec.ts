@@ -29,10 +29,6 @@ export function whenever(condition: boolean) {
   return condition ? it : xit;
 }
 
-export function isPhantomJS() {
-  return !(isChrome() || isFirefox());
-}
-
 export function isWebRTCSupported(): boolean {
   return isBrowserSupported();
 }

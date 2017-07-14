@@ -128,8 +128,7 @@ export namespace eventUtils {
       return richEvent;
     }
 
-    const richEvent: Event = {...e};
-    return richEvent;
+    return e;
   }
 
   function isCallInvitation(e: wireEvents.Event): e is wireEvents.CallInvitation {
