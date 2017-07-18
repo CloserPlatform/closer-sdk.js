@@ -948,7 +948,7 @@ $(document).ready(function() {
                         "bundlePolicy": "balanced",
                         "iceServers": [{
                             // FIXME ?transport=upd is required by Edge.
-                            "urls": ["stun:turn.ratel.im:3478?transport=udp", "turn:turn.ratel.im:3478?transport=udp"],
+                            "urls": ["stun:turn.ratel.im:443?transport=udp", "turn:turn.ratel.im:443?transport=udp"],
                             "username": "test123",
                             "credential": "test456"
                         }],
