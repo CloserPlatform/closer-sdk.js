@@ -445,7 +445,10 @@ $(document).ready(function() {
         var call = makeButton("btn-success", "Conference!", function() {
             if(!call.hasClass("disabled")) {
                 call.addClass("disabled");
-                callBuilder(room, users.list());
+                callBuilder(room, users.list(), {
+                  "video": true,
+                  "audio": true
+                });
             }
         });
 
