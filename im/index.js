@@ -934,13 +934,14 @@ $(document).ready(function() {
         }
 
         getUserNickname = function(userId) {
-            if(users[userId]) {
-                return users[userId].name
+            var u = {};
+            if(userId in users) {
+              u = users[userId];
             } else {
-                var u = getUser(ratelUrl, userId, user.apiKey);
+                u = getUser(ratelUrl, userId, user.apiKey);
                 internUser(u);
-                return u.name;
             }
+            return u.firstName + " " + u.lastName;
         }
 
         return RatelSDK.withApiKey(
