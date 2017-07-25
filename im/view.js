@@ -2,8 +2,7 @@ function makeLoginForm(id, onClick) {
     var form = $('<form id="login_form">')
         .append([makeInput('server', 'Server:', 'Server', 'artichoke.ratel.io'),
                  makeInput('ratel-server', 'RatelServer:', 'RatelServer', 'briefcase.ratel.io'),
-                 makeInput('user-phone', 'Phone:', '+48123456789'),
-                 makeInput('user-password', 'Password:', 'pa$$w0rd!')]);
+                 makeInput('user-phone', 'Phone:', '+48123456789')]);
 
     var button = $('<button class="btn btn-primary" form="login_form">')
         .append('Login!')

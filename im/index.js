@@ -42,8 +42,7 @@ $(document).ready(function() {
         var form = makeLoginForm("login-box", function (event) {
             event.preventDefault();
             userPhone = $('#user-phone').val();
-            var password = $('#user-password').val();
-            run($('#server').val(), $('#ratel-server').val(), userPhone, password).then(
+            run($('#server').val(), $('#ratel-server').val(), userPhone).then(
                 function () {
                     loginBox.element.hide();
                     chat.element.show();
@@ -884,27 +883,40 @@ $(document).ready(function() {
         return JSON.parse(xhttp.responseText);
     }
 
-    function logIn(url, phone, password) {
+    function sendCode(url, phone) {
+        var xhttp = new XMLHttpRequest();
+        xhttp.open("POST", url + 'api/session/sendCode', false);
+        xhttp.setRequestHeader('Content-Type', 'application/json');
+        xhttp.send(JSON.stringify({
+            "phone": phone
+        }));
+        if(xhttp.status !== 204) {
+            throw "Could not send code.";
+        }
+    }
+
+    function logIn(url, phone, code) {
         var xhttp = new XMLHttpRequest();
         xhttp.open("POST", url + 'api/session', false);
         xhttp.setRequestHeader('Content-Type', 'application/json');
         xhttp.send(JSON.stringify({
             "phone": phone,
-            "password": password
+            "code": code
         }));
         if(xhttp.status !== 200) {
-          throw "Invalid credentials.";
+            throw "Invalid credentials.";
         }
         return JSON.parse(xhttp.responseText);
     }
 
-    function run(chatServer, ratelServer, phone, password) {
+    function run(chatServer, ratelServer, phone) {
         var chatUrl = getURL(chatServer);
         var ratelUrl = getURL(ratelServer);
 
         var user = undefined;
         try {
-            user = logIn(ratelUrl, phone, password);
+            sendCode(ratelUrl, phone);
+            user = logIn(ratelUrl, phone, "1234"); // Master code.
         } catch(e) {
             return Promise.reject(e);
         }
@@ -922,13 +934,14 @@ $(document).ready(function() {
         }
 
         getUserNickname = function(userId) {
-            if(users[userId]) {
-                return users[userId].name
+            var u = {};
+            if(userId in users) {
+              u = users[userId];
             } else {
-                var u = getUser(ratelUrl, userId, user.apiKey);
+                u = getUser(ratelUrl, userId, user.apiKey);
                 internUser(u);
-                return u.name;
             }
+            return u.firstName + " " + u.lastName;
         }
 
         return RatelSDK.withApiKey(
