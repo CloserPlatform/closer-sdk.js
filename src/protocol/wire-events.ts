@@ -14,8 +14,6 @@ export namespace eventTypes {
   export const ERROR = "error";
   export const HEARTBEAT = "heartbeat";
   export const HELLO = "hello";
-  export const PRESENCE_REQUEST = "presence_request";
-  export const PRESENCE_UPDATE = "presence_update";
   export const ROOM_ACTION = "room_action";
   export const ROOM_CREATED = "room_created";
   export const ROOM_INVITATION = "room_invitation";
@@ -108,18 +106,6 @@ export interface Hello extends ServerInfo {
   deviceId: proto.ID;
 }
 
-export type Status = "away" | "available" | "unavailable";
-
-export interface PresenceRequest extends Event {
-  status: Status;
-}
-
-export interface PresenceUpdate extends Event {
-  user: proto.ID;
-  status: Status;
-  timestamp: proto.Timestamp;
-}
-
 export interface RoomActionSent extends Event {
   action: proto.RoomAction;
 }
@@ -200,13 +186,6 @@ export function mark(id: proto.ID, timestamp: proto.Timestamp): RoomMark {
     type: eventTypes.ROOM_MARK,
     id,
     timestamp
-  };
-}
-
-export function presenceRequest(status: Status): PresenceRequest {
-  return {
-    type: eventTypes.PRESENCE_REQUEST,
-    status
   };
 }
 

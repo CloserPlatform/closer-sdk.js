@@ -24,12 +24,7 @@ const events: Array<wireEvents.Event> = [{
   id: roomId,
   user: alice,
   timestamp: Date.now(),
-} as wireEvents.RoomTyping, wireEvents.presenceRequest("available"), {
-  type: eventTypes.PRESENCE_UPDATE,
-  user: alice,
-  status: "away",
-  timestamp: Date.now(),
-} as wireEvents.PresenceUpdate, wireEvents.error("Because!", {
+} as wireEvents.RoomTyping, wireEvents.error("Because!", {
   error: "error",
   text: "string"
 }, "23425"), {
