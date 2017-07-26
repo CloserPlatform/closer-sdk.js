@@ -53,12 +53,6 @@ export interface Heartbeat extends ServerInfo, wireEvents.Heartbeat {
 export interface Hello extends ServerInfo, wireEvents.Hello {
 }
 
-export interface PresenceRequest extends Event, wireEvents.PresenceRequest {
-}
-
-export interface PresenceUpdate extends Event, wireEvents.PresenceUpdate {
-}
-
 export interface RoomActionSent extends Event, wireEvents.RoomActionSent {
 }
 

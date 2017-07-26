@@ -320,11 +320,6 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<proto.Archivable, proto.Archivable>([this.url, this.archivePath, archivable.id], archivable);
   }
 
-  // Presence API:
-  setStatus(status: wireEvents.Status): Promise<void> {
-    return this.send(wireEvents.presenceRequest(status));
-  }
-
   private getAuth<Response>(path: Array<string>): Promise<Response> {
     return this.get<Response>(path, this.authHeaders);
   }

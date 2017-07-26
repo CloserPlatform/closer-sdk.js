@@ -118,15 +118,6 @@ export class Artichoke {
     return wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
-  // Presence API:
-  onStatusUpdate(callback: Callback<events.PresenceUpdate>) {
-    this.events.onEvent(eventTypes.PRESENCE_UPDATE, callback);
-  }
-
-  setStatus(status: wireEvents.Status): Promise<void> {
-    return this.api.setStatus(status);
-  }
-
   // Utils:
   private wrapCall(promise: Promise<wireEntities.Call>, stream?: MediaStream) {
     return promise.then((call) => createCall(call, this.config.rtc, this.log, this.events, this.api, stream));
