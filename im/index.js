@@ -22,8 +22,6 @@ $(document).ready(function() {
     var status = "available";
     var lektaButton = $("#lekta-button").click(function() { return false; }).html("Lekta!").hide();
 
-    var statusSwitch = $("#status-switch").click(function() { return false; }).html("Status: " + status).hide();
-
     var stealSwitch = $("#steal-switch").click(function() { return false; }).hide();
 
     var killSwitch = $("#kill-switch").click(function() { return false; }).hide();
@@ -256,18 +254,6 @@ $(document).ready(function() {
             bumpUnread: function() {
                 switcher.bumpUnread();
             },
-            onStatus: function(user, status) {
-                if(user === peer) {
-                    switch(status) {
-                    case "available":
-                        call.removeClass("disabled");
-                        break;
-                    case "away":
-                    case "unavailable":
-                        call.addClass("disabled");
-                    }
-                }
-            },
             activate: function() {
                 chatbox.show();
                 controls.show();
@@ -485,11 +471,6 @@ $(document).ready(function() {
             switchTo: switchTo(room.id),
             isActive: function() {
                 return switcher.isActive();
-            },
-            onStatus: function(user, status) {
-                if(users.list().includes(user)) {
-                    users.setStatus(user, status);
-                }
             },
             bumpUnread: function() {
                 switcher.bumpUnread();
@@ -782,11 +763,6 @@ $(document).ready(function() {
             isActive: function() {
                 return switcher.isActive();
             },
-            onStatus: function(user, status) {
-                if(users.list().includes(user)) {
-                    users.setStatus(user, status);
-                }
-            },
             activate: function() {
                 callbox.show();
                 controls.show();
@@ -976,7 +952,6 @@ $(document).ready(function() {
                 }
             }).then(function (session) {
                 sessionId = session.id;
-                statusSwitch.show();
                 lektaButton.show();
 
                 newRoom = roomBuilder(session);
@@ -1013,14 +988,6 @@ $(document).ready(function() {
                         session.api.sendCandidate(null, null, null);
                     });
 
-                    statusSwitch.click(function() {
-                        statusSwitch.toggleClass(status === "available" ? "btn-success" : "btn-info");
-                        status = status === "available" ? "away" : "available";
-                        statusSwitch.toggleClass(status === "available" ? "btn-success" : "btn-info");
-                        statusSwitch.html("Status: " + status);
-                        session.chat.setStatus(status);
-                    });
-
                     session.chat.getRoster().then(function(rooms) {
                         console.log("Roster: ", rooms);
 
@@ -1040,13 +1007,6 @@ $(document).ready(function() {
                         }
                     }).catch(function(error) {
                         console.log("Fetching roster failed:", error);
-                    });
-
-                    session.chat.onStatusUpdate(function(m) {
-                        console.log("User " + m.user + " is " + m.status + "!");
-                        Object.keys(chatboxes).forEach(function(k) {
-                            chatboxes[k].onStatus(m.user, m.status);
-                        });
                     });
 
                     session.chat.onRoomCreated(function (m) {
