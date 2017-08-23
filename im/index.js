@@ -935,7 +935,7 @@ $(document).ready(function() {
                     "hostname": chatUrl.hostname,
                     "port": chatUrl.port,
                     "rtc": {
-                        "iceTransportPolicy": "relay",
+                        "iceTransportPolicy": "all",
                         "rtcpMuxPolicy": "negotiate",
                         "bundlePolicy": "balanced",
                         "iceServers": [{
