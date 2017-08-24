@@ -79,10 +79,15 @@ export class JSONWebSocket {
 
   private setupOnClose(callback) {
     this.socket.onclose = callback;
+    const wrappedCallback = (close) => {
+      close.reason = "Browser offline.";
+      close.code = 1006; // NOTE WebSocket.CLOSE_ABNORMAL
+      callback(close);
+    };
     if (typeof window.addEventListener !== "undefined") {
-      window.addEventListener("offline", callback);
+      window.addEventListener("offline", wrappedCallback);
     } else {
-      (document.body as any).onoffline = callback;
+      (document.body as any).onoffline = wrappedCallback;
     }
     // TODO Check heartbeats.
   }
