@@ -829,7 +829,7 @@ $(document).ready(function() {
         stealSwitch.click(function() {
             createStream(function(stream) {
                 var callbox = addCall(call, stream, {
-                    "video": false,
+                    "video": true,
                     "audio": true
                 });
                 callbox.pull();
@@ -946,7 +946,7 @@ $(document).ready(function() {
                         }],
                         "defaultOfferOptions": {
                             "offerToReceiveAudio": true,
-                            "offerToReceiveVideo": false
+                            "offerToReceiveVideo": true
                         }
                     }
                 }
@@ -1056,7 +1056,7 @@ $(document).ready(function() {
                         closeModal = confirmModal("Call invitation", line, "Answer", function() {
                             createStream(function(stream) {
                                 var callbox = addCall(m.call, stream, {
-                                    "video": false,
+                                    "video": true,
                                     "audio": true
                                 });
                                 callbox.answer();
