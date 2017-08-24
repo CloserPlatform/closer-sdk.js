@@ -572,7 +572,8 @@ $(document).ready(function() {
 
     function createStream(callback, constraints) {
         constraints = constraints || {
-            "audio": true
+            "audio": true,
+            "video": true
         };
         navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
             console.log("Local stream started!");
