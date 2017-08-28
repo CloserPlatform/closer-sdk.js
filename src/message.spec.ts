@@ -35,6 +35,10 @@ function makeMsg(delivered?: Delivered): wireEntities.Message {
     type: "message",
     id: msg1,
     body: "Hi!",
+    context: {
+      type: "json",
+      payload: "{\"key\": \"value\"}"
+    },
     user: bob,
     room: roomId,
     timestamp: 123,

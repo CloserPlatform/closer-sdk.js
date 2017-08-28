@@ -25,6 +25,10 @@ function msg(id: string): wireEntities.Message {
     type: "message",
     id,
     body: "Hi!",
+    context: {
+      type: "json",
+      payload: "{\"key\": \"value\"}"
+    },
     user: alice,
     room: roomId,
     timestamp: 123,

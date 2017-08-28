@@ -291,8 +291,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<proto.Invite, void>([this.url, this.roomPath, roomId, "invite"], proto.invite(sessionId));
   }
 
-  sendMessage(roomId: proto.ID, body: string): Promise<wireEntities.Message> {
-    return this.ask<wireEvents.ChatReceived>(wireEvents.chatRequest(roomId, body)).then((ack) => ack.message);
+  sendMessage(roomId: proto.ID, body: string, context?: proto.Context): Promise<wireEntities.Message> {
+    return this.ask<wireEvents.ChatReceived>(wireEvents.chatRequest(roomId, body, context)).then((ack) => ack.message);
   }
 
   sendMetadata(roomId: proto.ID, payload: any): Promise<proto.Metadata> {

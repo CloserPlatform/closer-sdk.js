@@ -63,6 +63,11 @@ export interface MediaItem {
   description: string;
 }
 
+export interface Context {
+  type: Type;
+  payload: any;
+}
+
 export interface Metadata extends RoomArchivable {
   payload: any;
 }
