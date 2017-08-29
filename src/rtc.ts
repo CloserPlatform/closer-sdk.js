@@ -5,7 +5,7 @@ import { RTCCandidate, RTCDescription } from "./protocol/events";
 import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
 import { eventTypes } from "./protocol/wire-events";
-import { Thunk } from "./utils";
+import { onceDelayed, Thunk } from "./utils";
 
 export interface RTCConnectionConstraints {
   // FIXME @types/webrtc currently does not have this interface defined.
@@ -64,6 +64,7 @@ export class RTCConnection {
   // FIXME Required by the various hacks:
   private localRole: string;
   private attachedStreams: { [trackId: string]: MediaStream };
+  private renegotiationTimer: number;
 
   constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler,
               api: ArtichokeAPI, constraints?: RTCConnectionConstraints) {
@@ -110,10 +111,12 @@ export class RTCConnection {
       // FIXME Chrome triggers renegotiation on... Initial offer creation...
       // FIXME Firefox triggers renegotiation when remote offer is received.
       if (this.isEstablished()) {
-        this.log("Renegotiating an RTC connection.");
-        // FIXME Needs offerOptions.
-        this.offer().catch((error) => {
-          this.events.raise("Could not renegotiate the connection.", error);
+        this.renegotiationTimer = onceDelayed(this.renegotiationTimer, 100, () => {
+          this.log("Renegotiating an RTC connection.");
+          // FIXME Needs offerOptions.
+          this.offer().catch((error) => {
+            this.events.raise("Could not renegotiate the connection.", error);
+          });
         });
       }
     };
