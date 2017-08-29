@@ -40,5 +40,5 @@ export function isSafari() {
 
 export function onceDelayed(timer: number, timeout: number, fun: () => void): number {
   clearTimeout(timer);
-  return setTimeout(fun, timeout)
+  return setTimeout(fun, timeout);
 }
