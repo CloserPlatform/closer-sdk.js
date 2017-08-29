@@ -37,3 +37,8 @@ export function isEdge() {
 export function isSafari() {
   return adapter.browserDetails.browser === "safari";
 }
+
+export function onceDelayed(timer: number, timeout: number, fun: () => void): number {
+  clearTimeout(timer);
+  return setTimeout(fun, timeout)
+}

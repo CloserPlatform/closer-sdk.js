@@ -1,4 +1,4 @@
-import { deepcopy, isBrowserSupported, isChrome, isFirefox, wrapPromise } from "./utils";
+import { deepcopy, isBrowserSupported, isChrome, isFirefox, onceDelayed, wrapPromise } from "./utils";
 
 describe("Utils", () => {
   it("wrapPromise should replace a Promise", (done) => {
@@ -43,4 +43,14 @@ describe("Utils", () => {
       expect(isBrowserSupported()).toEqual(true);
     }
   });
+
+  it("onceDelayed should only execute once", (done) => {
+    let timer: number;
+    timer = onceDelayed(timer, 50, () => {
+      done.fail();
+    });
+    timer = onceDelayed(timer, 100, () => {
+      done();
+    });
+  })
 });
