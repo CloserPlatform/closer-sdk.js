@@ -60,20 +60,25 @@ export class RTCConnection {
   private conn: HackedRTCPeerConnection;
   private onICEDoneCallback: Thunk;
   private onRemoteStreamCallback: Callback<MediaStream>;
+  private offerOptions: HackedRTCOfferOptions;
+  private answerOptions: RTCAnswerOptions;
 
   // FIXME Required by the various hacks:
   private localRole: string;
   private attachedStreams: { [trackId: string]: MediaStream };
   private renegotiationTimer: number;
 
-  constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler,
-              api: ArtichokeAPI, constraints?: RTCConnectionConstraints) {
+  constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI,
+              constraints?: RTCConnectionConstraints, answerOptions?: RTCAnswerOptions,
+              offerOptions?: HackedRTCOfferOptions) {
     log("Connecting an RTC connection to " + peer + " on " + call);
     this.call = call;
     this.peer = peer;
     this.api = api;
     this.events = events;
     this.log = log;
+    this.answerOptions = answerOptions;
+    this.offerOptions = offerOptions;
     this.conn = new (RTCPeerConnection as HackedRTCPeerConnection)(config, constraints);
 
     this.localRole = undefined;
@@ -113,7 +118,6 @@ export class RTCConnection {
       if (this.isEstablished()) {
         this.renegotiationTimer = onceDelayed(this.renegotiationTimer, 100, () => {
           this.log("Renegotiating an RTC connection.");
-          // FIXME Needs offerOptions.
           this.offer().catch((error) => {
             this.events.raise("Could not renegotiate the connection.", error);
           });
@@ -157,7 +161,7 @@ export class RTCConnection {
   offer(options?: HackedRTCOfferOptions): Promise<wireEvents.SDP> {
     this.log("Creating an RTC offer.");
 
-    return this.conn.createOffer(options).then((offer) => {
+    return this.conn.createOffer(options || this.offerOptions).then((offer) => {
       return this.setLocalDescription(offer);
     }).then((offer) => {
       return this.api.sendDescription(this.call, this.peer, offer).then(() => offer);
@@ -176,7 +180,7 @@ export class RTCConnection {
   answer(options?: RTCAnswerOptions): Promise<wireEvents.SDP> {
     this.log("Creating an RTC answer.");
 
-    return this.conn.createAnswer(options).then((answer) => {
+    return this.conn.createAnswer(options || this.answerOptions).then((answer) => {
       // FIXME Chrome does not support DTLS role changes.
       return this.setLocalDescription(this.patchSDP(answer));
     }).then((answer) => {
@@ -300,12 +304,12 @@ export class RTCPool {
 
       if (msg.description.type === "offer") {
         if (msg.peer in this.connections) {
-          this.connections[msg.peer].addOffer(msg.description, this.answerOptions).catch((error) => {
+          this.connections[msg.peer].addOffer(msg.description).catch((error) => {
             events.raise("Could not process the RTC description: ", error);
           });
         } else {
           const rtc = this.createRTC(msg.peer);
-          rtc.addOffer(msg.description, this.answerOptions).catch((error) => {
+          rtc.addOffer(msg.description).catch((error) => {
             events.raise("Could not process the RTC description: ", error);
           });
         }
@@ -387,8 +391,8 @@ export class RTCPool {
   }
 
   private createRTC(peer: ID): RTCConnection {
-    const rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events,
-                                    this.api, this.connectionConstraints);
+    const rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events, this.api,
+                                    this.connectionConstraints, this.answerOptions, this.offerOptions);
     rtc.onRemoteStream((s) => this.onRemoteStreamCallback(peer, s));
     this.connections[peer] = rtc;
     this.tracks.forEach((t) => rtc.addTrack(t.track, t.stream));
@@ -397,8 +401,10 @@ export class RTCPool {
 }
 
 export function createRTCConnection(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler,
-                                    api: ArtichokeAPI, constraints?: RTCConnectionConstraints): RTCConnection {
-  return new RTCConnection(call, peer, config, log, events, api, constraints);
+                                    api: ArtichokeAPI, constraints?: RTCConnectionConstraints,
+                                    answerOptions?: RTCAnswerOptions,
+                                    offerOptions?: HackedRTCOfferOptions): RTCConnection {
+  return new RTCConnection(call, peer, config, log, events, api, constraints, answerOptions, offerOptions);
 }
 
 export function createRTCPool(call: ID, config: RTCConfig, log: Logger,
