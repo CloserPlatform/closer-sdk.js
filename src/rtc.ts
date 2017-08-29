@@ -44,7 +44,7 @@ type HackedRTCPeerConnection = RTCPeerConnection & {
   getSenders: () => Array<RTCRtpSender>;
   createOffer: (options?: HackedRTCOfferOptions) => Promise<RTCSessionDescription>;
   createAnswer: (options?: RTCAnswerOptions) => Promise<RTCSessionDescription>;
-}
+};
 
 function supportsTracks(pc: HackedRTCPeerConnection): boolean {
   return (typeof pc.addTrack !== "undefined") && (typeof pc.removeTrack !== "undefined");

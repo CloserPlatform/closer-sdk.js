@@ -3,7 +3,7 @@ import { Call, createCall, DirectCall, GroupCall } from "./call";
 import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import * as events from "./protocol/events";
+import * as protoEvents from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import * as wireEvents from "./protocol/wire-events";
@@ -24,7 +24,7 @@ export class Artichoke {
     this.events = events;
 
     // NOTE Disable some events by default.
-    let nop = (e: events.Event) => {
+    let nop = (e: protoEvents.Event) => {
       // Do nothing.
     };
     events.onEvent(eventTypes.ERROR, nop);
@@ -33,27 +33,26 @@ export class Artichoke {
   }
 
   // Callbacks:
-  onConnect(callback: Callback<events.Hello>) {
+  onConnect(callback: Callback<protoEvents.Hello>) {
     this.events.onEvent(eventTypes.HELLO, callback);
   }
 
-  onHeartbeat(callback: Callback<events.Heartbeat>) {
+  onHeartbeat(callback: Callback<protoEvents.Heartbeat>) {
     this.events.onEvent(eventTypes.HEARTBEAT, callback);
   }
 
-  onDisconnect(callback: Callback<events.Disconnect>) {
+  onDisconnect(callback: Callback<protoEvents.Disconnect>) {
     this.events.onEvent(eventTypes.DISCONNECT, callback);
   }
 
-  onError(callback: Callback<events.Error>) {
+  onError(callback: Callback<protoEvents.Error>) {
     this.events.onError(callback);
   }
 
   // API:
   connect() {
     this.api.onEvent((e: wireEvents.Event) => {
-      const richEvent: events.Event = events.eventUtils.upgrade(e, this.config, this.log, this.events, this.api);
-      this.events.notify(richEvent);
+      this.events.notify(protoEvents.eventUtils.upgrade(e, this.config, this.log, this.events, this.api));
     });
 
     this.api.connect();
@@ -64,11 +63,11 @@ export class Artichoke {
   }
 
   // Call API:
-  onCallCreated(callback: Callback<events.CallCreated>) {
+  onCallCreated(callback: Callback<protoEvents.CallCreated>) {
     this.events.onEvent(eventTypes.CALL_CREATED, callback);
   }
 
-  onCallInvitation(callback: Callback<events.CallInvitation>) {
+  onCallInvitation(callback: Callback<protoEvents.CallInvitation>) {
     this.events.onEvent(eventTypes.CALL_INVITATION, callback);
   }
 
@@ -90,11 +89,11 @@ export class Artichoke {
   }
 
   // Chat room API:
-  onRoomCreated(callback: Callback<events.RoomCreated>) {
+  onRoomCreated(callback: Callback<protoEvents.RoomCreated>) {
     this.events.onEvent(eventTypes.ROOM_CREATED, callback);
   }
 
-  onRoomInvitation(callback: Callback<events.RoomInvitation>) {
+  onRoomInvitation(callback: Callback<protoEvents.RoomInvitation>) {
     this.events.onEvent(eventTypes.ROOM_INVITATION, callback);
   }
 

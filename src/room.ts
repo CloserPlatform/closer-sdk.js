@@ -3,7 +3,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMedia, Media } from "./media";
 import { createMessage, Message } from "./message";
-import * as events from "./protocol/events";
+import * as protoEvents from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { actionTypes, eventTypes } from "./protocol/wire-events";
@@ -107,32 +107,32 @@ export abstract class Room implements wireEntities.Room {
     return this.api.sendTyping(this.id);
   }
 
-  onMark(callback: Callback<events.RoomMark>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MARK, this.id, (mark: events.RoomMark) => {
+  onMark(callback: Callback<protoEvents.RoomMark>) {
+    this.events.onConcreteEvent(eventTypes.ROOM_MARK, this.id, (mark: protoEvents.RoomMark) => {
       this.mark = mark.timestamp;
       callback(mark);
     });
   }
 
   onMessage(callback: Callback<Message>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (msg: events.RoomMessage) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (msg: protoEvents.RoomMessage) => {
       callback(msg.message);
     });
   }
 
   onMetadata(callback: Callback<proto.Metadata>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_METADATA, this.id, (msg: events.RoomMetadata) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_METADATA, this.id, (msg: protoEvents.RoomMetadata) => {
       callback(msg.metadata);
     });
   }
 
   onMedia(callback: Callback<Media>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MEDIA, this.id, (msg: events.RoomMedia) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_MEDIA, this.id, (msg: protoEvents.RoomMedia) => {
       callback(msg.media);
     });
   }
 
-  onTyping(callback: Callback<events.RoomTyping>) {
+  onTyping(callback: Callback<protoEvents.RoomTyping>) {
     this.events.onConcreteEvent(eventTypes.ROOM_TYPING, this.id, callback);
   }
 }
@@ -158,7 +158,7 @@ export class GroupRoom extends Room {
     this.onJoinedCallback = nop;
     this.onInvitedCallback = nop;
 
-    this.events.onConcreteEvent(eventTypes.ROOM_ACTION, this.id, (e: events.RoomActionSent) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_ACTION, this.id, (e: protoEvents.RoomActionSent) => {
       switch (e.action.action) {
       case actionTypes.JOINED:
         this.users.push(e.action.user);
