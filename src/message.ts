@@ -11,6 +11,7 @@ export class Message implements wireEntities.Message, RichDeliverable, RichEdita
   public type: proto.Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
   public id: proto.ID;
   public body: string;
+  public context: proto.Context;
   public user: proto.ID;
   public room: proto.ID;
   public timestamp: proto.Timestamp;
@@ -24,6 +25,7 @@ export class Message implements wireEntities.Message, RichDeliverable, RichEdita
   constructor(message: wireEntities.Message, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = message.id;
     this.body = message.body;
+    this.context = message.context;
     this.user = message.user;
     this.room = message.room;
     this.timestamp = message.timestamp;
