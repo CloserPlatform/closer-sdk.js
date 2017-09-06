@@ -52,6 +52,7 @@ export abstract class Call implements wireEntities.Call {
   private onActiveDeviceCallback: Callback<CallActiveDevice>;
   private onLeftCallback: Callback<proto.CallAction>;
   private onWentOfflineCallback: Callback<proto.CallAction>;
+  private onReconnectedCallback: Callback<proto.CallAction>;
   private onJoinedCallback: Callback<proto.CallAction>;
   private onTransferredCallback: Callback<proto.CallAction>;
   protected onInvitedCallback: Callback<proto.CallAction>;
@@ -96,6 +97,7 @@ export abstract class Call implements wireEntities.Call {
 
     this.onLeftCallback = nop;
     this.onWentOfflineCallback = nop;
+    this.onReconnectedCallback = nop;
     this.onJoinedCallback = nop;
     this.onTransferredCallback = nop;
     this.onInvitedCallback = nop;
@@ -124,6 +126,10 @@ export abstract class Call implements wireEntities.Call {
 
         case actionTypes.WENT_OFFLINE:
           this.onWentOfflineCallback(e.action);
+          break;
+
+        case actionTypes.RECONNECTED:
+          this.onReconnectedCallback(e.action);
           break;
 
         case actionTypes.INVITED:
@@ -217,6 +223,10 @@ export abstract class Call implements wireEntities.Call {
 
   onWentOffline(callback: Callback<proto.CallAction>) {
     this.onWentOfflineCallback = callback;
+  }
+
+  onReconnected(callback: Callback<proto.CallAction>) {
+    this.onReconnectedCallback = callback;
   }
 
   onJoined(callback: Callback<proto.CallAction>) {
