@@ -112,6 +112,17 @@ const events: Array<wireEvents.Event> = [{
     reason: "reason",
     timestamp: Date.now()
   }
+} as wireEvents.CallActionSent, {
+  type: eventTypes.CALL_ACTION,
+  id: callId,
+  action: {
+    type: eventTypes.CALL_ACTION,
+    action: actionTypes.WENT_OFFLINE,
+    id: actionId,
+    call: callId,
+    user: alice,
+    timestamp: Date.now()
+  }
 } as wireEvents.CallActionSent];
 
 describe("Protocol", () => {

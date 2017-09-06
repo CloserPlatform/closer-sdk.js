@@ -145,6 +145,26 @@ function makeCall(callType: CallType) {
       } as Event);
     });
 
+    it("should run a callback on went_offline", (done) => {
+      events.onError((error) => done.fail());
+
+      call.onWentOffline((msg) => {
+        expect(msg.user).toBe(alice);
+        done();
+      });
+
+      events.notify({
+        type: eventTypes.CALL_ACTION,
+        id: call.id,
+        action: {
+          action: actionTypes.WENT_OFFLINE,
+          call: call.id,
+          user: alice,
+          timestamp: Date.now(),
+        }
+      } as Event);
+    });
+
     it("should run a callback on answer", (done) => {
       events.onError((error) => done.fail());
 
