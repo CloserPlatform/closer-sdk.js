@@ -36,6 +36,8 @@ export namespace actionTypes {
   export const TRANSFERRED = "transferred";
   export type LEFT = "left";
   export const LEFT = "left";
+  export type WENT_OFFLINE = "went_offline";
+  export const WENT_OFFLINE = "went_offline";
   export type INVITED = "invited";
   export const INVITED = "invited";
   export type ANSWERED = "answered";

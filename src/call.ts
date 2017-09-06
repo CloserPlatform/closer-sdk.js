@@ -51,6 +51,7 @@ export abstract class Call implements wireEntities.Call {
   protected pool: RTCPool;
   private onActiveDeviceCallback: Callback<CallActiveDevice>;
   private onLeftCallback: Callback<proto.CallAction>;
+  private onWentOfflineCallback: Callback<proto.CallAction>;
   private onJoinedCallback: Callback<proto.CallAction>;
   private onTransferredCallback: Callback<proto.CallAction>;
   protected onInvitedCallback: Callback<proto.CallAction>;
@@ -94,6 +95,7 @@ export abstract class Call implements wireEntities.Call {
     };
 
     this.onLeftCallback = nop;
+    this.onWentOfflineCallback = nop;
     this.onJoinedCallback = nop;
     this.onTransferredCallback = nop;
     this.onInvitedCallback = nop;
@@ -118,6 +120,10 @@ export abstract class Call implements wireEntities.Call {
           this.users = this.users.filter((u) => u !== e.action.user);
           this.pool.destroy(e.action.user);
           this.onLeftCallback(e.action);
+          break;
+
+        case actionTypes.WENT_OFFLINE:
+          this.onWentOfflineCallback(e.action);
           break;
 
         case actionTypes.INVITED:
@@ -207,6 +213,10 @@ export abstract class Call implements wireEntities.Call {
 
   onLeft(callback: Callback<proto.CallAction>) {
     this.onLeftCallback = callback;
+  }
+
+  onWentOffline(callback: Callback<proto.CallAction>) {
+    this.onWentOfflineCallback = callback;
   }
 
   onJoined(callback: Callback<proto.CallAction>) {
