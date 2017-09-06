@@ -642,6 +642,14 @@ $(document).ready(function() {
             users.remove(m.user);
         });
 
+        call.onWentOffline(function(m) {
+            console.log("User went offline: ", m);
+        });
+
+        call.onReconnected(function(m) {
+            console.log("User reconnected: ", m);
+        });
+
         call.onJoined(function(m) {
             console.log("User joined the call: ", m);
             users.add(m.user);
