@@ -583,7 +583,7 @@ $(document).ready(function() {
         });
     }
 
-    function makeCall(call, localStream, constraints) {
+    function makeCall(call, localStream, constraints, session) {
         console.log("Building a call object for: ", call);
 
         var users = makeUserList(function() {});
@@ -727,6 +727,14 @@ $(document).ready(function() {
             createImageStream(randomGif(), 10, replaceStream);
         });
 
+        var connect = makeButton('btn-warning', "Connect", function() {
+            session.chat.connect();
+        });
+
+        var disconnect = makeButton('btn-warning', "Disconnect", function() {
+            session.chat.disconnect();
+        });
+
         var video = makeCheckbox(call.id + "-video", " Video", constraints.video, function(isChecked) {
             createStream(replaceStream, {
                 "video": isChecked,
@@ -759,7 +767,7 @@ $(document).ready(function() {
             }, function() {});
         }
 
-        var buttons = makeButtonGroup().append([hangup, toggle, video, audio]);
+        var buttons = makeButtonGroup().append([hangup, toggle, connect, disconnect, video, audio]);
         var panel = makePanel(users.element).addClass('controls-wrapper');
         var controls = makeControls(call.id, [panel, input, buttons]).addClass('text-center').hide();
         renderStreams();
@@ -799,8 +807,8 @@ $(document).ready(function() {
         }
     }
 
-    function addCall(call, stream, constraints) {
-        var box = makeCall(call, stream, constraints);
+    function addCall(call, stream, constraints, session) {
+        var box = makeCall(call, stream, constraints, session);
         call.getHistory(); // NOTE Just for testing purposes.
         chat.add(call.id, box);
         return box;
@@ -810,7 +818,7 @@ $(document).ready(function() {
         return function(room, user, constraints) {
             createStream(function(stream) {
                 session.chat.createDirectCall(stream, user, 10).then(function(call) {
-                    var box = addCall(call, stream, constraints);
+                    var box = addCall(call, stream, constraints, session);
                     chatboxes[room.id].addCall(box);
                     box.switchTo();
                 }).catch(function(error) {
@@ -824,7 +832,7 @@ $(document).ready(function() {
         return function(room, users, constraints) {
             createStream(function(stream) {
                 session.chat.createCall(stream, users).then(function(call) {
-                    var box = addCall(call, stream, constraints);
+                    var box = addCall(call, stream, constraints, session);
                     chatboxes[room.id].addCall(box);
                     box.switchTo();
                 }).catch(function(error) {
@@ -1067,7 +1075,7 @@ $(document).ready(function() {
                                 var callbox = addCall(m.call, stream, {
                                     "video": true,
                                     "audio": true
-                                });
+                                }, session);
                                 callbox.answer();
                                 callbox.switchTo();
                             });
