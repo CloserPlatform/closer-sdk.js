@@ -38,6 +38,8 @@ export namespace actionTypes {
   export const LEFT = "left";
   export type WENT_OFFLINE = "went_offline";
   export const WENT_OFFLINE = "went_offline";
+  export type RECONNECTED = "reconnected";
+  export const RECONNECTED = "reconnected";
   export type INVITED = "invited";
   export const INVITED = "invited";
   export type ANSWERED = "answered";

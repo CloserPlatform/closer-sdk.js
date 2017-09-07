@@ -123,7 +123,18 @@ const events: Array<wireEvents.Event> = [{
     user: alice,
     timestamp: Date.now()
   }
-} as wireEvents.CallActionSent];
+} as wireEvents.CallActionSent, {
+    type: eventTypes.CALL_ACTION,
+    id: callId,
+    action: {
+      type: eventTypes.CALL_ACTION,
+      action: actionTypes.RECONNECTED,
+      id: actionId,
+      call: callId,
+      user: alice,
+      timestamp: Date.now()
+    }
+  } as wireEvents.CallActionSent];
 
 describe("Protocol", () => {
   it("should be reversible", () => {

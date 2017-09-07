@@ -26,7 +26,7 @@ export interface RoomArchivable extends Archivable {
 
 export interface CallAction extends CallArchivable {
   action: actionTypes.JOINED | actionTypes.TRANSFERRED | actionTypes.LEFT | actionTypes.WENT_OFFLINE |
-    actionTypes.INVITED | actionTypes.REJECTED | actionTypes.ANSWERED;
+    actionTypes.RECONNECTED | actionTypes.INVITED | actionTypes.REJECTED | actionTypes.ANSWERED;
   reason?: string;
   invitee?: ID;
 }
