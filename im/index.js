@@ -642,12 +642,12 @@ $(document).ready(function() {
             users.remove(m.user);
         });
 
-        call.onWentOffline(function(m) {
-            console.log("User went offline: ", m);
+        call.onOffline(function(m) {
+            console.log("User become offline: ", m);
         });
 
-        call.onReconnected(function(m) {
-            console.log("User reconnected: ", m);
+        call.onOnline(function(m) {
+            console.log("User become online: ", m);
         });
 
         call.onJoined(function(m) {

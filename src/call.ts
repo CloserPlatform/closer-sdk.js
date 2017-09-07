@@ -51,8 +51,8 @@ export abstract class Call implements wireEntities.Call {
   protected pool: RTCPool;
   private onActiveDeviceCallback: Callback<CallActiveDevice>;
   private onLeftCallback: Callback<proto.CallAction>;
-  private onWentOfflineCallback: Callback<proto.CallAction>;
-  private onReconnectedCallback: Callback<proto.CallAction>;
+  private onOfflineCallback: Callback<proto.CallAction>;
+  private onOnlineCallback: Callback<proto.CallAction>;
   private onJoinedCallback: Callback<proto.CallAction>;
   private onTransferredCallback: Callback<proto.CallAction>;
   protected onInvitedCallback: Callback<proto.CallAction>;
@@ -96,8 +96,8 @@ export abstract class Call implements wireEntities.Call {
     };
 
     this.onLeftCallback = nop;
-    this.onWentOfflineCallback = nop;
-    this.onReconnectedCallback = nop;
+    this.onOfflineCallback = nop;
+    this.onOnlineCallback = nop;
     this.onJoinedCallback = nop;
     this.onTransferredCallback = nop;
     this.onInvitedCallback = nop;
@@ -124,12 +124,12 @@ export abstract class Call implements wireEntities.Call {
           this.onLeftCallback(e.action);
           break;
 
-        case actionTypes.WENT_OFFLINE:
-          this.onWentOfflineCallback(e.action);
+        case actionTypes.OFFLINE:
+          this.onOfflineCallback(e.action);
           break;
 
-        case actionTypes.RECONNECTED:
-          this.onReconnectedCallback(e.action);
+        case actionTypes.ONLINE:
+          this.onOnlineCallback(e.action);
           break;
 
         case actionTypes.INVITED:
@@ -221,12 +221,12 @@ export abstract class Call implements wireEntities.Call {
     this.onLeftCallback = callback;
   }
 
-  onWentOffline(callback: Callback<proto.CallAction>) {
-    this.onWentOfflineCallback = callback;
+  onOffline(callback: Callback<proto.CallAction>) {
+    this.onOfflineCallback = callback;
   }
 
-  onReconnected(callback: Callback<proto.CallAction>) {
-    this.onReconnectedCallback = callback;
+  onOnline(callback: Callback<proto.CallAction>) {
+    this.onOnlineCallback = callback;
   }
 
   onJoined(callback: Callback<proto.CallAction>) {

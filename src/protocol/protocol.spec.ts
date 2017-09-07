@@ -117,7 +117,7 @@ const events: Array<wireEvents.Event> = [{
   id: callId,
   action: {
     type: eventTypes.CALL_ACTION,
-    action: actionTypes.WENT_OFFLINE,
+    action: actionTypes.OFFLINE,
     id: actionId,
     call: callId,
     user: alice,
@@ -128,7 +128,7 @@ const events: Array<wireEvents.Event> = [{
     id: callId,
     action: {
       type: eventTypes.CALL_ACTION,
-      action: actionTypes.RECONNECTED,
+      action: actionTypes.ONLINE,
       id: actionId,
       call: callId,
       user: alice,

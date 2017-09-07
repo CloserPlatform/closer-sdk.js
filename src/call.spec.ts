@@ -145,10 +145,10 @@ function makeCall(callType: CallType) {
       } as Event);
     });
 
-    it("should run a callback on went_offline", (done) => {
+    it("should run a callback on offline call action", (done) => {
       events.onError((error) => done.fail());
 
-      call.onWentOffline((msg) => {
+      call.onOffline((msg) => {
         expect(msg.user).toBe(alice);
         done();
       });
@@ -157,7 +157,7 @@ function makeCall(callType: CallType) {
         type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
-          action: actionTypes.WENT_OFFLINE,
+          action: actionTypes.OFFLINE,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
@@ -165,10 +165,10 @@ function makeCall(callType: CallType) {
       } as Event);
     });
 
-    it("should run a callback on reconnected", (done) => {
+    it("should run a callback on online call action", (done) => {
       events.onError((error) => done.fail());
 
-      call.onReconnected((msg) => {
+      call.onOnline((msg) => {
         expect(msg.user).toBe(alice);
         done();
       });
@@ -177,7 +177,7 @@ function makeCall(callType: CallType) {
         type: eventTypes.CALL_ACTION,
         id: call.id,
         action: {
-          action: actionTypes.RECONNECTED,
+          action: actionTypes.ONLINE,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
