@@ -36,10 +36,10 @@ export namespace actionTypes {
   export const TRANSFERRED = "transferred";
   export type LEFT = "left";
   export const LEFT = "left";
-  export type WENT_OFFLINE = "went_offline";
-  export const WENT_OFFLINE = "went_offline";
-  export type RECONNECTED = "reconnected";
-  export const RECONNECTED = "reconnected";
+  export type OFFLINE = "offline";
+  export const OFFLINE = "offline";
+  export type ONLINE = "online";
+  export const ONLINE = "online";
   export type INVITED = "invited";
   export const INVITED = "invited";
   export type ANSWERED = "answered";
