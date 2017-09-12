@@ -7,7 +7,7 @@ import * as protoEvents from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { actionTypes, eventTypes } from "./protocol/wire-events";
-import { wrapPromise } from "./utils";
+import { TransferFunction } from "./utils";
 
 export namespace roomType {
   export enum RoomType {
@@ -57,18 +57,18 @@ export abstract class Room implements wireEntities.Room {
     this.api = api;
   }
 
-  getHistory(count?: number, filter?: proto.HistoryFilter): Promise<proto.HistoryPage<proto.RoomArchivable>> {
+  getHistory(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
     return this.doGetHistory(this.api.getRoomHistoryLast(this.id, count || 100, filter));
   }
 
   getHistoryPage(offset: number,
                  limit: number,
-                 filter?: proto.HistoryFilter): Promise<proto.HistoryPage<proto.RoomArchivable>> {
+                 filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
     return this.doGetHistory(this.api.getRoomHistoryPage(this.id, offset, limit, filter));
   }
 
-  private doGetHistory(p: Promise<proto.HistoryPage<proto.RoomArchivable>>) {
-    return wrapPromise(p, (a: proto.RoomArchivable) => {
+  private doGetHistory(p: Promise<proto.Paginated<proto.RoomArchivable>>) {
+    return this.wrapPagination(p, (a: proto.RoomArchivable) => {
       switch (a.type) {
       case "media":
         const media = a as wireEntities.Media;
@@ -81,6 +81,16 @@ export abstract class Room implements wireEntities.Room {
       default:
         return a as proto.RoomArchivable;
       }
+    });
+  }
+
+  private wrapPagination<T, U>(p: Promise<proto.Paginated<T>>, f: TransferFunction<T, U>): Promise<proto.Paginated<U>> {
+    return p.then((t) => {
+      return {
+        offset: t.offset,
+        limit: t.limit,
+        items: t.items.map(f)
+      };
     });
   }
 

@@ -26,46 +26,46 @@ export class RESTfulAPI {
     this.log = log;
   }
 
-  private responseCallback<Response>(xhttp: XMLHttpRequest,
-                                     resolve: PromiseResolve<Response>,
-                                     reject: PromiseReject): Thunk {
+  private responseCallback(xhttp: XMLHttpRequest,
+                           resolve: PromiseResolve<XMLHttpRequest>,
+                           reject: PromiseReject): Thunk {
     return () => {
       if (xhttp.readyState === 4 && xhttp.status === 200) {
         this.log("OK response: " + xhttp.responseText);
-        resolve(JSON.parse(xhttp.responseText));
+        resolve(xhttp);
       } else if (xhttp.readyState === 4 && xhttp.status === 204) {
         this.log("NoContent response.");
         resolve(undefined);
       } else if (xhttp.readyState === 4) {
         this.log("Error response: " + xhttp.responseText);
-        try {
-          reject(JSON.parse(xhttp.responseText));
-        } catch (error) {
-          reject(undefined); // FIXME Make sure that this never happens.
-        }
+        reject(JSON.parse(xhttp.responseText));
       }
     };
   }
 
-  get<Response>(path: Array<string>, headers?: Array<HeaderValue>): Promise<Response> {
-    return new Promise<Response>((resolve, reject) => {
+  getRaw<Response>(path: Array<string>, headers?: Array<HeaderValue>): Promise<XMLHttpRequest> {
+    return new Promise<XMLHttpRequest>((resolve, reject) => {
       let url = path.join("/");
       this.log("GET " + url);
 
       let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = this.responseCallback<Response>(xhttp, resolve, reject);
+      xhttp.onreadystatechange = this.responseCallback(xhttp, resolve, reject);
       xhttp.open("GET", url, true);
       (headers || []).forEach((h) => xhttp.setRequestHeader(h.header, h.value));
       xhttp.send();
     });
   }
 
-  post<Body, Response>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<Response> {
-    return new Promise<Response>((resolve, reject) => {
+  get<Response>(path: Array<string>, headers?: Array<HeaderValue>): Promise<Response> {
+    return this.getRaw(path, headers).then((resp) => JSON.parse(resp.responseText));
+  }
+
+  postRaw<Body>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<XMLHttpRequest> {
+    return new Promise<XMLHttpRequest>((resolve, reject) => {
       let url = path.join("/");
 
       let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = this.responseCallback<Response>(xhttp, resolve, reject);
+      xhttp.onreadystatechange = this.responseCallback(xhttp, resolve, reject);
       xhttp.open("POST", url, true);
       (headers || []).forEach((h) => xhttp.setRequestHeader(h.header, h.value));
 
@@ -80,6 +80,11 @@ export class RESTfulAPI {
       }
     });
   }
+
+  post<Body, Response>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<Response> {
+    return this.postRaw(path, headers, body).then((resp) => JSON.parse(resp.responseText));
+  }
+
 }
 
 export interface PromiseResolve<T> extends Callback<T | PromiseLike<T>> {}
@@ -277,23 +282,23 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   getRoomHistoryLast(roomId: proto.ID,
                      count: number,
-                     filter?: proto.HistoryFilter): Promise<proto.HistoryPage<proto.RoomArchivable>> {
+                     filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
     let endpoint = "history/last?count=" + count;
     if (filter) {
       endpoint += "&filter=" + filter;
     }
-    return this.getAuth<proto.HistoryPage<proto.RoomArchivable>>([this.url, this.roomPath, roomId, endpoint]);
+    return this.getAuthPaginated<proto.RoomArchivable>([this.url, this.roomPath, roomId, endpoint]);
   }
 
   getRoomHistoryPage(roomId: proto.ID,
                      offset: number,
                      limit: number,
-                     filter?: proto.HistoryFilter): Promise<proto.HistoryPage<proto.RoomArchivable>> {
+                     filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
     let endpoint = "history/page?offset=" + offset + "&limit=" + limit;
     if (filter) {
       endpoint += "&filter=" + filter;
     }
-    return this.getAuth<proto.HistoryPage<proto.RoomArchivable>>([this.url, this.roomPath, roomId, endpoint]);
+    return this.getAuthPaginated<proto.RoomArchivable>([this.url, this.roomPath, roomId, endpoint]);
   }
 
   joinRoom(roomId: proto.ID): Promise<void> {
@@ -339,6 +344,20 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   private getAuth<Response>(path: Array<string>): Promise<Response> {
     return this.get<Response>(path, this.authHeaders);
+  }
+
+  private getAuthPaginated<Item>(path: Array<string>): Promise<proto.Paginated<Item>> {
+    return this.getRaw(path, this.authHeaders)
+      .then((resp) => {
+        const items = JSON.parse(resp.responseText) as Array<Item>;
+        const offset = +resp.getResponseHeader("Paging-Offset");
+        const limit = +resp.getResponseHeader("Paging-Limit");
+        return {
+          items,
+          offset,
+          limit
+        };
+      });
   }
 
   private postAuth<Body, Response>(path, body?: Body): Promise<Response> {

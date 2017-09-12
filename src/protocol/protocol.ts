@@ -143,4 +143,8 @@ export function invite(user): Invite {
 
 export type HistoryFilter = string;
 
-export type HistoryPage<T> = Array<T>;
+export interface Paginated<T> {
+  items: Array<T>;
+  offset: number;
+  limit: number;
+}
