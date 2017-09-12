@@ -36,7 +36,6 @@ export abstract class Room implements wireEntities.Room {
   public users: Array<proto.ID>;
   public direct: boolean;
   public orgId: proto.ID;
-  public externalId: string;
   public mark: proto.Timestamp;
 
   private log: Logger;
@@ -52,7 +51,6 @@ export abstract class Room implements wireEntities.Room {
     this.users = room.users;
     this.direct = room.direct;
     this.orgId = room.orgId;
-    this.externalId = room.externalId;
     this.mark = room.mark || 0;
     this.log = log;
     this.events = events;

@@ -134,7 +134,6 @@ function makeRoom(roomType: RoomType) {
 
     case RoomType.BUSINESS:
       room.orgId = "1234";
-      room.externalId = "5678";
       return room;
 
     case RoomType.GROUP:
