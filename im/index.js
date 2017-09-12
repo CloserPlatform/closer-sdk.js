@@ -20,7 +20,8 @@ $(document).ready(function() {
     var newRoom = function() {};
 
     var status = "available";
-    var lektaButton = $("#lekta-button").click(function() { return false; }).html("Lekta!").hide();
+    var lektaVIGButton = $("#lekta-vig-button").click(function() { return false; }).html("Lekta VIG!").hide();
+    var lektaPAButton = $("#lekta-pa-button").click(function() { return false; }).html("Lekta PA!").hide();
 
     var stealSwitch = $("#steal-switch").click(function() { return false; }).hide();
 
@@ -969,7 +970,8 @@ $(document).ready(function() {
                 }
             }).then(function (session) {
                 sessionId = session.id;
-                lektaButton.show();
+                lektaVIGButton.show();
+                lektaPAButton.show();
 
                 newRoom = roomBuilder(session);
 
@@ -995,9 +997,14 @@ $(document).ready(function() {
                     $('#demo-name').html("Connected - " + user.user.name);
                     console.log("Connected to Artichoke!");
 
-                    lektaButton.click(function() {
-                        // NOTE Lekta bot ID.
+                    lektaVIGButton.click(function() {
+                        // NOTE Lekta VIG bot ID.
                         directRoomBuilder(session)("3d8498b2-8dd7-4c16-8c45-ef09dfd265bb");
+                    });
+
+                    lektaPAButton.click(function() {
+                        // NOTE Lekta Personal Assistant bot ID.
+                        directRoomBuilder(session)("5418b491-5093-4e26-94b3-835552be2fc7");
                     });
 
                     killSwitch.click(function() {
