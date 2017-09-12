@@ -519,7 +519,7 @@ $(document).ready(function() {
             }
 
             room.getHistory().then(function(msgs) {
-                msgs.forEach(function(msg) {
+                msgs.items.forEach(function(msg) {
                     switch(msg.type) {
                     case "media":
                         msg.onEdit(editLine);
