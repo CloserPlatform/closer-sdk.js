@@ -23,7 +23,7 @@ export class JSONWebSocket {
       this.log("WS connected to: " + url);
     };
 
-    this.socket.onclose = this.onCloseCallback;
+    this.setupOnClose(this.onCloseCallback);
     this.socket.onerror = this.onErrorCallback;
     this.socket.onmessage = this.onMessageCallback;
   }
@@ -40,7 +40,7 @@ export class JSONWebSocket {
     };
 
     if (this.socket) {
-      this.socket.onclose = this.onCloseCallback;
+      this.setupOnClose(this.onCloseCallback);
     }
   }
 
@@ -75,5 +75,20 @@ export class JSONWebSocket {
     } else {
       return Promise.reject<void>(new Error("Websocket is not connected!"));
     }
+  }
+
+  private setupOnClose(callback) {
+    this.socket.onclose = callback;
+    const wrappedCallback = (close) => {
+      close.reason = "Browser offline.";
+      close.code = 1006; // NOTE WebSocket.CLOSE_ABNORMAL
+      callback(close);
+    };
+    if (typeof window.addEventListener !== "undefined") {
+      window.addEventListener("offline", wrappedCallback);
+    } else {
+      (document.body as any).onoffline = wrappedCallback;
+    }
+    // TODO Check heartbeats.
   }
 }
