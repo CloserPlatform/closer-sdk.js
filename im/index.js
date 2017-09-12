@@ -137,6 +137,12 @@ $(document).ready(function() {
         }
 
         return {
+            line: function() {
+                var line = $('<p>').append("-----");
+                text.append(line);
+                text.trigger('scroll-to-bottom');
+                return line;
+            },
             media: function(media) {
                 var e = media.edited ? " edited" : "";
                 return receive(media, "media" + e, getUserNickname(media.user), makeEmbed({
@@ -518,27 +524,35 @@ $(document).ready(function() {
                 chatbox = makeGroupChatbox(room, directRoomBuilder(session), callBuilder(session));
             }
 
-            room.getHistory().then(function(msgs) {
-                msgs.items.forEach(function(msg) {
-                    switch(msg.type) {
-                    case "media":
-                        msg.onEdit(editLine);
-                        chatbox.receive.media(msg);
-                        break;
-                    case "message":
-                        msg.markDelivered();
-                        msg.onEdit(editLine);
-                        chatbox.receive.message(msg);
-                        break;
-                    case "metadata":
-                        chatbox.receive.metadata(msg);
-                        break;
-                    case "action":
-                        chatbox.receive.action(msg);
-                    }
-                });
-            }).catch(function(error) {
+            function doReceive(msg) {
+              switch(msg.type) {
+              case "media":
+                msg.onEdit(editLine);
+                chatbox.receive.media(msg);
+                break;
+              case "message":
+                msg.markDelivered();
+                msg.onEdit(editLine);
+                chatbox.receive.message(msg);
+                break;
+              case "metadata":
+                chatbox.receive.metadata(msg);
+                break;
+              case "action":
+                chatbox.receive.action(msg);
+              }
+            }
+
+            room.getHistoryPage(0, 5).then(function(initial) {
+              room.getHistory(50).then(function(msgs) {
+                initial.items.forEach(doReceive);
+                chatbox.receive.line();
+                msgs.items.forEach(doReceive);
+              }).catch(function(error) {
                 console.log("Fetching room history failed: ", error);
+              });
+            }).catch(function(error) {
+              console.log("Fetching initial room history failed: ", error);
             });
 
             chat.add(room.id, chatbox);
