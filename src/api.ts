@@ -275,8 +275,25 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<Array<proto.ID>>([this.url, this.roomPath, roomId, "users"]);
   }
 
-  getRoomHistory(roomId: proto.ID): Promise<Array<proto.RoomArchivable>> {
-    return this.getAuth<Array<proto.RoomArchivable>>([this.url, this.roomPath, roomId, "history"]);
+  getRoomHistoryLast(roomId: proto.ID,
+                     count: number,
+                     filter?: proto.HistoryFilter): Promise<proto.HistoryPage<proto.RoomArchivable>> {
+    let endpoint = "history/last?count=" + count;
+    if (filter) {
+      endpoint += "&filter=" + filter;
+    }
+    return this.getAuth<proto.HistoryPage<proto.RoomArchivable>>([this.url, this.roomPath, roomId, endpoint]);
+  }
+
+  getRoomHistoryPage(roomId: proto.ID,
+                     offset: number,
+                     limit: number,
+                     filter?: proto.HistoryFilter): Promise<proto.HistoryPage<proto.RoomArchivable>> {
+    let endpoint = "history/page?offset=" + offset + "&limit=" + limit;
+    if (filter) {
+      endpoint += "&filter=" + filter;
+    }
+    return this.getAuth<proto.HistoryPage<proto.RoomArchivable>>([this.url, this.roomPath, roomId, endpoint]);
   }
 
   joinRoom(roomId: proto.ID): Promise<void> {

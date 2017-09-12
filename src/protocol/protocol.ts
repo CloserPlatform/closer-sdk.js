@@ -140,3 +140,7 @@ export function invite(user): Invite {
     user
   };
 }
+
+export type HistoryFilter = string;
+
+export type HistoryPage<T> = Array<T>;

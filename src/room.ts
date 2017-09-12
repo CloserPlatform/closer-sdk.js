@@ -57,8 +57,18 @@ export abstract class Room implements wireEntities.Room {
     this.api = api;
   }
 
-  getHistory(): Promise<Array<proto.RoomArchivable>> {
-    return wrapPromise(this.api.getRoomHistory(this.id), (a: proto.RoomArchivable) => {
+  getHistory(count?: number, filter?: proto.HistoryFilter): Promise<proto.HistoryPage<proto.RoomArchivable>> {
+    return this.doGetHistory(this.api.getRoomHistoryLast(this.id, count || 100, filter));
+  }
+
+  getHistoryPage(offset: number,
+                 limit: number,
+                 filter?: proto.HistoryFilter): Promise<proto.HistoryPage<proto.RoomArchivable>> {
+    return this.doGetHistory(this.api.getRoomHistoryPage(this.id, offset, limit, filter));
+  }
+
+  private doGetHistory(p: Promise<proto.HistoryPage<proto.RoomArchivable>>) {
+    return wrapPromise(p, (a: proto.RoomArchivable) => {
       switch (a.type) {
       case "media":
         const media = a as wireEntities.Media;

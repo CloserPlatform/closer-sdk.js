@@ -85,7 +85,11 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve();
   }
 
-  getRoomHistory(id) {
+  getRoomHistoryLast(id, count, filter) {
+    return Promise.resolve([msg(msg1), msg(msg2)]);
+  }
+
+  getRoomHistoryPage(id, offset, limit, filter) {
     return Promise.resolve([msg(msg1), msg(msg2)]);
   }
 
