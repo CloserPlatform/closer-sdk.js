@@ -24,12 +24,13 @@ export class Artichoke {
     this.events = events;
 
     // NOTE Disable some events by default.
-    let nop = (e: protoEvents.Event) => {
+    const nop = (e: protoEvents.Event) => {
       // Do nothing.
     };
     events.onEvent(eventTypes.ERROR, nop);
     events.onEvent(eventTypes.CHAT_RECEIVED, nop);
     events.onEvent(eventTypes.CHAT_DELIVERED, nop);
+    events.onEvent(eventTypes.HEARTBEAT, (hb: protoEvents.Heartbeat) => this.api.send(hb));
   }
 
   // Callbacks:
