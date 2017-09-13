@@ -7,7 +7,7 @@ import * as protoEvents from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { actionTypes, eventTypes } from "./protocol/wire-events";
-import { wrapPromise } from "./utils";
+import { TransferFunction } from "./utils";
 
 export namespace roomType {
   export enum RoomType {
@@ -36,7 +36,6 @@ export abstract class Room implements wireEntities.Room {
   public users: Array<proto.ID>;
   public direct: boolean;
   public orgId: proto.ID;
-  public externalId: string;
   public mark: proto.Timestamp;
 
   private log: Logger;
@@ -52,15 +51,24 @@ export abstract class Room implements wireEntities.Room {
     this.users = room.users;
     this.direct = room.direct;
     this.orgId = room.orgId;
-    this.externalId = room.externalId;
     this.mark = room.mark || 0;
     this.log = log;
     this.events = events;
     this.api = api;
   }
 
-  getHistory(): Promise<Array<proto.RoomArchivable>> {
-    return wrapPromise(this.api.getRoomHistory(this.id), (a: proto.RoomArchivable) => {
+  getLatestMessages(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
+    return this.doGetHistory(this.api.getRoomHistoryLast(this.id, count || 100, filter));
+  }
+
+  getMessages(offset: number,
+              limit: number,
+              filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
+    return this.doGetHistory(this.api.getRoomHistoryPage(this.id, offset, limit, filter));
+  }
+
+  private doGetHistory(p: Promise<proto.Paginated<proto.RoomArchivable>>) {
+    return this.wrapPagination(p, (a: proto.RoomArchivable) => {
       switch (a.type) {
       case "media":
         const media = a as wireEntities.Media;
@@ -73,6 +81,16 @@ export abstract class Room implements wireEntities.Room {
       default:
         return a as proto.RoomArchivable;
       }
+    });
+  }
+
+  private wrapPagination<T, U>(p: Promise<proto.Paginated<T>>, f: TransferFunction<T, U>): Promise<proto.Paginated<U>> {
+    return p.then((t) => {
+      return {
+        offset: t.offset,
+        limit: t.limit,
+        items: t.items.map(f)
+      };
     });
   }
 

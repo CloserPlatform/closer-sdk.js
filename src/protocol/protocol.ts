@@ -140,3 +140,11 @@ export function invite(user): Invite {
     user
   };
 }
+
+export type HistoryFilter = string;
+
+export interface Paginated<T> {
+  items: Array<T>;
+  offset: number;
+  limit: number;
+}

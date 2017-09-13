@@ -85,8 +85,20 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve();
   }
 
-  getRoomHistory(id) {
-    return Promise.resolve([msg(msg1), msg(msg2)]);
+  getRoomHistoryLast(id, count, filter) {
+    return Promise.resolve({
+      offset: 0,
+      limit: 2,
+      items: [msg(msg1), msg(msg2)]
+    });
+  }
+
+  getRoomHistoryPage(id, offset, limit, filter) {
+    return Promise.resolve({
+      offset: 0,
+      limit: 2,
+      items: [msg(msg1), msg(msg2)]
+    });
   }
 
   getRoomUsers(id) {
@@ -134,7 +146,6 @@ function makeRoom(roomType: RoomType) {
 
     case RoomType.BUSINESS:
       room.orgId = "1234";
-      room.externalId = "5678";
       return room;
 
     case RoomType.GROUP:
@@ -249,8 +260,8 @@ function makeRoom(roomType: RoomType) {
 
     // FIXME These should be moved to integration tests:
     it("should retrieve history", (done) => {
-      room.getHistory().then((msgs) => {
-        let ids = msgs.map((m) => m.id);
+      room.getLatestMessages().then((msgs) => {
+        let ids = msgs.items.map((m) => m.id);
         expect(ids).toContain(msg1);
         expect(ids).toContain(msg2);
         done();

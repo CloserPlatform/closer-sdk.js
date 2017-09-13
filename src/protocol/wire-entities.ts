@@ -24,6 +24,5 @@ export interface Room {
   users: Array<ID>;
   direct: boolean;
   orgId?: ID;
-  externalId?: string;
   mark?: number;
 }
