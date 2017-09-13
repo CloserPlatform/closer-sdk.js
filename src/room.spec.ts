@@ -260,7 +260,7 @@ function makeRoom(roomType: RoomType) {
 
     // FIXME These should be moved to integration tests:
     it("should retrieve history", (done) => {
-      room.getHistory().then((msgs) => {
+      room.getLatestMessages().then((msgs) => {
         let ids = msgs.items.map((m) => m.id);
         expect(ids).toContain(msg1);
         expect(ids).toContain(msg2);

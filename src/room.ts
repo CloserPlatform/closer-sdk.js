@@ -57,13 +57,13 @@ export abstract class Room implements wireEntities.Room {
     this.api = api;
   }
 
-  getHistory(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
+  getLatestMessages(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
     return this.doGetHistory(this.api.getRoomHistoryLast(this.id, count || 100, filter));
   }
 
-  getHistoryPage(offset: number,
-                 limit: number,
-                 filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
+  getMessages(offset: number,
+              limit: number,
+              filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
     return this.doGetHistory(this.api.getRoomHistoryPage(this.id, offset, limit, filter));
   }
 

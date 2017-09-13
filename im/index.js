@@ -543,8 +543,8 @@ $(document).ready(function() {
               }
             }
 
-            room.getHistoryPage(0, 5).then(function(initial) {
-              room.getHistory(50).then(function(msgs) {
+            room.getMessages(0, 5).then(function(initial) {
+              room.getLatestMessages(50).then(function(msgs) {
                 initial.items.forEach(doReceive);
                 chatbox.receive.line();
                 msgs.items.forEach(doReceive);
