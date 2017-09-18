@@ -92,6 +92,7 @@ export interface ChatReceived extends Event {
 
 export interface ChatRequest extends Event {
   body: string;
+  messageType?: string;
   context?: proto.Context;
   room: proto.ID;
 }
@@ -169,11 +170,13 @@ export interface Disconnect extends Event {
 }
 
 // WS API:
-export function chatRequest(room: proto.ID, body: string, context?: proto.Context, ref?: proto.Ref): ChatRequest {
+export function chatRequest(room: proto.ID, body: string, messageType?: string,
+                            context?: proto.Context, ref?: proto.Ref): ChatRequest {
   return {
     type: eventTypes.CHAT_REQUEST,
     room,
     body,
+    messageType,
     context,
     ref
   };
