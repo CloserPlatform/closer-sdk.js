@@ -12,6 +12,7 @@ describe("JSONWebSocket", () => {
   it("should reject sending messages when connection is not established", (done) => {
     const jws = new JSONWebSocket(log);
     jws.onError((e) => done.fail());
-    jws.send(chatRequest("123", "body", {type: "json", payload: "{\"key\": \"value\"}"})).then(() => done.fail()).catch((e) => done());
+    jws.send(chatRequest("123", "body", "TEXT_MESSAGE",
+      {type: "json", payload: "{\"key\": \"value\"}"})).then(() => done.fail()).catch((e) => done());
   });
 });
