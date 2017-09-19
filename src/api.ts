@@ -30,12 +30,9 @@ export class RESTfulAPI {
                            resolve: PromiseResolve<XMLHttpRequest>,
                            reject: PromiseReject): Thunk {
     return () => {
-      if (xhttp.readyState === 4 && xhttp.status === 200) {
+      if (xhttp.readyState === 4 && (xhttp.status === 200 || xhttp.status === 204)) {
         this.log("OK response: " + xhttp.responseText);
         resolve(xhttp);
-      } else if (xhttp.readyState === 4 && xhttp.status === 204) {
-        this.log("NoContent response.");
-        resolve(undefined);
       } else if (xhttp.readyState === 4) {
         this.log("Error response: " + xhttp.responseText);
         reject(JSON.parse(xhttp.responseText));
@@ -57,7 +54,7 @@ export class RESTfulAPI {
   }
 
   get<Response>(path: Array<string>, headers?: Array<HeaderValue>): Promise<Response> {
-    return this.getRaw(path, headers).then((resp) => JSON.parse(resp.responseText));
+    return this.getRaw(path, headers).then((resp) => RESTfulAPI.parseData(resp));
   }
 
   postRaw<Body>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<XMLHttpRequest> {
@@ -82,7 +79,11 @@ export class RESTfulAPI {
   }
 
   post<Body, Response>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<Response> {
-    return this.postRaw(path, headers, body).then((resp) => JSON.parse(resp.responseText));
+    return this.postRaw(path, headers, body).then((resp) => RESTfulAPI.parseData(resp));
+  }
+
+  private static parseData(resp: XMLHttpRequest) {
+    return resp.status === 204 ? resp.responseText : JSON.parse(resp.responseText);
   }
 
 }
