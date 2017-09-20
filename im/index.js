@@ -22,6 +22,7 @@ $(document).ready(function() {
     var status = "available";
     var lektaVIGButton = $("#lekta-vig-button").click(function() { return false; }).html("Lekta VIG!").hide();
     var lektaPAButton = $("#lekta-pa-button").click(function() { return false; }).html("Lekta PA!").hide();
+    var lektaMMButton = $("#lekta-mm-button").click(function() { return false; }).html("Lekta MM!").hide();
 
     var stealSwitch = $("#steal-switch").click(function() { return false; }).hide();
 
@@ -986,6 +987,7 @@ $(document).ready(function() {
                 sessionId = session.id;
                 lektaVIGButton.show();
                 lektaPAButton.show();
+                lektaMMButton.show();
 
                 newRoom = roomBuilder(session);
 
@@ -1019,6 +1021,11 @@ $(document).ready(function() {
                     lektaPAButton.click(function() {
                         // NOTE Lekta Personal Assistant bot ID.
                         directRoomBuilder(session)("5418b491-5093-4e26-94b3-835552be2fc7");
+                    });
+
+                    lektaMMButton.click(function() {
+                        // NOTE Lekta MeetMe bot ID.
+                        directRoomBuilder(session)("16b5dd33-0516-4754-a217-495945b57f61");
                     });
 
                     killSwitch.click(function() {
