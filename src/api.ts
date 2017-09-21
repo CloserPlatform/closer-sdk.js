@@ -352,8 +352,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getRaw(path, this.authHeaders)
       .then((resp) => {
         const items = JSON.parse(resp.responseText) as Array<Item>;
-        const offset = +resp.getResponseHeader("Paging-Offset");
-        const limit = +resp.getResponseHeader("Paging-Limit");
+        const offset = +resp.getResponseHeader("X-Paging-Offset");
+        const limit = +resp.getResponseHeader("X-Paging-Limit");
         return {
           items,
           offset,
