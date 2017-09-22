@@ -4,7 +4,7 @@ import { Logger } from "./logger";
 import { RTCCandidate, RTCDescription } from "./protocol/events";
 import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
-import { eventTypes } from "./protocol/wire-events";
+import {error, Event, eventTypes} from "./protocol/wire-events";
 import { onceDelayed, Thunk } from "./utils";
 
 export interface RTCConnectionConstraints {
@@ -55,7 +55,7 @@ export class RTCConnection {
   private call: ID;
   private peer: ID;
   private api: ArtichokeAPI;
-  private events: EventHandler;
+  private events: EventHandler<Event>;
   private log: Logger;
   private conn: HackedRTCPeerConnection;
   private onICEDoneCallback: Thunk;
@@ -68,7 +68,7 @@ export class RTCConnection {
   private attachedStreams: { [trackId: string]: MediaStream };
   private renegotiationTimer: number;
 
-  constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI,
+  constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler<Event>, api: ArtichokeAPI,
               constraints?: RTCConnectionConstraints, answerOptions?: RTCAnswerOptions,
               offerOptions?: HackedRTCOfferOptions) {
     log("Connecting an RTC connection to " + peer + " on " + call);
@@ -95,8 +95,8 @@ export class RTCConnection {
     this.conn.onicecandidate = (event) => {
       if (event.candidate) {
         this.log("Created ICE candidate: " + event.candidate.candidate);
-        this.api.sendCandidate(this.call, this.peer, event.candidate).catch((error) => {
-          this.events.raise("Could not send an ICE candidate.", error);
+        this.api.sendCandidate(this.call, this.peer, event.candidate).catch((err) => {
+          this.events.notify(error("Could not send an ICE candidate.", err));
         });
       } else {
         this.log("Done gathering ICE candidates.");
@@ -118,8 +118,8 @@ export class RTCConnection {
       if (this.isEstablished()) {
         this.renegotiationTimer = onceDelayed(this.renegotiationTimer, 100, () => {
           this.log("Renegotiating an RTC connection.");
-          this.offer().catch((error) => {
-            this.events.raise("Could not renegotiate the connection.", error);
+          this.offer().catch((err) => {
+            this.events.notify(error("Could not renegotiate the connection.", err));
           });
         });
       }
@@ -268,7 +268,7 @@ interface MediaStreamAndTrack {
 
 export class RTCPool {
   private api: ArtichokeAPI;
-  private events: EventHandler;
+  private events: EventHandler<Event>;
   private log: Logger;
 
   private call: ID;
@@ -281,7 +281,7 @@ export class RTCPool {
   private tracks: Array<MediaStreamAndTrack>;
   private onRemoteStreamCallback: RemoteStreamCallback;
 
-  constructor(call: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(call: ID, config: RTCConfig, log: Logger, events: EventHandler<Event>, api: ArtichokeAPI) {
     this.api = api;
     this.events = events;
     this.log = log;
@@ -304,36 +304,36 @@ export class RTCPool {
 
       if (msg.description.type === "offer") {
         if (msg.peer in this.connections) {
-          this.connections[msg.peer].addOffer(msg.description).catch((error) => {
-            events.raise("Could not process the RTC description: ", error);
+          this.connections[msg.peer].addOffer(msg.description).catch((err) => {
+            events.notify(error("Could not process the RTC description: ", err));
           });
         } else {
           const rtc = this.createRTC(msg.peer);
-          rtc.addOffer(msg.description).catch((error) => {
-            events.raise("Could not process the RTC description: ", error);
+          rtc.addOffer(msg.description).catch((err) => {
+            events.notify(error("Could not process the RTC description: ", err));
           });
         }
       } else if (msg.description.type === "answer") {
         if (msg.peer in this.connections) {
-          this.connections[msg.peer].addAnswer(msg.description).catch((error) => {
-            events.raise("Could not process the RTC description: ", error);
+          this.connections[msg.peer].addAnswer(msg.description).catch((err) => {
+            events.notify(error("Could not process the RTC description: ", err));
           });
         } else {
-          events.raise("Received an invalid RTC answer from " + msg.peer);
+          events.notify(error("Received an invalid RTC answer from " + msg.peer));
         }
       } else {
-        events.raise("Received an invalid RTC description type " + msg.description.type);
+        events.notify(error("Received an invalid RTC description type " + msg.description.type));
       }
     });
 
     events.onConcreteEvent(eventTypes.RTC_CANDIDATE, this.call, (msg: RTCCandidate) => {
       this.log("Received an RTC candidate: " + msg.candidate);
       if (msg.peer in this.connections) {
-        this.connections[msg.peer].addCandidate(msg.candidate).catch((error) => {
-          events.raise("Could not process the RTC candidate: ", error);
+        this.connections[msg.peer].addCandidate(msg.candidate).catch((err) => {
+          events.notify(error("Could not process the RTC candidate: ", err));
         });
       } else {
-        events.raise("Received an invalid RTC candidate. " +  msg.peer + " is not currently in this call.");
+        events.notify(error("Received an invalid RTC candidate. " +  msg.peer + " is not currently in this call."));
       }
     });
   }
@@ -361,8 +361,8 @@ export class RTCPool {
 
   create(peer: ID): RTCConnection {
     const rtc = this.createRTC(peer);
-    rtc.offer(this.offerOptions).catch((error) => {
-      this.events.raise("Could not create an RTC offer.", error);
+    rtc.offer(this.offerOptions).catch((err) => {
+      this.events.notify(error("Could not create an RTC offer.", err));
     });
     return rtc;
   }
@@ -400,7 +400,7 @@ export class RTCPool {
   }
 }
 
-export function createRTCConnection(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler,
+export function createRTCConnection(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler<Event>,
                                     api: ArtichokeAPI, constraints?: RTCConnectionConstraints,
                                     answerOptions?: RTCAnswerOptions,
                                     offerOptions?: HackedRTCOfferOptions): RTCConnection {
@@ -408,6 +408,6 @@ export function createRTCConnection(call: ID, peer: ID, config: RTCConfig, log: 
 }
 
 export function createRTCPool(call: ID, config: RTCConfig, log: Logger,
-                              events: EventHandler, api: ArtichokeAPI): RTCPool {
+                              events: EventHandler<Event>, api: ArtichokeAPI): RTCPool {
   return new RTCPool(call, config, log, events, api);
 }

@@ -4,7 +4,7 @@ import { apiKey, config, log } from "./fixtures.spec";
 import { Event } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import { actionTypes, eventTypes, mark, typing } from "./protocol/wire-events";
+import {actionTypes, codec, eventTypes, mark, typing} from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 
 import RoomType = roomType.RoomType;
@@ -163,7 +163,7 @@ function makeRoom(roomType: RoomType) {
     let room;
 
     beforeEach(() => {
-      events = new EventHandler(log);
+      events = new EventHandler(log, codec);
       api = new APIMock();
       const roomType = d === "DirectRoom" ? RoomType.DIRECT : RoomType.GROUP;
       room = createRoom(makeRoom(roomType), log, events, api);
@@ -312,7 +312,7 @@ describe("DirectRoom", () => {
   let room;
 
   beforeEach(() => {
-    events = new EventHandler(log);
+    events = new EventHandler(log, codec);
     api = new APIMock();
     room = createRoom(makeRoom(RoomType.DIRECT), log, events, api) as DirectRoom;
   });
@@ -331,13 +331,13 @@ describe("GroupRoom", () => {
   let room;
 
   beforeEach(() => {
-    events = new EventHandler(log);
+    events = new EventHandler(log, codec);
     api = new APIMock();
     room = createRoom(makeRoom(RoomType.GROUP), log, events, api) as GroupRoom;
   });
 
   it("should maintain the user list", (done) => {
-    events.onError((error) => done.fail());
+    events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
     room.onJoined((joined) => {
       expect(joined.user).toBe(bob);
@@ -463,7 +463,7 @@ describe("GroupRoom", () => {
 });
 
 describe("GroupRoom, BusinessRoom, DirectRoom", () => {
-  const events = new EventHandler(log);
+  const events = new EventHandler(log, codec);
   const api = new APIMock();
 
   it("should have proper roomType field defined", (done) => {

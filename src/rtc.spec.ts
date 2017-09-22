@@ -12,7 +12,7 @@ import {
 import { Event } from "./protocol/events";
 import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
-import { eventTypes } from "./protocol/wire-events";
+import {codec, eventTypes} from "./protocol/wire-events";
 import { createRTCConnection, createRTCPool, RTCConnection, RTCPool } from "./rtc";
 
 const invalidSDP = "this is not a valid SDP";
@@ -37,7 +37,7 @@ function logError(done) {
       log("Cause: " + error.cause);
     }
     done.fail();
-  }
+  };
 }
 
 function addLocalStream(pool: RTCPool|RTCConnection, stream: MediaStream) {
@@ -76,7 +76,7 @@ describe("RTCConnection", () => {
 
   beforeEach(() => {
     api = new APIMock();
-    events = new EventHandler(log);
+    events = new EventHandler(log, codec);
     peerA = createRTCConnection(callId, peerBId, config.chat.rtc, log, events, api);
   });
 
@@ -246,12 +246,12 @@ describe("RTCConnection", () => {
 });
 
 describe("RTCPool", () => {
-  let events;
+  let events: EventHandler<Event>;
   let api;
   let pool;
 
   beforeEach(() => {
-    events = new EventHandler(log);
+    events = new EventHandler(log, codec);
     api = new APIMock();
     pool = createRTCPool(callId, config.chat.rtc, log, events, api);
   });
@@ -266,7 +266,7 @@ describe("RTCPool", () => {
         done();
       };
 
-      events.onError(logError(done));
+      events.onEvent(eventTypes.ERROR, logError(done));
 
       addLocalStream(pool, stream);
       pool.create(peerAId);
@@ -289,7 +289,7 @@ describe("RTCPool", () => {
             done();
           };
 
-          events.onError(logError(done));
+          events.onEvent(eventTypes.ERROR, logError(done));
 
           addLocalStream(pool, streamPool);
           pool.onRemoteStream((peer, stream) => {
@@ -305,7 +305,7 @@ describe("RTCPool", () => {
   whenever(isWebRTCSupported())("should error on invalid session description", (done) => {
     getStream((stream) => {
       addLocalStream(pool, stream);
-      events.onError((error) => done());
+      events.onEvent(eventTypes.ERROR, (error) => done());
       api.onDescription = (id, peer, sdp) => done.fail();
 
       events.notify(descr({
@@ -318,7 +318,7 @@ describe("RTCPool", () => {
   whenever(isWebRTCSupported())("should error on invalid RTC signaling", (done) => {
     getStream((stream) => {
       addLocalStream(pool, stream);
-      events.onError((error) => done());
+      events.onEvent(eventTypes.ERROR, (error) => done());
       api.onDescription = (id, peer, sdp) => done.fail();
 
       events.notify(descr({
@@ -335,7 +335,7 @@ describe("RTCPool", () => {
         addLocalStream(peer, streamPeer);
         addLocalStream(pool, streamPool);
 
-        events.onError(logError(done));
+        events.onEvent(eventTypes.ERROR, logError(done));
 
         api.onDescription = (id, peerId, sdp) => {
           expect(api.descriptionSent).toBe(true);

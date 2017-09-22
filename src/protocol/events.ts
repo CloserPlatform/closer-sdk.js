@@ -95,7 +95,7 @@ export interface Disconnect extends Event, wireEvents.Disconnect {
 export namespace eventUtils {
 
   export function upgrade(e: wireEvents.Event, config: ChatConfig, log: Logger,
-                          events: EventHandler, api: ArtichokeAPI): Event {
+                          events: EventHandler<Event>, api: ArtichokeAPI): Event {
     if (isCallInvitation(e)) {
       const call = createCall(e.call, config.rtc, log, events, api);
       const richEvent: CallInvitation = {...e, call};

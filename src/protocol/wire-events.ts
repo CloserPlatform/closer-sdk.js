@@ -1,3 +1,4 @@
+import { Codec, EventEntity } from "../codec";
 import * as proto from "./protocol";
 import * as wireEntities from "./wire-entities";
 
@@ -49,10 +50,8 @@ export namespace actionTypes {
 }
 
 // JSON Events:
-export interface Event {
-  type: proto.Type;
+export interface Event extends EventEntity {
   ref?: proto.Ref;
-  id?: proto.ID;
 }
 
 export interface CallActionSent extends Event {
@@ -258,11 +257,7 @@ export function activeDevice(id: proto.ID, device: proto.ID): CallActiveDevice {
   };
 }
 
-// Reading & writing:
-export function read(bytes: string): Event {
-  return JSON.parse(bytes);
-}
-
-export function write(event: Event): string {
-  return JSON.stringify(event);
-}
+export const codec: Codec<Event> = {
+  decode: (data: string) => JSON.parse(data),
+  encode: (value: Event) => JSON.stringify(value)
+};

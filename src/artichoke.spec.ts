@@ -2,9 +2,9 @@ import { ArtichokeAPI } from "./api";
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
 import { apiKey, config, deviceId, log } from "./fixtures.spec";
-import { Call, Room } from "./protocol/wire-entities";
-import { disconnect, error, eventTypes } from "./protocol/wire-events";
 import { Event, Hello } from "./protocol/events";
+import { Call, Room } from "./protocol/wire-entities";
+import {codec, disconnect, error, eventTypes} from "./protocol/wire-events";
 
 const roomId = "234";
 const callId = "123";
@@ -27,12 +27,12 @@ class APIMock extends ArtichokeAPI {
 }
 
 describe("Artichoke", () => {
-  let events;
+  let events: EventHandler<Event>;
   let api;
   let chat;
 
   beforeEach(() => {
-    events = new EventHandler(log);
+    events = new EventHandler(log, codec);
     api = new APIMock();
     chat = new Artichoke(config.chat, log, events, api);
   });
@@ -77,7 +77,7 @@ describe("Artichoke", () => {
   });
 
   it("should run a callback when a room is created", (done) => {
-    events.onError((error) => done.fail());
+    events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
     const roomObj = {
       id: roomId,
@@ -99,7 +99,7 @@ describe("Artichoke", () => {
   });
 
   it("should run a callback when a call is created", (done) => {
-    events.onError((error) => done.fail());
+    events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
     const callObj = {
       id: callId,

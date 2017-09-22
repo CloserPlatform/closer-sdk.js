@@ -6,7 +6,8 @@ import { createMessage, Message } from "./message";
 import * as protoEvents from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import { actionTypes, eventTypes } from "./protocol/wire-events";
+import * as wireEvents from "./protocol/wire-events";
+import {actionTypes, error, eventTypes} from "./protocol/wire-events";
 import { TransferFunction } from "./utils";
 
 export namespace roomType {
@@ -39,12 +40,12 @@ export abstract class Room implements wireEntities.Room {
   public mark: proto.Timestamp;
 
   private log: Logger;
-  protected events: EventHandler;
+  protected events: EventHandler<wireEvents.Event>;
   protected api: ArtichokeAPI;
 
   public abstract readonly roomType: roomType.RoomType;
 
-  constructor(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(room: wireEntities.Room, log: Logger, events: EventHandler<wireEvents.Event>, api: ArtichokeAPI) {
     this.id = room.id;
     this.name = room.name;
     this.created = room.created;
@@ -166,7 +167,7 @@ export class GroupRoom extends Room {
   private onLeftCallback: Callback<proto.RoomAction>;
   private onInvitedCallback: Callback<proto.RoomAction>;
 
-  constructor(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(room: wireEntities.Room, log: Logger, events: EventHandler<wireEvents.Event>, api: ArtichokeAPI) {
     super(room, log, events, api);
 
     const nop = (a: proto.RoomAction) => {
@@ -193,7 +194,7 @@ export class GroupRoom extends Room {
         break;
 
       default:
-        this.events.raise("Invalid room_action event", e);
+        this.events.notify(error("Invalid room_action event", e));
       }
     });
   }
@@ -232,7 +233,8 @@ export class BusinessRoom extends GroupRoom {
   public readonly roomType: roomType.RoomType = roomType.RoomType.BUSINESS;
 }
 
-export function createRoom(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): Room {
+export function createRoom(room: wireEntities.Room, log: Logger,
+                           events: EventHandler<wireEvents.Event>, api: ArtichokeAPI): Room {
   if (room.direct) {
     return new DirectRoom(room, log, events, api);
   } else if (room.orgId) {

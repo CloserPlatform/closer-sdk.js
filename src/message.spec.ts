@@ -5,7 +5,7 @@ import { createMessage } from "./message";
 import { ChatDelivered, ChatEdited } from "./protocol/events";
 import { Delivered } from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import { eventTypes } from "./protocol/wire-events";
+import {codec, eventTypes} from "./protocol/wire-events";
 
 const roomId = "123";
 const bob = "456";
@@ -52,7 +52,7 @@ describe("Message", () => {
   let msg;
 
   beforeEach(() => {
-    events = new EventHandler(log);
+    events = new EventHandler(log, codec);
     api = new APIMock();
     msg = createMessage(makeMsg(), log, events, api);
   });

@@ -7,7 +7,7 @@ import * as protoEvents from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import * as wireEvents from "./protocol/wire-events";
-import { eventTypes } from "./protocol/wire-events";
+import {error, eventTypes} from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { wrapPromise } from "./utils";
 
@@ -15,9 +15,9 @@ export class Artichoke {
   private api: ArtichokeAPI;
   private config: ChatConfig;
   private log: Logger;
-  private events: EventHandler;
+  private events: EventHandler<wireEvents.Event>;
 
-  constructor(config: ChatConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(config: ChatConfig, log: Logger, events: EventHandler<wireEvents.Event>, api: ArtichokeAPI) {
     this.api = api;
     this.config = config;
     this.log = log;
@@ -47,13 +47,13 @@ export class Artichoke {
   }
 
   onError(callback: Callback<protoEvents.Error>) {
-    this.events.onError(callback);
+    this.events.onEvent(eventTypes.ERROR, callback);
   }
 
   // API:
   connect() {
     this.api.onEvent((e: wireEvents.Event) => {
-      this.events.notify(protoEvents.eventUtils.upgrade(e, this.config, this.log, this.events, this.api));
+      this.notify(protoEvents.eventUtils.upgrade(e, this.config, this.log, this.events, this.api));
     });
 
     this.api.connect();
@@ -116,6 +116,12 @@ export class Artichoke {
 
   getRoster(): Promise<Array<Room>> {
     return wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
+  }
+
+  private notify(event: wireEvents.Event): void {
+    this.events.notify(event, (e) =>
+      this.events.notify(error("Unhandled event: " + event.type, event))
+    );
   }
 
   // Utils:

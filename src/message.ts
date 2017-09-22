@@ -5,7 +5,7 @@ import { ChatDelivered, ChatEdited } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import { RichDeliverable, RichEditable } from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import { eventTypes } from "./protocol/wire-events";
+import {Event, eventTypes} from "./protocol/wire-events";
 
 export class Message implements wireEntities.Message, RichDeliverable, RichEditable<string> {
   public type: proto.Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
@@ -19,10 +19,10 @@ export class Message implements wireEntities.Message, RichDeliverable, RichEdita
   public edited: proto.Edited;
 
   private log: Logger;
-  private events: EventHandler;
+  private events: EventHandler<Event>;
   private api: ArtichokeAPI;
 
-  constructor(message: wireEntities.Message, log: Logger, events: EventHandler, api: ArtichokeAPI) {
+  constructor(message: wireEntities.Message, log: Logger, events: EventHandler<Event>, api: ArtichokeAPI) {
     this.id = message.id;
     this.body = message.body;
     this.context = message.context;
@@ -84,6 +84,6 @@ export class Message implements wireEntities.Message, RichDeliverable, RichEdita
 }
 
 export function createMessage(message: wireEntities.Message, log: Logger,
-                              events: EventHandler, api: ArtichokeAPI): Message {
+                              events: EventHandler<Event>, api: ArtichokeAPI): Message {
   return new Message(message, log, events, api);
 }

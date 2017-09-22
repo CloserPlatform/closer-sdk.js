@@ -2,9 +2,9 @@ import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import { apiKey, config, log } from "./fixtures.spec";
 import { createMedia } from "./media";
-import * as wireEntities from "./protocol/wire-entities";
 import { ChatEdited } from "./protocol/events";
-import { eventTypes } from "./protocol/wire-events";
+import * as wireEntities from "./protocol/wire-entities";
+import {codec, eventTypes} from "./protocol/wire-events";
 
 const roomId = "123";
 const bob = "456";
@@ -46,7 +46,7 @@ describe("Media", () => {
   let media;
 
   beforeEach(() => {
-    events = new EventHandler(log);
+    events = new EventHandler(log, codec);
     api = new APIMock();
     media = createMedia(makeMedia(), log, events, api);
   });
