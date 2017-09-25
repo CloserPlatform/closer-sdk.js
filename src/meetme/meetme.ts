@@ -1,9 +1,7 @@
-import {ApiKey} from "../auth";
 import {Callback, EventHandler} from "../events";
 import {JSONWebSocket} from "../jsonws";
 import * as logger from "../logger";
 import {Logger} from "../logger";
-import {ID} from "../protocol/protocol";
 import {Config} from "./config";
 import * as events from "./events";
 import {MeetmeEventType} from "./events";
@@ -12,12 +10,11 @@ export class MeetmeWebsocket {
   protected log: Logger;
 
   private url: string;
-  private orgId: ID;
 
   private socket: JSONWebSocket<events.MeetmeEvent>;
   private events: EventHandler<events.MeetmeEvent>;
 
-  constructor(apiKey: ApiKey, config: Config, orgId: ID) {
+  constructor(config: Config) {
     this.log = config.debug ? logger.debugConsole : logger.devNull;
 
     this.log("Configuration: " + JSON.stringify(config));
@@ -25,9 +22,7 @@ export class MeetmeWebsocket {
     this.socket = new JSONWebSocket(this.log, events.codec);
 
     let host = config.ws.hostname + (config.ws.port === "" ? "" : ":" + config.ws.port);
-    this.url = [config.ws.protocol, "//", host, "/ws/", apiKey].join("");
-
-    this.orgId = orgId;
+    this.url = [config.ws.protocol, "//", host, "/ws/", config.apiKey].join("");
   }
 
   connect() {

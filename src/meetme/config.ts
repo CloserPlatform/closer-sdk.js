@@ -1,12 +1,10 @@
 import {ApiKey} from "../auth";
 import {URLConfig} from "../config";
-import {ID} from "../protocol/protocol";
 
 export interface Config {
   debug: boolean;
 
   apiKey?: ApiKey;
-  sessionId?: ID;
 
   ws: URLConfig;
 }
