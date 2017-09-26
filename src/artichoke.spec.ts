@@ -4,7 +4,7 @@ import { EventHandler } from "./events";
 import { apiKey, config, deviceId, log } from "./fixtures.spec";
 import { Event, Hello } from "./protocol/events";
 import { Call, Room } from "./protocol/wire-entities";
-import {codec, disconnect, error, eventTypes} from "./protocol/wire-events";
+import { codec, disconnect, error, eventTypes } from "./protocol/wire-events";
 
 const roomId = "234";
 const callId = "123";
