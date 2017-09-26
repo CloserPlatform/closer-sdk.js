@@ -924,7 +924,7 @@ $(document).ready(function() {
 
         var user = undefined;
         try {
-            // sendCode(ratelUrl, phone);
+            sendCode(ratelUrl, phone);
             user = logIn(ratelUrl, phone, "1234"); // Master code.
         } catch(e) {
             return Promise.reject(e);
