@@ -5,7 +5,7 @@ import { ChatEdited } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import { RichEditable } from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import {Event, eventTypes} from "./protocol/wire-events";
+import { Event, eventTypes } from "./protocol/wire-events";
 
 export class Media implements wireEntities.Media, RichEditable<string> {
   public type: proto.Type = "media";

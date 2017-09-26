@@ -12,7 +12,7 @@ import {
 import { Event } from "./protocol/events";
 import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
-import {codec, eventTypes} from "./protocol/wire-events";
+import { codec, eventTypes } from "./protocol/wire-events";
 import { createRTCConnection, createRTCPool, RTCConnection, RTCPool } from "./rtc";
 
 const invalidSDP = "this is not a valid SDP";

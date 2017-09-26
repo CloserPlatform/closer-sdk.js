@@ -1,5 +1,5 @@
 import * as wireEvents from "./wire-events";
-import {actionTypes, codec, eventTypes} from "./wire-events";
+import { actionTypes, codec, eventTypes } from "./wire-events";
 
 const actionId = "567";
 const roomId = "123";

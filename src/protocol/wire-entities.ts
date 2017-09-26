@@ -1,4 +1,4 @@
-import {Context, Deliverable, Editable, ID, MediaItem, RoomArchivable, Timestamp} from "./protocol";
+import { Context, Deliverable, Editable, ID, MediaItem, RoomArchivable, Timestamp } from "./protocol";
 
 export interface Call {
   id: ID;

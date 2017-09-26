@@ -7,7 +7,7 @@ import * as protoEvents from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import * as wireEvents from "./protocol/wire-events";
-import {actionTypes, error, eventTypes} from "./protocol/wire-events";
+import { actionTypes, error, eventTypes } from "./protocol/wire-events";
 import { TransferFunction } from "./utils";
 
 export namespace roomType {

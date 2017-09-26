@@ -4,7 +4,7 @@ import { apiKey, config, log } from "./fixtures.spec";
 import { createMedia } from "./media";
 import { ChatEdited } from "./protocol/events";
 import * as wireEntities from "./protocol/wire-entities";
-import {codec, eventTypes} from "./protocol/wire-events";
+import { codec, eventTypes } from "./protocol/wire-events";
 
 const roomId = "123";
 const bob = "456";

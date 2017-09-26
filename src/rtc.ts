@@ -4,7 +4,7 @@ import { Logger } from "./logger";
 import { RTCCandidate, RTCDescription } from "./protocol/events";
 import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
-import {error, Event, eventTypes} from "./protocol/wire-events";
+import { error, Event, eventTypes } from "./protocol/wire-events";
 import { onceDelayed, Thunk } from "./utils";
 
 export interface RTCConnectionConstraints {

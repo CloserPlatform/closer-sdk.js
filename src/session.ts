@@ -5,7 +5,7 @@ import { Config } from "./config";
 import { EventHandler } from "./events";
 import * as logger from "./logger";
 import { ID } from "./protocol/protocol";
-import {codec, Event} from "./protocol/wire-events";
+import { codec, Event } from "./protocol/wire-events";
 
 export class Session {
   public id: ID;

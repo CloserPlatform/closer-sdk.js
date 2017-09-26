@@ -1,4 +1,4 @@
-import {ID, Type} from "./protocol/protocol";
+import { ID, Type } from "./protocol/protocol";
 
 export interface EventEntity {
   id?: ID;

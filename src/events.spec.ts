@@ -1,7 +1,7 @@
 import { EventHandler } from "./events";
 import { log } from "./fixtures.spec";
 import { Error, RoomMark } from "./protocol/events";
-import {codec, error, eventTypes, mark} from "./protocol/wire-events";
+import { codec, error, eventTypes, mark } from "./protocol/wire-events";
 
 interface ErrorWithCause extends Error {
   cause: boolean;

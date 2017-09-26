@@ -1,5 +1,5 @@
-import {Codec, EventEntity} from "../codec";
-import {ID} from "../protocol/protocol";
+import { Codec, EventEntity } from "../codec";
+import { ID } from "../protocol/protocol";
 
 export interface MeetmeEvent extends EventEntity {
 }

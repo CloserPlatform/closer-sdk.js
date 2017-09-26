@@ -1,6 +1,6 @@
-import {log} from "./fixtures.spec";
-import {JSONWebSocket} from "./jsonws";
-import {chatRequest, codec} from "./protocol/wire-events";
+import { log } from "./fixtures.spec";
+import { JSONWebSocket } from "./jsonws";
+import { chatRequest, codec } from "./protocol/wire-events";
 
 describe("JSONWebSocket", () => {
   it("should call a callback on connection error", (done) => {

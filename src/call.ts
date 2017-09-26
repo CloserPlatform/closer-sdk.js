@@ -4,7 +4,7 @@ import { Logger } from "./logger";
 import { CallActionSent, CallActiveDevice, CallEnd } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import {actionTypes, error, Event, eventTypes} from "./protocol/wire-events";
+import { actionTypes, error, Event, eventTypes } from "./protocol/wire-events";
 import {
   createRTCPool,
   HackedRTCOfferOptions as RTCOfferOptions,

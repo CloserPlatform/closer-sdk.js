@@ -6,7 +6,7 @@ import { Logger } from "./logger";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import * as wireEvents from "./protocol/wire-events";
-import {codec, eventTypes} from "./protocol/wire-events";
+import { codec, eventTypes } from "./protocol/wire-events";
 import { Thunk } from "./utils";
 
 export class HeaderValue {

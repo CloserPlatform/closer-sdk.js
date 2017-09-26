@@ -4,7 +4,7 @@ import { apiKey, config, log } from "./fixtures.spec";
 import { Event } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import {actionTypes, codec, eventTypes, mark, typing} from "./protocol/wire-events";
+import { actionTypes, codec, eventTypes, mark, typing } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 
 import RoomType = roomType.RoomType;

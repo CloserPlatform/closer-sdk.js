@@ -4,7 +4,7 @@ import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
 import { Event } from "./protocol/events";
 import { Call as ProtoCall } from "./protocol/wire-entities";
-import {actionTypes, codec, eventTypes} from "./protocol/wire-events";
+import { actionTypes, codec, eventTypes } from "./protocol/wire-events";
 import CallType = ct.CallType;
 
 const callId = "123";
