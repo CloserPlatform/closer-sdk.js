@@ -10,7 +10,6 @@ export { Message } from "./message";
 export { Archivable, CallAction, CallArchivable, Metadata, RoomAction, RoomArchivable} from "./protocol/protocol";
 export { BusinessRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 export { Session } from "./session";
-export { MeetmeWebsocket } from "./meetme/meetme";
 
 // Other useful crap:
 export { isBrowserSupported } from "./utils";
