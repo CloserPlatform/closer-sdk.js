@@ -1,33 +1,29 @@
-import {Callback, EventHandler} from "../events";
-import {JSONWebSocket} from "../jsonws";
+import { Callback, EventHandler } from "../events";
+import { JSONWebSocket } from "../jsonws";
 import * as logger from "../logger";
-import {Logger} from "../logger";
-import {Config} from "./config";
+import { Logger } from "../logger";
+import { Config } from "./config";
 import * as events from "./events";
-import {MeetmeEventType} from "./events";
+import { MeetmeEventType } from "./events";
 
 export class MeetmeWebsocket {
   protected log: Logger;
 
-  private url: string;
-
   private socket: JSONWebSocket<events.MeetmeEvent>;
   private events: EventHandler<events.MeetmeEvent>;
 
-  constructor(config: Config) {
-    this.log = config.debug ? logger.debugConsole : logger.devNull;
+  constructor(debug = true) {
+    this.log = debug ? logger.debugConsole : logger.devNull;
+  }
 
-    this.log("Configuration: " + JSON.stringify(config));
+  connect(config: Config) {
     this.events = new EventHandler(this.log, events.codec);
     this.socket = new JSONWebSocket(this.log, events.codec);
 
     let host = config.ws.hostname + (config.ws.port === "" ? "" : ":" + config.ws.port);
-    this.url = [config.ws.protocol, "//", host, "/ws/", config.apiKey].join("");
-  }
-
-  connect() {
-    this.socket.connect(this.url);
-    this.socket.onEvent(this.notify);
+    const url = [config.ws.protocol, "//", host, "/ws/", config.apiKey].join("");
+    this.socket.connect(url);
+    this.socket.onEvent((e) => this.notify(e));
   }
 
   disconnect() {
