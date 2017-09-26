@@ -34,7 +34,7 @@ describe("Event Handler", () => {
 
     events.onEvent(eventTypes.ERROR, (error: Error) => ok = true);
     expect(ok).toBe(false);
-    events.notify({ type: "unhandled" }, events.notify(error("Unhandled")));
+    events.notify({ type: "unhandled" }, () => events.notify(error("Unhandled")));
     expect(ok).toBe(true);
   });
 
