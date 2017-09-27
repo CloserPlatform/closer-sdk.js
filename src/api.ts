@@ -131,9 +131,13 @@ export class APIWithWebsocket extends RESTfulAPI {
   }
 
   onEvent(callback: Callback<wireEvents.Event>) {
-    this.socket.onDisconnect(callback);
+    this.socket.onDisconnect((ev) =>
+      callback(wireEvents.disconnect(ev.code, ev.reason))
+    );
 
-    this.socket.onError(callback);
+    this.socket.onError((ev) =>
+      callback(wireEvents.error("Websocket connection error.", ev))
+    );
 
     this.socket.onEvent((event: wireEvents.Event) => {
       if (event.type === eventTypes.ERROR) {
