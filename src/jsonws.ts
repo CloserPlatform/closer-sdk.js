@@ -1,17 +1,19 @@
+import { Codec, EventEntity } from "./codec";
 import { Callback } from "./events";
 import { Logger } from "./logger";
-import * as wireEvents from "./protocol/wire-events";
 
-export class JSONWebSocket {
+export class JSONWebSocket<T extends EventEntity> {
   private log: Logger;
   private socket: WebSocket;
+  private codec: Codec<T>;
 
   private onCloseCallback: Callback<CloseEvent>;
   private onErrorCallback: Callback<Event>;
   private onMessageCallback: Callback<MessageEvent>;
 
-  constructor(log: Logger) {
+  constructor(log: Logger, codec: Codec<T>) {
     this.log = log;
+    this.codec = codec;
   }
 
   connect(url: string) {
@@ -32,11 +34,11 @@ export class JSONWebSocket {
     this.socket.close();
   }
 
-  onDisconnect(callback: Callback<wireEvents.Disconnect>) {
+  onDisconnect(callback: Callback<CloseEvent>) {
     this.onCloseCallback = (close) => {
       this.socket = undefined;
       this.log("WS disconnected: " + close.reason);
-      callback(wireEvents.disconnect(close.code, close.reason));
+      callback(close);
     };
 
     if (this.socket) {
@@ -44,10 +46,10 @@ export class JSONWebSocket {
     }
   }
 
-  onError(callback: Callback<wireEvents.Error>) {
+  onError(callback: Callback<Event>) {
     this.onErrorCallback = (err) => {
       this.log("WS error: " + err);
-      callback(wireEvents.error("Websocket connection error.", err));
+      callback(err);
     };
 
     if (this.socket) {
@@ -55,10 +57,10 @@ export class JSONWebSocket {
     }
   }
 
-  onEvent(callback: Callback<wireEvents.Event>) {
+  onEvent(callback: Callback<T>) {
     this.onMessageCallback = (event) => {
       this.log("WS received: " + event.data);
-      callback(wireEvents.read(event.data) as wireEvents.Event);
+      callback(this.codec.decode(event.data));
     };
 
     if (this.socket) {
@@ -66,9 +68,9 @@ export class JSONWebSocket {
     }
   }
 
-  send(event: wireEvents.Event): Promise<void> {
+  send(event: T): Promise<void> {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      const json = wireEvents.write(event);
+      const json = this.codec.encode(event);
       this.log("WS sent: " + json);
       this.socket.send(json);
       return Promise.resolve();

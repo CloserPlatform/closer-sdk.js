@@ -4,7 +4,7 @@ import { Logger } from "./logger";
 import { CallActionSent, CallActiveDevice, CallEnd } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import { actionTypes, eventTypes } from "./protocol/wire-events";
+import { actionTypes, error, Event, eventTypes } from "./protocol/wire-events";
 import {
   createRTCPool,
   HackedRTCOfferOptions as RTCOfferOptions,
@@ -45,7 +45,7 @@ export abstract class Call implements wireEntities.Call {
   public externalId: string;
 
   protected api: ArtichokeAPI;
-  protected events: EventHandler;
+  protected events: EventHandler<Event>;
 
   private log: Logger;
   protected pool: RTCPool;
@@ -61,7 +61,7 @@ export abstract class Call implements wireEntities.Call {
 
   public abstract readonly callType: callType.CallType;
 
-  constructor(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
+  constructor(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler<Event>,
               api: ArtichokeAPI, stream?: MediaStream) {
     this.id = call.id;
     this.created = call.created;
@@ -145,7 +145,7 @@ export abstract class Call implements wireEntities.Call {
           break;
 
         default:
-          this.events.raise("Invalid call_action event", e);
+          this.events.notify(error("Invalid call_action event", e));
       }
     });
   }
@@ -274,7 +274,7 @@ export class BusinessCall extends GroupCall {
   public readonly callType: callType.CallType = callType.CallType.BUSINESS;
 }
 
-export function createCall(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
+export function createCall(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler<Event>,
                            api: ArtichokeAPI, stream?: MediaStream): Call {
   if (call.direct) {
     return new DirectCall(call, config, log, events, api, stream);

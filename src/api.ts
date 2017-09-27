@@ -6,7 +6,7 @@ import { Logger } from "./logger";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import * as wireEvents from "./protocol/wire-events";
-import { eventTypes } from "./protocol/wire-events";
+import { codec, eventTypes } from "./protocol/wire-events";
 import { Thunk } from "./utils";
 
 export class HeaderValue {
@@ -97,13 +97,13 @@ interface PromiseFunctions {
 }
 
 export class APIWithWebsocket extends RESTfulAPI {
-  private socket: JSONWebSocket;
+  private socket: JSONWebSocket<wireEvents.Event>;
   private promises: { [ref: string]: PromiseFunctions };
 
   constructor(log: Logger) {
     super(log);
     this.promises = {};
-    this.socket = new JSONWebSocket(this.log);
+    this.socket = new JSONWebSocket<wireEvents.Event>(this.log, codec);
   }
 
   connect(url: string) {
@@ -131,9 +131,13 @@ export class APIWithWebsocket extends RESTfulAPI {
   }
 
   onEvent(callback: Callback<wireEvents.Event>) {
-    this.socket.onDisconnect(callback);
+    this.socket.onDisconnect((ev) =>
+      callback(wireEvents.disconnect(ev.code, ev.reason))
+    );
 
-    this.socket.onError(callback);
+    this.socket.onError((ev) =>
+      callback(wireEvents.error("Websocket connection error.", ev))
+    );
 
     this.socket.onEvent((event: wireEvents.Event) => {
       if (event.type === eventTypes.ERROR) {

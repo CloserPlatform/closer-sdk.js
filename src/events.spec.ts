@@ -1,7 +1,7 @@
 import { EventHandler } from "./events";
 import { log } from "./fixtures.spec";
-import { eventTypes, mark } from "./protocol/wire-events";
 import { Error, RoomMark } from "./protocol/events";
+import { codec, error, eventTypes, mark } from "./protocol/wire-events";
 
 interface ErrorWithCause extends Error {
   cause: boolean;
@@ -15,26 +15,26 @@ describe("Event Handler", () => {
   let events;
 
   beforeEach(() => {
-    events = new EventHandler(log);
+    events = new EventHandler(log, codec);
   });
 
   it("should allow defining & invoking error handlers", () => {
     let ok = true;
 
-    events.onError((error: ErrorWithCause) => ok = error.cause);
+    events.onEvent(eventTypes.ERROR, (error: ErrorWithCause) => ok = error.cause);
     expect(ok).toBe(true);
-    events.raise("Dun goofed", false);
+    events.notify(error("Dun goofed", false));
     expect(ok).toBe(false);
-    events.raise("j/k", true);
+    events.notify(error("j/k", true));
     expect(ok).toBe(true);
   });
 
   it("should run error handler on unhandled event", () => {
     let ok = false;
 
-    events.onError((error: Error) => ok = true);
+    events.onEvent(eventTypes.ERROR, (error: Error) => ok = true);
     expect(ok).toBe(false);
-    events.notify({ type: "unhandled" });
+    events.notify({ type: "unhandled" }, () => events.notify(error("Unhandled")));
     expect(ok).toBe(true);
   });
 

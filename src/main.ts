@@ -10,6 +10,8 @@ export { Message } from "./message";
 export { Archivable, CallAction, CallArchivable, Metadata, RoomAction, RoomArchivable} from "./protocol/protocol";
 export { BusinessRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 export { Session } from "./session";
+export { Callback, EventHandler } from "./events";
+export { JSONWebSocket } from "./jsonws";
 
 // Other useful crap:
 export { isBrowserSupported } from "./utils";

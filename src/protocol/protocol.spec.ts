@@ -1,5 +1,5 @@
 import * as wireEvents from "./wire-events";
-import { actionTypes, eventTypes } from "./wire-events";
+import { actionTypes, codec, eventTypes } from "./wire-events";
 
 const actionId = "567";
 const roomId = "123";
@@ -138,6 +138,6 @@ const events: Array<wireEvents.Event> = [{
 
 describe("Protocol", () => {
   it("should be reversible", () => {
-    events.forEach((e) => expect(wireEvents.read(wireEvents.write(e))).toEqual(e));
+    events.forEach((e) => expect(codec.decode(codec.encode(e))).toEqual(e));
   });
 });

@@ -1,11 +1,11 @@
 import { ArtichokeAPI } from "./api";
-import { GroupCall, createCall, callType, Call } from "./call";
+import { Call, callType as ct, createCall, GroupCall} from "./call";
 import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
-import { Call as ProtoCall } from "./protocol/wire-entities";
 import { Event } from "./protocol/events";
-import { actionTypes, eventTypes } from "./protocol/wire-events";
-import CallType = callType.CallType;
+import { Call as ProtoCall } from "./protocol/wire-entities";
+import { actionTypes, codec, eventTypes } from "./protocol/wire-events";
+import CallType = ct.CallType;
 
 const callId = "123";
 const alice = "321";
@@ -85,14 +85,14 @@ function makeCall(callType: CallType) {
     let call;
 
     beforeEach(() => {
-      events = new EventHandler(log);
+      events = new EventHandler(log, codec);
       api = new APIMock();
       const callType = d === "DirectCall" ? CallType.DIRECT : CallType.GROUP;
       call = createCall(makeCall(callType), config.chat.rtc, log, events, api);
     });
 
     it("should allow rejecting", (done) => {
-      events.onError((error) => done.fail());
+      events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.reject("rejected").then(() => {
         expect(api.rejected).toBe("rejected");
@@ -104,7 +104,7 @@ function makeCall(callType: CallType) {
       getStream((stream) => {
         call.addStream(stream);
 
-        events.onError((error) => done.fail());
+        events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
         call.onJoined((msg) => {
           expect(msg.user).toBe(chad);
@@ -125,7 +125,7 @@ function makeCall(callType: CallType) {
     });
 
     it("should run a callback on leave", (done) => {
-      events.onError((error) => done.fail());
+      events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.onLeft((msg) => {
         expect(msg.user).toBe(alice);
@@ -146,7 +146,7 @@ function makeCall(callType: CallType) {
     });
 
     it("should run a callback on offline call action", (done) => {
-      events.onError((error) => done.fail());
+      events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.onOffline((msg) => {
         expect(msg.user).toBe(alice);
@@ -166,7 +166,7 @@ function makeCall(callType: CallType) {
     });
 
     it("should run a callback on online call action", (done) => {
-      events.onError((error) => done.fail());
+      events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.onOnline((msg) => {
         expect(msg.user).toBe(alice);
@@ -186,7 +186,7 @@ function makeCall(callType: CallType) {
     });
 
     it("should run a callback on answer", (done) => {
-      events.onError((error) => done.fail());
+      events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.onAnswered((msg) => {
         expect(msg.user).toBe(alice);
@@ -209,7 +209,7 @@ function makeCall(callType: CallType) {
       getStream((stream) => {
         call.pull(stream);
 
-        events.onError((error) => done.fail());
+        events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
         call.onTransferred((msg) => {
           expect(msg.user).toBe(chad);
@@ -230,7 +230,7 @@ function makeCall(callType: CallType) {
     });
 
     it("should run a callback on reject", (done) => {
-      events.onError((error) => done.fail());
+      events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.onRejected((msg) => {
         expect(msg.user).toBe(alice);
@@ -251,7 +251,7 @@ function makeCall(callType: CallType) {
     });
 
     it("should run a callback on ActiveDevice", (done) => {
-      events.onError((error) => done.fail());
+      events.onEvent(eventTypes.ERROR, (error) => done.fail());
       const deviceId = "aliceDevice";
 
       call.onActiveDevice((msg) => {
@@ -271,7 +271,7 @@ function makeCall(callType: CallType) {
       getStream((stream) => {
         call.addStream(stream);
 
-        events.onError((error) => done.fail());
+        events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
         call.onJoined((msg1) => {
           expect(msg1.user).toBe(bob);
@@ -320,7 +320,7 @@ function makeCall(callType: CallType) {
     // FIXME These should be moved to integration tests:
     whenever(isWebRTCSupported())("should allow answering", (done) => {
       getStream((stream) => {
-        events.onError((error) => done.fail());
+        events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
         call.answer(stream).then(() => {
           expect(api.answered).toBe(true);
@@ -330,7 +330,7 @@ function makeCall(callType: CallType) {
     });
 
     it("should allow leaving", (done) => {
-      events.onError((error) => done.fail());
+      events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.leave("reason").then(() => {
         expect(api.left).toBe("reason");
@@ -346,13 +346,13 @@ describe("GroupCall", () => {
   let call;
 
   beforeEach(() => {
-    events = new EventHandler(log);
+    events = new EventHandler(log, codec);
     api = new APIMock();
     call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api) as GroupCall;
   });
 
   it("should run a callback on invitation", (done) => {
-    events.onError((error) => done.fail());
+    events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
     call.onInvited((msg) => {
       expect(msg.user).toBe(alice);
@@ -375,7 +375,7 @@ describe("GroupCall", () => {
   // FIXME These should be moved to integration tests:
   whenever(isWebRTCSupported())("should allow joining", (done) => {
     getStream((stream) => {
-      events.onError((error) => done.fail());
+      events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.join(stream).then(() => {
         expect(api.joined).toBe(true);
@@ -385,7 +385,7 @@ describe("GroupCall", () => {
   });
 
   it("should allow inviting users", (done) => {
-    events.onError((error) => done.fail());
+    events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
     call.invite(bob).then(() => {
       expect(api.invited).toBe(bob);
@@ -395,7 +395,7 @@ describe("GroupCall", () => {
 });
 
 describe("DirectCall, GroupCall", () => {
-  const events = new EventHandler(log);
+  const events = new EventHandler(log, codec);
   const api = new APIMock();
 
   it("should have proper callType field defined", () => {

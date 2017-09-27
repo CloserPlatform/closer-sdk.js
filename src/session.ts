@@ -5,6 +5,7 @@ import { Config } from "./config";
 import { EventHandler } from "./events";
 import * as logger from "./logger";
 import { ID } from "./protocol/protocol";
+import { codec, Event } from "./protocol/wire-events";
 
 export class Session {
   public id: ID;
@@ -16,7 +17,7 @@ export class Session {
     log("Configuration: " + JSON.stringify(config));
 
     this.id = id;
-    const events: EventHandler = new EventHandler(log);
+    const events: EventHandler<Event> = new EventHandler<Event>(log, codec);
     const chatApi = new ArtichokeAPI(apiKey, config.chat, log);
     this.chat = new Artichoke(config.chat, log, events, chatApi);
   }
