@@ -4,25 +4,25 @@ import { RTCConfig } from "./rtc";
 import { deepcopy } from "./utils";
 
 export interface URLConfig {
-  protocol: string;
-  hostname: string;
-  port: string;
+  protocol?: string;
+  hostname?: string;
+  port?: string;
 }
 
 export interface ChatConfig extends URLConfig {
-  rtc: RTCConfig;
+  rtc?: RTCConfig;
 }
 
 export interface RatelConfig extends URLConfig {}
 
 export interface Config {
-  debug: boolean;
+  debug?: boolean;
 
   apiKey?: ApiKey;
   sessionId?: ID;
 
-  chat: ChatConfig;
-  ratel: RatelConfig;
+  chat?: ChatConfig;
+  ratel?: RatelConfig;
 }
 
 export const defaultConfig: Config = {
@@ -54,12 +54,21 @@ export const defaultConfig: Config = {
   },
 };
 
-function merge<O>(a: O, b: O): O {
-  let result = a;
-  Object.getOwnPropertyNames(b).forEach((p) => result[p] = a[p] || b[p]);
-  return result;
-}
-
 export function load(conf: Config): Config {
+
+  function merge(a: any, b: any): any {
+    if (Array.isArray(a)) {
+      return a.map((ai, i) => merge(ai, b[i]));
+    } else if (typeof a === "object") {
+      const result = a;
+      Object.getOwnPropertyNames(b).forEach((p) => result[p] = merge(a[p], b[p]));
+      return result;
+    } else if (typeof a === "undefined") {
+      return b;
+    } else {
+      return a;
+    }
+  }
+
   return merge(deepcopy(conf), deepcopy(defaultConfig));
 }

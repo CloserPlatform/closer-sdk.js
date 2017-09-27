@@ -30,8 +30,8 @@ export interface RTCConfig extends RTCConfiguration {
   defaultOfferOptions?: HackedRTCOfferOptions;
   defaultAnswerOptions?: RTCAnswerOptions;
   defaultConnectionConstraints?: RTCConnectionConstraints;
-  rtcpMuxPolicy: "require" | "negotiate";
-  bundlePolicy: "balanced" | "max-compat" | "max-bundle";
+  rtcpMuxPolicy?: "require" | "negotiate";
+  bundlePolicy?: "balanced" | "max-compat" | "max-bundle";
 }
 
 // FIXME Can't extends RTCPeerConnection, cause createOffer & createAnswer are of the wrong type.
