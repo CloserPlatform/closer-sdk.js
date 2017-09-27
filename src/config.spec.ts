@@ -3,9 +3,9 @@ import { deepcopy } from "./utils";
 
 describe("Config", () => {
   it("should load with defaults", () => {
-    let d = load({} as Config);
+    const d = load({});
 
-    let c = load({debug: !d.debug} as Config);
+    const c = load({debug: !d.debug});
 
     expect(d).toEqual(defaultConfig);
     expect(c.debug).toBe(!d.debug);
@@ -14,42 +14,40 @@ describe("Config", () => {
   });
 
   it("should not override provided service config", () => {
-    let c = load({
+    const c = load({
       chat: {
         hostname: "chat-nonlocalhost"
       },
       ratel: {
         hostname: "ratel-nonlocalhost"
       },
-    } as Config);
+    });
 
     expect(c.chat.hostname).toBe("chat-nonlocalhost");
     expect(c.ratel.hostname).toBe("ratel-nonlocalhost");
   });
 
   it("should not override defaultConfig", () => {
-    let d = deepcopy(defaultConfig);
-    load({} as Config);
+    const d = deepcopy(defaultConfig);
+    load({});
     expect(defaultConfig).toEqual(d);
   });
 
   it("should not override supplied in config", () => {
-    let cfg: Config = {
+    const cfg: Config = {
       ratel: {
         hostname: "ratel-host"
       }
-    } as Config;
+    };
 
-    let c = deepcopy(cfg);
+    const c = deepcopy(cfg);
     load(cfg);
 
     expect(cfg).toEqual(c);
   });
 
   it("should merge config deeply", () => {
-    let d = deepcopy(defaultConfig);
-
-    let cfg: Config = {
+    const cfg: Config = {
       chat: {
         rtc: {
           rtcpMuxPolicy: "require",
@@ -59,10 +57,11 @@ describe("Config", () => {
           }
         }
       }
-    } as Config;
-    let copy = deepcopy(cfg);
+    };
 
-    let c = load(cfg);
+    const d = deepcopy(defaultConfig);
+    const copy = deepcopy(cfg);
+    const c = load(cfg);
 
     expect(c.chat.rtc.rtcpMuxPolicy).toEqual(copy.chat.rtc.rtcpMuxPolicy);
     expect(c.chat.rtc.rtcpMuxPolicy).not.toEqual(d.chat.rtc.rtcpMuxPolicy);
