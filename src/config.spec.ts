@@ -45,4 +45,29 @@ describe("Config", () => {
 
     expect(cfg).toEqual(c);
   });
+
+  it("should merge config deeply", () => {
+    let d = deepcopy(defaultConfig);
+
+    let cfg: Config = {
+      chat: {
+        rtc: {
+          rtcpMuxPolicy: "require",
+          defaultOfferOptions: {
+            offerToReceiveAudio: false,
+            offerToReceiveVideo: false
+          }
+        }
+      }
+    } as Config;
+    let copy = deepcopy(cfg);
+
+    let c = load(cfg);
+
+    expect(c.chat.rtc.rtcpMuxPolicy).toEqual(copy.chat.rtc.rtcpMuxPolicy);
+    expect(c.chat.rtc.rtcpMuxPolicy).not.toEqual(d.chat.rtc.rtcpMuxPolicy);
+    expect(c.chat.rtc.defaultOfferOptions).toBeDefined();
+    expect(c.chat.rtc.defaultOfferOptions.offerToReceiveAudio)
+      .toEqual(cfg.chat.rtc.defaultOfferOptions.offerToReceiveAudio);
+  });
 });

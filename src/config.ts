@@ -16,13 +16,13 @@ export interface ChatConfig extends URLConfig {
 export interface RatelConfig extends URLConfig {}
 
 export interface Config {
-  debug: boolean;
+  debug?: boolean;
 
   apiKey?: ApiKey;
   sessionId?: ID;
 
-  chat: ChatConfig;
-  ratel: RatelConfig;
+  chat?: ChatConfig;
+  ratel?: RatelConfig;
 }
 
 export const defaultConfig: Config = {
@@ -54,10 +54,18 @@ export const defaultConfig: Config = {
   },
 };
 
-function merge<O>(a: O, b: O): O {
-  let result = a;
-  Object.getOwnPropertyNames(b).forEach((p) => result[p] = a[p] || b[p]);
-  return result;
+function merge(a: any, b: any): any {
+  if (Array.isArray(a)) {
+    return a.map((ai, i) => merge(ai, b[i]));
+  } else if (typeof a === "object") {
+    let result = a;
+    Object.getOwnPropertyNames(b).forEach((p) => result[p] = merge(a[p], b[p]));
+    return result;
+  } else if (typeof a === "undefined") {
+    return b;
+  } else {
+    return a;
+  }
 }
 
 export function load(conf: Config): Config {
