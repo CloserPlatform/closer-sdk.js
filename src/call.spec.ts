@@ -112,11 +112,12 @@ function makeCall(callType: CallType) {
         });
 
         events.notify({
-          type: eventTypes.CALL_ACTION,
+          type: eventTypes.CALL_MESSAGE,
           id: call.id,
-          action: {
-            action: actionTypes.JOINED,
-            call: call.id,
+          message: {
+            type: "message",
+            tag: actionTypes.CALL_JOINED,
+            channel: call.id,
             user: chad,
             timestamp: Date.now()
           }
@@ -133,14 +134,17 @@ function makeCall(callType: CallType) {
       });
 
       events.notify({
-        type: eventTypes.CALL_ACTION,
+        type: eventTypes.CALL_MESSAGE,
         id: call.id,
-        action: {
-          action: actionTypes.LEFT,
+        message: {
+          type: "message",
+          tag: actionTypes.CALL_LEFT,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
-          reason: "reason"
+          context: {
+            reason: "reason"
+          }
         }
       } as Event);
     });
@@ -154,10 +158,11 @@ function makeCall(callType: CallType) {
       });
 
       events.notify({
-        type: eventTypes.CALL_ACTION,
+        type: eventTypes.CALL_MESSAGE,
         id: call.id,
-        action: {
-          action: actionTypes.OFFLINE,
+        message: {
+          type: "mesage",
+          tag: actionTypes.CALL_OFFLINE,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
@@ -174,10 +179,11 @@ function makeCall(callType: CallType) {
       });
 
       events.notify({
-        type: eventTypes.CALL_ACTION,
+        type: eventTypes.CALL_MESSAGE,
         id: call.id,
-        action: {
-          action: actionTypes.ONLINE,
+        message: {
+          type: "message",
+          tag: actionTypes.CALL_ONLINE,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
@@ -194,10 +200,11 @@ function makeCall(callType: CallType) {
       });
 
       events.notify({
-        type: eventTypes.CALL_ACTION,
+        type: eventTypes.CALL_MESSAGE,
         id: call.id,
-        action: {
-          action: actionTypes.ANSWERED,
+        message: {
+          type: "message",
+          tag: actionTypes.CALL_ANSWERED,
           call: call.id,
           user: alice,
           timestamp: Date.now()
@@ -217,10 +224,11 @@ function makeCall(callType: CallType) {
         });
 
         events.notify({
-          type: eventTypes.CALL_ACTION,
+          type: eventTypes.CALL_MESSAGE,
           id: call.id,
-          action: {
-            action: actionTypes.TRANSFERRED,
+          message: {
+            type: "message",
+            tag: actionTypes.CALL_TRANSFERRED,
             call: call.id,
             user: chad,
             timestamp: Date.now()
@@ -238,10 +246,11 @@ function makeCall(callType: CallType) {
       });
 
       events.notify({
-        type: eventTypes.CALL_ACTION,
+        type: eventTypes.CALL_MESSAGE,
         id: call.id,
-        action: {
-          action: actionTypes.REJECTED,
+        message: {
+          type: "message",
+          tag: actionTypes.CALL_REJECTED,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
@@ -291,24 +300,28 @@ function makeCall(callType: CallType) {
             });
 
             events.notify({
-              type: eventTypes.CALL_ACTION,
+              type: eventTypes.CALL_MESSAGE,
               id: call.id,
-              action: {
-                action: actionTypes.LEFT,
+              message: {
+                type: "message",
+                tag: actionTypes.CALL_LEFT,
                 call: call.id,
                 user: alice,
                 timestamp: Date.now(),
-                reason: "reason"
+                context: {
+                  reason: "reason"
+                }
               }
             } as Event);
           });
         });
 
         events.notify({
-          type: eventTypes.CALL_ACTION,
+          type: eventTypes.CALL_MESSAGE,
           id: call.id,
-          action: {
-            action: actionTypes.JOINED,
+          message: {
+            type: "message",
+            message: actionTypes.CALL_JOINED,
             call: call.id,
             user: bob,
             timestamp: Date.now()
@@ -361,13 +374,16 @@ describe("GroupCall", () => {
     });
 
     events.notify({
-      type: eventTypes.CALL_ACTION,
+      type: eventTypes.CALL_MESSAGE,
       id: call.id,
-      action: {
-        action: actionTypes.INVITED,
+      message: {
+        type: "message",
+        tag: actionTypes.CALL_INVITED,
         call: call.id,
         user: alice,
-        invitee: chad
+        context: {
+          invitee: chad
+        }
       }
     } as Event);
   });

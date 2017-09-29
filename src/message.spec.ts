@@ -35,12 +35,12 @@ function makeMsg(delivered?: Delivered): wireEntities.Message {
     type: "message",
     id: msg1,
     body: "Hi!",
+    tag: "json",
     context: {
-      type: "json",
       payload: "{\"key\": \"value\"}"
     },
     user: bob,
-    room: roomId,
+    channel: roomId,
     timestamp: 123,
     delivered
   };
@@ -151,7 +151,7 @@ describe("Message", () => {
     events.notify({
       type: eventTypes.CHAT_EDITED,
       id: msg.id,
-      archivable: edited
+      message: edited
     } as ChatEdited);
   });
 });

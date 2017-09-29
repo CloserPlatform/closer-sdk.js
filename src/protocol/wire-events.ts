@@ -3,25 +3,23 @@ import * as proto from "./protocol";
 import * as wireEntities from "./wire-entities";
 
 export namespace eventTypes {
-  export const CALL_ACTION = "call_action";
+  export const CALL_MESSAGE = "call_message";
   export const CALL_CREATED = "call_created";
   export const CALL_END = "call_end";
   export const CALL_INVITATION = "call_invitation";
   export const CALL_ACTIVE_DEVICE = "call_active_device";
-  export const CHAT_REQUEST = "chat_request";
   export const CHAT_RECEIVED = "chat_received";
   export const CHAT_DELIVERED = "chat_delivered";
   export const CHAT_EDITED = "chat_edited";
+  export const CHAT_SEND_MESSAGE = "chat_send_message";
+  export const CHAT_SEND_CUSTOM = "chat_send_custom";
   export const ERROR = "error";
   export const HEARTBEAT = "heartbeat";
   export const HELLO = "hello";
-  export const ROOM_ACTION = "room_action";
   export const ROOM_CREATED = "room_created";
   export const ROOM_INVITATION = "room_invitation";
   export const ROOM_MARK = "room_mark";
-  export const ROOM_MEDIA = "room_media";
   export const ROOM_MESSAGE = "room_message";
-  export const ROOM_METADATA = "room_metadata";
   export const ROOM_TYPING = "room_typing";
   export const ROOM_START_TYPING = "room_start_typing";
   export const RTC_DESCRIPTION = "rtc_description";
@@ -31,22 +29,32 @@ export namespace eventTypes {
 }
 
 export namespace actionTypes {
-  export type JOINED = "joined";
-  export const JOINED = "joined";
-  export type TRANSFERRED = "transferred";
-  export const TRANSFERRED = "transferred";
-  export type LEFT = "left";
-  export const LEFT = "left";
-  export type OFFLINE = "offline";
-  export const OFFLINE = "offline";
-  export type ONLINE = "online";
-  export const ONLINE = "online";
-  export type INVITED = "invited";
-  export const INVITED = "invited";
-  export type ANSWERED = "answered";
-  export const ANSWERED = "answered";
-  export type REJECTED = "rejected";
-  export const REJECTED = "rejected";
+  export type TEXT_MESSAGE = "TEXT_MESSAGE";
+  export const TEXT_MESSAGE = "TEXT_MESSAGE";
+
+  export type ROOM_JOINED = "ROOM_JOINED";
+  export const ROOM_JOINED = "ROOM_JOINED";
+  export type ROOM_LEFT = "ROOM_LEFT";
+  export const ROOM_LEFT = "ROOM_LEFT";
+  export type ROOM_INVITED = "ROOM_INVITED";
+  export const ROOM_INVITED = "ROOM_INVITED";
+
+  export type CALL_JOINED = "CALL_JOINED";
+  export const CALL_JOINED = "CALL_JOINED";
+  export type CALL_LEFT = "CALL_LEFT";
+  export const CALL_LEFT = "CALL_LEFT";
+  export type CALL_INVITED = "CALL_INVITED";
+  export const CALL_INVITED = "CALL_INVITED";
+  export type CALL_OFFLINE = "CALL_OFFLINE";
+  export const CALL_OFFLINE = "CALL_OFFLINE";
+  export type CALL_ONLINE = "CALL_ONLINE";
+  export const CALL_ONLINE = "CALL_ONLINE";
+  export type CALL_ANSWERED = "CALL_ANSWERED";
+  export const CALL_ANSWERED = "CALL_ANSWERED";
+  export type CALL_REJECTED = "CALL_REJECTED";
+  export const CALL_REJECTED = "CALL_REJECTED";
+  export type CALL_TRANSFERRED = "CALL_TRANSFERRED";
+  export const CALL_TRANSFERRED = "CALL_TRANSFERRED";
 }
 
 // JSON Events:
@@ -54,8 +62,8 @@ export interface Event extends EventEntity {
   ref?: proto.Ref;
 }
 
-export interface CallActionSent extends Event {
-  action: proto.CallAction;
+export interface CallMessage extends Event {
+  message: wireEntities.Message;
 }
 
 export interface CallInvitation extends Event {
@@ -82,18 +90,23 @@ export interface ChatDelivered extends Event {
 }
 
 export interface ChatEdited extends Event {
-  archivable: proto.Archivable;
+  message: wireEntities.Message;
 }
 
 export interface ChatReceived extends Event {
   message: wireEntities.Message;
 }
 
-export interface ChatRequest extends Event {
+export interface ChatSendMessage extends Event {
   body: string;
-  messageType?: string;
-  context?: proto.Context;
   room: proto.ID;
+}
+
+export interface ChatSendCustom extends Event {
+  body: string;
+  room: proto.ID;
+  tag: string;
+  context: proto.Context;
 }
 
 export interface Error extends Event {
@@ -111,10 +124,6 @@ export interface Hello extends ServerInfo {
   deviceId: proto.ID;
 }
 
-export interface RoomActionSent extends Event {
-  action: proto.RoomAction;
-}
-
 export interface RoomCreated extends Event {
   room: wireEntities.Room;
 }
@@ -128,16 +137,8 @@ export interface RoomMark extends Event {
   timestamp: proto.Timestamp;
 }
 
-export interface RoomMedia extends Event {
-  media: wireEntities.Media;
-}
-
 export interface RoomMessage extends Event {
   message: wireEntities.Message;
-}
-
-export interface RoomMetadata extends Event {
-  metadata: proto.Metadata;
 }
 
 export interface RoomStartTyping extends Event {
@@ -169,13 +170,22 @@ export interface Disconnect extends Event {
 }
 
 // WS API:
-export function chatRequest(room: proto.ID, body: string, messageType?: string,
-                            context?: proto.Context, ref?: proto.Ref): ChatRequest {
+export function chatSendMessage(room: proto.ID, body: string, ref?: proto.Ref): ChatSendMessage {
   return {
-    type: eventTypes.CHAT_REQUEST,
+    type: eventTypes.CHAT_SEND_MESSAGE,
     room,
     body,
-    messageType,
+    ref
+  };
+}
+
+export function chatSendCustom(room: proto.ID, body: string, tag: string,
+                               context: proto.Context, ref?: proto.Ref): ChatSendCustom {
+  return {
+    type: eventTypes.CHAT_SEND_CUSTOM,
+    room,
+    body,
+    tag,
     context,
     ref
   };

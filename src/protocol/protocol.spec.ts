@@ -39,102 +39,111 @@ const events: Array<wireEvents.Event> = [{
     id: msgId,
     body: "Oi papi!",
     user: alice,
-    room: roomId,
+    channel: roomId,
+    tag: actionTypes.TEXT_MESSAGE,
     timestamp: Date.now(),
   }
 } as wireEvents.RoomMessage, {
-  type: eventTypes.ROOM_ACTION,
+  type: eventTypes.ROOM_MESSAGE,
   id: roomId,
-  action: {
-    type: eventTypes.ROOM_ACTION,
-    action: actionTypes.JOINED,
+  message: {
+    type: "message",
     id: actionId,
-    room: roomId,
+    channel: roomId,
     user: alice,
+    tag: actionTypes.ROOM_JOINED,
     timestamp: Date.now()
   }
-} as wireEvents.RoomActionSent, {
-  type: eventTypes.ROOM_ACTION,
+} as wireEvents.RoomMessage, {
+  type: eventTypes.ROOM_MESSAGE,
   id: roomId,
-  action: {
-    type: eventTypes.ROOM_ACTION,
-    action: actionTypes.INVITED,
+  message: {
+    type: "message",
     id: actionId,
-    room: roomId,
+    channel: roomId,
     user: alice,
-    invitee: bob,
+    tag: actionTypes.ROOM_INVITED,
+    context: {
+      invitee: bob
+    },
     timestamp: Date.now()
   }
-} as wireEvents.RoomActionSent, {
-  type: eventTypes.ROOM_ACTION,
+} as wireEvents.RoomMessage, {
+  type: eventTypes.ROOM_MESSAGE,
   id: roomId,
-  action: {
-    type: eventTypes.ROOM_ACTION,
-    action: actionTypes.LEFT,
+  message: {
+    type: "message",
     id: actionId,
-    room: roomId,
+    channel: roomId,
     user: alice,
-    reason: "reason",
+    tag: actionTypes.ROOM_LEFT,
+    context: {
+      reason: "reason"
+    },
     timestamp: Date.now()
   }
-} as wireEvents.RoomActionSent, {
-  type: eventTypes.CALL_ACTION,
+} as wireEvents.RoomMessage, {
+  type: eventTypes.CALL_MESSAGE,
   id: callId,
-  action: {
-    type: eventTypes.CALL_ACTION,
-    action: actionTypes.JOINED,
+  message: {
+    type: "message",
     id: actionId,
-    call: callId,
+    channel: callId,
     user: alice,
+    tag: actionTypes.CALL_JOINED,
     timestamp: Date.now()
   }
-} as wireEvents.CallActionSent, {
-  type: eventTypes.CALL_ACTION,
+} as wireEvents.CallMessage, {
+  type: eventTypes.CALL_MESSAGE,
   id: callId,
-  action: {
-    type: eventTypes.CALL_ACTION,
-    action: actionTypes.INVITED,
+  message: {
+    type: "message",
     id: actionId,
-    call: callId,
+    channel: callId,
     user: alice,
-    invitee: bob,
+    tag: actionTypes.CALL_INVITED,
+    context: {
+      invitee: bob
+    },
     timestamp: Date.now()
   }
-} as wireEvents.CallActionSent, {
-  type: eventTypes.CALL_ACTION,
+} as wireEvents.CallMessage, {
+  type: eventTypes.CALL_MESSAGE,
   id: callId,
-  action: {
-    type: eventTypes.CALL_ACTION,
-    action: actionTypes.LEFT,
+  message: {
+    type: "message",
     id: actionId,
-    call: callId,
+    channel: callId,
     user: alice,
-    reason: "reason",
+    tag: actionTypes.CALL_LEFT,
+    context: {
+      reason: "reason"
+    },
     timestamp: Date.now()
   }
-} as wireEvents.CallActionSent, {
-  type: eventTypes.CALL_ACTION,
+} as wireEvents.CallMessage, {
+  type: eventTypes.CALL_MESSAGE,
   id: callId,
-  action: {
-    type: eventTypes.CALL_ACTION,
-    action: actionTypes.OFFLINE,
+  message: {
+    type: "message",
     id: actionId,
-    call: callId,
+    channel: callId,
     user: alice,
+    tag: actionTypes.CALL_OFFLINE,
     timestamp: Date.now()
   }
-} as wireEvents.CallActionSent, {
-    type: eventTypes.CALL_ACTION,
+} as wireEvents.CallMessage, {
+    type: eventTypes.CALL_MESSAGE,
     id: callId,
-    action: {
-      type: eventTypes.CALL_ACTION,
-      action: actionTypes.ONLINE,
+    message: {
+      type: "message",
       id: actionId,
-      call: callId,
+      channel: callId,
       user: alice,
+      tag: actionTypes.CALL_ONLINE,
       timestamp: Date.now()
     }
-  } as wireEvents.CallActionSent];
+  } as wireEvents.CallMessage];
 
 describe("Protocol", () => {
   it("should be reversible", () => {

@@ -1,4 +1,17 @@
-import { Context, Deliverable, Editable, ID, MediaItem, RoomArchivable, Timestamp } from "./protocol";
+import { Context, Delivered, Edited, ID, Timestamp, Type } from "./protocol";
+
+export interface Message {
+  type: Type;
+  id: ID;
+  user: ID;
+  channel: ID;
+  timestamp: Timestamp;
+  body: string;
+  tag: string;
+  context?: Context;
+  delivered?: Delivered;
+  edited?: Edited;
+}
 
 export interface Call {
   id: ID;
@@ -8,13 +21,6 @@ export interface Call {
   direct: boolean;
   orgId?: ID;
   externalId?: string;
-}
-
-export interface Media extends RoomArchivable, MediaItem, Editable {}
-
-export interface Message extends RoomArchivable, Deliverable, Editable {
-  body: string;
-  context?: Context;
 }
 
 export interface Room {

@@ -1,7 +1,6 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { createMedia, Media } from "./media";
 import { createMessage, Message } from "./message";
 import * as protoEvents from "./protocol/events";
 import * as proto from "./protocol/protocol";
@@ -58,30 +57,17 @@ export abstract class Room implements wireEntities.Room {
     this.api = api;
   }
 
-  getLatestMessages(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
+  getLatestMessages(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<Message>> {
     return this.doGetHistory(this.api.getRoomHistoryLast(this.id, count || 100, filter));
   }
 
-  getMessages(offset: number,
-              limit: number,
-              filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
+  getMessages(offset: number, limit: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<Message>> {
     return this.doGetHistory(this.api.getRoomHistoryPage(this.id, offset, limit, filter));
   }
 
-  private doGetHistory(p: Promise<proto.Paginated<proto.RoomArchivable>>) {
-    return this.wrapPagination(p, (a: proto.RoomArchivable) => {
-      switch (a.type) {
-      case "media":
-        const media = a as wireEntities.Media;
-        return createMedia(media, this.log, this.events, this.api);
-
-      case "message":
-        const msg = a as wireEntities.Message;
-        return createMessage(msg, this.log, this.events, this.api);
-
-      default:
-        return a as proto.RoomArchivable;
-      }
+  private doGetHistory(p: Promise<proto.Paginated<wireEntities.Message>>) {
+    return this.wrapPagination(p, (m: Message) => {
+      return createMessage(m, this.log, this.events, this.api);
     });
   }
 
@@ -109,17 +95,16 @@ export abstract class Room implements wireEntities.Room {
     return this.api.setMark(this.id, timestamp);
   }
 
-  send(message: string, type?: string, context?: proto.Context): Promise<Message> {
-    return this.api.sendMessage(this.id, message, type, context).then((m) => createMessage(m, this.log,
-      this.events, this.api));
+  send(message: string): Promise<Message> {
+    return this.api.sendMessage(this.id, message).then((m) => {
+      return createMessage(m, this.log, this.events, this.api);
+    });
   }
 
-  sendMetadata(payload: any): Promise<proto.Metadata> {
-    return this.api.sendMetadata(this.id, payload);
-  }
-
-  sendMedia(media: proto.MediaItem): Promise<Media> {
-    return this.api.sendMedia(this.id, media).then((m) => createMedia(m, this.log, this.events, this.api));
+  sendCustom(message: string, tag: string, context: proto.Context): Promise<Message> {
+    return this.api.sendCustom(this.id, message, tag, context).then((m) => {
+      return createMessage(m, this.log, this.events, this.api);
+    });
   }
 
   indicateTyping(): Promise<void> {
@@ -139,18 +124,6 @@ export abstract class Room implements wireEntities.Room {
     });
   }
 
-  onMetadata(callback: Callback<proto.Metadata>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_METADATA, this.id, (msg: protoEvents.RoomMetadata) => {
-      callback(msg.metadata);
-    });
-  }
-
-  onMedia(callback: Callback<Media>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MEDIA, this.id, (msg: protoEvents.RoomMedia) => {
-      callback(msg.media);
-    });
-  }
-
   onTyping(callback: Callback<protoEvents.RoomTyping>) {
     this.events.onConcreteEvent(eventTypes.ROOM_TYPING, this.id, callback);
   }
@@ -163,38 +136,38 @@ export class DirectRoom extends Room {
 export class GroupRoom extends Room {
   public readonly roomType: roomType.RoomType = roomType.RoomType.GROUP;
 
-  private onJoinedCallback: Callback<proto.RoomAction>;
-  private onLeftCallback: Callback<proto.RoomAction>;
-  private onInvitedCallback: Callback<proto.RoomAction>;
+  private onJoinedCallback: Callback<Message>;
+  private onLeftCallback: Callback<Message>;
+  private onInvitedCallback: Callback<Message>;
 
   constructor(room: wireEntities.Room, log: Logger, events: EventHandler<wireEvents.Event>, api: ArtichokeAPI) {
     super(room, log, events, api);
 
-    const nop = (a: proto.RoomAction) => {
+    const nop = (a: Message) => {
       // Do nothing.
     };
     this.onLeftCallback = nop;
     this.onJoinedCallback = nop;
     this.onInvitedCallback = nop;
 
-    this.events.onConcreteEvent(eventTypes.ROOM_ACTION, this.id, (e: protoEvents.RoomActionSent) => {
-      switch (e.action.action) {
-      case actionTypes.JOINED:
-        this.users.push(e.action.user);
-        this.onJoinedCallback(e.action);
+    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (e: protoEvents.RoomMessage) => {
+      switch (e.message.tag) {
+      case actionTypes.ROOM_JOINED:
+        this.users.push(e.message.user);
+        this.onJoinedCallback(e.message);
         break;
 
-      case actionTypes.LEFT:
-        this.users = this.users.filter((u) => u !== e.action.user);
-        this.onLeftCallback(e.action);
+      case actionTypes.ROOM_LEFT:
+        this.users = this.users.filter((u) => u !== e.message.user);
+        this.onLeftCallback(e.message);
         break;
 
-      case actionTypes.INVITED:
-        this.onInvitedCallback(e.action);
+      case actionTypes.ROOM_INVITED:
+        this.onInvitedCallback(e.message);
         break;
 
       default:
-        this.events.notify(error("Invalid room_action event", e));
+        this.events.notify(error("Invalid event", e));
       }
     });
   }
@@ -216,15 +189,15 @@ export class GroupRoom extends Room {
     return this.api.inviteToRoom(this.id, user);
   }
 
-  onJoined(callback: Callback<proto.RoomAction>) {
+  onJoined(callback: Callback<Message>) {
     this.onJoinedCallback = callback;
   }
 
-  onLeft(callback: Callback<proto.RoomAction>) {
+  onLeft(callback: Callback<Message>) {
     this.onLeftCallback = callback;
   }
 
-  onInvited(callback: Callback<proto.RoomAction>) {
+  onInvited(callback: Callback<Message>) {
     this.onInvitedCallback = callback;
   }
 }
