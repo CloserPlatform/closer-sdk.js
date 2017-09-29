@@ -88,8 +88,8 @@ export class JSONWebSocket<T extends EventEntity> {
     };
     if (typeof window.addEventListener !== "undefined") {
       window.addEventListener("offline", wrappedCallback);
-    } else {
-      (document.body as any).onoffline = wrappedCallback;
+    } else if (window.document && window.document.body) {
+      (window.document.body as any).onoffline = wrappedCallback;
     }
     // TODO Check heartbeats.
   }
