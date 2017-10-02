@@ -42,6 +42,9 @@ export abstract class Room implements wireEntities.Room {
   protected events: EventHandler<wireEvents.Event>;
   protected api: ArtichokeAPI;
 
+  protected onTextMessageCallback: Callback<Message>;
+  protected onCustomCallbacks: { [tag: string]: Callback<Message> };
+
   public abstract readonly roomType: roomType.RoomType;
 
   constructor(room: wireEntities.Room, log: Logger, events: EventHandler<wireEvents.Event>, api: ArtichokeAPI) {
@@ -55,6 +58,28 @@ export abstract class Room implements wireEntities.Room {
     this.log = log;
     this.events = events;
     this.api = api;
+    this.onCustomCallbacks = {};
+    this.onTextMessageCallback = (m: Message) => {
+      // Do nothing.
+    };
+    this.defineCallbacks();
+  }
+
+  protected defineCallbacks() {
+    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (e: protoEvents.RoomMessage) => {
+      switch (e.message.tag) {
+      case actionTypes.TEXT_MESSAGE:
+        this.onTextMessageCallback(e.message);
+        break;
+
+      default:
+        if (e.message.tag in this.onCustomCallbacks) {
+          this.onCustomCallbacks[e.message.tag](e.message);
+        } else {
+          this.events.notify(error("Invalid event", e));
+        }
+      }
+    });
   }
 
   getLatestMessages(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<Message>> {
@@ -119,9 +144,11 @@ export abstract class Room implements wireEntities.Room {
   }
 
   onMessage(callback: Callback<Message>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (msg: protoEvents.RoomMessage) => {
-      callback(msg.message);
-    });
+    this.onTextMessageCallback = callback;
+  }
+
+  onCustom(tag: string, callback: Callback<Message>) {
+    this.onCustomCallbacks[tag] = callback;
   }
 
   onTyping(callback: Callback<protoEvents.RoomTyping>) {
@@ -149,7 +176,9 @@ export class GroupRoom extends Room {
     this.onLeftCallback = nop;
     this.onJoinedCallback = nop;
     this.onInvitedCallback = nop;
+  }
 
+  protected defineCallbacks() {
     this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (e: protoEvents.RoomMessage) => {
       switch (e.message.tag) {
       case actionTypes.ROOM_JOINED:
@@ -166,8 +195,16 @@ export class GroupRoom extends Room {
         this.onInvitedCallback(e.message);
         break;
 
+      case actionTypes.TEXT_MESSAGE:
+        this.onTextMessageCallback(e.message);
+        break;
+
       default:
-        this.events.notify(error("Invalid event", e));
+        if (e.message.tag in this.onCustomCallbacks) {
+          this.onCustomCallbacks[e.message.tag](e.message);
+        } else {
+          this.events.notify(error("Invalid event", e));
+        }
       }
     });
   }

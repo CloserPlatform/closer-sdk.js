@@ -2,7 +2,7 @@ import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage, Message } from "./message";
-import { CallMessage, CallActiveDevice, CallEnd } from "./protocol/events";
+import { CallActiveDevice, CallEnd, CallMessage } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { actionTypes, error, Event, eventTypes } from "./protocol/wire-events";

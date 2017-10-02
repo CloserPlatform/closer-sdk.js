@@ -23,7 +23,7 @@ function msg(id: string): wireEntities.Message {
     type: "message",
     id,
     body: "Hi!",
-    tag: "json",
+    tag: "TEXT_MESSAGE",
     context: {
       payload: "{\"key\": \"value\"}"
     },
@@ -169,6 +169,24 @@ function makeRoom(roomType: RoomType) {
       let m = msg(msg1);
       m.channel = room.id;
       m.user = chad;
+      events.notify({
+        type: eventTypes.ROOM_MESSAGE,
+        id: room.id,
+        message: m
+      } as Event);
+    });
+
+    it("should run a callback on incoming custom message", (done) => {
+      room.onCustom("json", (msg) => {
+        expect(msg.user).toBe(chad);
+        done();
+      });
+
+      let m = msg(msg1);
+      m.tag = "json"
+      m.channel = room.id;
+      m.user = chad;
+
       events.notify({
         type: eventTypes.ROOM_MESSAGE,
         id: room.id,
