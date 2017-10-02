@@ -28,3 +28,11 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
  - open chrome://net-internals/#hsts
  - delete domains: 'api.dev.ratel.io' and 'artichoke.ratel.io'
  - enjoy
+
+
+# Changelog
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+
+## 0.4.12
+### Changed
+- `RoomCreated` event has now rich Room object
