@@ -19,7 +19,7 @@
     "posttest:ci": "istanbul check-coverage --statement 75 --branch 55 --function 60 --line 75",
     "start": "python3 -m http.server",
     "test": "karma start --singleRun true",
-    "test:ci": "karma start --singleRun true --browsers HeadlessChrome",
+    "test:ci": "karma start --singleRun true --browsers HeadlessChrome,HeadlessFirefox",
     "test:firefox": "karma start --singleRun true --browsers Firefox",
     "test:chrome": "karma start --singleRun true --browsers ChromeWithFakeUserMedia",
     "test:watch": "karma start --singleRun false",

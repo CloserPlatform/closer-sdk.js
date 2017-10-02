@@ -116,6 +116,10 @@ module.exports = (config) => {
                 base: 'Chrome',
                 flags: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream',
                         '--headless', '--disable-gpu', '--remote-debugging-port=9222']
+            },
+            HeadlessFirefox: {
+                base: 'Firefox',
+                flags: ['-headless']
             }
         }
     });
