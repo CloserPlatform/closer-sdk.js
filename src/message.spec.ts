@@ -13,7 +13,7 @@ const msg1 = "2323";
 
 class APIMock extends ArtichokeAPI {
   setDelivery = false;
-  updatedArchivable = false;
+  updatedMessage = false;
 
   constructor() {
     super(apiKey, config.chat, log);
@@ -24,9 +24,9 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve();
   }
 
-  updateArchivable(archivable, timestamp) {
-    this.updatedArchivable = true;
-    return Promise.resolve(archivable);
+  updateMessage(message, timestamp) {
+    this.updatedMessage = true;
+    return Promise.resolve(message);
   }
 }
 
@@ -128,7 +128,7 @@ describe("Message", () => {
   it("should allow editing", () => {
     expect(msg.edited).not.toBeDefined();
     msg.edit("edited body");
-    expect(api.updatedArchivable).toBe(true);
+    expect(api.updatedMessage).toBe(true);
     expect(msg.edited).toBeDefined();
   });
 

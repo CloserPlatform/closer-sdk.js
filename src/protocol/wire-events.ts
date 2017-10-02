@@ -163,6 +163,16 @@ export interface RTCDescription extends Event {
   description: SDP;
 }
 
+export interface Invitee {
+  invitee: proto.ID;
+}
+
+export type EndReason = string;
+
+export interface Reason {
+  reason: EndReason;
+}
+
 // Internal events:
 export interface Disconnect extends Event {
   reason: string;

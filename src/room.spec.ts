@@ -4,7 +4,7 @@ import { apiKey, config, log } from "./fixtures.spec";
 import { Event } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import { actionTypes, codec, eventTypes, mark, typing } from "./protocol/wire-events";
+import { actionTypes, codec, eventTypes, Invitee, mark, Reason, typing } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 
 import RoomType = roomType.RoomType;
@@ -320,7 +320,7 @@ describe("GroupRoom", () => {
   it("should run callback on room left", (done) => {
     room.onLeft((msg) => {
       expect(msg.user).toBe(alice);
-      expect(msg.reason).toBe("reason");
+      expect((msg.context as Reason).reason).toBe("reason");
       done();
     });
 
@@ -344,7 +344,7 @@ describe("GroupRoom", () => {
   it("should run callback on room invite", (done) => {
     room.onInvited((msg) => {
       expect(msg.user).toBe(alice);
-      expect(msg.invitee).toBe(bob);
+      expect((msg.context as Invitee).invitee).toBe(bob);
       done();
     });
 

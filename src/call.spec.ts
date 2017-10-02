@@ -4,7 +4,7 @@ import { EventHandler } from "./events";
 import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
 import { Event } from "./protocol/events";
 import { Call as ProtoCall } from "./protocol/wire-entities";
-import { actionTypes, codec, eventTypes } from "./protocol/wire-events";
+import { actionTypes, codec, eventTypes, Invitee } from "./protocol/wire-events";
 import CallType = ct.CallType;
 
 const callId = "123";
@@ -321,7 +321,7 @@ function makeCall(callType: CallType) {
           id: call.id,
           message: {
             type: "message",
-            message: actionTypes.CALL_JOINED,
+            tag: actionTypes.CALL_JOINED,
             call: call.id,
             user: bob,
             timestamp: Date.now()
@@ -369,7 +369,7 @@ describe("GroupCall", () => {
 
     call.onInvited((msg) => {
       expect(msg.user).toBe(alice);
-      expect(msg.invitee).toBe(chad);
+      expect((msg.context as Invitee).invitee).toBe(chad);
       done();
     });
 
