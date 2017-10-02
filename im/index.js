@@ -146,10 +146,7 @@ $(document).ready(function() {
             },
             media: function(media) {
                 var e = media.edited ? " edited" : "";
-                return receive(media, "media" + e, getUserNickname(media.user), makeEmbed({
-                    type: "media",
-                    media: media
-                }));
+                return receive(media, "media" + e, getUserNickname(media.user), makeEmbed(media));
             },
             message: function(msg) {
                 var d = !!msg.delivered ? " delivered" : "";
@@ -157,11 +154,16 @@ $(document).ready(function() {
                 return receive(msg, "message" + d + e, getUserNickname(msg.user), msg.body);
             },
             metadata: function(meta) {
-                return receive(meta, "metadata", getUserNickname(meta.user), makeEmbed(meta.payload));
+                return receive(meta, "metadata", getUserNickname(meta.user), makeEmbed(meta));
             },
             action: function(action) {
-                var target = (action.action === "invited" ? getUserNickname(action.invitee) : "the room");
-                return receive(action, "info", "", "User " + getUserNickname(action.user) + " " + action.action + " " + target + ".");
+                var target = (action.tag === "ROOM_INVITED" ? getUserNickname(action.context.invitee) : "the room");
+                var tags = {
+                  "ROOM_JOINED": "joined",
+                  "ROOM_LEFT": "left",
+                  "ROOM_INVITED": "invited"
+                };
+                return receive(action, "info", "", "User " + getUserNickname(action.user) + " " + tags[action.tag] + " " + target + ".");
             }
         };
     }
@@ -210,19 +212,11 @@ $(document).ready(function() {
             receive.message(msg);
         });
 
-        room.onMetadata(receive.metadata);
-
-        room.onMedia(function(media) {
-            media.onEdit(editLine);
-            receive.media(media);
-        });
-
         var input = makeInputField("Send!", function(input) {
             room.send(input).then(function (msg) {
                 msg.onDelivery(deliverLine);
                 msg.onEdit(editLine);
                 console.log("Received ack for message: ", msg);
-                receive.message(msg).click(clickEditor(msg));
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
@@ -397,12 +391,8 @@ $(document).ready(function() {
             users.deactivate(msg.user);
         });
 
-        room.onMetadata(receive.metadata);
-
-        room.onMedia(function(media) {
-            media.onEdit(editLine);
-            receive.media(media);
-        });
+        room.onCustom("MEDIA", receive.media);
+        room.onCustom("AGENT", receive.metadata);
 
         room.onTyping(function(msg) {
             console.log(msg.user + " is typing!");
@@ -414,7 +404,6 @@ $(document).ready(function() {
                 msg.onDelivery(deliverLine);
                 hackersTrap(msg.body);
                 console.log("Received ack for message: ", msg);
-                receive.message(msg).click(clickEditor(msg));
             }).catch(function(error) {
                 console.log("Sending message failed: ", error);
             });
@@ -446,7 +435,7 @@ $(document).ready(function() {
         });
 
         var gif = makeButton("btn-info", "Gif!", function() {
-            room.sendMedia({
+            room.sendCustom("", "MEDIA", {
                 mimeType: "image/gif",
                 content: randomGif(),
                 description: "A random gif image"
@@ -458,8 +447,7 @@ $(document).ready(function() {
         });
 
         var brag = makeButton("btn-warning", "Brag!", function() {
-            room.sendMetadata({
-                type: "agent",
+            room.sendCustom("", "AGENT", {
                 agent: navigator.userAgent
             }).then(function(metadata) {
               console.log("User Agent sent successfully.")
@@ -526,20 +514,19 @@ $(document).ready(function() {
             }
 
             function doReceive(msg) {
-              switch(msg.type) {
-              case "media":
-                msg.onEdit(editLine);
-                chatbox.receive.media(msg);
-                break;
-              case "message":
+              switch(msg.tag) {
+              case "TEXT_MESSAGE":
                 msg.markDelivered();
                 msg.onEdit(editLine);
                 chatbox.receive.message(msg);
                 break;
-              case "metadata":
+              case "MEDIA":
+                chatbox.receive.media(msg);
+                break;
+              case "AGENT":
                 chatbox.receive.metadata(msg);
                 break;
-              case "action":
+              default:
                 chatbox.receive.action(msg);
               }
             }
@@ -825,7 +812,7 @@ $(document).ready(function() {
 
     function addCall(call, stream, constraints, session) {
         var box = makeCall(call, stream, constraints, session);
-        call.getHistory(); // NOTE Just for testing purposes.
+        call.getMessages(); // NOTE Just for testing purposes.
         chat.add(call.id, box);
         return box;
     }

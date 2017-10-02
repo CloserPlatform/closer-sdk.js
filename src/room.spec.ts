@@ -4,7 +4,7 @@ import { apiKey, config, log } from "./fixtures.spec";
 import { Event } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import { actionTypes, codec, eventTypes, mark, typing } from "./protocol/wire-events";
+import { actionTypes, codec, eventTypes, Invitee, mark, Reason, typing } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 
 import RoomType = roomType.RoomType;
@@ -17,45 +17,19 @@ const chad = "987";
 const msg1 = "2323";
 const msg2 = "1313";
 const msg3 = "4545";
-const meta1 = "576";
-const media1 = "365";
 
 function msg(id: string): wireEntities.Message {
   return {
     type: "message",
     id,
     body: "Hi!",
+    tag: "TEXT_MESSAGE",
     context: {
-      type: "json",
       payload: "{\"key\": \"value\"}"
     },
     user: alice,
-    room: roomId,
+    channel: roomId,
     timestamp: 123,
-  };
-}
-
-function meta(id: string, payload: any): proto.Metadata {
-  return {
-    type: "metadata",
-    id,
-    room: roomId,
-    user: alice,
-    payload,
-    timestamp: 123
-  };
-}
-
-function media(id: string, description: string): wireEntities.Media {
-  return {
-    type: "media",
-    id,
-    room: roomId,
-    user: alice,
-    timestamp: 123,
-    mimeType: "image/png",
-    content: "https://test.com/img.png",
-    description
   };
 }
 
@@ -114,14 +88,6 @@ class APIMock extends ArtichokeAPI {
     let m = msg(msg3);
     m.body = body;
     return Promise.resolve(m);
-  }
-
-  sendMetadata(id, payload) {
-    return Promise.resolve(meta(meta1, payload));
-  }
-
-  sendMedia(id, m) {
-    return Promise.resolve(media(media1, m.description));
   }
 
   setMark(id, timestamp) {
@@ -201,7 +167,7 @@ function makeRoom(roomType: RoomType) {
       });
 
       let m = msg(msg1);
-      m.room = room.id;
+      m.channel = room.id;
       m.user = chad;
       events.notify({
         type: eventTypes.ROOM_MESSAGE,
@@ -210,37 +176,21 @@ function makeRoom(roomType: RoomType) {
       } as Event);
     });
 
-    it("should run a callback on incoming metadata", (done) => {
-      let payload = ["anything goes", 1, {
-        filter: "all"
-      }];
-
-      room.onMetadata((meta) => {
-        expect(meta.user).toBe(alice);
-        expect(meta.payload).toBe(payload);
+    it("should run a callback on incoming custom message", (done) => {
+      room.onCustom("json", (msg) => {
+        expect(msg.user).toBe(chad);
         done();
       });
 
-      events.notify({
-        type: eventTypes.ROOM_METADATA,
-        id: room.id,
-        metadata: meta(meta1, payload)
-      } as Event);
-    });
-
-    it("should run a callback on incoming media", (done) => {
-      let descr = "some image";
-
-      room.onMedia((media) => {
-        expect(media.user).toBe(alice);
-        expect(media.description).toBe(descr);
-        done();
-      });
+      let m = msg(msg1);
+      m.tag = "json"
+      m.channel = room.id;
+      m.user = chad;
 
       events.notify({
-        type: eventTypes.ROOM_MEDIA,
+        type: eventTypes.ROOM_MESSAGE,
         id: room.id,
-        media: media(media1, descr)
+        message: m
       } as Event);
     });
 
@@ -277,29 +227,6 @@ function makeRoom(roomType: RoomType) {
     it("should allow sending messages", (done) => {
       room.send("hello").then((msg) => {
         expect(msg.body).toBe("hello");
-        done();
-      });
-    });
-
-    it("should allow sending metadata", (done) => {
-      let payload = {
-        img: "image",
-        src: "http://i.giphy.com/3o6ZtpxSZbQRRnwCKQ.gif"
-      };
-      room.sendMetadata(payload).then((meta) => {
-        expect(meta.payload).toBe(payload);
-        done();
-      });
-    });
-
-    it("should allow sending media", (done) => {
-      let gif = {
-        mimeType: "image/gif",
-        content: "http://i.giphy.com/3o6ZtpxSZbQRRnwCKQ.gif",
-        description: "Lovely little gif."
-      };
-      room.sendMedia(gif).then((media) => {
-        expect(media.description).toBe(gif.description);
         done();
       });
     });
@@ -357,14 +284,17 @@ describe("GroupRoom", () => {
         });
 
         events.notify({
-          type: eventTypes.ROOM_ACTION,
+          type: eventTypes.ROOM_MESSAGE,
           id: room.id,
-          action: {
-            action: actionTypes.LEFT,
+          message: {
+            type: "message",
+            tag: actionTypes.ROOM_LEFT,
             id: actionId,
             room: room.id,
             user: alice,
-            reason: "no reason",
+            context: {
+              reason: "no reason"
+            },
             timestamp: Date.now()
           }
         } as Event);
@@ -372,10 +302,11 @@ describe("GroupRoom", () => {
     });
 
     events.notify({
-      type: eventTypes.ROOM_ACTION,
+      type: eventTypes.ROOM_MESSAGE,
       id: room.id,
-      action: {
-        action: actionTypes.JOINED,
+      message: {
+        type: "message",
+        tag: actionTypes.ROOM_JOINED,
         id: actionId,
         room: room.id,
         user: bob,
@@ -391,10 +322,11 @@ describe("GroupRoom", () => {
     });
 
     events.notify({
-      type: eventTypes.ROOM_ACTION,
+      type: eventTypes.ROOM_MESSAGE,
       id: room.id,
-      action: {
-        action: actionTypes.JOINED,
+      message: {
+        type: "message",
+        tag: actionTypes.ROOM_JOINED,
         id: actionId,
         room: room.id,
         user: alice,
@@ -406,19 +338,22 @@ describe("GroupRoom", () => {
   it("should run callback on room left", (done) => {
     room.onLeft((msg) => {
       expect(msg.user).toBe(alice);
-      expect(msg.reason).toBe("reason");
+      expect((msg.context as Reason).reason).toBe("reason");
       done();
     });
 
     events.notify({
-      type: eventTypes.ROOM_ACTION,
+      type: eventTypes.ROOM_MESSAGE,
       id: room.id,
-      action: {
-        action: actionTypes.LEFT,
+      message: {
+        type: "message",
+        tag: actionTypes.ROOM_LEFT,
         id: actionId,
         room: room.id,
         user: alice,
-        reason: "reason",
+        context: {
+          reason: "reason"
+        },
         timestamp: Date.now()
       }
     } as Event);
@@ -427,19 +362,22 @@ describe("GroupRoom", () => {
   it("should run callback on room invite", (done) => {
     room.onInvited((msg) => {
       expect(msg.user).toBe(alice);
-      expect(msg.invitee).toBe(bob);
+      expect((msg.context as Invitee).invitee).toBe(bob);
       done();
     });
 
     events.notify({
-      type: eventTypes.ROOM_ACTION,
+      type: eventTypes.ROOM_MESSAGE,
       id: room.id,
-      action: {
-        action: actionTypes.INVITED,
+      message: {
+        type: "message",
+        tag: actionTypes.ROOM_INVITED,
         id: actionId,
         room: room.id,
         user: alice,
-        invitee: bob,
+        context: {
+          invitee: bob
+        },
         timestamp: Date.now()
       }
     } as Event);

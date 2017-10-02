@@ -1,4 +1,3 @@
-import { Callback } from "../events";
 // Common types:
 import { actionTypes } from "./wire-events";
 export type Type = string;
@@ -7,70 +6,11 @@ export type Ref = string;
 export type Timestamp = number;
 
 // Datatypes:
-export interface RoomAction extends RoomArchivable {
-  action: actionTypes.JOINED | actionTypes.LEFT | actionTypes.INVITED;
-  reason?: string;
-  invitee?: ID;
-}
-
-export interface Archivable {
-  type: Type;
-  id: ID;
-  user: ID;
-  timestamp: Timestamp;
-}
-
-export interface RoomArchivable extends Archivable {
-    room: ID;
-}
-
-export interface CallAction extends CallArchivable {
-  action: actionTypes.JOINED | actionTypes.TRANSFERRED | actionTypes.LEFT | actionTypes.OFFLINE |
-    actionTypes.ONLINE | actionTypes.INVITED | actionTypes.REJECTED | actionTypes.ANSWERED;
-  reason?: string;
-  invitee?: ID;
-}
-
-export interface CallArchivable extends Archivable {
-  call: ID;
-}
-
-export interface Deliverable {
-  delivered?: Delivered;
-}
-
-export interface RichDeliverable extends Deliverable {
-  markDelivered: () => void;
-  onDelivery: (cb: Callback<Deliverable>) => void;
-}
-
 export interface Delivered extends UserTimestamp {}
-
-export interface Editable {
-  edited?: Edited;
-}
-
-export interface RichEditable<T> extends Editable {
-  edit: (arg: T) => void;
-  onEdit: (cb: Callback<Editable>) => void;
-}
 
 export interface Edited extends UserTimestamp {}
 
-export interface MediaItem {
-  mimeType: string;
-  content: string;
-  description: string;
-}
-
-export interface Context {
-  type: Type;
-  payload: any;
-}
-
-export interface Metadata extends RoomArchivable {
-  payload: any;
-}
+export type Context = any;
 
 export interface UserTimestamp {
   user: ID;

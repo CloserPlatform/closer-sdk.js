@@ -3,20 +3,20 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { ChatDelivered, ChatEdited } from "./protocol/events";
 import * as proto from "./protocol/protocol";
-import { RichDeliverable, RichEditable } from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { Event, eventTypes } from "./protocol/wire-events";
 
-export class Message implements wireEntities.Message, RichDeliverable, RichEditable<string> {
-  public type: proto.Type = "message"; // NOTE Needed in order to differentiate between different Archivables.
+export class Message implements wireEntities.Message {
+  public type: proto.Type = "message";
   public id: proto.ID;
-  public body: string;
-  public context: proto.Context;
   public user: proto.ID;
-  public room: proto.ID;
+  public channel: proto.ID;
   public timestamp: proto.Timestamp;
-  public delivered: proto.Delivered;
-  public edited: proto.Edited;
+  public body: string;
+  public tag: string;
+  public context?: proto.Context;
+  public delivered?: proto.Delivered;
+  public edited?: proto.Edited;
 
   private log: Logger;
   private events: EventHandler<Event>;
@@ -27,7 +27,9 @@ export class Message implements wireEntities.Message, RichDeliverable, RichEdita
     this.body = message.body;
     this.context = message.context;
     this.user = message.user;
-    this.room = message.room;
+    this.channel = message.channel;
+    this.tag = message.tag;
+    this.context = message.context;
     this.timestamp = message.timestamp;
     this.delivered = message.delivered;
     this.edited = message.edited;
@@ -68,14 +70,13 @@ export class Message implements wireEntities.Message, RichDeliverable, RichEdita
       user: "FIXME", // FIXME We don't currently have the sessionId here...
       timestamp: ts
     };
-    this.api.updateArchivable(this, ts); // FIXME Actually use the promise.
+    this.api.updateMessage(this, ts); // FIXME Actually use the promise.
   }
 
   onEdit(callback: Callback<Message>) {
     this.events.onConcreteEvent(eventTypes.CHAT_EDITED, this.id, (msg: ChatEdited) => {
-      let m = (msg.archivable as wireEntities.Message);
-      this.body = m.body;
-      this.edited = m.edited;
+      this.body = msg.message.body;
+      this.edited = msg.message.edited;
       callback(this);
     });
   }

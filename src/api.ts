@@ -229,8 +229,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath]);
   }
 
-  getCallHistory(callId: proto.ID): Promise<Array<proto.CallArchivable>> {
-    return this.getAuth<Array<proto.CallArchivable>>([this.url, this.callPath, callId, "history"]);
+  getCallHistory(callId: proto.ID): Promise<Array<wireEntities.Message>> {
+    return this.getAuth<Array<wireEntities.Message>>([this.url, this.callPath, callId, "history"]);
   }
 
   answerCall(callId: proto.ID): Promise<void> {
@@ -287,23 +287,23 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   getRoomHistoryLast(roomId: proto.ID,
                      count: number,
-                     filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
+                     filter?: proto.HistoryFilter): Promise<proto.Paginated<wireEntities.Message>> {
     let endpoint = "history/last?count=" + count;
     if (filter) {
       endpoint += "&filter=" + filter;
     }
-    return this.getAuthPaginated<proto.RoomArchivable>([this.url, this.roomPath, roomId, endpoint]);
+    return this.getAuthPaginated<wireEntities.Message>([this.url, this.roomPath, roomId, endpoint]);
   }
 
   getRoomHistoryPage(roomId: proto.ID,
                      offset: number,
                      limit: number,
-                     filter?: proto.HistoryFilter): Promise<proto.Paginated<proto.RoomArchivable>> {
+                     filter?: proto.HistoryFilter): Promise<proto.Paginated<wireEntities.Message>> {
     let endpoint = "history/page?offset=" + offset + "&limit=" + limit;
     if (filter) {
       endpoint += "&filter=" + filter;
     }
-    return this.getAuthPaginated<proto.RoomArchivable>([this.url, this.roomPath, roomId, endpoint]);
+    return this.getAuthPaginated<wireEntities.Message>([this.url, this.roomPath, roomId, endpoint]);
   }
 
   joinRoom(roomId: proto.ID): Promise<void> {
@@ -318,17 +318,14 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<proto.Invite, void>([this.url, this.roomPath, roomId, "invite"], proto.invite(sessionId));
   }
 
-  sendMessage(roomId: proto.ID, body: string, type?: string, context?: proto.Context): Promise<wireEntities.Message> {
-    return this.ask<wireEvents.ChatReceived>(wireEvents.chatRequest(roomId, body, type, context))
+  sendMessage(roomId: proto.ID, body: string): Promise<wireEntities.Message> {
+    return this.ask<wireEvents.ChatReceived>(wireEvents.chatSendMessage(roomId, body))
       .then((ack) => ack.message);
   }
 
-  sendMetadata(roomId: proto.ID, payload: any): Promise<proto.Metadata> {
-    return this.postAuth<any, proto.Metadata>([this.url, this.roomPath, roomId, "metadata"], payload);
-  }
-
-  sendMedia(roomId: proto.ID, media: proto.MediaItem): Promise<wireEntities.Media> {
-    return this.postAuth<proto.MediaItem, wireEntities.Media>([this.url, this.roomPath, roomId, "media"], media);
+  sendCustom(roomId: proto.ID, body: string, tag: string, context: proto.Context): Promise<wireEntities.Message> {
+    return this.ask<wireEvents.ChatReceived>(wireEvents.chatSendCustom(roomId, body, tag, context))
+      .then((ack) => ack.message);
   }
 
   sendTyping(roomId: proto.ID): Promise<void> {
@@ -339,13 +336,13 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.send(wireEvents.mark(roomId, timestamp));
   }
 
-  // Archivable API:
-  setDelivered(archivableId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
-    return this.send(wireEvents.chatDelivered(archivableId, timestamp));
+  // Archive API:
+  setDelivered(messageId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
+    return this.send(wireEvents.chatDelivered(messageId, timestamp));
   }
 
-  updateArchivable(archivable: proto.Archivable, timestamp: proto.Timestamp): Promise<proto.Archivable> {
-    return this.postAuth<proto.Archivable, proto.Archivable>([this.url, this.archivePath, archivable.id], archivable);
+  updateMessage(message: wireEntities.Message, timestamp: proto.Timestamp): Promise<wireEntities.Message> {
+    return this.postAuth<wireEntities.Message, wireEntities.Message>([this.url, this.archivePath, message.id], message);
   }
 
   private getAuth<Response>(path: Array<string>): Promise<Response> {

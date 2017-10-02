@@ -3,7 +3,6 @@ import { Call, createCall } from "../call";
 import { ChatConfig } from "../config";
 import { EventHandler } from "../events";
 import { Logger } from "../logger";
-import { createMedia, Media } from "../media";
 import { createMessage, Message } from "../message";
 import { createRoom, Room } from "../room";
 import * as wireEvents from "./wire-events";
@@ -12,7 +11,8 @@ import { eventTypes } from "./wire-events";
 export interface Event extends wireEvents.Event {
 }
 
-export interface CallActionSent extends Event, wireEvents.CallActionSent {
+export interface CallMessage extends Event, wireEvents.CallMessage {
+  message: Message;
 }
 
 export interface CallInvitation extends Event, wireEvents.CallInvitation {
@@ -38,7 +38,10 @@ export interface ChatReceived extends Event, wireEvents.ChatReceived {
   message: Message;
 }
 
-export interface ChatRequest extends Event, wireEvents.ChatRequest {
+export interface ChatSendMessage extends Event, wireEvents.ChatSendMessage {
+}
+
+export interface ChatSendCustom extends Event, wireEvents.ChatSendCustom {
 }
 
 export interface Error extends Event, wireEvents.Error {
@@ -53,9 +56,6 @@ export interface Heartbeat extends ServerInfo, wireEvents.Heartbeat {
 export interface Hello extends ServerInfo, wireEvents.Hello {
 }
 
-export interface RoomActionSent extends Event, wireEvents.RoomActionSent {
-}
-
 export interface RoomCreated extends Event, wireEvents.RoomCreated {
   room: Room;
 }
@@ -67,15 +67,8 @@ export interface RoomInvitation extends Event, wireEvents.RoomInvitation {
 export interface RoomMark extends Event, wireEvents.RoomMark {
 }
 
-export interface RoomMedia extends Event, wireEvents.RoomMedia {
-  media: Media;
-}
-
 export interface RoomMessage extends Event, wireEvents.RoomMessage {
   message: Message;
-}
-
-export interface RoomMetadata extends Event, wireEvents.RoomMetadata {
 }
 
 export interface RoomStartTyping extends Event, wireEvents.RoomStartTyping {
@@ -117,11 +110,6 @@ export namespace eventUtils {
       const richEvent: RoomInvitation = {...e, room};
       return richEvent;
     }
-    if (isRoomMedia(e)) {
-      const media: Media = createMedia(e.media, log, events, api);
-      const richEvent: RoomMedia = {...e, media};
-      return richEvent;
-    }
     if (isRoomMessage(e)) {
       const message: Message = createMessage(e.message, log, events, api);
       const richEvent: RoomMessage = {...e, message};
@@ -145,10 +133,6 @@ export namespace eventUtils {
 
   function isRoomInvitation(e: wireEvents.Event): e is wireEvents.RoomInvitation {
     return e.type === eventTypes.ROOM_INVITATION;
-  }
-
-  function isRoomMedia(e: wireEvents.Event): e is wireEvents.RoomMedia {
-    return e.type === eventTypes.ROOM_MEDIA;
   }
 
   function isRoomMessage(e: wireEvents.Event): e is wireEvents.RoomMessage {

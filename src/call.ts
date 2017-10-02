@@ -1,7 +1,8 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { CallActionSent, CallActiveDevice, CallEnd } from "./protocol/events";
+import { createMessage, Message } from "./message";
+import { CallActiveDevice, CallEnd, CallMessage } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { actionTypes, error, Event, eventTypes } from "./protocol/wire-events";
@@ -50,14 +51,14 @@ export abstract class Call implements wireEntities.Call {
   private log: Logger;
   protected pool: RTCPool;
   private onActiveDeviceCallback: Callback<CallActiveDevice>;
-  private onLeftCallback: Callback<proto.CallAction>;
-  private onOfflineCallback: Callback<proto.CallAction>;
-  private onOnlineCallback: Callback<proto.CallAction>;
-  private onJoinedCallback: Callback<proto.CallAction>;
-  private onTransferredCallback: Callback<proto.CallAction>;
-  protected onInvitedCallback: Callback<proto.CallAction>;
-  private onAnsweredCallback: Callback<proto.CallAction>;
-  private onRejectedCallback: Callback<proto.CallAction>;
+  private onLeftCallback: Callback<Message>;
+  private onOfflineCallback: Callback<Message>;
+  private onOnlineCallback: Callback<Message>;
+  private onJoinedCallback: Callback<Message>;
+  private onTransferredCallback: Callback<Message>;
+  protected onInvitedCallback: Callback<Message>;
+  private onAnsweredCallback: Callback<Message>;
+  private onRejectedCallback: Callback<Message>;
 
   public abstract readonly callType: callType.CallType;
 
@@ -91,7 +92,7 @@ export abstract class Call implements wireEntities.Call {
       this.onActiveDeviceCallback(e);
     });
 
-    let nop = (a: proto.CallAction) => {
+    let nop = (a: Message) => {
       // Do nothing.
     };
 
@@ -104,48 +105,48 @@ export abstract class Call implements wireEntities.Call {
     this.onAnsweredCallback = nop;
     this.onRejectedCallback = nop;
 
-    this.events.onConcreteEvent(eventTypes.CALL_ACTION, this.id, (e: CallActionSent) => {
-      switch (e.action.action) {
-        case actionTypes.JOINED:
-          this.users.push(e.action.user);
-          this.pool.create(e.action.user);
-          this.onJoinedCallback(e.action);
+    this.events.onConcreteEvent(eventTypes.CALL_MESSAGE, this.id, (e: CallMessage) => {
+      switch (e.message.tag) {
+        case actionTypes.CALL_JOINED:
+          this.users.push(e.message.user);
+          this.pool.create(e.message.user);
+          this.onJoinedCallback(e.message);
           break;
 
-        case actionTypes.TRANSFERRED:
-          this.pool.destroy(e.action.user);
-          this.pool.create(e.action.user);
-          this.onTransferredCallback(e.action);
+        case actionTypes.CALL_TRANSFERRED:
+          this.pool.destroy(e.message.user);
+          this.pool.create(e.message.user);
+          this.onTransferredCallback(e.message);
           break;
 
-        case actionTypes.LEFT:
-          this.users = this.users.filter((u) => u !== e.action.user);
-          this.pool.destroy(e.action.user);
-          this.onLeftCallback(e.action);
+        case actionTypes.CALL_LEFT:
+          this.users = this.users.filter((u) => u !== e.message.user);
+          this.pool.destroy(e.message.user);
+          this.onLeftCallback(e.message);
           break;
 
-        case actionTypes.OFFLINE:
-          this.onOfflineCallback(e.action);
+        case actionTypes.CALL_OFFLINE:
+          this.onOfflineCallback(e.message);
           break;
 
-        case actionTypes.ONLINE:
-          this.onOnlineCallback(e.action);
+        case actionTypes.CALL_ONLINE:
+          this.onOnlineCallback(e.message);
           break;
 
-        case actionTypes.INVITED:
-          this.onInvitedCallback(e.action);
+        case actionTypes.CALL_INVITED:
+          this.onInvitedCallback(e.message);
           break;
 
-        case actionTypes.ANSWERED:
-          this.onAnsweredCallback(e.action);
+        case actionTypes.CALL_ANSWERED:
+          this.onAnsweredCallback(e.message);
           break;
 
-        case actionTypes.REJECTED:
-          this.onRejectedCallback(e.action);
+        case actionTypes.CALL_REJECTED:
+          this.onRejectedCallback(e.message);
           break;
 
         default:
-          this.events.notify(error("Invalid call_action event", e));
+          this.events.notify(error("Invalid event", e));
       }
     });
   }
@@ -186,8 +187,10 @@ export abstract class Call implements wireEntities.Call {
     return Promise.resolve(this.users);
   }
 
-  getHistory(): Promise<Array<proto.CallArchivable>> {
-    return this.api.getCallHistory(this.id);
+  getMessages(): Promise<Array<Message>> {
+    return this.api.getCallHistory(this.id).then((msgs) => msgs.map((m) => {
+      return createMessage(m, this.log, this.events, this.api);
+    }));
   }
 
   answer(stream: MediaStream): Promise<void> {
@@ -209,31 +212,31 @@ export abstract class Call implements wireEntities.Call {
     return this.api.leaveCall(this.id, reason);
   }
 
-  onAnswered(callback: Callback<proto.CallAction>) {
+  onAnswered(callback: Callback<Message>) {
     this.onAnsweredCallback = callback;
   }
 
-  onRejected(callback: Callback<proto.CallAction>) {
+  onRejected(callback: Callback<Message>) {
     this.onRejectedCallback = callback;
   }
 
-  onLeft(callback: Callback<proto.CallAction>) {
+  onLeft(callback: Callback<Message>) {
     this.onLeftCallback = callback;
   }
 
-  onOffline(callback: Callback<proto.CallAction>) {
+  onOffline(callback: Callback<Message>) {
     this.onOfflineCallback = callback;
   }
 
-  onOnline(callback: Callback<proto.CallAction>) {
+  onOnline(callback: Callback<Message>) {
     this.onOnlineCallback = callback;
   }
 
-  onJoined(callback: Callback<proto.CallAction>) {
+  onJoined(callback: Callback<Message>) {
     this.onJoinedCallback = callback;
   }
 
-  onTransferred(callback: Callback<proto.CallAction>) {
+  onTransferred(callback: Callback<Message>) {
     this.onTransferredCallback = callback;
   }
 
@@ -265,7 +268,7 @@ export class GroupCall extends Call {
     return this.api.joinCall(this.id);
   }
 
-  onInvited(callback: Callback<proto.CallAction>) {
+  onInvited(callback: Callback<Message>) {
     this.onInvitedCallback = callback;
   }
 }
