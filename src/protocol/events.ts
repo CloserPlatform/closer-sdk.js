@@ -57,6 +57,7 @@ export interface RoomActionSent extends Event, wireEvents.RoomActionSent {
 }
 
 export interface RoomCreated extends Event, wireEvents.RoomCreated {
+  room: Room;
 }
 
 export interface RoomInvitation extends Event, wireEvents.RoomInvitation {
@@ -106,6 +107,11 @@ export namespace eventUtils {
       const richEvent: ChatReceived = {...e, message};
       return richEvent;
     }
+    if (isRoomCreated(e)) {
+      const room: Room = createRoom(e.room, log, events, api);
+      const richEvent: RoomCreated = {...e, room};
+      return richEvent;
+    }
     if (isRoomInvitation(e)) {
       const room: Room = createRoom(e.room, log, events, api);
       const richEvent: RoomInvitation = {...e, room};
@@ -131,6 +137,10 @@ export namespace eventUtils {
 
   function isChatReceived(e: wireEvents.Event): e is wireEvents.ChatReceived {
     return e.type === eventTypes.CHAT_RECEIVED;
+  }
+
+  function isRoomCreated(e: wireEvents.Event): e is wireEvents.RoomCreated {
+    return e.type === eventTypes.ROOM_CREATED;
   }
 
   function isRoomInvitation(e: wireEvents.Event): e is wireEvents.RoomInvitation {
