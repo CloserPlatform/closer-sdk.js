@@ -187,7 +187,7 @@ export abstract class Call implements wireEntities.Call {
     return Promise.resolve(this.users);
   }
 
-  getHistory(): Promise<Array<Message>> {
+  getMessages(): Promise<Array<Message>> {
     return this.api.getCallHistory(this.id).then((msgs) => msgs.map((m) => {
       return createMessage(m, this.log, this.events, this.api);
     }));
