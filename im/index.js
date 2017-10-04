@@ -536,6 +536,7 @@ $(document).ready(function() {
               case "ROOM_LEFT":
               case "ROOM_INVITED":
                 chatbox.receive.action(msg);
+                break;
               default:
                 chatbox.receive.unknown(msg);
               }
