@@ -886,21 +886,23 @@ $(document).ready(function() {
     }
 
     function getUser(url, id, apiKey) {
+      try {
         var xhttp = new XMLHttpRequest();
         xhttp.open("GET", url + 'api/users/' + id, false);
         xhttp.setRequestHeader('X-Api-Key', apiKey);
+        xhttp.overrideMimeType("text/plain");
         xhttp.send();
-        if(xhttp.status === 200) {
-          return JSON.parse(xhttp.responseText);
-        }
+        return JSON.parse(xhttp.responseText);
+      } catch(e) {
         return {
           id,
           firstName: "Unknown",
           lastName: "User",
-          gender: "male",
+          gender: "unknown",
           email: "unknown@user.hehe",
           phone: "+48123123123"
         };
+      }
     }
 
     function sendCode(url, phone) {
