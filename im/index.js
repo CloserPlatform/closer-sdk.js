@@ -883,7 +883,17 @@ $(document).ready(function() {
         xhttp.open("GET", url + 'api/users/' + id, false);
         xhttp.setRequestHeader('X-Api-Key', apiKey);
         xhttp.send();
-        return JSON.parse(xhttp.responseText);
+        if(xhttp.status === 200) {
+          return JSON.parse(xhttp.responseText);
+        }
+        return {
+          id,
+          firstName: "Unknown",
+          lastName: "User",
+          gender: "male",
+          email: "unknown@user.hehe",
+          phone: "+48123123123"
+        };
     }
 
     function sendCode(url, phone) {
