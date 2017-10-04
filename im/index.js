@@ -164,6 +164,9 @@ $(document).ready(function() {
                   "ROOM_INVITED": "invited"
                 };
                 return receive(action, "info", "", "User " + getUserNickname(action.user) + " " + tags[action.tag] + " " + target + ".");
+            },
+            unknown: function(msg) {
+                return receive(msg, "message", getUserNickname(msg.user), JSON.stringify(msg));
             }
         };
     }
@@ -533,8 +536,12 @@ $(document).ready(function() {
               case "AGENT":
                 chatbox.receive.metadata(msg);
                 break;
-              default:
+              case "ROOM_JOINED":
+              case "ROOM_LEFT":
+              case "ROOM_INVITED":
                 chatbox.receive.action(msg);
+              default:
+                chatbox.receive.unknown(msg);
               }
             }
 
