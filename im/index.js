@@ -164,6 +164,9 @@ $(document).ready(function() {
                   "ROOM_INVITED": "invited"
                 };
                 return receive(action, "info", "", "User " + getUserNickname(action.user) + " " + tags[action.tag] + " " + target + ".");
+            },
+            unknown: function(msg) {
+                return receive(msg, "message", getUserNickname(msg.user), "UNKNOWN MESSAGE: " + msg.tag + " - " + msg.body + " - " + JSON.stringify(msg.context));
             }
         };
     }
@@ -205,6 +208,9 @@ $(document).ready(function() {
 
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
+
+        room.onCustom("MEDIA", receive.media);
+        room.onCustom("AGENT", receive.metadata);
 
         room.onMessage(function(msg) {
             msg.markDelivered();
@@ -526,8 +532,13 @@ $(document).ready(function() {
               case "AGENT":
                 chatbox.receive.metadata(msg);
                 break;
-              default:
+              case "ROOM_JOINED":
+              case "ROOM_LEFT":
+              case "ROOM_INVITED":
                 chatbox.receive.action(msg);
+                break;
+              default:
+                chatbox.receive.unknown(msg);
               }
             }
 
@@ -872,11 +883,23 @@ $(document).ready(function() {
     }
 
     function getUser(url, id, apiKey) {
+      try {
         var xhttp = new XMLHttpRequest();
         xhttp.open("GET", url + 'api/users/' + id, false);
         xhttp.setRequestHeader('X-Api-Key', apiKey);
+        xhttp.overrideMimeType("text/plain");
         xhttp.send();
         return JSON.parse(xhttp.responseText);
+      } catch(e) {
+        return {
+          id,
+          firstName: "Unknown",
+          lastName: "User",
+          gender: "unknown",
+          email: "unknown@user.hehe",
+          phone: "+48123123123"
+        };
+      }
     }
 
     function sendCode(url, phone) {
