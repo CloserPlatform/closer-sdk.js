@@ -166,7 +166,7 @@ $(document).ready(function() {
                 return receive(action, "info", "", "User " + getUserNickname(action.user) + " " + tags[action.tag] + " " + target + ".");
             },
             unknown: function(msg) {
-                return receive(msg, "message", getUserNickname(msg.user), JSON.stringify(msg));
+                return receive(msg, "message", getUserNickname(msg.user), "UNKNOWN MESSAGE: " + msg.tag + " - " + msg.body + " - " + JSON.stringify(msg.context));
             }
         };
     }
