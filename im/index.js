@@ -209,10 +209,6 @@ $(document).ready(function() {
         var text = makeTextArea("chatbox-textarea");
         var receive = makeReceiver(room, text);
 
-        room.onJoined(receive.action);
-        room.onLeft(receive.action);
-        room.onInvited(receive.action);
-
         room.onCustom("MEDIA", receive.media);
         room.onCustom("AGENT", receive.metadata);
 
