@@ -967,7 +967,7 @@ $(document).ready(function() {
             user.user.id, // Well fuck.
             user.apiKey,
             {
-                "debug": true,
+                "logLevel": 0, // FIXME "DEBUG",
                 "ratel": {
                     "protocol": ratelUrl.protocol,
                     "hostname": ratelUrl.hostname,

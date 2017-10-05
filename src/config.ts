@@ -1,4 +1,5 @@
 import { ApiKey } from "./auth";
+import * as logger from "./logger";
 import { ID } from "./protocol/protocol";
 import { RTCConfig } from "./rtc";
 import { deepcopy } from "./utils";
@@ -16,7 +17,7 @@ export interface ChatConfig extends URLConfig {
 export interface RatelConfig extends URLConfig {}
 
 export interface Config {
-  debug?: boolean;
+  logLevel?: logger.LogLevel;
 
   apiKey?: ApiKey;
   sessionId?: ID;
@@ -26,7 +27,7 @@ export interface Config {
 }
 
 export const defaultConfig: Config = {
-  debug: false,
+  logLevel: logger.LogLevel.WARN,
 
   chat: {
     protocol: "https:",

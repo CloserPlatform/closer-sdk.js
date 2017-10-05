@@ -12,7 +12,7 @@ export class Session {
   public chat: Artichoke;
 
   constructor(id: ID, apiKey: ApiKey, config: Config) {
-    let log = new logger.ConsoleLogger(config.debug ? logger.LogLevel.DEBUG : logger.LogLevel.NONE);
+    let log = new logger.ConsoleLogger(config.logLevel || logger.LogLevel.NONE);
 
     log.info("Configuration: " + JSON.stringify(config));
 
