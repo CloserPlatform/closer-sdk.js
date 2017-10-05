@@ -4,7 +4,7 @@ import { Config, load } from "../src/config";
 import * as logger from "../src/logger";
 import { isBrowserSupported, isChrome, isFirefox } from "./utils";
 
-export const log = logger.debugConsole;
+export const log = new logger.ConsoleLogger(logger.LogLevel.WARN);
 
 export const config: Config = load({
   debug: true,
