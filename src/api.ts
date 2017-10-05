@@ -31,10 +31,10 @@ export class RESTfulAPI {
                            reject: PromiseReject): Thunk {
     return () => {
       if (xhttp.readyState === 4 && (xhttp.status === 200 || xhttp.status === 204)) {
-        this.log("OK response: " + xhttp.responseText);
+        this.log.debug("OK response: " + xhttp.responseText);
         resolve(xhttp);
       } else if (xhttp.readyState === 4) {
-        this.log("Error response: " + xhttp.responseText);
+        this.log.debug("Error response: " + xhttp.responseText);
         reject(JSON.parse(xhttp.responseText));
       }
     };
@@ -43,7 +43,7 @@ export class RESTfulAPI {
   getRaw<Response>(path: Array<string>, headers?: Array<HeaderValue>): Promise<XMLHttpRequest> {
     return new Promise<XMLHttpRequest>((resolve, reject) => {
       let url = path.join("/");
-      this.log("GET " + url);
+      this.log.debug("GET " + url);
 
       let xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = this.responseCallback(xhttp, resolve, reject);
@@ -68,11 +68,11 @@ export class RESTfulAPI {
 
       if (body) {
         let json = JSON.stringify(body);
-        this.log("POST " + url + ": " + json);
+        this.log.debug("POST " + url + ": " + json);
         xhttp.setRequestHeader("Content-Type", "application/json");
         xhttp.send(json);
       } else {
-        this.log("POST " + url);
+        this.log.debug("POST " + url);
         xhttp.send();
       }
     });

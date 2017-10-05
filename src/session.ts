@@ -14,7 +14,7 @@ export class Session {
   constructor(id: ID, apiKey: ApiKey, config: Config) {
     let log = config.debug ? logger.debugConsole : logger.devNull;
 
-    log("Configuration: " + JSON.stringify(config));
+    log.info("Configuration: " + JSON.stringify(config));
 
     this.id = id;
     const events: EventHandler<Event> = new EventHandler<Event>(log, codec);
