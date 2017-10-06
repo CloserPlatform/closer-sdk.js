@@ -20,7 +20,6 @@ export interface Call {
   users: Array<ID>;
   direct: boolean;
   orgId?: ID;
-  externalId?: string;
 }
 
 export interface Room {
