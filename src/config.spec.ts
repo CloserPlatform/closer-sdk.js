@@ -1,14 +1,15 @@
 import { Config, defaultConfig, load } from "./config";
+import { LogLevel } from "./logger";
 import { deepcopy } from "./utils";
 
 describe("Config", () => {
   it("should load with defaults", () => {
     const d = load({});
 
-    const c = load({debug: !d.debug});
+    const c = load({logLevel: LogLevel.INFO});
 
     expect(d).toEqual(defaultConfig);
-    expect(c.debug).toBe(!d.debug);
+    expect(c.logLevel).toBe(LogLevel.INFO);
     expect(c.ratel).toBeDefined();
     expect(c.chat).toBeDefined();
   });

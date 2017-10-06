@@ -4,7 +4,7 @@ import { Config, load } from "../src/config";
 import * as logger from "../src/logger";
 import { isBrowserSupported, isChrome, isFirefox } from "./utils";
 
-export const log = logger.debugConsole;
+export const log = new logger.ConsoleLogger(logger.LogLevel.WARN);
 
 export const config: Config = load({
   debug: true,
@@ -39,6 +39,6 @@ export function getStream(onStream, onError, constraints?) {
     audio: true
   };
   cs.fake = true; // NOTE For FireFox.
-  log("Creating a stream with constraints: " + JSON.stringify(cs));
+  log.info("Creating a stream with constraints: " + JSON.stringify(cs));
   navigator.mediaDevices.getUserMedia(cs).then(onStream).catch(onError);
 }

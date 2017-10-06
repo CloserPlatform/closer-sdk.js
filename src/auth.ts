@@ -1,6 +1,6 @@
 import { RatelAPI } from "./api";
 import { Config, load } from "./config";
-import { debugConsole } from "./logger";
+import * as logger from "./logger";
 import { ID, Timestamp } from "./protocol/protocol";
 import { Session } from "./session";
 
@@ -30,7 +30,8 @@ export function withApiKey(sessionId: ID, apiKey: ApiKey, config: Config): Promi
 
 export function withSignedAuth(sessionData: SessionData, config: Config): Promise<Session> {
   let cfg = load(config);
-  let api = new RatelAPI(cfg.ratel, debugConsole); // FIXME Should be the common logger.
+  // FIXME Logger should be the common logger.
+  let api = new RatelAPI(cfg.ratel, new logger.ConsoleLogger(config.logLevel || logger.LogLevel.NONE));
   return api.verifySignature(sessionData).then((context: AgentContext) => {
     return withApiKey(context.id, context.apiKey, cfg);
   });

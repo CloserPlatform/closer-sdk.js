@@ -32,9 +32,9 @@ function descr(sdp): Event {
 
 function logError(done) {
   return function (error) {
-    log("Got an error: " + error + " (" + JSON.stringify(error) + ")");
+    log.error("Got an error: " + error + " (" + JSON.stringify(error) + ")");
     if (typeof error.cause !== "undefined") {
-      log("Cause: " + error.cause);
+      log.error("Cause: " + error.cause);
     }
     done.fail();
   };
@@ -136,9 +136,9 @@ describe("RTCConnection", () => {
   function testRenegotiation(peerA, peerB, trigger, calleeId, done) {
     // 0. Initial setup...
     getStream((streamA) => {
-      log("Got stream A.");
+      log.info("Got stream A.");
       getStream((streamB) => {
-        log("Got stream B.");
+        log.info("Got stream B.");
         addLocalStream(peerA, streamA);
         addLocalStream(peerB, streamB);
 
@@ -149,7 +149,7 @@ describe("RTCConnection", () => {
         };
 
         function exchange() {
-          log("Exchanging candidates.");
+          log.info("Exchanging candidates.");
           Promise.all(candidates.map((c) => {
             if (c.peer === peerAId) return peerA.addCandidate(c.candidate);
             else return peerB.addCandidate(c.candidate);
@@ -166,7 +166,7 @@ describe("RTCConnection", () => {
             api.onDescription = (id, peer, description) => {
               expect(description.type).toBe("offer");
               expect(peer).toBe(calleeId)
-              log("Renegotiation successful.");
+              log.info("Renegotiation successful.");
               done();
             };
 
@@ -192,13 +192,13 @@ describe("RTCConnection", () => {
 
         // 1. Peer A offers a connection.
         peerA.offer().then((offer) => {
-          log("Sent offer.");
+          log.info("Sent offer.");
           // 2. Peer B answers it.
           peerB.addOffer(offer).then((answer) => {
-            log("Received offer & sent answer.");
+            log.info("Received offer & sent answer.");
             // 3. Peer A establishes a connection.
             peerA.addAnswer(answer).then(() => {
-              log("Received answer.");
+              log.info("Received answer.");
             }).catch(logError(done));
           }).catch(logError(done));
         }).catch(logError(done));
@@ -210,7 +210,7 @@ describe("RTCConnection", () => {
     const peerB = createRTCConnection(callId, peerAId, config.chat.rtc, log, events, api);
     testRenegotiation(peerA, peerB, () => {
       getStream((newStream) => {
-        log("Got new stream. Triggering renegotiation...");
+        log.info("Got new stream. Triggering renegotiation...");
         addLocalStream(peerA, newStream);
       }, logError(done));
     }, peerBId, done);
@@ -220,7 +220,7 @@ describe("RTCConnection", () => {
     const peerB = createRTCConnection(callId, peerAId, config.chat.rtc, log, events, api);
     testRenegotiation(peerA, peerB, () => {
       getStream((newStream) => {
-        log("Got new stream. Triggering renegotiation...");
+        log.info("Got new stream. Triggering renegotiation...");
         addLocalStream(peerB, newStream);
       }, logError(done));
     }, peerAId, done);
@@ -230,7 +230,7 @@ describe("RTCConnection", () => {
     const peerB = createRTCConnection(callId, peerAId, config.chat.rtc, log, events, api);
     testRenegotiation(peerA, peerB, () => {
       getStream((newStream) => {
-        log("Got new stream. Adding a stream track...");
+        log.info("Got new stream. Adding a stream track...");
         peerA.addTrack(newStream.getTracks()[0], newStream);
       }, logError(done));
     }, peerBId, done);
@@ -239,7 +239,7 @@ describe("RTCConnection", () => {
   whenever(isWebRTCSupported())("should renegotiate on removeTrack", (done) => {
     const peerB = createRTCConnection(callId, peerAId, config.chat.rtc, log, events, api);
     testRenegotiation(peerA, peerB, () => {
-      log("Removing a stream track...");
+      log.info("Removing a stream track...");
       peerA.removeTrack((peerA as any).conn.getLocalStreams()[0].getTracks()[0]);
     }, peerBId, done);
   });

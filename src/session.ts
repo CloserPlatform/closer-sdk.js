@@ -12,9 +12,9 @@ export class Session {
   public chat: Artichoke;
 
   constructor(id: ID, apiKey: ApiKey, config: Config) {
-    let log = config.debug ? logger.debugConsole : logger.devNull;
+    let log = new logger.ConsoleLogger(config.logLevel || logger.LogLevel.NONE);
 
-    log("Configuration: " + JSON.stringify(config));
+    log.info("Configuration: " + JSON.stringify(config));
 
     this.id = id;
     const events: EventHandler<Event> = new EventHandler<Event>(log, codec);

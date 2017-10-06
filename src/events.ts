@@ -19,7 +19,7 @@ export class EventHandler<T extends EventEntity> {
 
   notify(event: T, onUnhandled?: (ev: T) => void) {
     if ([this.notifyById(event), this.notifyByType(event)].every((r) => !r)) {
-      this.log("Unhandled event " + event.type + ": " + event);
+      this.log.info("Unhandled event " + event.type + ": " + event);
       if (onUnhandled) {
         onUnhandled(event);
       }
@@ -28,7 +28,7 @@ export class EventHandler<T extends EventEntity> {
 
   private notifyByType(event: T): boolean {
     if (event.type in this.perType) {
-      this.log("Running callbacks for event type " + event.type);
+      this.log.debug("Running callbacks for event type " + event.type);
       this.perType[event.type].forEach(function(cb) {
         cb(event);
       });
@@ -39,7 +39,7 @@ export class EventHandler<T extends EventEntity> {
 
   private notifyById(event: T): boolean {
     if (event.id && event.type in this.perId && event.id in this.perId[event.type]) {
-      this.log("Running callbacks for event type " + event.type + ", id " + event.id);
+      this.log.debug("Running callbacks for event type " + event.type + ", id " + event.id);
       this.perId[event.type][event.id](event);
       return true;
     }
@@ -47,7 +47,7 @@ export class EventHandler<T extends EventEntity> {
   }
 
   onEvent(type: Type, callback: Callback<T>) {
-    this.log("Registered callback for event type " + type);
+    this.log.debug("Registered callback for event type " + type);
 
     if (!(type in this.perType)) {
       this.perType[type] = [];
@@ -56,7 +56,7 @@ export class EventHandler<T extends EventEntity> {
   }
 
   onConcreteEvent(type: Type, id: ID, callback: Callback<T>) {
-    this.log("Registered callback for event type " + type + ", id " + id);
+    this.log.debug("Registered callback for event type " + type + ", id " + id);
 
     if (!(type in this.perId)) {
       this.perId[type] = {};

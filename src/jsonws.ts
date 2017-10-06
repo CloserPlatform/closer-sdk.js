@@ -17,12 +17,12 @@ export class JSONWebSocket<T extends EventEntity> {
   }
 
   connect(url: string) {
-    this.log("WS connecting to: " + url);
+    this.log.info("WS connecting to: " + url);
 
     this.socket = new WebSocket(url);
 
     this.socket.onopen = () => {
-      this.log("WS connected to: " + url);
+      this.log.info("WS connected to: " + url);
     };
 
     this.setupOnClose(this.onCloseCallback);
@@ -37,7 +37,7 @@ export class JSONWebSocket<T extends EventEntity> {
   onDisconnect(callback: Callback<CloseEvent>) {
     this.onCloseCallback = (close) => {
       this.socket = undefined;
-      this.log("WS disconnected: " + close.reason);
+      this.log.info("WS disconnected: " + close.reason);
       callback(close);
     };
 
@@ -48,7 +48,7 @@ export class JSONWebSocket<T extends EventEntity> {
 
   onError(callback: Callback<Event>) {
     this.onErrorCallback = (err) => {
-      this.log("WS error: " + err);
+      this.log.error("WS error: " + err);
       callback(err);
     };
 
@@ -59,7 +59,7 @@ export class JSONWebSocket<T extends EventEntity> {
 
   onEvent(callback: Callback<T>) {
     this.onMessageCallback = (event) => {
-      this.log("WS received: " + event.data);
+      this.log.debug("WS received: " + event.data);
       callback(this.codec.decode(event.data));
     };
 
@@ -71,7 +71,7 @@ export class JSONWebSocket<T extends EventEntity> {
   send(event: T): Promise<void> {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       const json = this.codec.encode(event);
-      this.log("WS sent: " + json);
+      this.log.debug("WS sent: " + json);
       this.socket.send(json);
       return Promise.resolve();
     } else {

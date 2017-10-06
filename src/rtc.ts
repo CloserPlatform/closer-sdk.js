@@ -71,7 +71,7 @@ export class RTCConnection {
   constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler<Event>, api: ArtichokeAPI,
               constraints?: RTCConnectionConstraints, answerOptions?: RTCAnswerOptions,
               offerOptions?: HackedRTCOfferOptions) {
-    log("Connecting an RTC connection to " + peer + " on " + call);
+    log.info("Connecting an RTC connection to " + peer + " on " + call);
     this.call = call;
     this.peer = peer;
     this.api = api;
@@ -94,18 +94,18 @@ export class RTCConnection {
 
     this.conn.onicecandidate = (event) => {
       if (event.candidate) {
-        this.log("Created ICE candidate: " + event.candidate.candidate);
+        this.log.debug("Created ICE candidate: " + event.candidate.candidate);
         this.api.sendCandidate(this.call, this.peer, event.candidate).catch((err) => {
           this.events.notify(error("Could not send an ICE candidate.", err));
         });
       } else {
-        this.log("Done gathering ICE candidates.");
+        this.log.debug("Done gathering ICE candidates.");
         this.onICEDoneCallback();
       }
     };
 
     this.conn.ontrack = (event: HackedMediaStreamEvent) => {
-      this.log("Received a remote stream.");
+      this.log.info("Received a remote stream.");
       const streams = (typeof event.streams !== "undefined") ? event.streams : [event.stream];
       streams.forEach((stream) => {
         this.onRemoteStreamCallback(stream);
@@ -117,7 +117,7 @@ export class RTCConnection {
       // FIXME Firefox triggers renegotiation when remote offer is received.
       if (this.isEstablished()) {
         this.renegotiationTimer = onceDelayed(this.renegotiationTimer, 100, () => {
-          this.log("Renegotiating an RTC connection.");
+          this.log.debug("Renegotiating an RTC connection.");
           this.offer().catch((err) => {
             this.events.notify(error("Could not renegotiate the connection.", err));
           });
@@ -127,12 +127,12 @@ export class RTCConnection {
   }
 
   disconnect() {
-    this.log("Disconnecting an RTC connection.");
+    this.log.info("Disconnecting an RTC connection.");
     this.conn.close();
   }
 
   addTrack(track: MediaStreamTrack, stream?: MediaStream) {
-    this.log("Adding a stream track.");
+    this.log.debug("Adding a stream track.");
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (supportsTracks(this.conn)) {
       this.conn.addTrack(track, stream);
@@ -144,7 +144,7 @@ export class RTCConnection {
   }
 
   removeTrack(track: MediaStreamTrack) {
-    this.log("Removing a stream track.");
+    this.log.debug("Removing a stream track.");
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (supportsTracks(this.conn)) {
       this.conn.getSenders().filter((s) => s.track === track).forEach((t) => this.conn.removeTrack(t));
@@ -154,31 +154,31 @@ export class RTCConnection {
   }
 
   addCandidate(candidate: wireEvents.Candidate): Promise<void> {
-    this.log("Received an RTC candidate: " + candidate.candidate);
+    this.log.debug("Received an RTC candidate: " + candidate.candidate);
     return this.conn.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
   offer(options?: HackedRTCOfferOptions): Promise<wireEvents.SDP> {
-    this.log("Creating an RTC offer.");
+    this.log.debug("Creating an RTC offer.");
 
     return this.conn.createOffer(options || this.offerOptions).then((offer) => {
       return this.setLocalDescription(offer);
     }).then((offer) => {
       return this.api.sendDescription(this.call, this.peer, offer).then(() => offer);
     }).then((offer) => {
-      this.log("Sent an RTC offer: " + offer.sdp);
+      this.log.debug("Sent an RTC offer: " + offer.sdp);
       return offer;
     });
   }
 
   addOffer(remoteDescription: wireEvents.SDP, options?: RTCAnswerOptions): Promise<wireEvents.SDP> {
-    this.log("Received an RTC offer.");
+    this.log.debug("Received an RTC offer.");
 
     return this.setRemoteDescription(remoteDescription).then((descr) => this.answer(options));
   }
 
   answer(options?: RTCAnswerOptions): Promise<wireEvents.SDP> {
-    this.log("Creating an RTC answer.");
+    this.log.debug("Creating an RTC answer.");
 
     return this.conn.createAnswer(options || this.answerOptions).then((answer) => {
       // FIXME Chrome does not support DTLS role changes.
@@ -186,13 +186,13 @@ export class RTCConnection {
     }).then((answer) => {
       return this.api.sendDescription(this.call, this.peer, answer).then(() => answer);
     }).then((answer) => {
-      this.log("Sent an RTC answer: " + answer.sdp);
+      this.log.debug("Sent an RTC answer: " + answer.sdp);
       return answer;
     });
   }
 
   addAnswer(remoteDescription: wireEvents.SDP): Promise<void> {
-    this.log("Received an RTC answer.");
+    this.log.debug("Received an RTC answer.");
     return this.setRemoteDescription(remoteDescription).then((descr) => {
       // FIXME Chrome does not support DTLS role changes.
       this.extractRole(descr);
@@ -210,12 +210,12 @@ export class RTCConnection {
 
   // FIXME This should be private.
   setRemoteDescription(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
-    this.log("Setting remote RTC description.");
+    this.log.debug("Setting remote RTC description.");
     return this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription)).then(() => remoteDescription);
   }
 
   private setLocalDescription(localDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
-    this.log("Setting local RTC description.");
+    this.log.debug("Setting local RTC description.");
     return this.conn.setLocalDescription(new RTCSessionDescription(localDescription)).then(() => localDescription);
   }
 
@@ -300,7 +300,7 @@ export class RTCPool {
     };
 
     events.onConcreteEvent(eventTypes.RTC_DESCRIPTION, this.call, (msg: RTCDescription) => {
-      this.log("Received an RTC description: " + msg.description.sdp);
+      this.log.debug("Received an RTC description: " + msg.description.sdp);
 
       if (msg.description.type === "offer") {
         if (msg.peer in this.connections) {
@@ -327,7 +327,7 @@ export class RTCPool {
     });
 
     events.onConcreteEvent(eventTypes.RTC_CANDIDATE, this.call, (msg: RTCCandidate) => {
-      this.log("Received an RTC candidate: " + msg.candidate);
+      this.log.debug("Received an RTC candidate: " + msg.candidate);
       if (msg.peer in this.connections) {
         this.connections[msg.peer].addCandidate(msg.candidate).catch((err) => {
           events.notify(error("Could not process the RTC candidate: ", err));
