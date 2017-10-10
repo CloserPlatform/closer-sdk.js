@@ -43,7 +43,6 @@ export abstract class Call implements wireEntities.Call {
   public users: Array<proto.ID>;
   public direct: boolean;
   public orgId: proto.ID;
-  public externalId: string;
 
   protected api: ArtichokeAPI;
   protected events: EventHandler<Event>;
@@ -70,7 +69,6 @@ export abstract class Call implements wireEntities.Call {
     this.users = call.users;
     this.direct = call.direct;
     this.orgId = call.orgId;
-    this.externalId = call.externalId;
 
     this.log = log;
     this.events = events;
