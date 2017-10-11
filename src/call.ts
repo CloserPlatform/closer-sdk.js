@@ -105,6 +105,24 @@ export abstract class Call implements wireEntities.Call {
     this.onAnsweredCallback = nop;
     this.onRejectedCallback = nop;
 
+    if (this.creator === this.api.sessionId) {
+      this.users = [];
+      this.setupListeners();
+      this.establishRTCWithOldUsers();
+    } else {
+      this.setupListeners();
+    }
+  }
+
+  private establishRTCWithOldUsers() {
+    this.api.getCallUsers(this.id).then((users) => {
+      const oldUsers = users.filter((u) => u !== this.api.sessionId && !this.users.includes(u));
+      oldUsers.forEach((u) => this.pool.create(u));
+      this.users = this.users.concat(oldUsers);
+    });
+  }
+
+  private setupListeners() {
     this.events.onConcreteEvent(eventTypes.CALL_MESSAGE, this.id, (e: CallMessage) => {
       switch (e.message.tag) {
         case actionTypes.CALL_JOINED:
