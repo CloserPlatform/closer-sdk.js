@@ -18,7 +18,7 @@ export class Session {
 
     this.id = id;
     const events: EventHandler<Event> = new EventHandler<Event>(log, codec);
-    const chatApi = new ArtichokeAPI(apiKey, config.chat, log);
+    const chatApi = new ArtichokeAPI(id, apiKey, config.chat, log);
     this.chat = new Artichoke(config.chat, log, events, chatApi);
   }
 }

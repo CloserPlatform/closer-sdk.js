@@ -166,6 +166,7 @@ export class APIWithWebsocket extends RESTfulAPI {
 
 export class ArtichokeAPI extends APIWithWebsocket {
   private authHeaders: Array<HeaderValue>;
+  public sessionId: proto.ID;
   private deviceId: proto.ID;
 
   protected url: string;
@@ -175,9 +176,10 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   private wsUrl: string;
 
-  constructor(apiKey: ApiKey, config: ChatConfig, log: Logger) {
+  constructor(sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, log: Logger) {
     super(log);
 
+    this.sessionId = sessionId;
     this.authHeaders = [new HeaderValue("X-Api-Key", apiKey)];
 
     let host = config.hostname + (config.port === "" ? "" : ":" + config.port);
