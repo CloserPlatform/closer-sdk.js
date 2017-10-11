@@ -264,9 +264,11 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<proto.CreateRoom, wireEntities.Room>([this.url, this.roomPath], proto.createRoom(name));
   }
 
-  createDirectRoom(sessionId: proto.ID): Promise<wireEntities.Room> {
-    return this.postAuth<proto.CreateDirectRoom, wireEntities.Room>([this.url, this.roomPath],
-                                                             proto.createDirectRoom(sessionId));
+  createDirectRoom(sessionId: proto.ID, context?: proto.Context): Promise<wireEntities.Room> {
+    return this.postAuth<proto.CreateDirectRoom, wireEntities.Room>(
+      [this.url, this.roomPath],
+      proto.createDirectRoom(sessionId, context)
+    );
   }
 
   getRoom(roomId: proto.ID): Promise<wireEntities.Room> {

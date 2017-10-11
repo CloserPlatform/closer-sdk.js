@@ -30,7 +30,9 @@ export interface CreateDirectEntity {
   user: ID;
 }
 
-export interface CreateDirectRoom extends CreateDirectEntity {}
+export interface CreateDirectRoom extends CreateDirectEntity {
+  context?: Context;
+}
 
 export interface CreateRoom {
   name: string;
@@ -69,9 +71,10 @@ export function createRoom(name: string): CreateRoom {
   };
 }
 
-export function createDirectRoom(user: ID): CreateDirectRoom {
+export function createDirectRoom(user: ID, context?: Context): CreateDirectRoom {
   return {
-    user
+    user,
+    context
   };
 }
 
