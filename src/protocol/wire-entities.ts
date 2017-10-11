@@ -17,6 +17,7 @@ export interface Call {
   id: ID;
   created: Timestamp;
   ended?: Timestamp;
+  creator: ID;
   users: Array<ID>;
   direct: boolean;
   orgId?: ID;

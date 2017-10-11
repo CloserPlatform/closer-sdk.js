@@ -79,6 +79,7 @@ function makeCall(callType: CallType) {
   const call = {
     id: callId,
     created: 123,
+    creator: alice,
     users: [alice],
   } as ProtoCall;
 
