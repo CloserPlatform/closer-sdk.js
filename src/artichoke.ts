@@ -102,8 +102,8 @@ export class Artichoke {
     return this.wrapRoom(this.api.createRoom(name)) as Promise<GroupRoom>; // Trust me.
   }
 
-  createDirectRoom(peer: proto.ID): Promise<DirectRoom> {
-    return this.wrapRoom(this.api.createDirectRoom(peer));
+  createDirectRoom(peer: proto.ID, context?: proto.Context): Promise<DirectRoom> {
+    return this.wrapRoom(this.api.createDirectRoom(peer, context));
   }
 
   getRoom(room: proto.ID): Promise<Room> {
