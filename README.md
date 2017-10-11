@@ -33,6 +33,10 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.2
+### Added
+- Optional context parameter that is passed to the invitee in `createDirect` room methods
+
 ## 0.5.1
 ### Changed
 - `Call` no longer has `externalId` field
