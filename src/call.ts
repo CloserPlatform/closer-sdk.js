@@ -40,6 +40,7 @@ export abstract class Call implements wireEntities.Call {
   public id: proto.ID;
   public created: proto.Timestamp;
   public ended: proto.Timestamp;
+  public creator: proto.ID;
   public users: Array<proto.ID>;
   public direct: boolean;
   public orgId: proto.ID;
@@ -66,6 +67,7 @@ export abstract class Call implements wireEntities.Call {
     this.id = call.id;
     this.created = call.created;
     this.ended = call.ended;
+    this.creator = call.creator;
     this.users = call.users;
     this.direct = call.direct;
     this.orgId = call.orgId;
