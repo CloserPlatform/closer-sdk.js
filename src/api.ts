@@ -235,6 +235,10 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<Array<wireEntities.Message>>([this.url, this.callPath, callId, "history"]);
   }
 
+  getCallUsers(callId: proto.ID): Promise<Array<proto.ID>> {
+    return this.getAuth<Array<proto.ID>>([this.url, this.callPath, callId, "users"]);
+  }
+
   answerCall(callId: proto.ID): Promise<void> {
     return this.postAuth<void, void>([this.url, this.callPath, callId, "answer"]);
   }
