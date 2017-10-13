@@ -143,11 +143,11 @@ export abstract class Call implements wireEntities.Call {
           this.onLeftCallback(e.message);
           break;
 
-        case actionTypes.CALL_OFFLINE:
+        case actionTypes.OFFLINE:
           this.onOfflineCallback(e.message);
           break;
 
-        case actionTypes.CALL_ONLINE:
+        case actionTypes.ONLINE:
           this.onOnlineCallback(e.message);
           break;
 
