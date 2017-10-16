@@ -6,6 +6,7 @@ import {
   getStream,
   isWebRTCSupported,
   log,
+  sessionId,
   sleep,
   whenever
 } from "./fixtures.spec";
@@ -50,7 +51,7 @@ class APIMock extends ArtichokeAPI {
   onCandidate: (call: ID, peer: ID, candidate: wireEvents.Candidate) => void;
 
   constructor() {
-    super(apiKey, config.chat, log);
+    super(sessionId, apiKey, config.chat, log);
   }
 
   sendDescription(call: ID, peer: ID, sdp: wireEvents.SDP) {

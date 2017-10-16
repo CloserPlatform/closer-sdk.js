@@ -1,16 +1,19 @@
-import { ArtichokeAPI } from "./api";
-import { Call, callType as ct, createCall, GroupCall} from "./call";
-import { EventHandler } from "./events";
-import { apiKey, config, getStream, isWebRTCSupported, log, whenever } from "./fixtures.spec";
-import { Event } from "./protocol/events";
-import { Call as ProtoCall, Message } from "./protocol/wire-entities";
-import { actionTypes, codec, eventTypes, Invitee } from "./protocol/wire-events";
+import {ArtichokeAPI} from "./api";
+import {Call, callType as ct, createCall, GroupCall} from "./call";
+import {EventHandler} from "./events";
+import {apiKey, config, getStream, isWebRTCSupported, log, sessionId, whenever} from "./fixtures.spec";
+import {Event} from "./protocol/events";
+import {ID} from "./protocol/protocol";
+import {Call as ProtoCall, Message} from "./protocol/wire-entities";
+import {actionTypes, codec, eventTypes, Invitee} from "./protocol/wire-events";
+import {RTCPool} from "./rtc";
 import CallType = ct.CallType;
 
 const callId = "123";
 const alice = "321";
 const bob = "456";
 const chad = "987";
+const david = "654";
 const msg1 = "2323";
 const msg2 = "1313";
 
@@ -33,12 +36,16 @@ class APIMock extends ArtichokeAPI {
   rejected: string;
   invited: string;
 
-  constructor() {
-    super(apiKey, config.chat, log);
+  constructor(sessionId) {
+    super(sessionId, apiKey, config.chat, log);
   }
 
   getCallHistory(id) {
     return Promise.resolve([msg(msg1), msg(msg2)]);
+  }
+
+  getCallUsers(id) {
+    return Promise.resolve([alice, bob, chad]);
   }
 
   answerCall(id) {
@@ -97,6 +104,16 @@ function makeCall(callType: CallType) {
   }
 }
 
+function makeGroupCall(creator: ID, users: Array<ID>) {
+  return {
+    id: callId,
+    created: 123,
+    creator,
+    users,
+    direct: false,
+  } as ProtoCall;
+}
+
 ["DirectCall", "GroupCall"].forEach((d) => {
   describe(d, () => {
     let events;
@@ -105,9 +122,38 @@ function makeCall(callType: CallType) {
 
     beforeEach(() => {
       events = new EventHandler(log, codec);
-      api = new APIMock();
+      api = new APIMock(sessionId);
       const callType = d === "DirectCall" ? CallType.DIRECT : CallType.GROUP;
       call = createCall(makeCall(callType), config.chat.rtc, log, events, api);
+    });
+
+    it("for creator should create RTC connection with old users in call", (done) => {
+      const api = new APIMock(alice);
+      spyOn(api, "getCallUsers").and.returnValue(Promise.resolve([alice, bob, chad, david]));
+
+      const usersToOffer = new Set([bob, chad, david]);
+      const usersNotToOffer = new Set([alice]);
+
+      spyOn(RTCPool.prototype, "create").and.callFake((u) => {
+        if (usersNotToOffer.has(u)) {
+          done.fail();
+        } else {
+          usersToOffer.delete(u);
+          if (usersToOffer.size === 0) {
+            done();
+          }
+        }
+      });
+      createCall(makeGroupCall(alice, [alice, david]), config.chat.rtc, log, events, api) as GroupCall;
+
+    });
+
+    it("for not creator should not create RTC connection with old users in call", (done) => {
+      const api = new APIMock(bob);
+      spyOn(api, "getCallUsers").and.returnValue(Promise.resolve([alice, bob, chad, david]));
+      spyOn(RTCPool.prototype, "create").and.callFake((u) => done.fail());
+      createCall(makeGroupCall(alice, [alice, david]), config.chat.rtc, log, events, api) as GroupCall;
+      done();
     });
 
     it("should retrieve history", (done) => {
@@ -403,7 +449,7 @@ describe("GroupCall", () => {
 
   beforeEach(() => {
     events = new EventHandler(log, codec);
-    api = new APIMock();
+    api = new APIMock(sessionId);
     call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api) as GroupCall;
   });
 
@@ -455,7 +501,7 @@ describe("GroupCall", () => {
 
 describe("DirectCall, GroupCall", () => {
   const events = new EventHandler(log, codec);
-  const api = new APIMock();
+  const api = new APIMock(sessionId);
 
   it("should have proper callType field defined", () => {
     const directCall: Call = createCall(makeCall(CallType.DIRECT), config.chat.rtc, log, events, api);

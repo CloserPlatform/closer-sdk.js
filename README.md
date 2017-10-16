@@ -33,6 +33,12 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.4
+### Added
+- Method for fetchin call users in `ArtichokeAPI`
+### Fixed
+- Call creator sends WebRTC offer to other users on call object creation
+
 ## 0.5.3
 ### Changed
 - `Call` has `creator` field

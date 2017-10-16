@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
-import { apiKey, config, deviceId, log } from "./fixtures.spec";
+import { apiKey, config, deviceId, log, sessionId } from "./fixtures.spec";
 import { Event, Hello } from "./protocol/events";
 import { Call, Room } from "./protocol/wire-entities";
 import { codec, disconnect, error, eventTypes } from "./protocol/wire-events";
@@ -14,7 +14,7 @@ class APIMock extends ArtichokeAPI {
   cb;
 
   constructor() {
-    super(apiKey, config.chat, log);
+    super(sessionId, apiKey, config.chat, log);
   }
 
   onEvent(callback) {
