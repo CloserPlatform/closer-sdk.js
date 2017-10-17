@@ -29,10 +29,10 @@ export namespace eventTypes {
 }
 
 export namespace actionTypes {
-  export type OFFLINE = "OFFLINE";
-  export const OFFLINE = "OFFLINE";
-  export type ONLINE = "ONLINE";
-  export const ONLINE = "ONLINE";
+  export type OFFLINE = "DEVICE_OFFLINE";
+  export const OFFLINE = "DEVICE_OFFLINE";
+  export type ONLINE = "DEVICE_ONLINE";
+  export const ONLINE = "DEVICE_ONLINE";
 
   export type TEXT_MESSAGE = "TEXT_MESSAGE";
   export const TEXT_MESSAGE = "TEXT_MESSAGE";
