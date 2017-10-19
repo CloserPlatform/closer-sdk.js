@@ -36,6 +36,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ## 0.5.5
 ### Changed
 - Renamed `CallOffline`/`CallOnline` to `Offline`/`Online` and updated type tags
+- Field `user` changed to `userId` in messages.
 
 ## 0.5.4
 ### Added
