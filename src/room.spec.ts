@@ -27,7 +27,7 @@ function msg(id: string): wireEntities.Message {
     context: {
       payload: "{\"key\": \"value\"}"
     },
-    user: alice,
+    userId: alice,
     channel: roomId,
     timestamp: 123,
   };
@@ -153,7 +153,7 @@ function makeRoom(roomType: RoomType) {
 
     it("should run a callback on typing indication", (done) => {
       room.onTyping((msg) => {
-        expect(msg.user).toBe(chad);
+        expect(msg.userId).toBe(chad);
         done();
       });
 
@@ -162,13 +162,13 @@ function makeRoom(roomType: RoomType) {
 
     it("should run a callback on incoming message", (done) => {
       room.onMessage((msg) => {
-        expect(msg.user).toBe(chad);
+        expect(msg.userId).toBe(chad);
         done();
       });
 
       let m = msg(msg1);
       m.channel = room.id;
-      m.user = chad;
+      m.userId = chad;
       events.notify({
         type: eventTypes.ROOM_MESSAGE,
         id: room.id,
@@ -178,14 +178,14 @@ function makeRoom(roomType: RoomType) {
 
     it("should run a callback on incoming custom message", (done) => {
       room.onCustom("json", (msg) => {
-        expect(msg.user).toBe(chad);
+        expect(msg.userId).toBe(chad);
         done();
       });
 
       let m = msg(msg1);
       m.tag = "json"
       m.channel = room.id;
-      m.user = chad;
+      m.userId = chad;
 
       events.notify({
         type: eventTypes.ROOM_MESSAGE,
@@ -267,14 +267,14 @@ describe("GroupRoom", () => {
     events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
     room.onJoined((joined) => {
-      expect(joined.user).toBe(bob);
+      expect(joined.userId).toBe(bob);
 
       room.getUsers().then((users1) => {
         expect(users1).toContain(bob);
         expect(users1).toContain(alice);
 
         room.onLeft((left) => {
-          expect(left.user).toBe(alice);
+          expect(left.userId).toBe(alice);
 
           room.getUsers().then((users2) => {
             expect(users2).toContain(bob);
@@ -291,7 +291,7 @@ describe("GroupRoom", () => {
             tag: actionTypes.ROOM_LEFT,
             id: actionId,
             room: room.id,
-            user: alice,
+            userId: alice,
             context: {
               reason: "no reason"
             },
@@ -309,7 +309,7 @@ describe("GroupRoom", () => {
         tag: actionTypes.ROOM_JOINED,
         id: actionId,
         room: room.id,
-        user: bob,
+        userId: bob,
         timestamp: Date.now()
       }
     } as Event);
@@ -317,7 +317,7 @@ describe("GroupRoom", () => {
 
   it("should run callback on room joined", (done) => {
     room.onJoined((msg) => {
-      expect(msg.user).toBe(alice);
+      expect(msg.userId).toBe(alice);
       done();
     });
 
@@ -329,7 +329,7 @@ describe("GroupRoom", () => {
         tag: actionTypes.ROOM_JOINED,
         id: actionId,
         room: room.id,
-        user: alice,
+        userId: alice,
         timestamp: Date.now()
       }
     } as Event);
@@ -337,7 +337,7 @@ describe("GroupRoom", () => {
 
   it("should run callback on room left", (done) => {
     room.onLeft((msg) => {
-      expect(msg.user).toBe(alice);
+      expect(msg.userId).toBe(alice);
       expect((msg.context as Reason).reason).toBe("reason");
       done();
     });
@@ -350,7 +350,7 @@ describe("GroupRoom", () => {
         tag: actionTypes.ROOM_LEFT,
         id: actionId,
         room: room.id,
-        user: alice,
+        userId: alice,
         context: {
           reason: "reason"
         },
@@ -361,7 +361,7 @@ describe("GroupRoom", () => {
 
   it("should run callback on room invite", (done) => {
     room.onInvited((msg) => {
-      expect(msg.user).toBe(alice);
+      expect(msg.userId).toBe(alice);
       expect((msg.context as Invitee).invitee).toBe(bob);
       done();
     });
@@ -374,7 +374,7 @@ describe("GroupRoom", () => {
         tag: actionTypes.ROOM_INVITED,
         id: actionId,
         room: room.id,
-        user: alice,
+        userId: alice,
         context: {
           invitee: bob
         },

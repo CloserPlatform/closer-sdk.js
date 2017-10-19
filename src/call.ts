@@ -126,28 +126,28 @@ export abstract class Call implements wireEntities.Call {
     this.events.onConcreteEvent(eventTypes.CALL_MESSAGE, this.id, (e: CallMessage) => {
       switch (e.message.tag) {
         case actionTypes.CALL_JOINED:
-          this.users.push(e.message.user);
-          this.pool.create(e.message.user);
+          this.users.push(e.message.userId);
+          this.pool.create(e.message.userId);
           this.onJoinedCallback(e.message);
           break;
 
         case actionTypes.CALL_TRANSFERRED:
-          this.pool.destroy(e.message.user);
-          this.pool.create(e.message.user);
+          this.pool.destroy(e.message.userId);
+          this.pool.create(e.message.userId);
           this.onTransferredCallback(e.message);
           break;
 
         case actionTypes.CALL_LEFT:
-          this.users = this.users.filter((u) => u !== e.message.user);
-          this.pool.destroy(e.message.user);
+          this.users = this.users.filter((u) => u !== e.message.userId);
+          this.pool.destroy(e.message.userId);
           this.onLeftCallback(e.message);
           break;
 
-        case actionTypes.CALL_OFFLINE:
+        case actionTypes.OFFLINE:
           this.onOfflineCallback(e.message);
           break;
 
-        case actionTypes.CALL_ONLINE:
+        case actionTypes.ONLINE:
           this.onOnlineCallback(e.message);
           break;
 

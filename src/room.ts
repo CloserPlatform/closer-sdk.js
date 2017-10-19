@@ -182,12 +182,12 @@ export class GroupRoom extends Room {
     this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (e: protoEvents.RoomMessage) => {
       switch (e.message.tag) {
       case actionTypes.ROOM_JOINED:
-        this.users.push(e.message.user);
+        this.users.push(e.message.userId);
         this.onJoinedCallback(e.message);
         break;
 
       case actionTypes.ROOM_LEFT:
-        this.users = this.users.filter((u) => u !== e.message.user);
+        this.users = this.users.filter((u) => u !== e.message.userId);
         this.onLeftCallback(e.message);
         break;
 

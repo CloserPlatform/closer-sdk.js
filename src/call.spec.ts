@@ -23,7 +23,7 @@ function msg(id: string): Message {
     id,
     body: "Hi!",
     tag: actionTypes.CALL_JOINED,
-    user: alice,
+    userId: alice,
     channel: callId,
     timestamp: 123,
   };
@@ -181,7 +181,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
         events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
         call.onJoined((msg) => {
-          expect(msg.user).toBe(chad);
+          expect(msg.userId).toBe(chad);
           done();
         });
 
@@ -192,7 +192,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
             type: "message",
             tag: actionTypes.CALL_JOINED,
             channel: call.id,
-            user: chad,
+            userId:  chad,
             timestamp: Date.now()
           }
         } as Event);
@@ -203,7 +203,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.onLeft((msg) => {
-        expect(msg.user).toBe(alice);
+        expect(msg.userId).toBe(alice);
         done();
       });
 
@@ -214,7 +214,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
           type: "message",
           tag: actionTypes.CALL_LEFT,
           call: call.id,
-          user: alice,
+          userId:  alice,
           timestamp: Date.now(),
           context: {
             reason: "reason"
@@ -227,7 +227,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.onOffline((msg) => {
-        expect(msg.user).toBe(alice);
+        expect(msg.userId).toBe(alice);
         done();
       });
 
@@ -236,9 +236,9 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
         id: call.id,
         message: {
           type: "mesage",
-          tag: actionTypes.CALL_OFFLINE,
+          tag: actionTypes.OFFLINE,
           call: call.id,
-          user: alice,
+          userId:  alice,
           timestamp: Date.now(),
         }
       } as Event);
@@ -248,7 +248,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.onOnline((msg) => {
-        expect(msg.user).toBe(alice);
+        expect(msg.userId).toBe(alice);
         done();
       });
 
@@ -257,9 +257,9 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
         id: call.id,
         message: {
           type: "message",
-          tag: actionTypes.CALL_ONLINE,
+          tag: actionTypes.ONLINE,
           call: call.id,
-          user: alice,
+          userId:  alice,
           timestamp: Date.now(),
         }
       } as Event);
@@ -269,7 +269,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.onAnswered((msg) => {
-        expect(msg.user).toBe(alice);
+        expect(msg.userId).toBe(alice);
         done();
       });
 
@@ -280,7 +280,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
           type: "message",
           tag: actionTypes.CALL_ANSWERED,
           call: call.id,
-          user: alice,
+          userId:  alice,
           timestamp: Date.now()
         }
       } as Event);
@@ -293,7 +293,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
         events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
         call.onTransferred((msg) => {
-          expect(msg.user).toBe(chad);
+          expect(msg.userId).toBe(chad);
           done();
         });
 
@@ -304,7 +304,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
             type: "message",
             tag: actionTypes.CALL_TRANSFERRED,
             call: call.id,
-            user: chad,
+            userId:  chad,
             timestamp: Date.now()
           }
         } as Event);
@@ -315,7 +315,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
       call.onRejected((msg) => {
-        expect(msg.user).toBe(alice);
+        expect(msg.userId).toBe(alice);
         done();
       });
 
@@ -326,7 +326,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
           type: "message",
           tag: actionTypes.CALL_REJECTED,
           call: call.id,
-          user: alice,
+          userId:  alice,
           timestamp: Date.now(),
           reason: "reason"
         }
@@ -372,14 +372,14 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
         events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
         call.onJoined((msg1) => {
-          expect(msg1.user).toBe(bob);
+          expect(msg1.userId).toBe(bob);
 
           call.getUsers().then((users1) => {
             expect(users1).toContain(bob);
             expect(users1).toContain(alice);
 
             call.onLeft((msg2) => {
-              expect(msg2.user).toBe(alice);
+              expect(msg2.userId).toBe(alice);
 
               call.getUsers().then((users2) => {
                 expect(users2).toContain(bob);
@@ -395,7 +395,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
                 type: "message",
                 tag: actionTypes.CALL_LEFT,
                 call: call.id,
-                user: alice,
+                userId:  alice,
                 timestamp: Date.now(),
                 context: {
                   reason: "reason"
@@ -412,7 +412,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
             type: "message",
             tag: actionTypes.CALL_JOINED,
             call: call.id,
-            user: bob,
+            userId:  bob,
             timestamp: Date.now()
           }
         } as Event);
@@ -457,7 +457,7 @@ describe("GroupCall", () => {
     events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
     call.onInvited((msg) => {
-      expect(msg.user).toBe(alice);
+      expect(msg.userId).toBe(alice);
       expect((msg.context as Invitee).invitee).toBe(chad);
       done();
     });
@@ -469,7 +469,7 @@ describe("GroupCall", () => {
         type: "message",
         tag: actionTypes.CALL_INVITED,
         call: call.id,
-        user: alice,
+        userId:  alice,
         context: {
           invitee: chad
         }

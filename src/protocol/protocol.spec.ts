@@ -22,7 +22,7 @@ const events: Array<wireEvents.Event> = [{
 } as wireEvents.RoomInvitation, {
   type: eventTypes.ROOM_TYPING,
   id: roomId,
-  user: alice,
+  userId:  alice,
   timestamp: Date.now(),
 } as wireEvents.RoomTyping, wireEvents.error("Because!", {
   error: "error",
@@ -38,7 +38,7 @@ const events: Array<wireEvents.Event> = [{
     type: "message",
     id: msgId,
     body: "Oi papi!",
-    user: alice,
+    userId:  alice,
     channel: roomId,
     tag: actionTypes.TEXT_MESSAGE,
     timestamp: Date.now(),
@@ -50,7 +50,7 @@ const events: Array<wireEvents.Event> = [{
     type: "message",
     id: actionId,
     channel: roomId,
-    user: alice,
+    userId:  alice,
     tag: actionTypes.ROOM_JOINED,
     timestamp: Date.now()
   }
@@ -61,7 +61,7 @@ const events: Array<wireEvents.Event> = [{
     type: "message",
     id: actionId,
     channel: roomId,
-    user: alice,
+    userId:  alice,
     tag: actionTypes.ROOM_INVITED,
     context: {
       invitee: bob
@@ -75,7 +75,7 @@ const events: Array<wireEvents.Event> = [{
     type: "message",
     id: actionId,
     channel: roomId,
-    user: alice,
+    userId:  alice,
     tag: actionTypes.ROOM_LEFT,
     context: {
       reason: "reason"
@@ -89,7 +89,7 @@ const events: Array<wireEvents.Event> = [{
     type: "message",
     id: actionId,
     channel: callId,
-    user: alice,
+    userId:  alice,
     tag: actionTypes.CALL_JOINED,
     timestamp: Date.now()
   }
@@ -100,7 +100,7 @@ const events: Array<wireEvents.Event> = [{
     type: "message",
     id: actionId,
     channel: callId,
-    user: alice,
+    userId:  alice,
     tag: actionTypes.CALL_INVITED,
     context: {
       invitee: bob
@@ -114,7 +114,7 @@ const events: Array<wireEvents.Event> = [{
     type: "message",
     id: actionId,
     channel: callId,
-    user: alice,
+    userId:  alice,
     tag: actionTypes.CALL_LEFT,
     context: {
       reason: "reason"
@@ -128,8 +128,8 @@ const events: Array<wireEvents.Event> = [{
     type: "message",
     id: actionId,
     channel: callId,
-    user: alice,
-    tag: actionTypes.CALL_OFFLINE,
+    userId:  alice,
+    tag: actionTypes.OFFLINE,
     timestamp: Date.now()
   }
 } as wireEvents.CallMessage, {
@@ -139,8 +139,8 @@ const events: Array<wireEvents.Event> = [{
       type: "message",
       id: actionId,
       channel: callId,
-      user: alice,
-      tag: actionTypes.CALL_ONLINE,
+      userId:  alice,
+      tag: actionTypes.ONLINE,
       timestamp: Date.now()
     }
   } as wireEvents.CallMessage];
