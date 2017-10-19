@@ -129,7 +129,7 @@ const events: Array<wireEvents.Event> = [{
     id: actionId,
     channel: callId,
     user: alice,
-    tag: actionTypes.OFFLINE,
+    tag: actionTypes.CALL_OFFLINE,
     timestamp: Date.now()
   }
 } as wireEvents.CallMessage, {
@@ -140,7 +140,7 @@ const events: Array<wireEvents.Event> = [{
       id: actionId,
       channel: callId,
       user: alice,
-      tag: actionTypes.ONLINE,
+      tag: actionTypes.CALL_ONLINE,
       timestamp: Date.now()
     }
   } as wireEvents.CallMessage];
