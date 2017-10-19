@@ -29,6 +29,11 @@ export namespace eventTypes {
 }
 
 export namespace actionTypes {
+  export type OFFLINE = "DEVICE_OFFLINE";
+  export const OFFLINE = "DEVICE_OFFLINE";
+  export type ONLINE = "DEVICE_ONLINE";
+  export const ONLINE = "DEVICE_ONLINE";
+
   export type TEXT_MESSAGE = "TEXT_MESSAGE";
   export const TEXT_MESSAGE = "TEXT_MESSAGE";
 
@@ -45,10 +50,6 @@ export namespace actionTypes {
   export const CALL_LEFT = "CALL_LEFT";
   export type CALL_INVITED = "CALL_INVITED";
   export const CALL_INVITED = "CALL_INVITED";
-  export type CALL_OFFLINE = "CALL_OFFLINE";
-  export const CALL_OFFLINE = "CALL_OFFLINE";
-  export type CALL_ONLINE = "CALL_ONLINE";
-  export const CALL_ONLINE = "CALL_ONLINE";
   export type CALL_ANSWERED = "CALL_ANSWERED";
   export const CALL_ANSWERED = "CALL_ANSWERED";
   export type CALL_REJECTED = "CALL_REJECTED";
@@ -145,7 +146,7 @@ export interface RoomStartTyping extends Event {
 }
 
 export interface RoomTyping extends Event {
-  user: proto.ID;
+  userId: proto.ID;
   timestamp: proto.Timestamp;
 }
 
@@ -246,7 +247,7 @@ export function typing(id: proto.ID, user: proto.ID, timestamp: proto.Timestamp)
   return {
     type: eventTypes.ROOM_TYPING,
     id,
-    user,
+    userId: user,
     timestamp
   };
 }

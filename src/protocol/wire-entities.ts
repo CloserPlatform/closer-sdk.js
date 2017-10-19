@@ -3,7 +3,7 @@ import { Context, Delivered, Edited, ID, Timestamp, Type } from "./protocol";
 export interface Message {
   type: Type;
   id: ID;
-  user: ID;
+  userId: ID;
   channel: ID;
   timestamp: Timestamp;
   body: string;

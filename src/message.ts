@@ -9,7 +9,7 @@ import { Event, eventTypes } from "./protocol/wire-events";
 export class Message implements wireEntities.Message {
   public type: proto.Type = "message";
   public id: proto.ID;
-  public user: proto.ID;
+  public userId: proto.ID;
   public channel: proto.ID;
   public timestamp: proto.Timestamp;
   public body: string;
@@ -26,7 +26,7 @@ export class Message implements wireEntities.Message {
     this.id = message.id;
     this.body = message.body;
     this.context = message.context;
-    this.user = message.user;
+    this.userId = message.userId;
     this.channel = message.channel;
     this.tag = message.tag;
     this.context = message.context;

@@ -39,7 +39,7 @@ function makeMsg(delivered?: Delivered): wireEntities.Message {
     context: {
       payload: "{\"key\": \"value\"}"
     },
-    user: bob,
+    userId: bob,
     channel: roomId,
     timestamp: 123,
     delivered
