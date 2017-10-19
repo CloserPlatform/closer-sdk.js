@@ -236,7 +236,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
         id: call.id,
         message: {
           type: "mesage",
-          tag: actionTypes.CALL_OFFLINE,
+          tag: actionTypes.OFFLINE,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
@@ -257,7 +257,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
         id: call.id,
         message: {
           type: "message",
-          tag: actionTypes.CALL_ONLINE,
+          tag: actionTypes.ONLINE,
           call: call.id,
           user: alice,
           timestamp: Date.now(),
