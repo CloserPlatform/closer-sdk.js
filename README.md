@@ -33,6 +33,10 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.7
+### Added
+- Endpoint for fetching active calls
+
 ## 0.5.6
 ### Changed
 - Allow passing multiple chat history filters
