@@ -89,6 +89,11 @@ export class Artichoke {
                        (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
+  getActiveCalls(): Promise<Array<Call>> {
+    return wrapPromise(this.api.getActiveCalls(),
+                      (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
+  }
+
   // Chat room API:
   onRoomCreated(callback: Callback<protoEvents.RoomCreated>) {
     this.events.onEvent(eventTypes.ROOM_CREATED, callback);
