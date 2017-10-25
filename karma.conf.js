@@ -8,6 +8,7 @@ const webpack = require('./webpack.config');
 
 module.exports = (config) => {
     const coverage = config.singleRun ? ['coverage'] : [];
+    const pluginsWithDebug = getPluginsWithDebugOption(plugins, !config.singleRun);
 
     config.set({
         basePath: '',
@@ -29,7 +30,7 @@ module.exports = (config) => {
         ],
 
         mime: {
-           'application/javascript': ['ts']
+            'application/javascript': ['ts']
         },
 
         files: [
@@ -58,19 +59,14 @@ module.exports = (config) => {
         webpack: Object.assign({}, webpack, {
             output: null,
             devtool: 'inline-source-map',
-            verbose: false,
             module: {
-                loaders: combinedLoaders(),
-                postLoaders: config.singleRun
-                    ? [ loaders.istanbulInstrumenter ]
-                    : [ ],
+                loaders: combineLoaders(loaders),
             },
             stats: {
                 colors: true,
                 reasons: true,
             },
-            debug: config.singleRun ? false : true,
-            plugins,
+            plugins: pluginsWithDebug
         }),
 
         reporters: ['spec']
@@ -115,7 +111,7 @@ module.exports = (config) => {
             HeadlessChrome: {
                 base: 'Chrome',
                 flags: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream',
-                        '--headless', '--disable-gpu', '--remote-debugging-port=9222']
+                    '--headless', '--disable-gpu', '--remote-debugging-port=9222']
             },
             HeadlessFirefox: {
                 base: 'Firefox',
@@ -125,14 +121,14 @@ module.exports = (config) => {
     });
 };
 
-function combinedLoaders() {
-    return Object.keys(loaders).reduce(function reduce(aggregate, k) {
-        switch (k) {
-        case 'istanbulInstrumenter':
-        case 'tslint':
-            return aggregate;
-        default:
-            return aggregate.concat([loaders[k]]);
-        }
-    }, []);
-}
+const combineLoaders = (loaders) =>
+    Object.keys(loaders).reduce((aggregate, key) =>
+            key === 'tslint' ? aggregate : aggregate.concat([loaders[key]]), []);
+
+const getPluginsWithDebugOption = (plugins, debug) =>
+    plugins.map(plugin => {
+        if (!plugin.options) plugin.options = {};
+        plugin.options.debug = debug;
+        return plugin;
+    })
+

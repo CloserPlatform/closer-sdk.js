@@ -1,8 +1,9 @@
 'use strict';
 
 exports.tslint = {
+  enforce: 'pre',
   test: /\.tsx?$/,
-  loader: 'tslint',
+  loader: 'tslint-loader',
   exclude: /node_modules/,
 };
 
@@ -13,6 +14,7 @@ exports.tsx = {
 };
 
 exports.istanbulInstrumenter = {
+  enforce: 'post',
   test: /^(.(?!\.spec))*\.tsx?$/,
   loader: 'istanbul-instrumenter-loader',
   query: {

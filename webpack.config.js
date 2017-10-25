@@ -21,7 +21,6 @@ module.exports = {
 
     resolve: {
         extensions: [
-            '',
             '.webpack.js',
             '.web.js',
             '.ts',
@@ -33,10 +32,8 @@ module.exports = {
     plugins: plugins,
 
     module: {
-        preLoaders: [
-            loaders.tslint
-        ],
         loaders: [
+            loaders.tslint,
             loaders.tsx,
             loaders.json
         ],
