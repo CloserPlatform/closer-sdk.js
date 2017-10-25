@@ -8,15 +8,14 @@
     "experimentalDecorators": true,
     "noImplicitAny": false,
     "removeComments": false,
-    "sourceMap": false,
     "inlineSourceMap": true,
     "noEmitHelpers": false,
     "declaration": true,
     "declarationDir": ".",
     "types": [],
     "lib": [
-        "es2016",
-        "dom"
+      "es2016",
+      "dom"
     ]
   },
   "exclude": [

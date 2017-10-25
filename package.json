@@ -53,13 +53,13 @@
     "rimraf": "^2.6.1",
     "source-map-support": "^0.4.15",
     "ts-helpers": "^1.1.2",
-    "ts-loader": "^2.2.2",
-    "tslint": "^5.5.0",
+    "ts-loader": "^3.0.5",
+    "tslint": "^5.8.0",
     "tslint-loader": "^3.5.3",
     "typedoc": "^0.7.1",
-    "typescript": "^2.4.1",
+    "typescript": "^2.5.3",
     "watchify": "^3.9.0",
-    "webpack": "^1.15.0"
+    "webpack": "^3.8.1"
   },
   "publishConfig": {
     "registry": "https://nexus.contactis.pl/repository/npm-internal"
