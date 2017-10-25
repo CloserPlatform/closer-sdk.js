@@ -84,7 +84,7 @@ export function invite(user): Invite {
   };
 }
 
-export type HistoryFilter = string;
+export type HistoryFilter = Array<string>;
 
 export interface Paginated<T> {
   items: Array<T>;
