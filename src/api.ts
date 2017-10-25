@@ -298,7 +298,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
                      filter?: proto.HistoryFilter): Promise<proto.Paginated<wireEntities.Message>> {
     let endpoint = "history/last?count=" + count;
     if (filter) {
-      endpoint += "&filter=" + filter;
+      endpoint += filter.map((tag) => "&filter=" + tag).join("");
     }
     return this.getAuthPaginated<wireEntities.Message>([this.url, this.roomPath, roomId, endpoint]);
   }
@@ -309,7 +309,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
                      filter?: proto.HistoryFilter): Promise<proto.Paginated<wireEntities.Message>> {
     let endpoint = "history/page?offset=" + offset + "&limit=" + limit;
     if (filter) {
-      endpoint += "&filter=" + filter;
+      endpoint += filter.map((tag) => "&filter=" + tag).join("");
     }
     return this.getAuthPaginated<wireEntities.Message>([this.url, this.roomPath, roomId, endpoint]);
   }
