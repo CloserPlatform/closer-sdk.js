@@ -12,7 +12,8 @@ export class Session {
   public chat: Artichoke;
 
   constructor(id: ID, apiKey: ApiKey, config: Config) {
-    let log = new logger.ConsoleLogger(config.logLevel || logger.LogLevel.NONE);
+    const logLevel = config.logLevel !== undefined ? config.logLevel : logger.LogLevel.NONE;
+    const log = new logger.ConsoleLogger(logLevel);
 
     log.info("Configuration: " + JSON.stringify(config));
 
