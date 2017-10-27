@@ -1,11 +1,11 @@
 'use strict';
 
-var path = require('path');
+const path = require('path');
 const loaders = require('./webpack/loaders');
 const plugins = require('./webpack/plugins');
 
 module.exports = {
-    entry: './src/main.ts',
+    entry: path.resolve(__dirname, 'src/main.ts'),
 
     output: {
         path: path.resolve(__dirname, 'dist'),
@@ -20,19 +20,18 @@ module.exports = {
         'inline-source-map',
 
     resolve: {
+        unsafeCache: false,
         extensions: [
-            '.webpack.js',
-            '.web.js',
             '.ts',
             '.js',
             '.json'
-        ],
+        ]
     },
 
     plugins: plugins,
 
     module: {
-        loaders: [
+        rules: [
             loaders.tslint,
             loaders.tsx,
             loaders.json

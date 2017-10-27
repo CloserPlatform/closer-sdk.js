@@ -10,17 +10,18 @@
     "removeComments": false,
     "inlineSourceMap": true,
     "noEmitHelpers": false,
-    "declaration": true,
-    "declarationDir": ".",
-    "types": [],
+    "types": [
+      "jquery",
+      "jqueryui"
+    ],
     "lib": [
       "es2016",
       "dom"
     ]
   },
   "exclude": [
+    "src",
     "node_modules",
-    "src-demo-app",
     "dist-demo-app",
     "dist"
   ]
