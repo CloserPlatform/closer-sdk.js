@@ -1082,8 +1082,6 @@ $(function () {
 
                 killSwitch.click(function () {
                     // NOTE Kills the client session.
-                    // Incorrect property `api`
-                    // session.api.sendCandidate(null, null, null);
                     alert("Sorry, not implemented");
                 });
 
