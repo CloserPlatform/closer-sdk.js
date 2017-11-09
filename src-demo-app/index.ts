@@ -2,7 +2,7 @@ import * as RatelSDK from "../";
 import {displayVersion} from "./version";
 import * as View from "./view";
 
-$(document).ready(function () {
+$(function () {
     displayVersion();
 
     if (!RatelSDK.isBrowserSupported()) {
