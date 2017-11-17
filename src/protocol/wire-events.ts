@@ -18,6 +18,7 @@ export namespace eventTypes {
   export const HELLO = "hello";
   export const ROOM_CREATED = "room_created";
   export const ROOM_INVITATION = "room_invitation";
+  export const ROOM_MARK = "room_mark";
   export const ROOM_MARKED = "room_marked";
   export const ROOM_MESSAGE = "room_message";
   export const ROOM_TYPING = "room_typing";
@@ -226,7 +227,7 @@ export function marked(id: proto.ID, user: proto.ID, timestamp: proto.Timestamp)
 
 export function mark(id: proto.ID, timestamp: proto.Timestamp): RoomMark {
   return {
-    type: eventTypes.ROOM_MARKED,
+    type: eventTypes.ROOM_MARK,
     id,
     timestamp
   };
