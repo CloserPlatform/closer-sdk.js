@@ -28,7 +28,7 @@ const events: Array<wireEvents.Event> = [{
   error: "error",
   text: "string"
 }, "23425"), {
-  type: eventTypes.ROOM_MARK,
+  type: eventTypes.ROOM_MARKED,
   id: roomId,
   timestamp: Date.now()
 } as wireEvents.RoomMarked, {

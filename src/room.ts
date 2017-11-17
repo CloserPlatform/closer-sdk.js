@@ -141,7 +141,7 @@ export abstract class Room implements wireEntities.Room {
   }
 
   onMark(callback: Callback<protoEvents.RoomMark>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MARK, this.id, (mark: protoEvents.RoomMarked) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_MARKED, this.id, (mark: protoEvents.RoomMarked) => {
       if (!this.marks) {
         this.marks = {};
       }
