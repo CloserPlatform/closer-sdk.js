@@ -116,11 +116,11 @@ export abstract class Room implements wireEntities.Room {
     return Promise.resolve((this.marks && this.marks[user]) || 0);
   }
 
-  setMark(user: ID, timestamp: proto.Timestamp): Promise<void> {
+  setMark(timestamp: proto.Timestamp): Promise<void> {
     if (!this.marks) {
       this.marks = {};
     }
-    this.marks[user] = timestamp;
+    this.marks[this.api.sessionId] = timestamp;
     return this.api.setMark(this.id, timestamp);
   }
 

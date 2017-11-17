@@ -138,15 +138,15 @@ function makeRoom(roomType: RoomType) {
     });
 
     it("should maintain a high water mark", (done) => {
-      room.getMark(uid).then((hwm) => {
+      room.getMark(sessionId).then((hwm) => {
         expect(hwm).toBe(0);
 
         let t = Date.now();
-        room.setMark(uid, t);
+        room.setMark(t);
 
         expect(api.marked).toBe(true);
 
-        room.getMark(uid).then((newHwm) => {
+        room.getMark(sessionId).then((newHwm) => {
           expect(newHwm).toBe(t);
           done();
         });
