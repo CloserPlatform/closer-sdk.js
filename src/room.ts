@@ -3,6 +3,7 @@ import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage, Message } from "./message";
 import * as protoEvents from "./protocol/events";
+import { ID } from "./protocol/protocol";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import * as wireEvents from "./protocol/wire-events";
@@ -36,7 +37,7 @@ export abstract class Room implements wireEntities.Room {
   public users: Array<proto.ID>;
   public direct: boolean;
   public orgId: proto.ID;
-  public mark: proto.Timestamp;
+  public marks: { [type: string]: proto.Timestamp };
 
   private log: Logger;
   protected events: EventHandler<wireEvents.Event>;
@@ -54,7 +55,7 @@ export abstract class Room implements wireEntities.Room {
     this.users = room.users;
     this.direct = room.direct;
     this.orgId = room.orgId;
-    this.mark = room.mark || 0;
+    this.marks = room.marks;
     this.log = log;
     this.events = events;
     this.api = api;
@@ -110,13 +111,16 @@ export abstract class Room implements wireEntities.Room {
     return this.api.getRoomUsers(this.id);
   }
 
-  getMark(): Promise<number> {
+  getMark(user: ID): Promise<number> {
     // NOTE No need to retrieve the list if it's cached here.
-    return Promise.resolve(this.mark);
+    return Promise.resolve((this.marks && this.marks[user]) || 0);
   }
 
-  setMark(timestamp: proto.Timestamp): Promise<void> {
-    this.mark = timestamp;
+  setMark(user: ID, timestamp: proto.Timestamp): Promise<void> {
+    if (!this.marks) {
+      this.marks = {};
+    }
+    this.marks[user] = timestamp;
     return this.api.setMark(this.id, timestamp);
   }
 
@@ -137,8 +141,11 @@ export abstract class Room implements wireEntities.Room {
   }
 
   onMark(callback: Callback<protoEvents.RoomMark>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MARK, this.id, (mark: protoEvents.RoomMark) => {
-      this.mark = mark.timestamp;
+    this.events.onConcreteEvent(eventTypes.ROOM_MARK, this.id, (mark: protoEvents.RoomMarked) => {
+      if (!this.marks) {
+        this.marks = {};
+      }
+      this.marks[mark.user] = mark.timestamp;
       callback(mark);
     });
   }

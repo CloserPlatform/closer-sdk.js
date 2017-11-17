@@ -67,6 +67,9 @@ export interface RoomInvitation extends Event, wireEvents.RoomInvitation {
 export interface RoomMark extends Event, wireEvents.RoomMark {
 }
 
+export interface RoomMarked extends Event, wireEvents.RoomMarked {
+}
+
 export interface RoomMessage extends Event, wireEvents.RoomMessage {
   message: Message;
 }

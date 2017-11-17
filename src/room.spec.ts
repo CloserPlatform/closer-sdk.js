@@ -4,7 +4,7 @@ import {apiKey, config, log, sessionId } from "./fixtures.spec";
 import { Event } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import { actionTypes, codec, eventTypes, Invitee, mark, Reason, typing } from "./protocol/wire-events";
+import { actionTypes, codec, eventTypes, Invitee, marked, Reason, typing } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 
 import RoomType = roomType.RoomType;
@@ -127,24 +127,26 @@ function makeRoom(roomType: RoomType) {
     let events;
     let api;
     let room;
+    let uid;
 
     beforeEach(() => {
       events = new EventHandler(log, codec);
       api = new APIMock();
       const roomType = d === "DirectRoom" ? RoomType.DIRECT : RoomType.GROUP;
       room = createRoom(makeRoom(roomType), log, events, api);
+      uid = "123";
     });
 
     it("should maintain a high water mark", (done) => {
-      room.getMark().then((hwm) => {
+      room.getMark(uid).then((hwm) => {
         expect(hwm).toBe(0);
 
         let t = Date.now();
-        room.setMark(t);
+        room.setMark(uid, t);
 
         expect(api.marked).toBe(true);
 
-        room.getMark().then((newHwm) => {
+        room.getMark(uid).then((newHwm) => {
           expect(newHwm).toBe(t);
           done();
         });
@@ -153,7 +155,7 @@ function makeRoom(roomType: RoomType) {
 
     it("should run a callback on typing indication", (done) => {
       room.onTyping((msg) => {
-        expect(msg.userId).toBe(chad);
+        expect(msg.user).toBe(chad);
         done();
       });
 
@@ -199,13 +201,13 @@ function makeRoom(roomType: RoomType) {
 
       room.onMark((msg) => {
         expect(msg.timestamp).toBe(t);
-        room.getMark().then((mark) => {
+        room.getMark(uid).then((mark) => {
           expect(mark).toBe(t);
           done();
         });
       });
 
-      events.notify(mark(room.id, t));
+      events.notify(marked(room.id, uid, t));
     });
 
     // FIXME These should be moved to integration tests:
