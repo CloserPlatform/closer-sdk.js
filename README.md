@@ -33,6 +33,11 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.9
+### Changed
+- Rooms now contain marks of all users in form of a map (userId -> timestamp)
+- There's a new, separate RoomMarked event, specific for mark updates from server for all users
+
 ## 0.5.8
 ### Fixed
 - Fix DEBUG logging level
