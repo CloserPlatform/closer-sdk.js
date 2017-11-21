@@ -30,8 +30,13 @@ const events: Array<wireEvents.Event> = [{
 }, "23425"), {
   type: eventTypes.ROOM_MARKED,
   id: roomId,
+  user: "1234",
   timestamp: Date.now()
 } as wireEvents.RoomMarked, {
+  type: eventTypes.ROOM_MARK,
+  id: roomId,
+  timestamp: Date.now()
+} as wireEvents.RoomMark, {
   type: eventTypes.ROOM_MESSAGE,
   id: roomId,
   message: {

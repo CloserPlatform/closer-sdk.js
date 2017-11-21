@@ -199,7 +199,7 @@ function makeRoom(roomType: RoomType) {
     it("should run a callback on incoming mark", (done) => {
       let t = Date.now();
 
-      room.onMark((msg) => {
+      room.onMarked((msg) => {
         expect(msg.timestamp).toBe(t);
         room.getMark(uid).then((mark) => {
           expect(mark).toBe(t);
