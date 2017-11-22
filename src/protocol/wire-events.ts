@@ -19,6 +19,7 @@ export namespace eventTypes {
   export const ROOM_CREATED = "room_created";
   export const ROOM_INVITATION = "room_invitation";
   export const ROOM_MARK = "room_mark";
+  export const ROOM_MARKED = "room_marked";
   export const ROOM_MESSAGE = "room_message";
   export const ROOM_TYPING = "room_typing";
   export const ROOM_START_TYPING = "room_start_typing";
@@ -134,6 +135,11 @@ export interface RoomInvitation extends Event {
   room: wireEntities.Room;
 }
 
+export interface RoomMarked extends Event {
+  user: proto.ID;
+  timestamp: proto.Timestamp;
+}
+
 export interface RoomMark extends Event {
   timestamp: proto.Timestamp;
 }
@@ -146,7 +152,7 @@ export interface RoomStartTyping extends Event {
 }
 
 export interface RoomTyping extends Event {
-  userId: proto.ID;
+  user: proto.ID;
   timestamp: proto.Timestamp;
 }
 
@@ -210,6 +216,15 @@ export function chatDelivered(id: proto.ID, timestamp: proto.Timestamp): ChatDel
   };
 }
 
+export function marked(id: proto.ID, user: proto.ID, timestamp: proto.Timestamp): RoomMarked {
+  return {
+    type: eventTypes.ROOM_MARKED,
+    user,
+    id,
+    timestamp
+  };
+}
+
 export function mark(id: proto.ID, timestamp: proto.Timestamp): RoomMark {
   return {
     type: eventTypes.ROOM_MARK,
@@ -247,7 +262,7 @@ export function typing(id: proto.ID, user: proto.ID, timestamp: proto.Timestamp)
   return {
     type: eventTypes.ROOM_TYPING,
     id,
-    userId: user,
+    user,
     timestamp
   };
 }

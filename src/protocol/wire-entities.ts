@@ -27,8 +27,8 @@ export interface Room {
   id: ID;
   name: string;
   created: Timestamp;
-  users: Array<ID>;
   direct: boolean;
   orgId?: ID;
-  mark?: number;
+  users: Array<ID>;
+  marks: { [type: string]: number };
 }

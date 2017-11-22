@@ -22,12 +22,17 @@ const events: Array<wireEvents.Event> = [{
 } as wireEvents.RoomInvitation, {
   type: eventTypes.ROOM_TYPING,
   id: roomId,
-  userId:  alice,
+  user:  alice,
   timestamp: Date.now(),
 } as wireEvents.RoomTyping, wireEvents.error("Because!", {
   error: "error",
   text: "string"
 }, "23425"), {
+  type: eventTypes.ROOM_MARKED,
+  id: roomId,
+  user: "1234",
+  timestamp: Date.now()
+} as wireEvents.RoomMarked, {
   type: eventTypes.ROOM_MARK,
   id: roomId,
   timestamp: Date.now()
