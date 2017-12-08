@@ -1,28 +1,29 @@
 'use strict';
 
 exports.tslint = {
-  enforce: 'pre',
-  test: /\.tsx?$/,
-  loader: 'tslint-loader',
-  exclude: /node_modules/,
+    enforce: 'pre',
+    test: /\.tsx?$/,
+    loader: 'tslint-loader',
+    exclude: [/node_modules/],
 };
 
 exports.tsx = {
-  test: /\.tsx?$/,
-  loader: 'ts-loader',
-  exclude: /node_modules/,
+    test: /\.tsx?$/,
+    loader: 'ts-loader',
+    exclude: [/node_modules/],
 };
 
 exports.istanbulInstrumenter = {
-  enforce: 'post',
-  test: /^(.(?!\.spec))*\.tsx?$/,
-  loader: 'istanbul-instrumenter-loader',
-  query: {
-    embedSource: true,
-  },
+    enforce: 'post',
+    exclude: [/zz\.ts$/, /src-demo-app/],
+    test: /^(.(?!\.spec))*\.tsx?$/,
+    loader: 'istanbul-instrumenter-loader',
+    query: {
+        embedSource: true,
+    },
 };
 
 exports.json = {
-  test: /\.json$/,
-  loader: 'json',
+    test: /\.json$/,
+    loader: 'json',
 };
