@@ -68,6 +68,10 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve(undefined);
   }
 
+  pullCall(id) {
+    return Promise.resolve(undefined);
+  }
+
   inviteToCall(id, peer) {
     this.invited = peer;
     return Promise.resolve(undefined);
