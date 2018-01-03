@@ -77,6 +77,8 @@ export class Artichoke {
   }
 
   disconnect() {
+    this.heartbeatTimeout.clear();
+    this.heartbeatTimeout = undefined;
     this.api.disconnect();
   }
 

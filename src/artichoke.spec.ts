@@ -107,13 +107,30 @@ describe("Artichoke", () => {
       } as Event);
     }, heartbeatTimeout);
 
-    setTimeout(() => {
-        clearInterval(interval);
-        done();
-      }, 20 * heartbeatTimeout,
-    );
+    jasmine.clock().tick(10 * heartbeatTimeout);
+    clearInterval(interval);
+    done();
 
-    jasmine.clock().tick(21 * heartbeatTimeout);
+    jasmine.clock().uninstall();
+  });
+
+  it("should not invoke \"onServerUnreachable\" if \"disconnect()\" was called", (done) => {
+    jasmine.clock().install();
+
+    const heartbeatTimeout = 20;
+
+    chat.onServerUnreachable(() => done.fail());
+    chat.connect();
+    api.cb({
+      type: eventTypes.HELLO,
+      deviceId,
+      heartbeatTimeout,
+    } as Event);
+
+    chat.disconnect();
+    jasmine.clock().tick(2 * heartbeatTimeout + 1);
+    done();
+
     jasmine.clock().uninstall();
   });
 

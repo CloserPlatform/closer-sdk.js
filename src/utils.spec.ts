@@ -64,17 +64,31 @@ describe("Utils", () => {
     jasmine.clock().uninstall();
   });
 
-  it("BumpableTimetout should not fail if bumped within given timeout", (done) => {
+  it("BumpableTimeout should not fail if bumped within given timeout", (done) => {
     jasmine.clock().install();
 
     const ms = 10;
     const bumpableTimeout = new BumpableTimeout(ms, () => done.fail());
 
-    setInterval(() => bumpableTimeout.bump(), ms - 1);
-    setTimeout(() => done(), 10 * ms);
+    const interval = setInterval(() => bumpableTimeout.bump(), ms - 1);
 
+    jasmine.clock().tick(10 * ms);
+    clearInterval(interval);
+    done();
 
-    jasmine.clock().tick(10 * ms + 1);
+    jasmine.clock().uninstall();
+  });
+
+  it("BumpableTimeout should not fire timeout callback if cleared", (done) => {
+    jasmine.clock().install();
+
+    const ms = 10;
+    const bumpableTimeout = new BumpableTimeout(ms, () => done.fail());
+
+    setTimeout(() => bumpableTimeout.clear(), ms - 1);
+    jasmine.clock().tick(ms + 1);
+    done();
+
     jasmine.clock().uninstall();
   });
 });

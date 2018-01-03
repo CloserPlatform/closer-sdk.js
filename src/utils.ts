@@ -56,9 +56,14 @@ export class BumpableTimeout {
   }
 
   bump() {
+    this.clear();
+    this.timeoutId = setTimeout(this.onTimeoutClb, this.timeout_ms);
+  }
+
+  clear() {
     if (this.timeoutId) {
       clearTimeout(this.timeoutId);
+      this.timeoutId = undefined;
     }
-    this.timeoutId = setTimeout(this.onTimeoutClb, this.timeout_ms);
   }
 }
