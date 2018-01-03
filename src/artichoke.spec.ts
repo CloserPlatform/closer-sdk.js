@@ -70,12 +70,12 @@ describe("Artichoke", () => {
     } as Event);
   });
 
-  it("should fail if no heartbeat received within double time given in hello", (done) => {
+  it("should invoke \"onServerUnreachable\" if no heartbeat received within double time given in hello", (done) => {
     jasmine.clock().install();
 
     const heartbeatTimeout = 20;
 
-    chat.disconnect = () => done();
+    chat.onServerUnreachable(() => done());
     chat.connect();
     api.cb({
       type: eventTypes.HELLO,
@@ -87,11 +87,11 @@ describe("Artichoke", () => {
     jasmine.clock().uninstall();
   });
 
-  it("should not fail if heartbeat is received within time given in hello ", (done) => {
+  it("should not invoke \"onServerUnreachable\" if heartbeat is received within time given in hello ", (done) => {
     jasmine.clock().install();
 
     const heartbeatTimeout = 20;
-    chat.disconnect = () => done.fail();
+    chat.onServerUnreachable(() => done.fail());
     chat.connect();
 
     api.cb({

@@ -27,6 +27,7 @@ export namespace eventTypes {
   export const RTC_CANDIDATE = "rtc_candidate";
 
   export const DISCONNECT = "disconnect";
+  export const SERVER_UNREACHABLE = "server_unreachable";
 }
 
 export namespace actionTypes {
@@ -187,6 +188,9 @@ export interface Disconnect extends Event {
   code: number;
 }
 
+export interface ServerUnreachable extends Event {
+}
+
 // WS API:
 export function chatSendMessage(room: proto.ID, body: string, ref?: proto.Ref): ChatSendMessage {
   return {
@@ -283,6 +287,12 @@ export function disconnect(code: number, reason: string): Disconnect {
     type: eventTypes.DISCONNECT,
     reason,
     code
+  };
+}
+
+export function serverUnreachable(): ServerUnreachable {
+  return {
+    type: eventTypes.SERVER_UNREACHABLE,
   };
 }
 

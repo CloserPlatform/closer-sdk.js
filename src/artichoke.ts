@@ -7,7 +7,7 @@ import * as protoEvents from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import * as wireEvents from "./protocol/wire-events";
-import { error, eventTypes } from "./protocol/wire-events";
+import { error, eventTypes, serverUnreachable } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { BumpableTimeout, wrapPromise } from "./utils";
 
@@ -33,7 +33,10 @@ export class Artichoke {
     events.onEvent(eventTypes.CHAT_DELIVERED, nop);
 
     events.onEvent(eventTypes.HELLO, (hello: protoEvents.Hello) =>
-      this.heartbeatTimeout = new BumpableTimeout(2 * hello.heartbeatTimeout, () => this.disconnect())
+      this.heartbeatTimeout = new BumpableTimeout(
+        2 * hello.heartbeatTimeout,
+        () => this.events.notify(serverUnreachable())
+      )
     );
     events.onEvent(eventTypes.HEARTBEAT, (hb: protoEvents.Heartbeat) => {
       this.api.send(hb);
@@ -50,6 +53,10 @@ export class Artichoke {
 
   onHeartbeat(callback: Callback<protoEvents.Heartbeat>) {
     this.events.onEvent(eventTypes.HEARTBEAT, callback);
+  }
+
+  onServerUnreachable(callback: Callback<protoEvents.ServerUnreachable>) {
+    this.events.onEvent(eventTypes.SERVER_UNREACHABLE, callback);
   }
 
   onDisconnect(callback: Callback<protoEvents.Disconnect>) {

@@ -89,6 +89,9 @@ export interface RTCDescription extends Event, wireEvents.RTCDescription {
 export interface Disconnect extends Event, wireEvents.Disconnect {
 }
 
+export interface ServerUnreachable extends Event, wireEvents.ServerUnreachable {
+}
+
 export namespace eventUtils {
 
   export function upgrade(e: wireEvents.Event, config: ChatConfig, log: Logger,
