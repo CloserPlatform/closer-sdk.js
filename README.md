@@ -33,6 +33,10 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.10
+### Added
+- \"onServerUnreachable\" callback which is fired when no heartbeat is received from Artichoke within double timeout given in \"Hello\" event
+
 ## 0.5.9
 ### Changed
 - Rooms now contain marks of all users in form of a map (userId -> timestamp)
