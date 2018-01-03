@@ -42,3 +42,23 @@ export function onceDelayed(timer: number, timeout: number, fun: () => void): nu
   clearTimeout(timer);
   return setTimeout(fun, timeout);
 }
+
+export class BumpableTimeout {
+  private readonly timeout_ms: number;
+  private readonly onTimeoutClb: () => void;
+  private timeoutId: number;
+
+  constructor(timeout_ms: number, onTimeoutClb: () => void) {
+    this.timeout_ms = timeout_ms;
+    this.onTimeoutClb = onTimeoutClb;
+
+    this.bump();
+  }
+
+  bump() {
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+    }
+    this.timeoutId = setTimeout(this.onTimeoutClb, this.timeout_ms);
+  }
+}

@@ -1,4 +1,4 @@
-import { deepcopy, isBrowserSupported, isChrome, isFirefox, onceDelayed, wrapPromise } from "./utils";
+import { BumpableTimeout, deepcopy, isBrowserSupported, isChrome, isFirefox, onceDelayed, wrapPromise } from "./utils";
 
 describe("Utils", () => {
   it("wrapPromise should replace a Promise", (done) => {
@@ -52,5 +52,29 @@ describe("Utils", () => {
     timer = onceDelayed(timer, 100, () => {
       done();
     });
-  })
+  });
+
+  it("BumpableTimeout should fail if not bumped within given timeout", (done) => {
+    jasmine.clock().install();
+
+    const ms = 10;
+    const bumpableTimeout = new BumpableTimeout(ms, () => done());
+
+    jasmine.clock().tick(ms + 1);
+    jasmine.clock().uninstall();
+  });
+
+  it("BumpableTimetout should not fail if bumped within given timeout", (done) => {
+    jasmine.clock().install();
+
+    const ms = 10;
+    const bumpableTimeout = new BumpableTimeout(ms, () => done.fail());
+
+    setInterval(() => bumpableTimeout.bump(), ms - 1);
+    setTimeout(() => done(), 10 * ms);
+
+
+    jasmine.clock().tick(10 * ms + 1);
+    jasmine.clock().uninstall();
+  });
 });
