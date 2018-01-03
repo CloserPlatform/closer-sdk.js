@@ -1061,6 +1061,10 @@ $(function () {
                 }
             });
 
+            session.chat.onServerUnreachable(function () {
+                console.log("Server unreachable");
+            });
+
             session.chat.onConnect(function (m) {
                 $("#demo-name").html("Connected - " + user.user.name);
                 console.log("Connected to Artichoke!");
