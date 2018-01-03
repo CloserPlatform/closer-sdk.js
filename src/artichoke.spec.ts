@@ -24,6 +24,10 @@ class APIMock extends ArtichokeAPI {
   connect() {
     // Do nothing.
   }
+
+  disconnect() {
+    // Do nothing.
+  }
 }
 
 describe("Artichoke", () => {
@@ -43,6 +47,7 @@ describe("Artichoke", () => {
     api.cb({
       type: eventTypes.HELLO,
       deviceId,
+      heartbeatTimeout: 200,
     } as Event);
   });
 
@@ -52,6 +57,7 @@ describe("Artichoke", () => {
     api.cb({
       type: eventTypes.HELLO,
       deviceId,
+      heartbeatTimeout: 200,
     } as Event);
   });
 
@@ -62,6 +68,53 @@ describe("Artichoke", () => {
       type: eventTypes.HEARTBEAT,
       timestamp: 1234,
     } as Event);
+  });
+
+  it("should fail if no heartbeat received within double time given in hello", (done) => {
+    jasmine.clock().install();
+
+    const heartbeatTimeout = 20;
+
+    chat.disconnect = () => done();
+    chat.connect();
+    api.cb({
+      type: eventTypes.HELLO,
+      deviceId,
+      heartbeatTimeout,
+    } as Event);
+
+    jasmine.clock().tick(2 * heartbeatTimeout + 1);
+    jasmine.clock().uninstall();
+  });
+
+  it("should not fail if heartbeat is received within time given in hello ", (done) => {
+    jasmine.clock().install();
+
+    const heartbeatTimeout = 20;
+    chat.disconnect = () => done.fail();
+    chat.connect();
+
+    api.cb({
+      type: eventTypes.HELLO,
+      deviceId,
+      heartbeatTimeout,
+    } as Event);
+
+    const interval = setInterval(() => {
+      api.cb({
+        type: eventTypes.HEARTBEAT,
+        timestamp: 1234,
+      } as Event);
+    }, heartbeatTimeout);
+
+    setTimeout(() => {
+        clearInterval(interval);
+        done();
+      }, 20 * heartbeatTimeout,
+    );
+
+    jasmine.clock().tick(21 * heartbeatTimeout);
+    jasmine.clock().uninstall();
   });
 
   it("should call a callback on server disconnection", (done) => {
