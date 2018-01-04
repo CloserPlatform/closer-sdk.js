@@ -27,6 +27,7 @@ export namespace eventTypes {
   export const RTC_CANDIDATE = "rtc_candidate";
 
   export const DISCONNECT = "disconnect";
+  export const SERVER_UNREACHABLE = "server_unreachable";
 }
 
 export namespace actionTypes {
@@ -124,6 +125,7 @@ export interface Heartbeat extends ServerInfo {
 }
 export interface Hello extends ServerInfo {
   deviceId: proto.ID;
+  heartbeatTimeout: number;
 }
 
 export interface RoomCreated extends Event {
@@ -184,6 +186,9 @@ export interface Reason {
 export interface Disconnect extends Event {
   reason: string;
   code: number;
+}
+
+export interface ServerUnreachable extends Event {
 }
 
 // WS API:
@@ -282,6 +287,12 @@ export function disconnect(code: number, reason: string): Disconnect {
     type: eventTypes.DISCONNECT,
     reason,
     code
+  };
+}
+
+export function serverUnreachable(): ServerUnreachable {
+  return {
+    type: eventTypes.SERVER_UNREACHABLE,
   };
 }
 

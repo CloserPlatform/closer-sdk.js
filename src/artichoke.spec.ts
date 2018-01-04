@@ -24,6 +24,10 @@ class APIMock extends ArtichokeAPI {
   connect() {
     // Do nothing.
   }
+
+  disconnect() {
+    // Do nothing.
+  }
 }
 
 describe("Artichoke", () => {
@@ -43,6 +47,7 @@ describe("Artichoke", () => {
     api.cb({
       type: eventTypes.HELLO,
       deviceId,
+      heartbeatTimeout: 200,
     } as Event);
   });
 
@@ -52,6 +57,7 @@ describe("Artichoke", () => {
     api.cb({
       type: eventTypes.HELLO,
       deviceId,
+      heartbeatTimeout: 200,
     } as Event);
   });
 
@@ -62,6 +68,70 @@ describe("Artichoke", () => {
       type: eventTypes.HEARTBEAT,
       timestamp: 1234,
     } as Event);
+  });
+
+  it("should invoke \"onServerUnreachable\" if no heartbeat received within double time given in hello", (done) => {
+    jasmine.clock().install();
+
+    const heartbeatTimeout = 20;
+
+    chat.onServerUnreachable(() => done());
+    chat.connect();
+    api.cb({
+      type: eventTypes.HELLO,
+      deviceId,
+      heartbeatTimeout,
+    } as Event);
+
+    jasmine.clock().tick(2 * heartbeatTimeout + 1);
+    jasmine.clock().uninstall();
+  });
+
+  it("should not invoke \"onServerUnreachable\" if heartbeat is received within time given in hello ", (done) => {
+    jasmine.clock().install();
+
+    const heartbeatTimeout = 20;
+    chat.onServerUnreachable(() => done.fail());
+    chat.connect();
+
+    api.cb({
+      type: eventTypes.HELLO,
+      deviceId,
+      heartbeatTimeout,
+    } as Event);
+
+    const interval = setInterval(() => {
+      api.cb({
+        type: eventTypes.HEARTBEAT,
+        timestamp: 1234,
+      } as Event);
+    }, heartbeatTimeout);
+
+    jasmine.clock().tick(10 * heartbeatTimeout);
+    clearInterval(interval);
+    done();
+
+    jasmine.clock().uninstall();
+  });
+
+  it("should not invoke \"onServerUnreachable\" if \"disconnect()\" was called", (done) => {
+    jasmine.clock().install();
+
+    const heartbeatTimeout = 20;
+
+    chat.onServerUnreachable(() => done.fail());
+    chat.connect();
+    api.cb({
+      type: eventTypes.HELLO,
+      deviceId,
+      heartbeatTimeout,
+    } as Event);
+
+    chat.disconnect();
+    jasmine.clock().tick(2 * heartbeatTimeout + 1);
+    done();
+
+    jasmine.clock().uninstall();
   });
 
   it("should call a callback on server disconnection", (done) => {
