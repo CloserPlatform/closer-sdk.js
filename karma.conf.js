@@ -35,7 +35,7 @@ module.exports = (config) => {
 
         files: [
             {
-                pattern: './src/**/*.spec.ts',
+                pattern: './src/index.spec.js',
                 served: true,
                 included: true,
                 watched: true,
@@ -53,6 +53,7 @@ module.exports = (config) => {
         ],
 
         preprocessors: {
+            './src/index.spec.js': ['webpack', 'sourcemap'],
             './src/**/*.spec.ts': ['webpack', 'sourcemap'],
         },
 
