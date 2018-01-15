@@ -1,6 +1,6 @@
 {
   "name": "ratel-sdk-js",
-  "version": "0.5.10",
+  "version": "0.5.11",
   "description": "Ratel JavaScript SDK",
   "main": "dist/ratel-sdk.js",
   "types": "dist/main.d.ts",
@@ -34,7 +34,7 @@
   "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
   "license": "MIT",
   "dependencies": {
-    "webrtc-adapter": "^3.4.3"
+    "webrtc-adapter": "^6.0.4"
   },
   "devDependencies": {
     "@types/jasmine": "^2.5.53",
