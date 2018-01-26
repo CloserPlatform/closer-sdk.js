@@ -37,6 +37,12 @@ export class RESTfulAPI {
         this.log.debug("Error response: " + xhttp.responseText);
         reject(JSON.parse(xhttp.responseText));
       }
+      xhttp.onerror = (err) => {
+        reject({
+          reason: 'XMLHttpRequest status: ' + xhttp.status,
+          type: err.type
+        })
+      }
     };
   }
 
