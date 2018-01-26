@@ -81,16 +81,5 @@ export class JSONWebSocket<T extends EventEntity> {
 
   private setupOnClose(callback) {
     this.socket.onclose = callback;
-    const wrappedCallback = (close) => {
-      close.reason = "Browser offline.";
-      close.code = 1006; // NOTE WebSocket.CLOSE_ABNORMAL
-      callback(close);
-    };
-    if (typeof window.addEventListener !== "undefined") {
-      window.addEventListener("offline", wrappedCallback);
-    } else if (window.document && window.document.body) {
-      (window.document.body as any).onoffline = wrappedCallback;
-    }
-    // TODO Check heartbeats.
   }
 }

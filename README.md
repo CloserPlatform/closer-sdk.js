@@ -33,6 +33,13 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.12
+### Fixed
+- Fix onServerUnreachable events after reconnecting
+### Changed
+- onDisconnect is not fired on browser offline event anymore.
+Use onServerUnreachable instead which is more reliable.
+
 ## 0.5.11
 ### Changed
 - Upgraded webrtc-adapter

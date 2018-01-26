@@ -16,7 +16,7 @@ export class Artichoke {
   private config: ChatConfig;
   private log: Logger;
   private events: EventHandler<wireEvents.Event>;
-  private heartbeatTimeout: BumpableTimeout;
+  private heartbeatTimeout?: BumpableTimeout;
 
   constructor(config: ChatConfig, log: Logger, events: EventHandler<wireEvents.Event>, api: ArtichokeAPI) {
     this.api = api;
@@ -32,12 +32,16 @@ export class Artichoke {
     events.onEvent(eventTypes.CHAT_RECEIVED, nop);
     events.onEvent(eventTypes.CHAT_DELIVERED, nop);
 
-    events.onEvent(eventTypes.HELLO, (hello: protoEvents.Hello) =>
+    events.onEvent(eventTypes.HELLO, (hello: protoEvents.Hello) => {
+      if (this.heartbeatTimeout) {
+          this.heartbeatTimeout.clear();
+      }
+
       this.heartbeatTimeout = new BumpableTimeout(
         2 * hello.heartbeatTimeout,
         () => this.events.notify(serverUnreachable())
-      )
-    );
+      );
+    });
     events.onEvent(eventTypes.HEARTBEAT, (hb: protoEvents.Heartbeat) => {
       this.api.send(hb);
       if (this.heartbeatTimeout) {
@@ -77,8 +81,10 @@ export class Artichoke {
   }
 
   disconnect() {
-    this.heartbeatTimeout.clear();
-    this.heartbeatTimeout = undefined;
+    if (this.heartbeatTimeout) {
+      this.heartbeatTimeout.clear();
+      this.heartbeatTimeout = undefined;
+    }
     this.api.disconnect();
   }
 
