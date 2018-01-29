@@ -33,6 +33,10 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.13
+### Fixed
+- Reconnection do not break websocket
+
 ## 0.5.12
 ### Fixed
 - Fix onServerUnreachable events after reconnecting
