@@ -17,6 +17,7 @@ export class JSONWebSocket<T extends EventEntity> {
   }
 
   connect(url: string) {
+    this.cleanupBeforeConnecting();
     this.log.info("WS connecting to: " + url);
 
     this.socket = new WebSocket(url);
@@ -36,6 +37,7 @@ export class JSONWebSocket<T extends EventEntity> {
 
   onDisconnect(callback: Callback<CloseEvent>) {
     this.onCloseCallback = (close) => {
+      this.unregisterCallbacks();
       this.socket = undefined;
       this.log.info("WS disconnected: " + close.reason);
       callback(close);
@@ -79,7 +81,25 @@ export class JSONWebSocket<T extends EventEntity> {
     }
   }
 
-  private setupOnClose(callback) {
+  private cleanupBeforeConnecting(): void {
+    if (this.socket) {
+      this.log.info("Cleaning up previous websocket");
+      this.unregisterCallbacks();
+      this.socket.close();
+      this.socket = undefined;
+    }
+  }
+
+  private unregisterCallbacks(): void {
+    if (this.socket) {
+      this.socket.onclose = undefined;
+      this.socket.onerror = undefined;
+      this.socket.onmessage = undefined;
+      this.socket.onopen = undefined;
+    }
+  }
+
+  private setupOnClose(callback): void {
     this.socket.onclose = callback;
   }
 }

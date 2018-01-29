@@ -33,21 +33,22 @@ export class Artichoke {
     events.onEvent(eventTypes.CHAT_DELIVERED, nop);
 
     events.onEvent(eventTypes.HELLO, (hello: protoEvents.Hello) => {
-      if (this.heartbeatTimeout) {
-          this.heartbeatTimeout.clear();
-      }
+      this.clearHeartbeatTimeout();
 
       this.heartbeatTimeout = new BumpableTimeout(
         2 * hello.heartbeatTimeout,
         () => this.events.notify(serverUnreachable())
       );
     });
+
     events.onEvent(eventTypes.HEARTBEAT, (hb: protoEvents.Heartbeat) => {
       this.api.send(hb);
       if (this.heartbeatTimeout) {
         this.heartbeatTimeout.bump();
       }
     });
+
+    events.onEvent(eventTypes.SERVER_UNREACHABLE, this.clearHeartbeatTimeout);
   }
 
   // Callbacks:
@@ -146,6 +147,13 @@ export class Artichoke {
 
   getRoster(): Promise<Array<Room>> {
     return wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
+  }
+
+  private clearHeartbeatTimeout = (): void => {
+    if (this.heartbeatTimeout) {
+      this.heartbeatTimeout.clear();
+      this.heartbeatTimeout = undefined;
+    }
   }
 
   private notify(event: wireEvents.Event): void {
