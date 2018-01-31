@@ -241,6 +241,10 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath, "active"]);
   }
 
+  getCallsWithPendingInvitations(): Promise<Array<wireEntities.Call>> {
+    return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath, "pending-invitation"]);
+  }
+
   getCallHistory(callId: proto.ID): Promise<Array<wireEntities.Message>> {
     return this.getAuth<Array<wireEntities.Message>>([this.url, this.callPath, callId, "history"]);
   }
