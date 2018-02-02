@@ -3,7 +3,7 @@ export * from "./auth";
 
 // Some useful types:
 export { Artichoke as Chat } from "./artichoke";
-export { BusinessCall, callType, DirectCall, GroupCall } from "./call";
+export { BusinessCall, callType, DirectCall, GroupCall, Call } from "./call";
 export { Config } from "./config";
 export { Message } from "./message";
 export { BusinessRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
