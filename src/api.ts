@@ -170,6 +170,16 @@ export class APIWithWebsocket extends RESTfulAPI {
   }
 }
 
+export enum CallReason {
+    Terminated = "terminated",
+    Timeout = "timeout",
+    Ended = "ended",
+    Hangup = "hangup",
+    ConnectionDropped = "connection_dropped",
+    Disconnected = "disconnected",
+    CallRejected = "rejected"
+}
+
 export class ArtichokeAPI extends APIWithWebsocket {
   private authHeaders: Array<HeaderValue>;
   public sessionId: proto.ID;
@@ -257,7 +267,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<void, void>([this.url, this.callPath, callId, "answer"]);
   }
 
-  rejectCall(callId: proto.ID, reason: string): Promise<void> {
+  rejectCall(callId: proto.ID, reason: CallReason): Promise<void> {
     return this.postAuth<proto.LeaveReason, void>([this.url, this.callPath, callId, "reject"],
                                                   proto.leaveReason(reason));
   }
@@ -270,7 +280,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<void, void>([this.url, this.callPath, callId, "pull"]);
   }
 
-  leaveCall(callId: proto.ID, reason: string): Promise<void> {
+  leaveCall(callId: proto.ID, reason: CallReason): Promise<void> {
     return this.postAuth<proto.LeaveReason, void>([this.url, this.callPath, callId, "leave"],
                                                   proto.leaveReason(reason));
   }

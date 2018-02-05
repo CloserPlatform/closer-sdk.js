@@ -1,4 +1,5 @@
 import * as RatelSDK from "../";
+import {CallReason} from "../src/api";
 import {displayVersion} from "./version";
 import * as View from "./view";
 
@@ -1169,7 +1170,7 @@ $(function () {
                         });
                     }, "Reject", function () {
                         console.log("Rejecting call...");
-                        callInvitation.call.reject("rejected");
+                        callInvitation.call.reject(CallReason.CallRejected);
                     });
                 });
             });

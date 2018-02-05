@@ -33,6 +33,13 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.16
+### Added
+- Export CallReason used by leave & reject
+### Changed
+- Update TypeScript to 2.7.1, we can use String enums now
+- call reject and leave now require CallReason enum as reason
+
 ## 0.5.15
 ### Added
 - Export Call type
