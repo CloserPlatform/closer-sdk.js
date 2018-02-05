@@ -1,4 +1,4 @@
-import {ArtichokeAPI} from "./api";
+import {ArtichokeAPI, CallReason} from "./api";
 import {Call, callType as ct, createCall, GroupCall} from "./call";
 import {EventHandler} from "./events";
 import {apiKey, config, getStream, isWebRTCSupported, log, sessionId, whenever} from "./fixtures.spec";
@@ -53,7 +53,7 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve(undefined);
   }
 
-  rejectCall(id, reason) {
+  rejectCall(id, reason: CallReason) {
     this.rejected = reason;
     return Promise.resolve(undefined);
   }
@@ -63,7 +63,7 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve(undefined);
   }
 
-  leaveCall(id, reason) {
+  leaveCall(id, reason: CallReason) {
     this.left = reason;
     return Promise.resolve(undefined);
   }
@@ -172,8 +172,8 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
     it("should allow rejecting", (done) => {
       events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
-      call.reject("rejected").then(() => {
-        expect(api.rejected).toBe("rejected");
+      call.reject(CallReason.CallRejected).then(() => {
+        expect(api.rejected).toBe(CallReason.CallRejected);
         done();
       });
     });
@@ -438,8 +438,8 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
     it("should allow leaving", (done) => {
       events.onEvent(eventTypes.ERROR, (error) => done.fail());
 
-      call.leave("reason").then(() => {
-        expect(api.left).toBe("reason");
+      call.leave(CallReason.CallRejected).then(() => {
+        expect(api.left).toBe(CallReason.CallRejected);
         done();
       });
     });

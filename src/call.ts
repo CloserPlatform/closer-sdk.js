@@ -1,4 +1,4 @@
-import { ArtichokeAPI } from "./api";
+import { ArtichokeAPI, CallReason } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage, Message } from "./message";
@@ -216,7 +216,7 @@ export abstract class Call implements wireEntities.Call {
     return this.api.answerCall(this.id);
   }
 
-  reject(reason: string): Promise<void> {
+  reject(reason: CallReason): Promise<void> {
     return this.api.rejectCall(this.id, reason);
   }
 
@@ -225,7 +225,7 @@ export abstract class Call implements wireEntities.Call {
     return this.api.pullCall(this.id);
   }
 
-  leave(reason: string): Promise<void> {
+  leave(reason: CallReason): Promise<void> {
     this.pool.destroyAll();
     return this.api.leaveCall(this.id, reason);
   }
