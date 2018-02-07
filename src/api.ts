@@ -39,10 +39,10 @@ export class RESTfulAPI {
       }
       xhttp.onerror = (err) => {
         reject({
-          reason: 'XMLHttpRequest status: ' + xhttp.status,
-          type: err.type
-        })
-      }
+          reason: "XMLHttpRequest status: " + xhttp.status,
+          type: err.type,
+        });
+      };
     };
   }
 
