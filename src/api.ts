@@ -3,6 +3,7 @@ import { ChatConfig, RatelConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
+import { PushRegistration } from "./protocol/protocol";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import * as wireEvents from "./protocol/wire-events";
@@ -200,6 +201,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
   private archivePath = "archive/items";
   private callPath = "calls";
   private roomPath = "rooms";
+  private pushNotifsPath = "push";
 
   private wsUrl: string;
 
@@ -404,6 +406,16 @@ export class ArtichokeAPI extends APIWithWebsocket {
           limit
         };
       });
+  }
+
+  // Push Notifications API:
+  registerForPushNotifications(pushId: proto.ID): Promise<void> {
+    return this.postAuth<PushRegistration, void>([this.url, this.pushNotifsPath, "register"],
+      proto.pushRegistration(pushId));
+  }
+
+  unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
+    return this.deleteAuth([this.url, this.pushNotifsPath, "unregister", pushId]);
   }
 
   private postAuth<Body, Response>(path, body?: Body): Promise<Response> {
