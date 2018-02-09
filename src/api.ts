@@ -3,6 +3,7 @@ import { ChatConfig, RatelConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
+import { PushRegistration } from "./protocol/protocol";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import * as wireEvents from "./protocol/wire-events";
@@ -39,19 +40,19 @@ export class RESTfulAPI {
       }
       xhttp.onerror = (err) => {
         reject({
-          reason: 'XMLHttpRequest status: ' + xhttp.status,
-          type: err.type
-        })
-      }
+          reason: "XMLHttpRequest status: " + xhttp.status,
+          type: err.type,
+        });
+      };
     };
   }
 
   getRaw<Response>(path: Array<string>, headers?: Array<HeaderValue>): Promise<XMLHttpRequest> {
     return new Promise<XMLHttpRequest>((resolve, reject) => {
-      let url = path.join("/");
+      const url = path.join("/");
       this.log.debug("GET " + url);
 
-      let xhttp = new XMLHttpRequest();
+      const xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = this.responseCallback(xhttp, resolve, reject);
       xhttp.open("GET", url, true);
       (headers || []).forEach((h) => xhttp.setRequestHeader(h.header, h.value));
@@ -63,29 +64,40 @@ export class RESTfulAPI {
     return this.getRaw(path, headers).then((resp) => RESTfulAPI.parseData(resp));
   }
 
-  postRaw<Body>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<XMLHttpRequest> {
-    return new Promise<XMLHttpRequest>((resolve, reject) => {
-      let url = path.join("/");
+  postRaw: <Body>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body) => Promise<XMLHttpRequest> =
+    this.httpRequestWithBody("POST");
 
-      let xhttp = new XMLHttpRequest();
-      xhttp.onreadystatechange = this.responseCallback(xhttp, resolve, reject);
-      xhttp.open("POST", url, true);
-      (headers || []).forEach((h) => xhttp.setRequestHeader(h.header, h.value));
-
-      if (body) {
-        let json = JSON.stringify(body);
-        this.log.debug("POST " + url + ": " + json);
-        xhttp.setRequestHeader("Content-Type", "application/json");
-        xhttp.send(json);
-      } else {
-        this.log.debug("POST " + url);
-        xhttp.send();
-      }
-    });
-  }
+  deleteRaw: <Body>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body) => Promise<XMLHttpRequest> =
+    this.httpRequestWithBody("DELETE");
 
   post<Body, Response>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<Response> {
     return this.postRaw(path, headers, body).then((resp) => RESTfulAPI.parseData(resp));
+  }
+
+  delete<Body, Response>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<Response> {
+    return this.deleteRaw(path, headers, body).then((resp) => RESTfulAPI.parseData(resp));
+  }
+
+  private httpRequestWithBody(method: "POST" | "DELETE") {
+    return <Body>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<XMLHttpRequest> =>
+      new Promise<XMLHttpRequest>((resolve, reject) => {
+        const url = path.join("/");
+
+        const xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = this.responseCallback(xhttp, resolve, reject);
+        xhttp.open(method, url, true);
+        (headers || []).forEach((h) => xhttp.setRequestHeader(h.header, h.value));
+
+        if (body) {
+          const json = JSON.stringify(body);
+          this.log.debug(method + url + ": " + json);
+          xhttp.setRequestHeader("Content-Type", "application/json");
+          xhttp.send(json);
+        } else {
+          this.log.debug(method + url);
+          xhttp.send();
+        }
+      });
   }
 
   private static parseData(resp: XMLHttpRequest) {
@@ -189,6 +201,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
   private archivePath = "archive/items";
   private callPath = "calls";
   private roomPath = "rooms";
+  private pushNotifsPath = "push";
 
   private wsUrl: string;
 
@@ -395,8 +408,22 @@ export class ArtichokeAPI extends APIWithWebsocket {
       });
   }
 
+  // Push Notifications API:
+  registerForPushNotifications(pushId: proto.ID): Promise<void> {
+    return this.postAuth<PushRegistration, void>([this.url, this.pushNotifsPath, "register"],
+      proto.pushRegistration(pushId));
+  }
+
+  unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
+    return this.deleteAuth([this.url, this.pushNotifsPath, "unregister", pushId]);
+  }
+
   private postAuth<Body, Response>(path, body?: Body): Promise<Response> {
     return this.post<Body, Response>(path, this.authHeaders, body);
+  }
+
+  private deleteAuth<Body, Response>(path, body?: Body): Promise<Response> {
+    return this.delete<Body, Response>(path, this.authHeaders, body);
   }
 }
 

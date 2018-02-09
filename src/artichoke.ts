@@ -154,6 +154,14 @@ export class Artichoke {
     return wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
+  registerForPushNotifications(pushId: proto.ID): Promise<void> {
+    return this.api.registerForPushNotifications(pushId);
+  }
+
+  unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
+    return this.api.unregisterFromPushNotifications(pushId);
+  }
+
   private clearHeartbeatTimeout = (): void => {
     if (this.heartbeatTimeout) {
       this.heartbeatTimeout.clear();

@@ -46,6 +46,10 @@ export interface Invite {
   user: ID;
 }
 
+export interface PushRegistration {
+  pushId: ID;
+}
+
 export function createCall(users: Array<ID>): CreateCall {
   return {
     users
@@ -81,6 +85,12 @@ export function createDirectRoom(user: ID, context?: Context): CreateDirectRoom 
 export function invite(user): Invite {
   return {
     user
+  };
+}
+
+export function pushRegistration(pushId: ID): PushRegistration {
+  return {
+    pushId,
   };
 }
 
