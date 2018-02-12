@@ -1,3 +1,4 @@
+import { ApiHeaders } from "./api-headers";
 import { AgentContext, ApiKey, SessionData } from "./auth";
 import { ChatConfig, RatelConfig } from "./config";
 import { Callback } from "./events";
@@ -106,8 +107,11 @@ export class RESTfulAPI {
 
 }
 
-export interface PromiseResolve<T> extends Callback<T | PromiseLike<T>> {}
-export interface PromiseReject extends Callback<wireEvents.Error> {}
+export interface PromiseResolve<T> extends Callback<T | PromiseLike<T>> {
+}
+
+export interface PromiseReject extends Callback<wireEvents.Error> {
+}
 
 interface PromiseFunctions {
   resolve: PromiseResolve<wireEvents.Event>;
@@ -183,18 +187,18 @@ export class APIWithWebsocket extends RESTfulAPI {
 }
 
 export enum CallReason {
-    Terminated = "terminated",
-    Timeout = "timeout",
-    Ended = "ended",
-    Hangup = "hangup",
-    ConnectionDropped = "connection_dropped",
-    Disconnected = "disconnected",
-    CallRejected = "rejected"
+  Terminated = "terminated",
+  Timeout = "timeout",
+  Ended = "ended",
+  Hangup = "hangup",
+  ConnectionDropped = "connection_dropped",
+  Disconnected = "disconnected",
+  CallRejected = "rejected"
 }
 
 export class ArtichokeAPI extends APIWithWebsocket {
-  private authHeaders: Array<HeaderValue>;
   public sessionId: proto.ID;
+
   private deviceId: proto.ID;
 
   protected url: string;
@@ -205,11 +209,12 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   private wsUrl: string;
 
+  private apiHeaders: ApiHeaders = new ApiHeaders();
   constructor(sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, log: Logger) {
     super(log);
 
     this.sessionId = sessionId;
-    this.authHeaders = [new HeaderValue("X-Api-Key", apiKey)];
+    this.apiHeaders.apiKey = sessionId;
 
     let host = config.hostname + (config.port === "" ? "" : ":" + config.port);
     this.url = [config.protocol, "//", host, "/api"].join("");
@@ -222,7 +227,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
       // FIXME Apply this bandaid elsewhere.
       if (event.type === eventTypes.HELLO) {
         this.deviceId = (event as wireEvents.Hello).deviceId;
-        this.authHeaders = this.authHeaders.concat(new HeaderValue("X-Device-Id", this.deviceId));
+        this.apiHeaders.deviceId = this.deviceId;
       }
 
       callback(event);
@@ -249,7 +254,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   createDirectCall(sessionId: proto.ID, timeout?: number): Promise<wireEntities.Call> {
     return this.postAuth<proto.CreateDirectCall, wireEntities.Call>([this.url, this.callPath],
-                                                             proto.createDirectCall(sessionId, timeout));
+      proto.createDirectCall(sessionId, timeout));
   }
 
   getCall(callId: proto.ID): Promise<wireEntities.Call> {
@@ -282,7 +287,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   rejectCall(callId: proto.ID, reason: CallReason): Promise<void> {
     return this.postAuth<proto.LeaveReason, void>([this.url, this.callPath, callId, "reject"],
-                                                  proto.leaveReason(reason));
+      proto.leaveReason(reason));
   }
 
   joinCall(callId: proto.ID): Promise<void> {
@@ -295,7 +300,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   leaveCall(callId: proto.ID, reason: CallReason): Promise<void> {
     return this.postAuth<proto.LeaveReason, void>([this.url, this.callPath, callId, "leave"],
-                                                  proto.leaveReason(reason));
+      proto.leaveReason(reason));
   }
 
   inviteToCall(callId: proto.ID, sessionId: proto.ID): Promise<void> {
@@ -391,11 +396,11 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   private getAuth<Response>(path: Array<string>): Promise<Response> {
-    return this.get<Response>(path, this.authHeaders);
+    return this.get<Response>(path, this.apiHeaders.getHeaders());
   }
 
   private getAuthPaginated<Item>(path: Array<string>): Promise<proto.Paginated<Item>> {
-    return this.getRaw(path, this.authHeaders)
+    return this.getRaw(path, this.apiHeaders.getHeaders())
       .then((resp) => {
         const items = JSON.parse(resp.responseText) as Array<Item>;
         const offset = +resp.getResponseHeader("X-Paging-Offset");
@@ -419,12 +424,13 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   private postAuth<Body, Response>(path, body?: Body): Promise<Response> {
-    return this.post<Body, Response>(path, this.authHeaders, body);
+    return this.post<Body, Response>(path, this.apiHeaders.getHeaders(), body);
   }
 
   private deleteAuth<Body, Response>(path, body?: Body): Promise<Response> {
-    return this.delete<Body, Response>(path, this.authHeaders, body);
+    return this.delete<Body, Response>(path, this.apiHeaders.getHeaders(), body);
   }
+
 }
 
 export class RatelAPI extends RESTfulAPI {
