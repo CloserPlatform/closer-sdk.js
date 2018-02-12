@@ -214,7 +214,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
     super(log);
 
     this.sessionId = sessionId;
-    this.apiHeaders.apiKey = sessionId;
+    this.apiHeaders.apiKey = apiKey;
 
     let host = config.hostname + (config.port === "" ? "" : ":" + config.port);
     this.url = [config.protocol, "//", host, "/api"].join("");

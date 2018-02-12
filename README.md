@@ -33,6 +33,14 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.19
+### Added
+- Fix headers apiKey id
+
+## 0.5.18
+### Added
+- Add ApiHeaders class instead of keeping array of headers inside api class
+
 ## 0.5.17
 ### Added
 - Handle endpoints for registering and unregistering from push notifications
