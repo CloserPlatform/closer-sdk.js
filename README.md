@@ -33,6 +33,10 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.20
+### Added
+- Allow registering many callbacks on event with concrete id
+
 ## 0.5.19
 ### Added
 - Fix headers apiKey id

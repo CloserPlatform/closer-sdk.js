@@ -5,8 +5,11 @@ import { ChatDelivered, ChatEdited } from "./protocol/events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import { Event, eventTypes } from "./protocol/wire-events";
+import { randomUUID, UUID } from "./utils";
 
 export class Message implements wireEntities.Message {
+  private readonly uuid: UUID = randomUUID();
+
   public type: proto.Type = "message";
   public id: proto.ID;
   public userId: proto.ID;
@@ -54,7 +57,7 @@ export class Message implements wireEntities.Message {
   }
 
   onDelivery(callback: Callback<Message>) {
-    this.events.onConcreteEvent(eventTypes.CHAT_DELIVERED, this.id, (msg: ChatDelivered) => {
+    this.events.onConcreteEvent(eventTypes.CHAT_DELIVERED, this.id, this.uuid, (msg: ChatDelivered) => {
       this.delivered = {
         user: msg.user,
         timestamp: msg.timestamp
@@ -74,7 +77,7 @@ export class Message implements wireEntities.Message {
   }
 
   onEdit(callback: Callback<Message>) {
-    this.events.onConcreteEvent(eventTypes.CHAT_EDITED, this.id, (msg: ChatEdited) => {
+    this.events.onConcreteEvent(eventTypes.CHAT_EDITED, this.id, this.uuid, (msg: ChatEdited) => {
       this.body = msg.message.body;
       this.edited = msg.message.edited;
       callback(this);

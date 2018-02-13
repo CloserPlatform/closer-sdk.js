@@ -15,6 +15,7 @@ import {
   RTCConnectionConstraints,
   RTCPool
 } from "./rtc";
+import { randomUUID, UUID } from "./utils";
 
 export namespace callType {
   export enum CallType {
@@ -37,6 +38,7 @@ export namespace callType {
 }
 
 export abstract class Call implements wireEntities.Call {
+  private readonly uuid: UUID = randomUUID();
   public id: proto.ID;
   public created: proto.Timestamp;
   public ended: proto.Timestamp;
@@ -87,7 +89,7 @@ export abstract class Call implements wireEntities.Call {
       // Do nothing.
     };
 
-    this.events.onConcreteEvent(eventTypes.CALL_ACTIVE_DEVICE, this.id, (e: CallActiveDevice) => {
+    this.events.onConcreteEvent(eventTypes.CALL_ACTIVE_DEVICE, this.id, this.uuid, (e: CallActiveDevice) => {
       this.pool.destroyAll();
       this.onActiveDeviceCallback(e);
     });
@@ -123,7 +125,7 @@ export abstract class Call implements wireEntities.Call {
   }
 
   private setupListeners() {
-    this.events.onConcreteEvent(eventTypes.CALL_MESSAGE, this.id, (e: CallMessage) => {
+    this.events.onConcreteEvent(eventTypes.CALL_MESSAGE, this.id, this.uuid, (e: CallMessage) => {
       switch (e.message.tag) {
         case actionTypes.CALL_JOINED:
           this.users.push(e.message.userId);
@@ -263,7 +265,7 @@ export abstract class Call implements wireEntities.Call {
   }
 
   onEnd(callback: Callback<CallEnd>) {
-    this.events.onConcreteEvent(eventTypes.CALL_END, this.id, (e: CallEnd) => {
+    this.events.onConcreteEvent(eventTypes.CALL_END, this.id, this.uuid, (e: CallEnd) => {
       this.ended = e.timestamp;
       callback(e);
     });
