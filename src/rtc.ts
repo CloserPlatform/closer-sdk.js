@@ -5,7 +5,7 @@ import { RTCCandidate, RTCDescription } from "./protocol/events";
 import { ID } from "./protocol/protocol";
 import * as wireEvents from "./protocol/wire-events";
 import { error, Event, eventTypes } from "./protocol/wire-events";
-import { onceDelayed, Thunk } from "./utils";
+import { onceDelayed, randomUUID, Thunk, UUID } from "./utils";
 
 export interface RTCConnectionConstraints {
   // FIXME @types/webrtc currently does not have this interface defined.
@@ -267,6 +267,8 @@ interface MediaStreamAndTrack {
 }
 
 export class RTCPool {
+  private readonly uuid: UUID = randomUUID();
+
   private api: ArtichokeAPI;
   private events: EventHandler<Event>;
   private log: Logger;
@@ -299,7 +301,7 @@ export class RTCPool {
       // Do nothing.
     };
 
-    events.onConcreteEvent(eventTypes.RTC_DESCRIPTION, this.call, (msg: RTCDescription) => {
+    events.onConcreteEvent(eventTypes.RTC_DESCRIPTION, this.call, this.uuid, (msg: RTCDescription) => {
       this.log.debug("Received an RTC description: " + msg.description.sdp);
 
       if (msg.description.type === "offer") {
@@ -326,7 +328,7 @@ export class RTCPool {
       }
     });
 
-    events.onConcreteEvent(eventTypes.RTC_CANDIDATE, this.call, (msg: RTCCandidate) => {
+    events.onConcreteEvent(eventTypes.RTC_CANDIDATE, this.call, this.uuid, (msg: RTCCandidate) => {
       this.log.debug("Received an RTC candidate: " + msg.candidate);
       if (msg.peer in this.connections) {
         this.connections[msg.peer].addCandidate(msg.candidate).catch((err) => {

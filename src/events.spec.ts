@@ -2,6 +2,7 @@ import { EventHandler } from "./events";
 import { log } from "./fixtures.spec";
 import { Error, RoomMark } from "./protocol/events";
 import { codec, error, eventTypes, marked } from "./protocol/wire-events";
+import { randomUUID } from "./utils";
 
 interface ErrorWithCause extends Error {
   cause: boolean;
@@ -66,7 +67,7 @@ describe("Event Handler", () => {
   it("should allow defining concrete event handlers", () => {
     let ok = "0";
 
-    events.onConcreteEvent(eventTypes.ROOM_MARKED, "3", (msg: RoomMark) => ok = msg.id);
+    events.onConcreteEvent(eventTypes.ROOM_MARKED, "3", randomUUID(), (msg: RoomMark) => ok = msg.id);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -77,8 +78,8 @@ describe("Event Handler", () => {
     let first = false;
     let second = false;
 
-    events.onConcreteEvent(eventTypes.ROOM_MARKED, "3", (msg: RoomMark) => first = true);
-    events.onConcreteEvent(eventTypes.ROOM_MARKED, "1", (msg: RoomMark) => second = true);
+    events.onConcreteEvent(eventTypes.ROOM_MARKED, "3", randomUUID(), (msg: RoomMark) => first = true);
+    events.onConcreteEvent(eventTypes.ROOM_MARKED, "1", randomUUID(), (msg: RoomMark) => second = true);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
 
@@ -90,7 +91,7 @@ describe("Event Handler", () => {
     let first = false;
     let second = 0;
 
-    events.onConcreteEvent(eventTypes.ROOM_MARKED, "3", (msg: RoomMark) => first = true);
+    events.onConcreteEvent(eventTypes.ROOM_MARKED, "3", randomUUID(), (msg: RoomMark) => first = true);
     events.onEvent(eventTypes.ROOM_MARKED, (msg: RoomMark) => second++);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msg(i.toString())));
@@ -103,7 +104,7 @@ describe("Event Handler", () => {
     let first: RoomMark = undefined;
     let second: RoomMark = undefined;
 
-    events.onConcreteEvent(eventTypes.ROOM_MARKED, "3", (msg: RoomMark) => first = msg);
+    events.onConcreteEvent(eventTypes.ROOM_MARKED, "3", randomUUID(), (msg: RoomMark) => first = msg);
     events.onEvent(eventTypes.ROOM_MARKED, (msg: RoomMark) => {
       if (msg.id === "3") {
         second = msg;

@@ -8,7 +8,7 @@ import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import * as wireEvents from "./protocol/wire-events";
 import { actionTypes, error, eventTypes } from "./protocol/wire-events";
-import { TransferFunction } from "./utils";
+import { randomUUID, TransferFunction, UUID } from "./utils";
 
 export namespace roomType {
   export enum RoomType {
@@ -31,6 +31,8 @@ export namespace roomType {
 }
 
 export abstract class Room implements wireEntities.Room {
+  protected readonly uuid: UUID = randomUUID();
+
   public id: proto.ID;
   public name: string;
   public created: proto.Timestamp;
@@ -67,7 +69,7 @@ export abstract class Room implements wireEntities.Room {
   }
 
   protected defineCallbacks() {
-    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (e: protoEvents.RoomMessage) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, this.uuid, (e: protoEvents.RoomMessage) => {
       switch (e.message.tag) {
       case actionTypes.TEXT_MESSAGE:
         this.onTextMessageCallback(e.message);
@@ -141,7 +143,7 @@ export abstract class Room implements wireEntities.Room {
   }
 
   onMarked(callback: Callback<protoEvents.RoomMarked>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MARKED, this.id, (mark: protoEvents.RoomMarked) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_MARKED, this.id, this.uuid, (mark: protoEvents.RoomMarked) => {
       if (!this.marks) {
         this.marks = {};
       }
@@ -159,7 +161,7 @@ export abstract class Room implements wireEntities.Room {
   }
 
   onTyping(callback: Callback<protoEvents.RoomTyping>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_TYPING, this.id, callback);
+    this.events.onConcreteEvent(eventTypes.ROOM_TYPING, this.id, this.uuid, callback);
   }
 }
 
@@ -186,7 +188,7 @@ export class GroupRoom extends Room {
   }
 
   protected defineCallbacks() {
-    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, (e: protoEvents.RoomMessage) => {
+    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, this.uuid, (e: protoEvents.RoomMessage) => {
       switch (e.message.tag) {
       case actionTypes.ROOM_JOINED:
         this.users.push(e.message.userId);
