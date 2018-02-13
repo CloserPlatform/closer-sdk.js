@@ -9,7 +9,7 @@ export interface Callback<T> {
 export class EventHandler<T extends EventEntity> {
   private log: Logger;
   private perType: { [type: string]: Array<Callback<T>> } = {};
-  private perId: { [type: string]: { [id: string]: Callback<T> } } = {};
+  private perId: { [type: string]: { [id: string]: Array<Callback<T>> } } = {};
   private codec: Codec<T>;
 
   constructor(log: Logger, codec: Codec<T>) {
@@ -29,9 +29,7 @@ export class EventHandler<T extends EventEntity> {
   private notifyByType(event: T): boolean {
     if (event.type in this.perType) {
       this.log.debug("Running callbacks for event type " + event.type);
-      this.perType[event.type].forEach(function(cb) {
-        cb(event);
-      });
+      this.perType[event.type].forEach((cb) => cb(event));
       return true;
     }
     return false;
@@ -40,7 +38,7 @@ export class EventHandler<T extends EventEntity> {
   private notifyById(event: T): boolean {
     if (event.id && event.type in this.perId && event.id in this.perId[event.type]) {
       this.log.debug("Running callbacks for event type " + event.type + ", id " + event.id);
-      this.perId[event.type][event.id](event);
+      this.perId[event.type][event.id].forEach((cb) => cb(event));
       return true;
     }
     return false;
@@ -61,6 +59,9 @@ export class EventHandler<T extends EventEntity> {
     if (!(type in this.perId)) {
       this.perId[type] = {};
     }
-    this.perId[type][id] = callback;
+    if (!(id in this.perId[type])) {
+      this.perId[type][id] = [];
+    }
+    this.perId[type][id].push(callback);
   }
 }
