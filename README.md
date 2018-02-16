@@ -33,6 +33,11 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.21
+### Added
+- chat & ratel configs now accept pathname
+
+
 ## 0.5.20
 ### Added
 - Allow registering many callbacks on event with concrete id
