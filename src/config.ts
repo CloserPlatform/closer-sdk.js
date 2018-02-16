@@ -7,6 +7,7 @@ import { deepcopy } from "./utils";
 export interface URLConfig {
   protocol?: string;
   hostname?: string;
+  pathname?: string;
   port?: string;
 }
 

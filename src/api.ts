@@ -216,10 +216,12 @@ export class ArtichokeAPI extends APIWithWebsocket {
     this.sessionId = sessionId;
     this.apiHeaders.apiKey = apiKey;
 
+    const pathname = config.pathname ? config.pathname : "";
+
     let host = config.hostname + (config.port === "" ? "" : ":" + config.port);
-    this.url = [config.protocol, "//", host, "/api"].join("");
+    this.url = [config.protocol, "//", host, pathname, "/api"].join("");
     let wsProtocol = config.protocol === "https:" ? "wss:" : "ws:";
-    this.wsUrl = [wsProtocol, "//", host, "/ws/", apiKey].join("");
+    this.wsUrl = [wsProtocol, "//", host, pathname, "/ws/", apiKey].join("");
   }
 
   onEvent(callback: Callback<wireEvents.Event>) {
@@ -440,8 +442,10 @@ export class RatelAPI extends RESTfulAPI {
   constructor(config: RatelConfig, log: Logger) {
     super(log);
 
+    const pathname = config.pathname ? config.pathname : "";
+
     let host = config.hostname + ":" + config.port;
-    this.url = [config.protocol, "//", host, "/api"].join("");
+    this.url = [config.protocol, "//", host, pathname, "/api"].join("");
   }
 
   verifySignature(sessionData: SessionData): Promise<AgentContext> {
