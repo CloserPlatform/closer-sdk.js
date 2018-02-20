@@ -50,7 +50,7 @@ export class JSONWebSocket<T extends EventEntity> {
 
   onError(callback: Callback<Event>) {
     this.onErrorCallback = (err) => {
-      this.log.error("WS error: " + err);
+      this.log.warn("WS error: " + err);
       callback(err);
     };
 
