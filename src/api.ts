@@ -36,9 +36,17 @@ export class RESTfulAPI {
         this.log.debug("OK response: " + xhttp.responseText);
         resolve(xhttp);
       } else if (xhttp.readyState === 4) {
-        this.log.debug("Error response: " + xhttp.responseText);
-        reject(JSON.parse(xhttp.responseText));
+        this.log.debug("Api - responseCallback: Error response: " + xhttp.responseText);
+        try {
+          const responseError = JSON.parse(xhttp.responseText);
+          reject(responseError);
+        } catch (err) {
+          this.log.debug("Api - responseCallback: Cannot parse error response: " + err +
+            "\n Tried to parse: " + xhttp.responseText);
+          reject(("Cannot parse Error response: " + err + "\nError response: " + xhttp.responseText) as any);
+        }
       }
+
       xhttp.onerror = (err) => {
         reject({
           reason: "XMLHttpRequest status: " + xhttp.status,
@@ -62,7 +70,7 @@ export class RESTfulAPI {
   }
 
   get<Response>(path: Array<string>, headers?: Array<HeaderValue>): Promise<Response> {
-    return this.getRaw(path, headers).then((resp) => RESTfulAPI.parseData(resp));
+    return this.getRaw(path, headers).then((resp) => this.parseData(resp));
   }
 
   postRaw: <Body>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body) => Promise<XMLHttpRequest> =
@@ -72,11 +80,11 @@ export class RESTfulAPI {
     this.httpRequestWithBody("DELETE");
 
   post<Body, Response>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<Response> {
-    return this.postRaw(path, headers, body).then((resp) => RESTfulAPI.parseData(resp));
+    return this.postRaw(path, headers, body).then((resp) => this.parseData(resp));
   }
 
   delete<Body, Response>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<Response> {
-    return this.deleteRaw(path, headers, body).then((resp) => RESTfulAPI.parseData(resp));
+    return this.deleteRaw(path, headers, body).then((resp) => this.parseData(resp));
   }
 
   private httpRequestWithBody(method: "POST" | "DELETE") {
@@ -101,8 +109,17 @@ export class RESTfulAPI {
       });
   }
 
-  private static parseData(resp: XMLHttpRequest) {
-    return resp.status === 204 ? resp.responseText : JSON.parse(resp.responseText);
+  private parseData(resp: XMLHttpRequest) {
+    if (resp.status === 204) {
+      return resp.responseText;
+    }
+    try {
+      return JSON.parse(resp.responseText);
+    } catch (err) {
+      this.log.debug("Api - parseData: Cannot parse response: " + err
+        + "\n Tried to parse: " + resp.responseText);
+      return resp.responseText;
+    }
   }
 
 }
@@ -210,6 +227,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
   private wsUrl: string;
 
   private apiHeaders: ApiHeaders = new ApiHeaders();
+
   constructor(sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, log: Logger) {
     super(log);
 
@@ -404,7 +422,14 @@ export class ArtichokeAPI extends APIWithWebsocket {
   private getAuthPaginated<Item>(path: Array<string>): Promise<proto.Paginated<Item>> {
     return this.getRaw(path, this.apiHeaders.getHeaders())
       .then((resp) => {
-        const items = JSON.parse(resp.responseText) as Array<Item>;
+        let items;
+        try {
+          items = JSON.parse(resp.responseText) as Array<Item>;
+        } catch (err) {
+          this.log.debug("Api - getAuthPaginated: Cannot parse response: " + err
+            + "\n Tried to parse: " + resp.responseText);
+          throw new Error("Api - getAuthPaginated: Cannot parse response");
+        }
         const offset = +resp.getResponseHeader("X-Paging-Offset");
         const limit = +resp.getResponseHeader("X-Paging-Limit");
         return {
