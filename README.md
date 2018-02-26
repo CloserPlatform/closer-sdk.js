@@ -33,6 +33,10 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.24
+### Added
+- Busy call rejection reason
+
 ## 0.5.23
 ### Change
 - Handle json.parse errors in Api.ts file

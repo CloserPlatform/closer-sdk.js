@@ -210,7 +210,8 @@ export enum CallReason {
   Hangup = "hangup",
   ConnectionDropped = "connection_dropped",
   Disconnected = "disconnected",
-  CallRejected = "rejected"
+  CallRejected = "rejected",
+  Busy = "busy"
 }
 
 export class ArtichokeAPI extends APIWithWebsocket {
