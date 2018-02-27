@@ -11,6 +11,7 @@ export interface Delivered extends UserTimestamp {}
 export interface Edited extends UserTimestamp {}
 
 export type Context = any;
+export type CallInvitationMetadata = any;
 
 export interface UserTimestamp {
   user: ID;

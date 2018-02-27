@@ -72,6 +72,7 @@ export interface CallMessage extends Event {
 export interface CallInvitation extends Event {
   call: wireEntities.Call;
   inviter: proto.ID;
+  metadata?: proto.CallInvitationMetadata;
 }
 
 export interface CallActiveDevice extends Event {
