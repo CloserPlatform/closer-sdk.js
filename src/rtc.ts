@@ -301,7 +301,7 @@ export class RTCPool {
       // Do nothing.
     };
 
-    events.onConcreteEvent(eventTypes.RTC_DESCRIPTION, this.call, this.uuid, (msg: RTCDescription) => {
+    events.onConcreteEvent(eventTypes.RTC_DESCRIPTION, this.call, "singleton", (msg: RTCDescription) => {
       this.log.debug("Received an RTC description: " + msg.description.sdp);
 
       if (msg.description.type === "offer") {
@@ -328,7 +328,7 @@ export class RTCPool {
       }
     });
 
-    events.onConcreteEvent(eventTypes.RTC_CANDIDATE, this.call, this.uuid, (msg: RTCCandidate) => {
+    events.onConcreteEvent(eventTypes.RTC_CANDIDATE, this.call, "singleton", (msg: RTCCandidate) => {
       this.log.debug("Received an RTC candidate: " + msg.candidate);
       if (msg.peer in this.connections) {
         this.connections[msg.peer].addCandidate(msg.candidate).catch((err) => {

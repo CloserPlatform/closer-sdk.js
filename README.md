@@ -33,6 +33,10 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 # Changelog
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
+## 0.5.26
+### Changed
+- Setup only one callback for RTC stuff per call
+
 ## 0.5.25
 ### Added
 - Add metadata field to CallInvitation event
