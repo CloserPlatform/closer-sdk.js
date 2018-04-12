@@ -1,4 +1,5 @@
 import { DomainCommand } from "../commands/domain-command";
+import { DomainEvent } from "./domain-event";
 
 export namespace roomEvents {
   export enum EndReason {
@@ -12,7 +13,7 @@ export namespace roomEvents {
     Busy = "busy",
   }
 
-  export abstract class RoomEvent implements DomainCommand {
+  export abstract class RoomEvent implements DomainEvent {
     protected constructor(roomId: string, authorId: string, timestamp: number, tag: string) {
       this.roomId = roomId;
       this.authorId = authorId;
