@@ -2,10 +2,10 @@ import { ArtichokeAPI, CallReason } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage, Message } from "./message";
-import { CallActiveDevice, CallEnd, CallMessage } from "./protocol/events";
+import { callEvents } from "./protocol/events/call-events";
+import { DomainEvent } from "./protocol/events/domain-event";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import { actionTypes, error, Event, eventTypes } from "./protocol/wire-events";
 import {
   createRTCPool,
   HackedRTCOfferOptions as RTCOfferOptions,
@@ -48,23 +48,23 @@ export abstract class Call implements wireEntities.Call {
   public orgId: proto.ID;
 
   protected api: ArtichokeAPI;
-  protected events: EventHandler<Event>;
+  protected events: EventHandler<DomainEvent>;
 
   private log: Logger;
   protected pool: RTCPool;
-  private onActiveDeviceCallback: Callback<CallActiveDevice>;
-  private onLeftCallback: Callback<Message>;
-  private onOfflineCallback: Callback<Message>;
-  private onOnlineCallback: Callback<Message>;
-  private onJoinedCallback: Callback<Message>;
-  private onTransferredCallback: Callback<Message>;
-  protected onInvitedCallback: Callback<Message>;
-  private onAnsweredCallback: Callback<Message>;
-  private onRejectedCallback: Callback<Message>;
+  private onActiveDeviceCallback: Callback<callEvents.CallHandledOnDevice>;
+  private onLeftCallback: Callback<callEvents.Left>;
+  private onOfflineCallback: Callback<callEvents.DeviceOffline>;
+  private onOnlineCallback: Callback<callEvents.DeviceOnline>;
+  private onJoinedCallback: Callback<callEvents.Joined>;
+  private onTransferredCallback: Callback<callEvents.CallHandledOnDevice>;
+  protected onInvitedCallback: Callback<callEvents.Invited>;
+  private onAnsweredCallback: Callback<callEvents.Answered>;
+  private onRejectedCallback: Callback<callEvents.Rejected>;
 
   public abstract readonly callType: callType.CallType;
 
-  constructor(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler<Event>,
+  constructor(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler<DomainEvent>,
               api: ArtichokeAPI, stream?: MediaStream) {
     this.id = call.id;
     this.created = call.created;
@@ -85,27 +85,22 @@ export abstract class Call implements wireEntities.Call {
     }
 
     // By default do nothing:
-    this.onActiveDeviceCallback = (e: CallActiveDevice) => {
-      // Do nothing.
-    };
+    this.onActiveDeviceCallback = (e: callEvents.CallHandledOnDevice) => { /* Do nothing */ };
 
-    this.events.onConcreteEvent(eventTypes.CALL_ACTIVE_DEVICE, this.id, this.uuid, (e: CallActiveDevice) => {
-      this.pool.destroyAll();
-      this.onActiveDeviceCallback(e);
-    });
+    this.events.onConcreteEvent(callEvents.CallHandledOnDevice.tag, this.id, this.uuid,
+      (e: callEvents.CallHandledOnDevice) => {
+        this.pool.destroyAll();
+        this.onActiveDeviceCallback(e);
+      });
 
-    let nop = (a: Message) => {
-      // Do nothing.
-    };
-
-    this.onLeftCallback = nop;
-    this.onOfflineCallback = nop;
-    this.onOnlineCallback = nop;
-    this.onJoinedCallback = nop;
-    this.onTransferredCallback = nop;
-    this.onInvitedCallback = nop;
-    this.onAnsweredCallback = nop;
-    this.onRejectedCallback = nop;
+    this.onLeftCallback = (e: callEvents.Left) => { /* Do nothing */ };
+    this.onOfflineCallback = (e: callEvents.DeviceOffline) => { /* Do nothing */ };
+    this.onOnlineCallback = (e: callEvents.DeviceOnline) => { /* Do nothing */ };
+    this.onJoinedCallback = (e: callEvents.Joined) => { /* Do nothing */ };
+    this.onTransferredCallback = (e: callEvents.CallHandledOnDevice) => { /* Do nothing */ };
+    this.onInvitedCallback = (e: callEvents.Invited) => { /* Do nothing */ };
+    this.onAnsweredCallback = (e: callEvents.Answered) => { /* Do nothing */ };
+    this.onRejectedCallback = (e: callEvents.Rejected) => { /* Do nothing */ };
 
     if (this.creator === this.api.sessionId) {
       this.users = [];
@@ -125,49 +120,31 @@ export abstract class Call implements wireEntities.Call {
   }
 
   private setupListeners() {
-    this.events.onConcreteEvent(eventTypes.CALL_MESSAGE, this.id, this.uuid, (e: CallMessage) => {
-      switch (e.message.tag) {
-        case actionTypes.CALL_JOINED:
-          this.users.push(e.message.userId);
-          this.pool.create(e.message.userId);
-          this.onJoinedCallback(e.message);
-          break;
-
-        case actionTypes.CALL_TRANSFERRED:
-          this.pool.destroy(e.message.userId);
-          this.pool.create(e.message.userId);
-          this.onTransferredCallback(e.message);
-          break;
-
-        case actionTypes.CALL_LEFT:
-          this.users = this.users.filter((u) => u !== e.message.userId);
-          this.pool.destroy(e.message.userId);
-          this.onLeftCallback(e.message);
-          break;
-
-        case actionTypes.OFFLINE:
-          this.onOfflineCallback(e.message);
-          break;
-
-        case actionTypes.ONLINE:
-          this.onOnlineCallback(e.message);
-          break;
-
-        case actionTypes.CALL_INVITED:
-          this.onInvitedCallback(e.message);
-          break;
-
-        case actionTypes.CALL_ANSWERED:
-          this.onAnsweredCallback(e.message);
-          break;
-
-        case actionTypes.CALL_REJECTED:
-          this.onRejectedCallback(e.message);
-          break;
-
-        default:
-          this.events.notify(error("Invalid event", e));
+    this.events.onConcreteEvent(callEvents.Joined.tag, this.id, this.uuid, (e: callEvents.Joined) => {
+      this.users.push(e.authorId);
+      this.pool.create(e.authorId);
+      this.onJoinedCallback(e);
+    });
+    this.events.onConcreteEvent(callEvents.CallHandledOnDevice.tag, this.id, this.uuid,
+      (e: callEvents.CallHandledOnDevice) => {
+        this.pool.destroy(e.authorId);
+        this.pool.create(e.authorId);
+        this.onTransferredCallback(e);
       }
+    );
+    this.events.onConcreteEvent(callEvents.Left.tag, this.id, this.uuid, (e: callEvents.Left) => {
+      this.users = this.users.filter((u) => u !== e.authorId);
+      this.pool.destroy(e.authorId);
+      this.onLeftCallback(e);
+    });
+    this.events.onConcreteEvent(callEvents.Invited.tag, this.id, this.uuid, (e: callEvents.Invited) => {
+      this.onInvitedCallback(e);
+    });
+    this.events.onConcreteEvent(callEvents.Answered.tag, this.id, this.uuid, (e: callEvents.Answered) => {
+      this.onAnsweredCallback(e);
+    });
+    this.events.onConcreteEvent(callEvents.Rejected.tag, this.id, this.uuid, (e: callEvents.Rejected) => {
+      this.onRejectedCallback(e);
     });
   }
 
@@ -232,40 +209,40 @@ export abstract class Call implements wireEntities.Call {
     return this.api.leaveCall(this.id, reason);
   }
 
-  onAnswered(callback: Callback<Message>) {
+  onAnswered(callback: Callback<callEvents.Answered>) {
     this.onAnsweredCallback = callback;
   }
 
-  onRejected(callback: Callback<Message>) {
+  onRejected(callback: Callback<callEvents.Rejected>) {
     this.onRejectedCallback = callback;
   }
 
-  onLeft(callback: Callback<Message>) {
+  onLeft(callback: Callback<callEvents.Left>) {
     this.onLeftCallback = callback;
   }
 
-  onOffline(callback: Callback<Message>) {
+  onOffline(callback: Callback<callEvents.DeviceOffline>) {
     this.onOfflineCallback = callback;
   }
 
-  onOnline(callback: Callback<Message>) {
+  onOnline(callback: Callback<callEvents.DeviceOnline>) {
     this.onOnlineCallback = callback;
   }
 
-  onJoined(callback: Callback<Message>) {
+  onJoined(callback: Callback<callEvents.Joined>) {
     this.onJoinedCallback = callback;
   }
 
-  onTransferred(callback: Callback<Message>) {
+  onTransferred(callback: Callback<callEvents.CallHandledOnDevice>) {
     this.onTransferredCallback = callback;
   }
 
-  onActiveDevice(callback: Callback<CallActiveDevice>) {
+  onActiveDevice(callback: Callback<callEvents.CallHandledOnDevice>) {
     this.onActiveDeviceCallback = callback;
   }
 
-  onEnd(callback: Callback<CallEnd>) {
-    this.events.onConcreteEvent(eventTypes.CALL_END, this.id, this.uuid, (e: CallEnd) => {
+  onEnd(callback: Callback<callEvents.Ended>) {
+    this.events.onConcreteEvent(callEvents.Ended.tag, this.id, this.uuid, (e: callEvents.Ended) => {
       this.ended = e.timestamp;
       callback(e);
     });
@@ -288,7 +265,7 @@ export class GroupCall extends Call {
     return this.api.joinCall(this.id);
   }
 
-  onInvited(callback: Callback<Message>) {
+  onInvited(callback: Callback<callEvents.Invited>) {
     this.onInvitedCallback = callback;
   }
 }
@@ -297,7 +274,7 @@ export class BusinessCall extends GroupCall {
   public readonly callType: callType.CallType = callType.CallType.BUSINESS;
 }
 
-export function createCall(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler<Event>,
+export function createCall(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler<DomainEvent>,
                            api: ArtichokeAPI, stream?: MediaStream): Call {
   if (call.direct) {
     return new DirectCall(call, config, log, events, api, stream);
