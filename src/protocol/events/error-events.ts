@@ -12,4 +12,9 @@ export namespace errorEvents {
     readonly reason: string;
     readonly tag: string;
   }
+
+  export function isError(evt: DomainEvent): evt is errorEvents.Error {
+    return evt.tag === errorEvents.Error.tag;
+  }
+
 }
