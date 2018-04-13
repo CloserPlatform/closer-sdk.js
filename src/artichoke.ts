@@ -19,10 +19,10 @@ export class Artichoke {
   private api: ArtichokeAPI;
   private config: ChatConfig;
   private log: Logger;
-  private events: EventHandler<DomainEvent>;
+  private events: EventHandler;
   private heartbeatTimeout?: BumpableTimeout;
 
-  constructor(config: ChatConfig, log: Logger, events: EventHandler<DomainEvent>, api: ArtichokeAPI) {
+  constructor(config: ChatConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.api = api;
     this.config = config;
     this.log = log;
