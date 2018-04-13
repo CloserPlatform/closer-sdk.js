@@ -1,19 +1,23 @@
-import { Codec, EventEntity } from "./codec";
+import { Decoder, Encoder } from "./codec";
 import { Callback } from "./events";
 import { Logger } from "./logger";
+import { DomainCommand } from "./protocol/commands/domain-command";
+import { DomainEvent } from "./protocol/events/domain-event";
 
-export class JSONWebSocket<T extends EventEntity> {
+export class JSONWebSocket {
   private log: Logger;
   private socket: WebSocket;
-  private codec: Codec<T>;
+  private encoder: Encoder<DomainCommand>;
+  private decoder: Decoder<DomainEvent>;
 
   private onCloseCallback: Callback<CloseEvent>;
   private onErrorCallback: Callback<Event>;
   private onMessageCallback: Callback<MessageEvent>;
 
-  constructor(log: Logger, codec: Codec<T>) {
+  constructor(log: Logger, encoder: Encoder<DomainCommand>, decoder: Decoder<DomainEvent>) {
     this.log = log;
-    this.codec = codec;
+    this.encoder = encoder;
+    this.decoder = decoder;
   }
 
   connect(url: string) {
@@ -59,10 +63,10 @@ export class JSONWebSocket<T extends EventEntity> {
     }
   }
 
-  onEvent(callback: Callback<T>) {
+  onEvent(callback: Callback<DomainEvent>) {
     this.onMessageCallback = (event) => {
       this.log.debug("WS received: " + event.data);
-      callback(this.codec.decode(event.data));
+      callback(this.decoder.decode(event.data));
     };
 
     if (this.socket) {
@@ -70,9 +74,9 @@ export class JSONWebSocket<T extends EventEntity> {
     }
   }
 
-  send(event: T): Promise<void> {
+  send(event: DomainCommand): Promise<void> {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
-      const json = this.codec.encode(event);
+      const json = this.encoder.encode(event);
       this.log.debug("WS sent: " + json);
       this.socket.send(json);
       return Promise.resolve();
