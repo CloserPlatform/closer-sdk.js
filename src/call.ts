@@ -48,7 +48,7 @@ export abstract class Call implements wireEntities.Call {
   public orgId: proto.ID;
 
   protected api: ArtichokeAPI;
-  protected events: EventHandler<DomainEvent>;
+  protected events: EventHandler;
 
   private log: Logger;
   protected pool: RTCPool;
@@ -64,7 +64,7 @@ export abstract class Call implements wireEntities.Call {
 
   public abstract readonly callType: callType.CallType;
 
-  constructor(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler<DomainEvent>,
+  constructor(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
               api: ArtichokeAPI, stream?: MediaStream) {
     this.id = call.id;
     this.created = call.created;
@@ -274,7 +274,7 @@ export class BusinessCall extends GroupCall {
   public readonly callType: callType.CallType = callType.CallType.BUSINESS;
 }
 
-export function createCall(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler<DomainEvent>,
+export function createCall(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
                            api: ArtichokeAPI, stream?: MediaStream): Call {
   if (call.direct) {
     return new DirectCall(call, config, log, events, api, stream);
