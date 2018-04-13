@@ -2,7 +2,6 @@ import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
 import { createMessage, Message } from "./message";
-import { DomainEvent } from "./protocol/events/domain-event";
 import { roomEvents } from "./protocol/events/room-events";
 import { ID } from "./protocol/protocol";
 import * as proto from "./protocol/protocol";
@@ -41,7 +40,7 @@ export abstract class Room implements wireEntities.Room {
   public marks: { [type: string]: proto.Timestamp };
 
   private log: Logger;
-  protected events: EventHandler<DomainEvent>;
+  protected events: EventHandler;
   protected api: ArtichokeAPI;
 
   protected onTextMessageCallback: Callback<roomEvents.MessageSent>;
@@ -49,7 +48,7 @@ export abstract class Room implements wireEntities.Room {
 
   public abstract readonly roomType: roomType.RoomType;
 
-  constructor(room: wireEntities.Room, log: Logger, events: EventHandler<DomainEvent>, api: ArtichokeAPI) {
+  constructor(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = room.id;
     this.name = room.name;
     this.created = room.created;
@@ -164,7 +163,7 @@ export class GroupRoom extends Room {
   private onLeftCallback: Callback<roomEvents.Left>;
   private onInvitedCallback: Callback<roomEvents.Invited>;
 
-  constructor(room: wireEntities.Room, log: Logger, events: EventHandler<DomainEvent>, api: ArtichokeAPI) {
+  constructor(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     super(room, log, events, api);
 
     this.onLeftCallback = (e: roomEvents.Left) => { /* nothing */ };
@@ -234,8 +233,7 @@ export class BusinessRoom extends GroupRoom {
   public readonly roomType: roomType.RoomType = roomType.RoomType.BUSINESS;
 }
 
-export function createRoom(room: wireEntities.Room, log: Logger,
-                           events: EventHandler<DomainEvent>, api: ArtichokeAPI): Room {
+export function createRoom(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): Room {
   if (room.direct) {
     return new DirectRoom(room, log, events, api);
   } else if (room.orgId) {
