@@ -1,6 +1,7 @@
 import { DomainCommand } from "./domain-command";
 
 export namespace roomCommand {
+
   export abstract class RoomCommand implements DomainCommand {
     protected constructor(roomId: string, tag: string) {
       this.roomId = roomId;
@@ -9,6 +10,7 @@ export namespace roomCommand {
 
     readonly roomId: string;
     readonly tag: string;
+    readonly __discriminator__ = "domainCommand";
   }
 
   export class SendMessage extends RoomCommand {
@@ -21,7 +23,24 @@ export namespace roomCommand {
     }
 
     readonly body: string;
-    readonly ref: string | undefined;
+    ref: string | undefined;
+  }
+
+  export class SendCustomMessage extends RoomCommand {
+    static readonly tag = "room_send_custom_message";
+
+    constructor(roomId: string, body: string, subtag: string, context: Object, ref?: string) {
+      super(roomId, SendCustomMessage.tag);
+      this.body = body;
+      this.ref = ref;
+      this.subtag = subtag;
+      this.context = context;
+    }
+
+    readonly body: string;
+    ref: string | undefined;
+    readonly context: Object;
+    readonly subtag: string;
   }
 
   export class SendTyping extends RoomCommand {

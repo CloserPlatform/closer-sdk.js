@@ -1,16 +1,7 @@
-import { ID, Type } from "./protocol/protocol";
-
-export interface EventEntity {
-  id?: ID;
-  type: Type;
-}
-
-export interface Encoder<T extends EventEntity> {
+export interface Encoder<T> {
   encode(value: T): string;
 }
 
-export interface Decoder<T extends EventEntity> {
+export interface Decoder<T> {
   decode(data: string): T;
 }
-
-export interface Codec<T extends EventEntity> extends Encoder<T>, Decoder<T> {}

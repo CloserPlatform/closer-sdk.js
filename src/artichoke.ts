@@ -3,6 +3,7 @@ import { Call, createCall, DirectCall, GroupCall } from "./call";
 import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
+import { serverCommands } from "./protocol/commands/server-command";
 import { callEvents } from "./protocol/events/call-events";
 import { chatEvents } from "./protocol/events/chat-events";
 import { DomainEvent } from "./protocol/events/domain-event";
@@ -42,7 +43,7 @@ export class Artichoke {
     });
 
     events.onEvent(serverEvents.OutputHeartbeat.tag, (hb: serverEvents.OutputHeartbeat) => {
-      this.api.send(hb);
+      this.api.send(new serverCommands.InputHeartbeat(hb.timestamp));
       if (this.heartbeatTimeout) {
         this.heartbeatTimeout.bump();
       }

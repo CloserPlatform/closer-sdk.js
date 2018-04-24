@@ -10,6 +10,7 @@ export namespace chatEvents {
 
     readonly eventId: string;
     readonly tag: string;
+    readonly __discriminator__ = "domainEvent";
   }
 
   export interface NormalizedEvent {

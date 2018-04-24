@@ -1,4 +1,3 @@
-import { DomainCommand } from "../commands/domain-command";
 import { DomainEvent } from "./domain-event";
 
 export namespace roomEvents {
@@ -25,6 +24,7 @@ export namespace roomEvents {
     readonly authorId: string;
     readonly timestamp: number;
     readonly tag: string;
+    readonly __discriminator__ = "domainEvent";
   }
 
   export class Created extends RoomEvent {
@@ -84,15 +84,17 @@ export namespace roomEvents {
   export class CustomMessageSent extends RoomEvent {
     static readonly tag = "room_custom_message_sent";
 
-    constructor(roomId: string, authorId: string, message: string, messageId: string, tag: string, context: Object,
+    constructor(roomId: string, authorId: string, message: string, messageId: string, subtag: string, context: Object,
                 timestamp: number) {
-      super(roomId, authorId, timestamp, tag);
+      super(roomId, authorId, timestamp, CustomMessageSent.tag);
 
+      this.subtag = subtag;
       this.message = message;
       this.messageId = messageId;
       this.context = context;
     }
 
+    readonly subtag: string;
     readonly message: string;
     readonly messageId: string;
     readonly context: Object;

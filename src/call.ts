@@ -1,9 +1,7 @@
 import { ArtichokeAPI, CallReason } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { createMessage, Message } from "./message";
 import { callEvents } from "./protocol/events/call-events";
-import { DomainEvent } from "./protocol/events/domain-event";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
 import {
@@ -184,10 +182,8 @@ export abstract class Call implements wireEntities.Call {
     return Promise.resolve(this.users);
   }
 
-  getMessages(): Promise<Array<Message>> {
-    return this.api.getCallHistory(this.id).then((msgs) => msgs.map((m) => {
-      return createMessage(m, this.log, this.events, this.api);
-    }));
+  getMessages(): Promise<Array<callEvents.CallEvent>> {
+    return this.api.getCallHistory(this.id);
   }
 
   answer(stream: MediaStream): Promise<void> {

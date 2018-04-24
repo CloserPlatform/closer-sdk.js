@@ -1,7 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { createMessage, Message } from "./message";
+import { errorEvents } from "./protocol/events/error-events";
 import { roomEvents } from "./protocol/events/room-events";
 import { ID } from "./protocol/protocol";
 import * as proto from "./protocol/protocol";
@@ -72,18 +72,17 @@ export abstract class Room implements wireEntities.Room {
     });
   }
 
-  getLatestMessages(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<Message>> {
+  getLatestMessages(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
     return this.doGetHistory(this.api.getRoomHistoryLast(this.id, count || 100, filter));
   }
 
-  getMessages(offset: number, limit: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<Message>> {
+  getMessages(offset: number, limit: number,
+              filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
     return this.doGetHistory(this.api.getRoomHistoryPage(this.id, offset, limit, filter));
   }
 
-  private doGetHistory(p: Promise<proto.Paginated<wireEntities.Message>>) {
-    return this.wrapPagination(p, (m: Message) => {
-      return createMessage(m, this.log, this.events, this.api);
-    });
+  private doGetHistory(p: Promise<proto.Paginated<roomEvents.RoomEvent>>) {
+    return this.wrapPagination(p, (m: roomEvents.RoomEvent) => m);
   }
 
   private wrapPagination<T, U>(p: Promise<proto.Paginated<T>>, f: TransferFunction<T, U>): Promise<proto.Paginated<U>> {
@@ -113,16 +112,12 @@ export abstract class Room implements wireEntities.Room {
     return this.api.setMark(this.id, timestamp);
   }
 
-  send(message: string): Promise<Message> {
-    return this.api.sendMessage(this.id, message).then((m) => {
-      return createMessage(m, this.log, this.events, this.api);
-    });
+  send(message: string): Promise<roomEvents.MessageSent> {
+    return this.api.sendMessage(this.id, message);
   }
 
-  sendCustom(message: string, tag: string, context: proto.Context): Promise<Message> {
-    return this.api.sendCustom(this.id, message, tag, context).then((m) => {
-      return createMessage(m, this.log, this.events, this.api);
-    });
+  sendCustom(message: string, subtag: string, context: proto.Context): Promise<roomEvents.CustomMessageSent> {
+    return this.api.sendCustom(this.id, message, subtag, context);
   }
 
   indicateTyping(): Promise<void> {
@@ -143,8 +138,8 @@ export abstract class Room implements wireEntities.Room {
     this.onTextMessageCallback = callback;
   }
 
-  onCustom(tag: string, callback: Callback<roomEvents.CustomMessageSent>) {
-    this.onCustomCallbacks[tag] = callback;
+  onCustom(subtag: string, callback: Callback<roomEvents.CustomMessageSent>) {
+    this.onCustomCallbacks[subtag] = callback;
   }
 
   onTyping(callback: Callback<roomEvents.TypingSent>) {
@@ -186,17 +181,15 @@ export class GroupRoom extends Room {
     this.events.onConcreteEvent(roomEvents.MessageSent.tag, this.id, this.uuid, (e: roomEvents.MessageSent) => {
       this.onTextMessageCallback(e);
     });
-    // TODO: CustomMessage
-    // this.events.onConcreteEvent(roomEvents.MessageSent.tag, this.id, this.uuid, (e: roomEvents.MessageSent) => {
-    //   switch (e.tag) {
-    // default:
-    //   if (e.message.tag in this.onCustomCallbacks) {
-    //     this.onCustomCallbacks[e.message.tag](e.message);
-    //   } else {
-    //     this.events.notify(error("Invalid event", e));
-    //   }
-    // }
-    // });
+    this.events.onConcreteEvent(roomEvents.CustomMessageSent.tag, this.id, this.uuid,
+      (e: roomEvents.CustomMessageSent) => {
+        if (e.subtag in this.onCustomCallbacks) {
+          this.onCustomCallbacks[e.subtag](e);
+        } else {
+          this.events.notify(new errorEvents.Error("Unhandled cutom message with subtag: : " + e.subtag));
+        }
+      }
+    );
   }
 
   getUsers(): Promise<Array<proto.ID>> {

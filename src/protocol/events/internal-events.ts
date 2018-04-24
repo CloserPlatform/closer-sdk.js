@@ -5,6 +5,7 @@ export namespace internalEvents {
   export class ServerBecameUnreachable implements DomainEvent {
     static readonly tag = "server_became_unreachable";
     readonly tag: string = ServerBecameUnreachable.tag;
+    readonly __discriminator__ = "domainEvent";
   }
 
   export class WebsocketDisconnected implements DomainEvent {
@@ -18,6 +19,7 @@ export namespace internalEvents {
     readonly code: number;
     readonly reason: string;
     readonly tag: string = WebsocketDisconnected.tag;
+    readonly __discriminator__ = "domainEvent";
   }
 
 }

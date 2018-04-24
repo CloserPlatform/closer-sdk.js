@@ -11,6 +11,7 @@ export namespace errorEvents {
 
     readonly reason: string;
     readonly tag: string;
+    readonly __discriminator__ = "domainEvent";
   }
 
   export function isError(evt: DomainEvent): evt is errorEvents.Error {

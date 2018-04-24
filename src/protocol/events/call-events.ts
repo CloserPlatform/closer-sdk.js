@@ -22,6 +22,7 @@ export namespace callEvents {
     readonly callId: string;
     readonly timestamp: number;
     readonly tag: string;
+    readonly __discriminator__ = "domainEvent";
   }
 
   export class Created extends CallEvent {
