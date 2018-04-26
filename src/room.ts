@@ -112,6 +112,10 @@ export abstract class Room implements wireEntities.Room {
     return this.api.setMark(this.id, timestamp);
   }
 
+  setDelivered(messageId: proto.ID): Promise<void> {
+    return this.api.setDelivered(this.id, messageId, Date.now());
+  }
+
   send(message: string): Promise<roomEvents.MessageSent> {
     return this.api.sendMessage(this.id, message);
   }
