@@ -1,6 +1,7 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
+import { chatEvents } from "./protocol/events/chat-events";
 import { errorEvents } from "./protocol/events/error-events";
 import { roomEvents } from "./protocol/events/room-events";
 import { ID } from "./protocol/protocol";
@@ -116,11 +117,11 @@ export abstract class Room implements wireEntities.Room {
     return this.api.setDelivered(this.id, messageId, Date.now());
   }
 
-  send(message: string): Promise<roomEvents.MessageSent> {
+  send(message: string): Promise<chatEvents.Received> {
     return this.api.sendMessage(this.id, message);
   }
 
-  sendCustom(message: string, subtag: string, context: proto.Context): Promise<roomEvents.CustomMessageSent> {
+  sendCustom(message: string, subtag: string, context: proto.Context): Promise<chatEvents.Received> {
     return this.api.sendCustom(this.id, message, subtag, context);
   }
 

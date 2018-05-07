@@ -8,6 +8,7 @@ import { DomainCommand, encoder } from "./protocol/commands/domain-command";
 import { roomCommand } from "./protocol/commands/room-commands";
 import { rtcCommands } from "./protocol/commands/rtc-commands";
 import { callEvents } from "./protocol/events/call-events";
+import { chatEvents } from "./protocol/events/chat-events";
 import { decoder, DomainEvent } from "./protocol/events/domain-event";
 import { errorEvents } from "./protocol/events/error-events";
 import { internalEvents } from "./protocol/events/internal-events";
@@ -393,13 +394,13 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<proto.Invite, void>([this.url, this.roomPath, roomId, "invite"], proto.invite(sessionId));
   }
 
-  sendMessage(roomId: proto.ID, body: string): Promise<roomEvents.MessageSent> {
-    return this.ask<roomEvents.MessageSent>(new roomCommand.SendMessage(roomId, body));
+  sendMessage(roomId: proto.ID, body: string): Promise<chatEvents.Received> {
+    return this.ask<chatEvents.Received>(new roomCommand.SendMessage(roomId, body));
   }
 
   sendCustom(roomId: proto.ID, body: string, subtag: string,
-             context: proto.Context): Promise<roomEvents.CustomMessageSent> {
-    return this.ask<roomEvents.CustomMessageSent>(new roomCommand.SendCustomMessage(roomId, body, subtag, context));
+             context: proto.Context): Promise<chatEvents.Received> {
+    return this.ask<chatEvents.Received>(new roomCommand.SendCustomMessage(roomId, body, subtag, context));
   }
 
   sendTyping(roomId: proto.ID): Promise<void> {
