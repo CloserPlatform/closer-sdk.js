@@ -94,7 +94,10 @@ export function pushRegistration(pushId: ID): PushRegistration {
   };
 }
 
-export type HistoryFilter = Array<string>;
+export interface HistoryFilter {
+  filter: Array<string>;
+  customFilter: Array<string>;
+}
 
 export interface Paginated<T> {
   items: Array<T>;

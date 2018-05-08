@@ -366,7 +366,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
                      filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
     let endpoint = "history/last?count=" + count;
     if (filter) {
-      endpoint += filter.map((tag) => "&filter=" + tag).join("");
+      endpoint += filter.filter.map((tag) => "&filter=" + tag).join("");
+      endpoint += filter.customFilter.map((tag) => "&customFilter=" + tag).join("");
     }
     return this.getAuthPaginated<roomEvents.RoomEvent>([this.url, this.roomPath, roomId, endpoint]);
   }
@@ -377,7 +378,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
                      filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
     let endpoint = "history/page?offset=" + offset + "&limit=" + limit;
     if (filter) {
-      endpoint += filter.map((tag) => "&filter=" + tag).join("");
+      endpoint += filter.filter.map((tag) => "&filter=" + tag).join("");
+      endpoint += filter.customFilter.map((tag) => "&customFilter=" + tag).join("");
     }
     return this.getAuthPaginated<roomEvents.RoomEvent>([this.url, this.roomPath, roomId, endpoint]);
   }
