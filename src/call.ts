@@ -144,6 +144,12 @@ export abstract class Call implements wireEntities.Call {
     this.events.onConcreteEvent(callEvents.Rejected.tag, this.id, this.uuid, (e: callEvents.Rejected) => {
       this.onRejectedCallback(e);
     });
+    this.events.onConcreteEvent(callEvents.DeviceOffline.tag, this.id, this.uuid, (e: callEvents.DeviceOffline) => {
+      this.onOfflineCallback(e);
+    });
+    this.events.onConcreteEvent(callEvents.DeviceOnline.tag, this.id, this.uuid, (e: callEvents.DeviceOnline) => {
+      this.onOnlineCallback(e);
+    });
   }
 
   addStream(stream: MediaStream) {
