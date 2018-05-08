@@ -3,20 +3,10 @@ export type Type = string;
 export type ID = string;
 export type Ref = string;
 export type Timestamp = number;
-//
+
 // // Datatypes:
-// export interface Delivered extends UserTimestamp {}
-//
-// export interface Edited extends UserTimestamp {}
-//
 export type Context = any;
-// export type CallInvitationMetadata = any;
-//
-// export interface UserTimestamp {
-//   user: ID;
-//   timestamp: Timestamp;
-// }
-//
+
 // // REST API:
 export interface CreateCall {
   users: Array<ID>;
