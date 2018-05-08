@@ -93,9 +93,11 @@ export namespace callEvents {
     constructor(callId: string, authorId: string, reason: EndReason, timestamp: number) {
       super(callId, timestamp, Rejected.tag);
 
+      this.authorId = authorId;
       this.reason = reason;
     }
 
+    readonly authorId: string;
     readonly reason: EndReason;
   }
 
