@@ -418,11 +418,6 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.send(new roomCommand.ConfirmMessageDelivery(roomId, messageId, timestamp));
   }
 
-  // updateMessage(message: wireEntities.Message, timestamp: proto.Timestamp): Promise<wireEntities.Message> {
-  //   return this.postAuth<wireEntities.Message, wireEntities.Message>([this.url, this.archivePath, message.id],
-  //                                                                    message);
-  // }
-
   private getAuth<Response>(path: Array<string>): Promise<Response> {
     return this.get<Response>(path, this.apiHeaders.getHeaders());
   }

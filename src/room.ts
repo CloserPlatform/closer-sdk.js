@@ -143,6 +143,10 @@ export abstract class Room implements wireEntities.Room {
     this.onTextMessageCallback = callback;
   }
 
+  onMessageDelivered(callback: Callback<roomEvents.MessageDelivered>) {
+    this.events.onConcreteEvent(roomEvents.MessageDelivered.tag, this.id, this.uuid, callback);
+  }
+
   onCustom(subtag: string, callback: Callback<roomEvents.CustomMessageSent>) {
     this.onCustomCallbacks[subtag] = callback;
   }
