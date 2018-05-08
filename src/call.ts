@@ -95,7 +95,6 @@ export abstract class Call implements wireEntities.Call {
     this.onOfflineCallback = (e: callEvents.DeviceOffline) => { /* Do nothing */ };
     this.onOnlineCallback = (e: callEvents.DeviceOnline) => { /* Do nothing */ };
     this.onJoinedCallback = (e: callEvents.Joined) => { /* Do nothing */ };
-    this.onTransferredCallback = (e: callEvents.CallHandledOnDevice) => { /* Do nothing */ };
     this.onInvitedCallback = (e: callEvents.Invited) => { /* Do nothing */ };
     this.onAnsweredCallback = (e: callEvents.Answered) => { /* Do nothing */ };
     this.onRejectedCallback = (e: callEvents.Rejected) => { /* Do nothing */ };
@@ -123,13 +122,6 @@ export abstract class Call implements wireEntities.Call {
       this.pool.create(e.authorId);
       this.onJoinedCallback(e);
     });
-    this.events.onConcreteEvent(callEvents.CallHandledOnDevice.tag, this.id, this.uuid,
-      (e: callEvents.CallHandledOnDevice) => {
-        this.pool.destroy(e.authorId);
-        this.pool.create(e.authorId);
-        this.onTransferredCallback(e);
-      }
-    );
     this.events.onConcreteEvent(callEvents.Left.tag, this.id, this.uuid, (e: callEvents.Left) => {
       this.users = this.users.filter((u) => u !== e.authorId);
       this.pool.destroy(e.authorId);
@@ -233,10 +225,6 @@ export abstract class Call implements wireEntities.Call {
 
   onJoined(callback: Callback<callEvents.Joined>) {
     this.onJoinedCallback = callback;
-  }
-
-  onTransferred(callback: Callback<callEvents.CallHandledOnDevice>) {
-    this.onTransferredCallback = callback;
   }
 
   onActiveDevice(callback: Callback<callEvents.CallHandledOnDevice>) {
