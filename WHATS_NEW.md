@@ -1,2 +1,0 @@
-### Added
-* gitlab-ci configuration
