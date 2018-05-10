@@ -71,6 +71,15 @@ export abstract class Room implements wireEntities.Room {
     this.events.onConcreteEvent(roomEvents.MessageSent.tag, this.id, this.uuid, (e: roomEvents.MessageSent) => {
       this.onTextMessageCallback(e);
     });
+    this.events.onConcreteEvent(roomEvents.CustomMessageSent.tag, this.id, this.uuid,
+      (e: roomEvents.CustomMessageSent) => {
+        if (e.subtag in this.onCustomCallbacks) {
+          this.onCustomCallbacks[e.subtag](e);
+        } else {
+          this.events.notify(new errorEvents.Error("Unhandled custom message with subtag: : " + e.subtag));
+        }
+      }
+    );
   }
 
   getLatestMessages(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
@@ -195,7 +204,7 @@ export class GroupRoom extends Room {
         if (e.subtag in this.onCustomCallbacks) {
           this.onCustomCallbacks[e.subtag](e);
         } else {
-          this.events.notify(new errorEvents.Error("Unhandled cutom message with subtag: : " + e.subtag));
+          this.events.notify(new errorEvents.Error("Unhandled custom message with subtag: : " + e.subtag));
         }
       }
     );

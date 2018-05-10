@@ -1,15 +1,17 @@
 import { ArtichokeAPI } from "./api";
 import { EventHandler } from "./events";
 import {apiKey, config, log, sessionId } from "./fixtures.spec";
-import { Event } from "./protocol/events";
-import * as proto from "./protocol/protocol";
+import { chatEvents } from "./protocol/events/chat-events";
+import { decoder } from "./protocol/events/domain-event";
+import { errorEvents } from "./protocol/events/error-events";
+import { roomEvents } from "./protocol/events/room-events";
 import * as wireEntities from "./protocol/wire-entities";
-import { actionTypes, codec, eventTypes, Invitee, marked, Reason, typing } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
 
 import RoomType = roomType.RoomType;
+import NormalizedEvent = chatEvents.NormalizedEvent;
+import EndReason = roomEvents.EndReason;
 
-const actionId = "567";
 const roomId = "123";
 const alice = "321";
 const bob = "456";
@@ -18,19 +20,8 @@ const msg1 = "2323";
 const msg2 = "1313";
 const msg3 = "4545";
 
-function msg(id: string): wireEntities.Message {
-  return {
-    type: "message",
-    id,
-    body: "Hi!",
-    tag: "TEXT_MESSAGE",
-    context: {
-      payload: "{\"key\": \"value\"}"
-    },
-    userId: alice,
-    channel: roomId,
-    timestamp: 123,
-  };
+function msg(id: string, body?: string): roomEvents.MessageSent {
+  return new roomEvents.MessageSent(roomId, alice, body ? body : "Hi!", id, 123);
 }
 
 class APIMock extends ArtichokeAPI {
@@ -85,9 +76,16 @@ class APIMock extends ArtichokeAPI {
   }
 
   sendMessage(id, body) {
-    let m = msg(msg3);
-    m.body = body;
-    return Promise.resolve(m);
+    const m = msg(msg3, body);
+    const n: NormalizedEvent = {
+      id: m.messageId,
+      authorId: m.authorId,
+      channelId: m.roomId,
+      tag: m.tag,
+      data: {message: m.message},
+      timestamp: m.timestamp,
+    };
+    return Promise.resolve(new chatEvents.Received(m.messageId, n));
   }
 
   setMark(id, timestamp) {
@@ -124,13 +122,13 @@ function makeRoom(roomType: RoomType) {
 
 ["DirectRoom", "GroupRoom"].forEach((d) => {
   describe(d, () => {
-    let events;
-    let api;
-    let room;
+    let events: EventHandler;
+    let api: APIMock;
+    let room: Room;
     let uid;
 
     beforeEach(() => {
-      events = new EventHandler(log, codec);
+      events = new EventHandler(log, decoder);
       api = new APIMock();
       const roomType = d === "DirectRoom" ? RoomType.DIRECT : RoomType.GROUP;
       room = createRoom(makeRoom(roomType), log, events, api);
@@ -155,49 +153,35 @@ function makeRoom(roomType: RoomType) {
 
     it("should run a callback on typing indication", (done) => {
       room.onTyping((msg) => {
-        expect(msg.user).toBe(chad);
+        expect(msg.authorId).toBe(chad);
         done();
       });
 
-      events.notify(typing(room.id, chad, Date.now()));
+      events.notify(new roomEvents.TypingSent(room.id, chad, Date.now()));
     });
 
     it("should run a callback on incoming message", (done) => {
       room.onMessage((msg) => {
-        expect(msg.userId).toBe(chad);
+        expect(msg.authorId).toBe(chad);
         done();
       });
 
-      let m = msg(msg1);
-      m.channel = room.id;
-      m.userId = chad;
-      events.notify({
-        type: eventTypes.ROOM_MESSAGE,
-        id: room.id,
-        message: m
-      } as Event);
+      const m = new roomEvents.MessageSent(roomId, chad, "Hi!", msg1, 123);
+      events.notify(m);
     });
 
     it("should run a callback on incoming custom message", (done) => {
       room.onCustom("json", (msg) => {
-        expect(msg.userId).toBe(chad);
+        expect(msg.authorId).toBe(chad);
         done();
       });
 
-      let m = msg(msg1);
-      m.tag = "json"
-      m.channel = room.id;
-      m.userId = chad;
-
-      events.notify({
-        type: eventTypes.ROOM_MESSAGE,
-        id: room.id,
-        message: m
-      } as Event);
+      const m = new roomEvents.CustomMessageSent(roomId, chad, "Hi!", msg1, "json", {}, 123);
+      events.notify(m);
     });
 
     it("should run a callback on incoming mark", (done) => {
-      let t = Date.now();
+      const t = Date.now();
 
       room.onMarked((msg) => {
         expect(msg.timestamp).toBe(t);
@@ -207,13 +191,13 @@ function makeRoom(roomType: RoomType) {
         });
       });
 
-      events.notify(marked(room.id, uid, t));
+      events.notify(new roomEvents.MarkSent(room.id, uid, t));
     });
 
     // FIXME These should be moved to integration tests:
     it("should retrieve history", (done) => {
       room.getLatestMessages().then((msgs) => {
-        let ids = msgs.items.map((m) => m.id);
+        const ids = msgs.items.map((m: roomEvents.MessageSent) => m.messageId);
         expect(ids).toContain(msg1);
         expect(ids).toContain(msg2);
         done();
@@ -228,7 +212,7 @@ function makeRoom(roomType: RoomType) {
 
     it("should allow sending messages", (done) => {
       room.send("hello").then((msg) => {
-        expect(msg.body).toBe("hello");
+        expect((msg.message.data as any).message).toBe("hello");
         done();
       });
     });
@@ -241,7 +225,7 @@ describe("DirectRoom", () => {
   let room;
 
   beforeEach(() => {
-    events = new EventHandler(log, codec);
+    events = new EventHandler(log, decoder);
     api = new APIMock();
     room = createRoom(makeRoom(RoomType.DIRECT), log, events, api) as DirectRoom;
   });
@@ -255,28 +239,28 @@ describe("DirectRoom", () => {
 });
 
 describe("GroupRoom", () => {
-  let events;
-  let api;
-  let room;
+  let events: EventHandler;
+  let api: APIMock;
+  let room: GroupRoom;
 
   beforeEach(() => {
-    events = new EventHandler(log, codec);
+    events = new EventHandler(log, decoder);
     api = new APIMock();
     room = createRoom(makeRoom(RoomType.GROUP), log, events, api) as GroupRoom;
   });
 
   it("should maintain the user list", (done) => {
-    events.onEvent(eventTypes.ERROR, (error) => done.fail());
+    events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
     room.onJoined((joined) => {
-      expect(joined.userId).toBe(bob);
+      expect(joined.authorId).toBe(bob);
 
       room.getUsers().then((users1) => {
         expect(users1).toContain(bob);
         expect(users1).toContain(alice);
 
         room.onLeft((left) => {
-          expect(left.userId).toBe(alice);
+          expect(left.authorId).toBe(alice);
 
           room.getUsers().then((users2) => {
             expect(users2).toContain(bob);
@@ -285,104 +269,40 @@ describe("GroupRoom", () => {
           });
         });
 
-        events.notify({
-          type: eventTypes.ROOM_MESSAGE,
-          id: room.id,
-          message: {
-            type: "message",
-            tag: actionTypes.ROOM_LEFT,
-            id: actionId,
-            room: room.id,
-            userId: alice,
-            context: {
-              reason: "no reason"
-            },
-            timestamp: Date.now()
-          }
-        } as Event);
+        events.notify(new roomEvents.Left(room.id, alice, EndReason.Terminated, Date.now()));
       });
     });
 
-    events.notify({
-      type: eventTypes.ROOM_MESSAGE,
-      id: room.id,
-      message: {
-        type: "message",
-        tag: actionTypes.ROOM_JOINED,
-        id: actionId,
-        room: room.id,
-        userId: bob,
-        timestamp: Date.now()
-      }
-    } as Event);
+    events.notify(new roomEvents.Joined(room.id, bob, Date.now()));
   });
 
   it("should run callback on room joined", (done) => {
     room.onJoined((msg) => {
-      expect(msg.userId).toBe(alice);
+      expect(msg.authorId).toBe(alice);
       done();
     });
 
-    events.notify({
-      type: eventTypes.ROOM_MESSAGE,
-      id: room.id,
-      message: {
-        type: "message",
-        tag: actionTypes.ROOM_JOINED,
-        id: actionId,
-        room: room.id,
-        userId: alice,
-        timestamp: Date.now()
-      }
-    } as Event);
+    events.notify(new roomEvents.Joined(room.id, alice, Date.now()));
   });
 
   it("should run callback on room left", (done) => {
     room.onLeft((msg) => {
-      expect(msg.userId).toBe(alice);
-      expect((msg.context as Reason).reason).toBe("reason");
+      expect(msg.authorId).toBe(alice);
+      expect(msg.endReason).toBe(EndReason.Terminated);
       done();
     });
 
-    events.notify({
-      type: eventTypes.ROOM_MESSAGE,
-      id: room.id,
-      message: {
-        type: "message",
-        tag: actionTypes.ROOM_LEFT,
-        id: actionId,
-        room: room.id,
-        userId: alice,
-        context: {
-          reason: "reason"
-        },
-        timestamp: Date.now()
-      }
-    } as Event);
+    events.notify(new roomEvents.Left(room.id, alice, EndReason.Terminated, Date.now()));
   });
 
   it("should run callback on room invite", (done) => {
     room.onInvited((msg) => {
-      expect(msg.userId).toBe(alice);
-      expect((msg.context as Invitee).invitee).toBe(bob);
+      expect(msg.authorId).toBe(alice);
+      expect(msg.invitee).toBe(bob);
       done();
     });
 
-    events.notify({
-      type: eventTypes.ROOM_MESSAGE,
-      id: room.id,
-      message: {
-        type: "message",
-        tag: actionTypes.ROOM_INVITED,
-        id: actionId,
-        room: room.id,
-        userId: alice,
-        context: {
-          invitee: bob
-        },
-        timestamp: Date.now()
-      }
-    } as Event);
+    events.notify(new roomEvents.Invited(room.id, alice, bob, Date.now()));
   });
 
   // FIXME These should be moved to integration tests:
@@ -403,7 +323,7 @@ describe("GroupRoom", () => {
 });
 
 describe("GroupRoom, BusinessRoom, DirectRoom", () => {
-  const events = new EventHandler(log, codec);
+  const events = new EventHandler(log, decoder);
   const api = new APIMock();
 
   it("should have proper roomType field defined", (done) => {
