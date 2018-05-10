@@ -1,0 +1,57 @@
+stages:
+  - test
+  - bump
+  - publish
+
+test:
+  only:
+    - branches
+  script:
+    - npm install
+    - npm run test:ci
+  stage: test
+  tags:
+    - shell
+
+up_to_date:
+  except:
+    - master
+  only:
+    - branches
+  script:
+    - up-to-date
+  stage: test
+  tags:
+    - docker
+
+whats_new:
+  except:
+    - master
+  only:
+    - branches
+  script:
+    - whats_new
+  stage: test
+  tags:
+    - docker
+
+
+bump_version:
+  only:
+    - master
+  script:
+    - bump2
+  stage: bump
+  tags:
+    - docker
+
+
+publish:
+  only:
+    - tags
+  script:
+    - VERSION=$(cat package.json | grep version | head -1 | awk -F':' '{ print $2 }' | sed 's/[",\t ]//g')
+    - npm publish
+  stage: publish
+  tags:
+    - shell
