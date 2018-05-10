@@ -8,7 +8,7 @@ test:
     - branches
   script:
     - npm install
-    - npm run build
+    - npm run test:ci
   stage: test
   tags:
     - shell
