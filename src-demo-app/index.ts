@@ -1,5 +1,8 @@
 import * as RatelSDK from "../";
 import {CallReason} from "../src/api";
+import { GroupCall } from "../src/call";
+import { roomEvents } from "../src/main";
+import { BusinessRoom } from "../src/room";
 import {displayVersion} from "./version";
 import * as View from "./view";
 
@@ -144,7 +147,7 @@ $(function () {
     function makeReceiver(room, text) {
         function receive(msg, className, sender, body) {
             room.getMark().then(function (mark) {
-                if (msg.timestamp > mark) {
+                if (msg.p > mark) {
                     if (!chatboxes[room.id].isActive()) {
                         chatboxes[room.id].bumpUnread();
                     } else {
@@ -174,24 +177,26 @@ $(function () {
             message(msg) {
                 let d = !!msg.delivered ? " delivered" : "";
                 let e = !!msg.edited ? " edited" : "";
-                return receive(msg, "message" + d + e, getUserNickname(msg.user), msg.body);
+                return receive(msg, "message" + d + e, getUserNickname(msg.user), msg.message);
             },
             metadata(meta) {
                 return receive(meta, "metadata", getUserNickname(meta.user), View.makeEmbed(meta));
             },
             action(action) {
-                let target = (action.tag === "ROOM_INVITED" ? getUserNickname(action.context.invitee) : "the room");
-                let tags = {
-                    "ROOM_JOINED": "joined",
-                    "ROOM_LEFT": "left",
-                    "ROOM_INVITED": "invited"
+                const target = (action.tag === roomEvents.Invited.tag ?
+                  getUserNickname(action.context.invitee) : "the room");
+
+              const tags = {
+                    [roomEvents.Joined.tag]: "joined",
+                    [roomEvents.Left.tag]: "left",
+                    [roomEvents.Invited.tag]: "invited",
                 };
                 return receive(action, "info", "", "User " + getUserNickname(action.user) + " " + tags[action.tag] +
                     " " + target + ".");
             },
             unknown(msg) {
                 return receive(msg, "message", getUserNickname(msg.user), "UNKNOWN MESSAGE: " + msg.tag + " - " +
-                    msg.body + " - " + JSON.stringify(msg.context));
+                    msg.body + " - " + JSON.stringify(msg));
             }
         };
     }
@@ -241,15 +246,15 @@ $(function () {
         room.onCustom("AGENT", receive.metadata);
 
         room.onMessage(function (msg) {
-            msg.markDelivered();
-            msg.onEdit(editLine);
+            // msg.markDelivered();
+            // msg.onEdit(editLine);
             receive.message(msg);
         });
 
         let input = View.makeInputField("Send!", function (_input) {
             room.send(_input).then(function (msg) {
                 msg.onDelivery(deliverLine);
-                msg.onEdit(editLine);
+                // msg.onEdit(editLine);
                 console.log("Received ack for message: ", msg);
             }).catch(function (error) {
                 console.log("Sending message failed: ", error);
@@ -423,8 +428,8 @@ $(function () {
         room.onInvited(receive.action);
 
         room.onMessage(function (msg) {
-            msg.markDelivered();
-            msg.onEdit(editLine);
+            // msg.markDelivered();
+            // msg.onEdit(editLine);
             receive.message(msg);
             _users.deactivate(msg.user);
         });
@@ -542,20 +547,20 @@ $(function () {
     function addRoom(room, session) {
         function doReceive(msg, chatbox) {
             switch (msg.tag) {
-                case "TEXT_MESSAGE":
-                    msg.markDelivered();
-                    msg.onEdit(editLine);
+                case roomEvents.MessageSent.tag:
+                    room.setMark(msg.timestamp);
+                    // msg.onEdit(editLine);
                     chatbox.receive.message(msg);
                     break;
                 case "MEDIA":
                     chatbox.receive.media(msg);
                     break;
-                case "AGENT":
+                case roomEvents.CustomMessageSent.tag:
                     chatbox.receive.metadata(msg);
                     break;
-                case "ROOM_JOINED":
-                case "ROOM_LEFT":
-                case "ROOM_INVITED":
+                case roomEvents.Joined.tag:
+                case roomEvents.Left.tag:
+                case roomEvents.Invited.tag:
                     chatbox.receive.action(msg);
                     break;
                 default:
@@ -688,9 +693,9 @@ $(function () {
 
         call.onLeft(function (m) {
             console.log("User left the call: ", m);
-            delete streams[m.userId];
+            delete streams[m.authorId];
             renderStreams();
-            usersEl.remove(m.userId);
+            usersEl.remove(m.authorId);
         });
 
         call.onOffline(function (m) {
@@ -703,7 +708,7 @@ $(function () {
 
         call.onJoined(function (m) {
             console.log("User joined the call: ", m);
-            usersEl.add(m.userId);
+            usersEl.add(m.authorId);
         });
 
         call.onAnswered(function (m) {
@@ -718,10 +723,6 @@ $(function () {
             console.log("Call ended: ", e.reason);
             stealSwitch.hide();
             endCall("ended");
-        });
-
-        call.onTransferred(function (e) {
-            console.log("Call was transferred to another device: ", e);
         });
 
         call.onActiveDevice(function (e) {
@@ -812,7 +813,7 @@ $(function () {
             input = View.makeDiv();
         } else {
             (call as RatelSDK.BusinessCall).onInvited(function (m) {
-                console.log(getUserNickname(m.userId) + " invited someone to join the call: ", m);
+                console.log(getUserNickname(m.authorId) + " invited someone to join the call: ", m);
             });
 
             input = View.makeInputField("Invite!", function (_userPhone) {
@@ -1112,28 +1113,25 @@ $(function () {
                 });
 
                 session.chat.onRoomCreated(function (_m) {
-                    console.log("Room created: ", _m.room);
+                    console.log("Room created: ", _m.roomId);
                 });
 
                 session.chat.onRoomInvitation(function (invitation) {
                     console.log("Received room invitation: ", invitation);
-                    if (!invitation.room.direct) {
-                        const line =
-                            getUserNickname(invitation.inviter) + " invited you to join room " + invitation.room.name;
-                        View.confirmModal("Room invitation", line, "Join", function () {
-                            console.log("Joining room " + invitation.room.name);
-                            (invitation.room as RatelSDK.BusinessRoom).join();
-                            addRoom(invitation.room, session).switchTo();
-                        }, "Nope", function () {
-                            console.log("Rejecting invitation...");
+                    const line = getUserNickname(invitation.authorId) + " invited you to join room ";
+                    View.confirmModal("Room invitation", line, "Join", function () {
+                        console.log("Joining room ");
+                        session.chat.getRoom(invitation.roomId).then((r: RatelSDK.BusinessRoom) => {
+                          r.join();
+                          addRoom(r, session).switchTo();
                         });
-                    } else {
-                        addRoom(invitation.room, session);
-                    }
+                    }, "Nope", function () {
+                        console.log("Rejecting invitation...");
+                    });
                 });
 
                 session.chat.onCallCreated(function (_m) {
-                    console.log("Call created: ", _m.call);
+                    console.log("Call created: ", _m.callId);
                 });
 
                 session.chat.onCallInvitation(function (callInvitation) {
@@ -1141,37 +1139,36 @@ $(function () {
                     let closeModal = function () {
                         return undefined;
                     };
-                    callInvitation.call.onEnd(function (e) {
-                        console.log("Call ended: ", e.reason);
-                        stealSwitch.hide();
-                        closeModal();
-                    });
-                    callInvitation.call.onActiveDevice(function (e) {
-                        console.log("Call in progress on another device: ", e);
-                        closeModal();
-                        enableStealSwitch(callInvitation.call);
-                    });
-                    let line = "";
-                    if (callInvitation.call.direct) {
-                        line = getUserNickname(callInvitation.inviter) + " is calling, answer?";
-                    } else {
-                        line = getUserNickname(callInvitation.inviter) + " " +
-                            "invites you to join a conference call with " +
-                            callInvitation.call.users.map(getUserNickname);
-                    }
-                    closeModal = View.confirmModal("Call invitation", line, "Answer", function () {
-                        createStream(function (stream) {
-                            let callbox = addCall(callInvitation.call, stream, {
-                                "video": true,
-                                "audio": true
+                    session.chat.getCall(callInvitation.callId)
+                      .then((call) => {
+                        call.onEnd(function (e) {
+                          console.log("Call ended: ", e.reason);
+                          stealSwitch.hide();
+                          closeModal();
+                        });
+                        call.onActiveDevice(function (e) {
+                          console.log("Call in progress on another device: ", e);
+                          closeModal();
+                          enableStealSwitch(call);
+                        });
+
+                        const line = getUserNickname(callInvitation.authorId) + " " +
+                          "invites you to join a conference call with " +
+                          call.users.map(getUserNickname);
+                        closeModal = View.confirmModal("Call invitation", line, "Answer", function () {
+                          createStream(function (stream) {
+                            let callbox = addCall(call, stream, {
+                              "video": true,
+                              "audio": true
                             }, session);
                             callbox.answer();
                             callbox.switchTo();
+                          });
+                        }, "Reject", function () {
+                          console.log("Rejecting call...");
+                          call.reject(CallReason.CallRejected);
                         });
-                    }, "Reject", function () {
-                        console.log("Rejecting call...");
-                        callInvitation.call.reject(CallReason.CallRejected);
-                    });
+                      });
                 });
             });
 

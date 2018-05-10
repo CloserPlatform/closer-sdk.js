@@ -315,7 +315,7 @@ export function makeControls(id, contents): JQuery {
 }
 
 export function makeEmbed(object): JQuery | string {
-    switch (object.tag) {
+    switch (object.subtag) {
         case "MEDIA":
             switch (object.context.mimeType) {
                 case "image/gif":
@@ -329,7 +329,7 @@ export function makeEmbed(object): JQuery | string {
             }
 
         case "AGENT":
-            return $("<span>").text("User agent: " + object.context.agent);
+            return $("<span>").text("User agent: " + JSON.stringify(object.context));
 
         default:
             return "";
