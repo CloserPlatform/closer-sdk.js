@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.6.0 - 2018-05-14
+
+### Changed
+- protocol for WebSockets is extracted to `artichoke-protocol` project
+- every input message is a `Command` and every output is an `Event` 
+- improved semantic of messages names: `Command` names are in present tense, `Event` names in past tense
+- normalize/flatten events. Don't nest message inside a message
+- change schema of messages
+- change the way of filtering messages via REST API (new `customFilter` query parameter)
+
 ## 0.5.27 - 2018-05-10
 
 ### Added
