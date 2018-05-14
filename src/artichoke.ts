@@ -3,11 +3,16 @@ import { Call, createCall, DirectCall, GroupCall } from "./call";
 import { ChatConfig } from "./config";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import * as protoEvents from "./protocol/events";
+import { serverCommands } from "./protocol/commands/server-command";
+import { callEvents } from "./protocol/events/call-events";
+import { chatEvents } from "./protocol/events/chat-events";
+import { DomainEvent } from "./protocol/events/domain-event";
+import { errorEvents } from "./protocol/events/error-events";
+import { internalEvents } from "./protocol/events/internal-events";
+import { roomEvents } from "./protocol/events/room-events";
+import { serverEvents } from "./protocol/events/server-events";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import * as wireEvents from "./protocol/wire-events";
-import { error, eventTypes, serverUnreachable } from "./protocol/wire-events";
 import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
 import { BumpableTimeout, wrapPromise } from "./utils";
 
@@ -15,67 +20,63 @@ export class Artichoke {
   private api: ArtichokeAPI;
   private config: ChatConfig;
   private log: Logger;
-  private events: EventHandler<wireEvents.Event>;
+  private events: EventHandler;
   private heartbeatTimeout?: BumpableTimeout;
 
-  constructor(config: ChatConfig, log: Logger, events: EventHandler<wireEvents.Event>, api: ArtichokeAPI) {
+  constructor(config: ChatConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.api = api;
     this.config = config;
     this.log = log;
     this.events = events;
 
-    // NOTE Disable some events by default.
-    const nop = (e: protoEvents.Event) => {
-      // Do nothing.
-    };
-    events.onEvent(eventTypes.ERROR, nop);
-    events.onEvent(eventTypes.CHAT_RECEIVED, nop);
-    events.onEvent(eventTypes.CHAT_DELIVERED, nop);
+    events.onEvent(errorEvents.Error.tag, (e: errorEvents.Error) => { /* do nothing */ });
+    events.onEvent(chatEvents.Received.tag, (e: chatEvents.Received) => { /* do nothing */ });
+    events.onEvent(roomEvents.MessageDelivered.tag, (e: roomEvents.MessageDelivered) => { /* do nothing */ });
 
-    events.onEvent(eventTypes.HELLO, (hello: protoEvents.Hello) => {
+    events.onEvent(serverEvents.Hello.tag, (hello: serverEvents.Hello) => {
       this.clearHeartbeatTimeout();
 
       this.heartbeatTimeout = new BumpableTimeout(
         2 * hello.heartbeatTimeout,
-        () => this.events.notify(serverUnreachable())
+        () => this.events.notify(new internalEvents.ServerBecameUnreachable())
       );
     });
 
-    events.onEvent(eventTypes.HEARTBEAT, (hb: protoEvents.Heartbeat) => {
-      this.api.send(hb);
+    events.onEvent(serverEvents.OutputHeartbeat.tag, (hb: serverEvents.OutputHeartbeat) => {
+      this.api.send(new serverCommands.InputHeartbeat(hb.timestamp));
       if (this.heartbeatTimeout) {
         this.heartbeatTimeout.bump();
       }
     });
 
-    events.onEvent(eventTypes.SERVER_UNREACHABLE, this.clearHeartbeatTimeout);
+    events.onEvent(internalEvents.ServerBecameUnreachable.tag, this.clearHeartbeatTimeout);
   }
 
   // Callbacks:
-  onConnect(callback: Callback<protoEvents.Hello>) {
-    this.events.onEvent(eventTypes.HELLO, callback);
+  onConnect(callback: Callback<serverEvents.Hello>) {
+    this.events.onEvent(serverEvents.Hello.tag, callback);
   }
 
-  onHeartbeat(callback: Callback<protoEvents.Heartbeat>) {
-    this.events.onEvent(eventTypes.HEARTBEAT, callback);
+  onHeartbeat(callback: Callback<serverEvents.OutputHeartbeat>) {
+    this.events.onEvent(serverEvents.OutputHeartbeat.tag, callback);
   }
 
-  onServerUnreachable(callback: Callback<protoEvents.ServerUnreachable>) {
-    this.events.onEvent(eventTypes.SERVER_UNREACHABLE, callback);
+  onServerUnreachable(callback: Callback<internalEvents.ServerBecameUnreachable>) {
+    this.events.onEvent(internalEvents.ServerBecameUnreachable.tag, callback);
   }
 
-  onDisconnect(callback: Callback<protoEvents.Disconnect>) {
-    this.events.onEvent(eventTypes.DISCONNECT, callback);
+  onDisconnect(callback: Callback<internalEvents.WebsocketDisconnected>) {
+    this.events.onEvent(internalEvents.WebsocketDisconnected.tag, callback);
   }
 
-  onError(callback: Callback<protoEvents.Error>) {
-    this.events.onEvent(eventTypes.ERROR, callback);
+  onError(callback: Callback<errorEvents.Error>) {
+    this.events.onEvent(errorEvents.Error.tag, callback);
   }
 
   // API:
   connect() {
-    this.api.onEvent((e: wireEvents.Event) => {
-      this.notify(protoEvents.eventUtils.upgrade(e, this.config, this.log, this.events, this.api));
+    this.api.onEvent((e: DomainEvent) => {
+      this.notify(e);
     });
 
     this.api.connect();
@@ -90,12 +91,12 @@ export class Artichoke {
   }
 
   // Call API:
-  onCallCreated(callback: Callback<protoEvents.CallCreated>) {
-    this.events.onEvent(eventTypes.CALL_CREATED, callback);
+  onCallCreated(callback: Callback<callEvents.Created>) {
+    this.events.onEvent(callEvents.Created.tag, callback);
   }
 
-  onCallInvitation(callback: Callback<protoEvents.CallInvitation>) {
-    this.events.onEvent(eventTypes.CALL_INVITATION, callback);
+  onCallInvitation(callback: Callback<callEvents.Invited>) {
+    this.events.onEvent(callEvents.Invited.tag, callback);
   }
 
   createCall(stream: MediaStream, users: Array<proto.ID>): Promise<GroupCall> {
@@ -126,12 +127,12 @@ export class Artichoke {
   }
 
   // Chat room API:
-  onRoomCreated(callback: Callback<protoEvents.RoomCreated>) {
-    this.events.onEvent(eventTypes.ROOM_CREATED, callback);
+  onRoomCreated(callback: Callback<roomEvents.Created>) {
+    this.events.onEvent(roomEvents.Created.tag, callback);
   }
 
-  onRoomInvitation(callback: Callback<protoEvents.RoomInvitation>) {
-    this.events.onEvent(eventTypes.ROOM_INVITATION, callback);
+  onRoomInvitation(callback: Callback<roomEvents.Invited>) {
+    this.events.onEvent(roomEvents.Invited.tag, callback);
   }
 
   createRoom(name: string): Promise<GroupRoom> {
@@ -169,9 +170,9 @@ export class Artichoke {
     }
   }
 
-  private notify(event: wireEvents.Event): void {
+  private notify(event: DomainEvent): void {
     this.events.notify(event, (e) =>
-      this.events.notify(error("Unhandled event: " + event.type, event))
+      this.events.notify(new errorEvents.Error("Unhandled event: " + e.tag))
     );
   }
 

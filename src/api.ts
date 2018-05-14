@@ -4,11 +4,19 @@ import { ChatConfig, RatelConfig } from "./config";
 import { Callback } from "./events";
 import { JSONWebSocket } from "./jsonws";
 import { Logger } from "./logger";
+import { DomainCommand, encoder } from "./protocol/commands/domain-command";
+import { roomCommand } from "./protocol/commands/room-commands";
+import { rtcCommands } from "./protocol/commands/rtc-commands";
+import { callEvents } from "./protocol/events/call-events";
+import { chatEvents } from "./protocol/events/chat-events";
+import { decoder, DomainEvent } from "./protocol/events/domain-event";
+import { errorEvents } from "./protocol/events/error-events";
+import { internalEvents } from "./protocol/events/internal-events";
+import { roomEvents } from "./protocol/events/room-events";
+import { serverEvents } from "./protocol/events/server-events";
 import { PushRegistration } from "./protocol/protocol";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import * as wireEvents from "./protocol/wire-events";
-import { codec, eventTypes } from "./protocol/wire-events";
 import { Thunk } from "./utils";
 
 export class HeaderValue {
@@ -48,10 +56,7 @@ export class RESTfulAPI {
       }
 
       xhttp.onerror = (err) => {
-        reject({
-          reason: "XMLHttpRequest status: " + xhttp.status,
-          type: err.type,
-        });
+        reject(new errorEvents.Error("XMLHttpRequest status: " + xhttp.status));
       };
     };
   }
@@ -127,22 +132,22 @@ export class RESTfulAPI {
 export interface PromiseResolve<T> extends Callback<T | PromiseLike<T>> {
 }
 
-export interface PromiseReject extends Callback<wireEvents.Error> {
+export interface PromiseReject extends Callback<errorEvents.Error> {
 }
 
 interface PromiseFunctions {
-  resolve: PromiseResolve<wireEvents.Event>;
+  resolve: PromiseResolve<DomainEvent>;
   reject: PromiseReject;
 }
 
 export class APIWithWebsocket extends RESTfulAPI {
-  private socket: JSONWebSocket<wireEvents.Event>;
+  private socket: JSONWebSocket;
   private promises: { [ref: string]: PromiseFunctions };
 
   constructor(log: Logger) {
     super(log);
     this.promises = {};
-    this.socket = new JSONWebSocket<wireEvents.Event>(this.log, codec);
+    this.socket = new JSONWebSocket(this.log, encoder, decoder);
   }
 
   connect(url: string) {
@@ -153,49 +158,49 @@ export class APIWithWebsocket extends RESTfulAPI {
     this.socket.disconnect();
   }
 
-  send(event: wireEvents.Event): Promise<void> {
-    return this.socket.send(event);
+  send(command: DomainCommand): Promise<void> {
+    return this.socket.send(command);
   }
 
-  ask<Response extends wireEvents.Event>(event: wireEvents.Event): Promise<Response> {
+  ask<Response extends DomainEvent>(cmd: roomCommand.SendMessage | roomCommand.SendCustomMessage): Promise<Response> {
     return new Promise<Response>((resolve, reject) => {
-      let ref = "ref" + Date.now(); // FIXME Use UUID instead.
+      const ref = "ref" + Date.now(); // FIXME Use UUID instead.
       this.promises[ref] = {
         resolve,
         reject
       };
-      event.ref = ref;
-      this.send(event).catch((e) => this.reject(ref, wireEvents.error("Ask failed", e)));
+      cmd.ref = ref;
+      this.send(cmd).catch((e) => this.reject(ref, new errorEvents.Error("Ask failed")));
     });
   }
 
-  onEvent(callback: Callback<wireEvents.Event>) {
+  onEvent(callback: Callback<DomainEvent>) {
     this.socket.onDisconnect((ev) =>
-      callback(wireEvents.disconnect(ev.code, ev.reason))
+      callback(new internalEvents.WebsocketDisconnected(ev.code, ev.reason))
     );
 
     this.socket.onError((ev) =>
-      callback(wireEvents.error("Websocket connection error.", ev))
+      callback(new errorEvents.Error("Websocket connection error." + ev))
     );
 
-    this.socket.onEvent((event: wireEvents.Event) => {
-      if (event.type === eventTypes.ERROR) {
-        this.reject(event.ref, event as wireEvents.Error);
+    this.socket.onEvent((event: DomainEvent) => {
+      if (errorEvents.isError(event)) {
+        this.reject((event as any).ref, event);
       } else {
-        this.resolve(event.ref, event);
+        this.resolve((event as any).ref, event);
       }
       callback(event);
     });
   }
 
-  private resolve(ref: proto.Ref, event: wireEvents.Event) {
+  private resolve(ref: proto.Ref, event: DomainEvent) {
     if (ref && ref in this.promises) {
       this.promises[ref].resolve(event);
       delete this.promises[ref];
     }
   }
 
-  private reject(ref: proto.Ref, error: wireEvents.Error) {
+  private reject(ref: proto.Ref, error: errorEvents.Error) {
     if (ref && ref in this.promises) {
       this.promises[ref].reject(error);
       delete this.promises[ref];
@@ -243,11 +248,11 @@ export class ArtichokeAPI extends APIWithWebsocket {
     this.wsUrl = [wsProtocol, "//", host, pathname, "/ws/", apiKey].join("");
   }
 
-  onEvent(callback: Callback<wireEvents.Event>) {
-    super.onEvent((event: wireEvents.Event) => {
+  onEvent(callback: Callback<DomainEvent>) {
+    super.onEvent((event: DomainEvent) => {
       // FIXME Apply this bandaid elsewhere.
-      if (event.type === eventTypes.HELLO) {
-        this.deviceId = (event as wireEvents.Hello).deviceId;
+      if (event.tag === serverEvents.Hello.tag) {
+        this.deviceId = (event as serverEvents.Hello).deviceId;
         this.apiHeaders.deviceId = this.deviceId;
       }
 
@@ -261,12 +266,12 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   // GroupCall API:
-  sendDescription(callId: proto.ID, sessionId: proto.ID, description: wireEvents.SDP): Promise<void> {
-    return this.send(wireEvents.rtcDescription(callId, sessionId, description));
+  sendDescription(callId: proto.ID, sessionId: proto.ID, description: RTCSessionDescriptionInit): Promise<void> {
+    return this.send(new rtcCommands.SendDescription(callId, sessionId, description));
   }
 
-  sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: wireEvents.Candidate): Promise<void> {
-    return this.send(wireEvents.rtcCandidate(callId, sessionId, candidate));
+  sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: RTCIceCandidate): Promise<void> {
+    return this.send(new rtcCommands.SendCandidate(callId, sessionId, candidate));
   }
 
   createCall(sessionIds: Array<proto.ID>): Promise<wireEntities.Call> {
@@ -294,8 +299,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath, "pending-invitation"]);
   }
 
-  getCallHistory(callId: proto.ID): Promise<Array<wireEntities.Message>> {
-    return this.getAuth<Array<wireEntities.Message>>([this.url, this.callPath, callId, "history"]);
+  getCallHistory(callId: proto.ID): Promise<Array<callEvents.CallEvent>> {
+    return this.getAuth<Array<callEvents.CallEvent>>([this.url, this.callPath, callId, "history"]);
   }
 
   getCallUsers(callId: proto.ID): Promise<Array<proto.ID>> {
@@ -358,23 +363,25 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   getRoomHistoryLast(roomId: proto.ID,
                      count: number,
-                     filter?: proto.HistoryFilter): Promise<proto.Paginated<wireEntities.Message>> {
+                     filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
     let endpoint = "history/last?count=" + count;
     if (filter) {
-      endpoint += filter.map((tag) => "&filter=" + tag).join("");
+      endpoint += filter.filter.map((tag) => "&filter=" + tag).join("");
+      endpoint += filter.customFilter.map((tag) => "&customFilter=" + tag).join("");
     }
-    return this.getAuthPaginated<wireEntities.Message>([this.url, this.roomPath, roomId, endpoint]);
+    return this.getAuthPaginated<roomEvents.RoomEvent>([this.url, this.roomPath, roomId, endpoint]);
   }
 
   getRoomHistoryPage(roomId: proto.ID,
                      offset: number,
                      limit: number,
-                     filter?: proto.HistoryFilter): Promise<proto.Paginated<wireEntities.Message>> {
+                     filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
     let endpoint = "history/page?offset=" + offset + "&limit=" + limit;
     if (filter) {
-      endpoint += filter.map((tag) => "&filter=" + tag).join("");
+      endpoint += filter.filter.map((tag) => "&filter=" + tag).join("");
+      endpoint += filter.customFilter.map((tag) => "&customFilter=" + tag).join("");
     }
-    return this.getAuthPaginated<wireEntities.Message>([this.url, this.roomPath, roomId, endpoint]);
+    return this.getAuthPaginated<roomEvents.RoomEvent>([this.url, this.roomPath, roomId, endpoint]);
   }
 
   joinRoom(roomId: proto.ID): Promise<void> {
@@ -389,31 +396,26 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.postAuth<proto.Invite, void>([this.url, this.roomPath, roomId, "invite"], proto.invite(sessionId));
   }
 
-  sendMessage(roomId: proto.ID, body: string): Promise<wireEntities.Message> {
-    return this.ask<wireEvents.ChatReceived>(wireEvents.chatSendMessage(roomId, body))
-      .then((ack) => ack.message);
+  sendMessage(roomId: proto.ID, body: string): Promise<chatEvents.Received> {
+    return this.ask<chatEvents.Received>(new roomCommand.SendMessage(roomId, body));
   }
 
-  sendCustom(roomId: proto.ID, body: string, tag: string, context: proto.Context): Promise<wireEntities.Message> {
-    return this.ask<wireEvents.ChatReceived>(wireEvents.chatSendCustom(roomId, body, tag, context))
-      .then((ack) => ack.message);
+  sendCustom(roomId: proto.ID, body: string, subtag: string,
+             context: proto.Context): Promise<chatEvents.Received> {
+    return this.ask<chatEvents.Received>(new roomCommand.SendCustomMessage(roomId, body, subtag, context));
   }
 
   sendTyping(roomId: proto.ID): Promise<void> {
-    return this.send(wireEvents.startTyping(roomId));
+    return this.send(new roomCommand.SendTyping(roomId));
   }
 
   setMark(roomId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
-    return this.send(wireEvents.mark(roomId, timestamp));
+    return this.send(new roomCommand.SendMark(roomId, timestamp));
   }
 
   // Archive API:
-  setDelivered(messageId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
-    return this.send(wireEvents.chatDelivered(messageId, timestamp));
-  }
-
-  updateMessage(message: wireEntities.Message, timestamp: proto.Timestamp): Promise<wireEntities.Message> {
-    return this.postAuth<wireEntities.Message, wireEntities.Message>([this.url, this.archivePath, message.id], message);
+  setDelivered(roomId: proto.ID, messageId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
+    return this.send(new roomCommand.ConfirmMessageDelivery(roomId, messageId, timestamp));
   }
 
   private getAuth<Response>(path: Array<string>): Promise<Response> {

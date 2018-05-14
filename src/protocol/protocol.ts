@@ -1,24 +1,13 @@
-// Common types:
-import { actionTypes } from "./wire-events";
+// // Common types:
 export type Type = string;
 export type ID = string;
 export type Ref = string;
 export type Timestamp = number;
 
-// Datatypes:
-export interface Delivered extends UserTimestamp {}
-
-export interface Edited extends UserTimestamp {}
-
+// // Datatypes:
 export type Context = any;
-export type CallInvitationMetadata = any;
 
-export interface UserTimestamp {
-  user: ID;
-  timestamp: Timestamp;
-}
-
-// REST API:
+// // REST API:
 export interface CreateCall {
   users: Array<ID>;
 }
@@ -95,7 +84,10 @@ export function pushRegistration(pushId: ID): PushRegistration {
   };
 }
 
-export type HistoryFilter = Array<string>;
+export interface HistoryFilter {
+  filter: Array<string>;
+  customFilter: Array<string>;
+}
 
 export interface Paginated<T> {
   items: Array<T>;

@@ -1,13 +1,12 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { createMessage, Message } from "./message";
-import * as protoEvents from "./protocol/events";
+import { chatEvents } from "./protocol/events/chat-events";
+import { errorEvents } from "./protocol/events/error-events";
+import { roomEvents } from "./protocol/events/room-events";
 import { ID } from "./protocol/protocol";
 import * as proto from "./protocol/protocol";
 import * as wireEntities from "./protocol/wire-entities";
-import * as wireEvents from "./protocol/wire-events";
-import { actionTypes, error, eventTypes } from "./protocol/wire-events";
 import { randomUUID, TransferFunction, UUID } from "./utils";
 
 export namespace roomType {
@@ -42,15 +41,15 @@ export abstract class Room implements wireEntities.Room {
   public marks: { [type: string]: proto.Timestamp };
 
   private log: Logger;
-  protected events: EventHandler<wireEvents.Event>;
+  protected events: EventHandler;
   protected api: ArtichokeAPI;
 
-  protected onTextMessageCallback: Callback<Message>;
-  protected onCustomCallbacks: { [tag: string]: Callback<Message> };
+  protected onTextMessageCallback: Callback<roomEvents.MessageSent>;
+  protected onCustomCallbacks: { [tag: string]: Callback<roomEvents.CustomMessageSent> };
 
   public abstract readonly roomType: roomType.RoomType;
 
-  constructor(room: wireEntities.Room, log: Logger, events: EventHandler<wireEvents.Event>, api: ArtichokeAPI) {
+  constructor(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = room.id;
     this.name = room.name;
     this.created = room.created;
@@ -62,41 +61,38 @@ export abstract class Room implements wireEntities.Room {
     this.events = events;
     this.api = api;
     this.onCustomCallbacks = {};
-    this.onTextMessageCallback = (m: Message) => {
+    this.onTextMessageCallback = (m: roomEvents.MessageSent) => {
       // Do nothing.
     };
     this.defineCallbacks();
   }
 
   protected defineCallbacks() {
-    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, this.uuid, (e: protoEvents.RoomMessage) => {
-      switch (e.message.tag) {
-      case actionTypes.TEXT_MESSAGE:
-        this.onTextMessageCallback(e.message);
-        break;
-
-      default:
-        if (e.message.tag in this.onCustomCallbacks) {
-          this.onCustomCallbacks[e.message.tag](e.message);
+    this.events.onConcreteEvent(roomEvents.MessageSent.tag, this.id, this.uuid, (e: roomEvents.MessageSent) => {
+      this.onTextMessageCallback(e);
+    });
+    this.events.onConcreteEvent(roomEvents.CustomMessageSent.tag, this.id, this.uuid,
+      (e: roomEvents.CustomMessageSent) => {
+        if (e.subtag in this.onCustomCallbacks) {
+          this.onCustomCallbacks[e.subtag](e);
         } else {
-          this.events.notify(error("Invalid event", e));
+          this.events.notify(new errorEvents.Error("Unhandled custom message with subtag: : " + e.subtag));
         }
       }
-    });
+    );
   }
 
-  getLatestMessages(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<Message>> {
+  getLatestMessages(count?: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
     return this.doGetHistory(this.api.getRoomHistoryLast(this.id, count || 100, filter));
   }
 
-  getMessages(offset: number, limit: number, filter?: proto.HistoryFilter): Promise<proto.Paginated<Message>> {
+  getMessages(offset: number, limit: number,
+              filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
     return this.doGetHistory(this.api.getRoomHistoryPage(this.id, offset, limit, filter));
   }
 
-  private doGetHistory(p: Promise<proto.Paginated<wireEntities.Message>>) {
-    return this.wrapPagination(p, (m: Message) => {
-      return createMessage(m, this.log, this.events, this.api);
-    });
+  private doGetHistory(p: Promise<proto.Paginated<roomEvents.RoomEvent>>) {
+    return this.wrapPagination(p, (m: roomEvents.RoomEvent) => m);
   }
 
   private wrapPagination<T, U>(p: Promise<proto.Paginated<T>>, f: TransferFunction<T, U>): Promise<proto.Paginated<U>> {
@@ -126,42 +122,46 @@ export abstract class Room implements wireEntities.Room {
     return this.api.setMark(this.id, timestamp);
   }
 
-  send(message: string): Promise<Message> {
-    return this.api.sendMessage(this.id, message).then((m) => {
-      return createMessage(m, this.log, this.events, this.api);
-    });
+  setDelivered(messageId: proto.ID): Promise<void> {
+    return this.api.setDelivered(this.id, messageId, Date.now());
   }
 
-  sendCustom(message: string, tag: string, context: proto.Context): Promise<Message> {
-    return this.api.sendCustom(this.id, message, tag, context).then((m) => {
-      return createMessage(m, this.log, this.events, this.api);
-    });
+  send(message: string): Promise<chatEvents.Received> {
+    return this.api.sendMessage(this.id, message);
+  }
+
+  sendCustom(message: string, subtag: string, context: proto.Context): Promise<chatEvents.Received> {
+    return this.api.sendCustom(this.id, message, subtag, context);
   }
 
   indicateTyping(): Promise<void> {
     return this.api.sendTyping(this.id);
   }
 
-  onMarked(callback: Callback<protoEvents.RoomMarked>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_MARKED, this.id, this.uuid, (mark: protoEvents.RoomMarked) => {
+  onMarked(callback: Callback<roomEvents.MarkSent>) {
+    this.events.onConcreteEvent(roomEvents.MarkSent.tag, this.id, this.uuid, (mark: roomEvents.MarkSent) => {
       if (!this.marks) {
         this.marks = {};
       }
-      this.marks[mark.user] = mark.timestamp;
+      this.marks[mark.authorId] = mark.timestamp;
       callback(mark);
     });
   }
 
-  onMessage(callback: Callback<Message>) {
+  onMessage(callback: Callback<roomEvents.MessageSent>) {
     this.onTextMessageCallback = callback;
   }
 
-  onCustom(tag: string, callback: Callback<Message>) {
-    this.onCustomCallbacks[tag] = callback;
+  onMessageDelivered(callback: Callback<roomEvents.MessageDelivered>) {
+    this.events.onConcreteEvent(roomEvents.MessageDelivered.tag, this.id, this.uuid, callback);
   }
 
-  onTyping(callback: Callback<protoEvents.RoomTyping>) {
-    this.events.onConcreteEvent(eventTypes.ROOM_TYPING, this.id, this.uuid, callback);
+  onCustom(subtag: string, callback: Callback<roomEvents.CustomMessageSent>) {
+    this.onCustomCallbacks[subtag] = callback;
+  }
+
+  onTyping(callback: Callback<roomEvents.TypingSent>) {
+    this.events.onConcreteEvent(roomEvents.TypingSent.tag, this.id, this.uuid, callback);
   }
 }
 
@@ -172,50 +172,42 @@ export class DirectRoom extends Room {
 export class GroupRoom extends Room {
   public readonly roomType: roomType.RoomType = roomType.RoomType.GROUP;
 
-  private onJoinedCallback: Callback<Message>;
-  private onLeftCallback: Callback<Message>;
-  private onInvitedCallback: Callback<Message>;
+  private onJoinedCallback: Callback<roomEvents.Joined>;
+  private onLeftCallback: Callback<roomEvents.Left>;
+  private onInvitedCallback: Callback<roomEvents.Invited>;
 
-  constructor(room: wireEntities.Room, log: Logger, events: EventHandler<wireEvents.Event>, api: ArtichokeAPI) {
+  constructor(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     super(room, log, events, api);
 
-    const nop = (a: Message) => {
-      // Do nothing.
-    };
-    this.onLeftCallback = nop;
-    this.onJoinedCallback = nop;
-    this.onInvitedCallback = nop;
+    this.onLeftCallback = (e: roomEvents.Left) => { /* nothing */ };
+    this.onJoinedCallback = (e: roomEvents.Joined) => { /* nothing */ };
+    this.onInvitedCallback = (e: roomEvents.Invited) => { /* nothing */ };
   }
 
   protected defineCallbacks() {
-    this.events.onConcreteEvent(eventTypes.ROOM_MESSAGE, this.id, this.uuid, (e: protoEvents.RoomMessage) => {
-      switch (e.message.tag) {
-      case actionTypes.ROOM_JOINED:
-        this.users.push(e.message.userId);
-        this.onJoinedCallback(e.message);
-        break;
-
-      case actionTypes.ROOM_LEFT:
-        this.users = this.users.filter((u) => u !== e.message.userId);
-        this.onLeftCallback(e.message);
-        break;
-
-      case actionTypes.ROOM_INVITED:
-        this.onInvitedCallback(e.message);
-        break;
-
-      case actionTypes.TEXT_MESSAGE:
-        this.onTextMessageCallback(e.message);
-        break;
-
-      default:
-        if (e.message.tag in this.onCustomCallbacks) {
-          this.onCustomCallbacks[e.message.tag](e.message);
+    this.events.onConcreteEvent(roomEvents.Joined.tag, this.id, this.uuid, (e: roomEvents.Joined) => {
+      this.users.push(e.authorId);
+      this.onJoinedCallback(e);
+    });
+    this.events.onConcreteEvent(roomEvents.Left.tag, this.id, this.uuid, (e: roomEvents.Left) => {
+      this.users = this.users.filter((u) => u !== e.authorId);
+      this.onLeftCallback(e);
+    });
+    this.events.onConcreteEvent(roomEvents.Invited.tag, this.id, this.uuid, (e: roomEvents.Invited) => {
+      this.onInvitedCallback(e);
+    });
+    this.events.onConcreteEvent(roomEvents.MessageSent.tag, this.id, this.uuid, (e: roomEvents.MessageSent) => {
+      this.onTextMessageCallback(e);
+    });
+    this.events.onConcreteEvent(roomEvents.CustomMessageSent.tag, this.id, this.uuid,
+      (e: roomEvents.CustomMessageSent) => {
+        if (e.subtag in this.onCustomCallbacks) {
+          this.onCustomCallbacks[e.subtag](e);
         } else {
-          this.events.notify(error("Invalid event", e));
+          this.events.notify(new errorEvents.Error("Unhandled custom message with subtag: : " + e.subtag));
         }
       }
-    });
+    );
   }
 
   getUsers(): Promise<Array<proto.ID>> {
@@ -235,15 +227,15 @@ export class GroupRoom extends Room {
     return this.api.inviteToRoom(this.id, user);
   }
 
-  onJoined(callback: Callback<Message>) {
+  onJoined(callback: Callback<roomEvents.Joined>) {
     this.onJoinedCallback = callback;
   }
 
-  onLeft(callback: Callback<Message>) {
+  onLeft(callback: Callback<roomEvents.Left>) {
     this.onLeftCallback = callback;
   }
 
-  onInvited(callback: Callback<Message>) {
+  onInvited(callback: Callback<roomEvents.Invited>) {
     this.onInvitedCallback = callback;
   }
 }
@@ -252,8 +244,7 @@ export class BusinessRoom extends GroupRoom {
   public readonly roomType: roomType.RoomType = roomType.RoomType.BUSINESS;
 }
 
-export function createRoom(room: wireEntities.Room, log: Logger,
-                           events: EventHandler<wireEvents.Event>, api: ArtichokeAPI): Room {
+export function createRoom(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): Room {
   if (room.direct) {
     return new DirectRoom(room, log, events, api);
   } else if (room.orgId) {

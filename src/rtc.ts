@@ -1,10 +1,9 @@
 import { ArtichokeAPI } from "./api";
 import { Callback, EventHandler } from "./events";
 import { Logger } from "./logger";
-import { RTCCandidate, RTCDescription } from "./protocol/events";
+import { errorEvents } from "./protocol/events/error-events";
+import { rtcEvents } from "./protocol/events/rtc-events";
 import { ID } from "./protocol/protocol";
-import * as wireEvents from "./protocol/wire-events";
-import { error, Event, eventTypes } from "./protocol/wire-events";
 import { onceDelayed, randomUUID, Thunk, UUID } from "./utils";
 
 export interface RTCConnectionConstraints {
@@ -55,7 +54,7 @@ export class RTCConnection {
   private call: ID;
   private peer: ID;
   private api: ArtichokeAPI;
-  private events: EventHandler<Event>;
+  private events: EventHandler;
   private log: Logger;
   private conn: HackedRTCPeerConnection;
   private onICEDoneCallback: Thunk;
@@ -68,7 +67,7 @@ export class RTCConnection {
   private attachedStreams: { [trackId: string]: MediaStream };
   private renegotiationTimer: number;
 
-  constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler<Event>, api: ArtichokeAPI,
+  constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI,
               constraints?: RTCConnectionConstraints, answerOptions?: RTCAnswerOptions,
               offerOptions?: HackedRTCOfferOptions) {
     log.info("Connecting an RTC connection to " + peer + " on " + call);
@@ -96,7 +95,7 @@ export class RTCConnection {
       if (event.candidate) {
         this.log.debug("Created ICE candidate: " + event.candidate.candidate);
         this.api.sendCandidate(this.call, this.peer, event.candidate).catch((err) => {
-          this.events.notify(error("Could not send an ICE candidate.", err));
+          this.events.notify(new errorEvents.Error("Could not send an ICE candidate: " + err));
         });
       } else {
         this.log.debug("Done gathering ICE candidates.");
@@ -119,7 +118,7 @@ export class RTCConnection {
         this.renegotiationTimer = onceDelayed(this.renegotiationTimer, 100, () => {
           this.log.debug("Renegotiating an RTC connection.");
           this.offer().catch((err) => {
-            this.events.notify(error("Could not renegotiate the connection.", err));
+            this.events.notify(new errorEvents.Error("Could not renegotiate the connection: " + err));
           });
         });
       }
@@ -153,12 +152,12 @@ export class RTCConnection {
     }
   }
 
-  addCandidate(candidate: wireEvents.Candidate): Promise<void> {
+  addCandidate(candidate: RTCIceCandidate): Promise<void> {
     this.log.debug("Received an RTC candidate: " + candidate.candidate);
     return this.conn.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
-  offer(options?: HackedRTCOfferOptions): Promise<wireEvents.SDP> {
+  offer(options?: HackedRTCOfferOptions): Promise<RTCSessionDescriptionInit> {
     this.log.debug("Creating an RTC offer.");
 
     return this.conn.createOffer(options || this.offerOptions).then((offer) => {
@@ -171,13 +170,14 @@ export class RTCConnection {
     });
   }
 
-  addOffer(remoteDescription: wireEvents.SDP, options?: RTCAnswerOptions): Promise<wireEvents.SDP> {
+  addOffer(remoteDescription: RTCSessionDescriptionInit,
+           options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
     this.log.debug("Received an RTC offer.");
 
     return this.setRemoteDescription(remoteDescription).then((descr) => this.answer(options));
   }
 
-  answer(options?: RTCAnswerOptions): Promise<wireEvents.SDP> {
+  answer(options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
     this.log.debug("Creating an RTC answer.");
 
     return this.conn.createAnswer(options || this.answerOptions).then((answer) => {
@@ -191,7 +191,7 @@ export class RTCConnection {
     });
   }
 
-  addAnswer(remoteDescription: wireEvents.SDP): Promise<void> {
+  addAnswer(remoteDescription: RTCSessionDescriptionInit): Promise<void> {
     this.log.debug("Received an RTC answer.");
     return this.setRemoteDescription(remoteDescription).then((descr) => {
       // FIXME Chrome does not support DTLS role changes.
@@ -209,12 +209,12 @@ export class RTCConnection {
   }
 
   // FIXME This should be private.
-  setRemoteDescription(remoteDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
+  setRemoteDescription(remoteDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
     this.log.debug("Setting remote RTC description.");
     return this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription)).then(() => remoteDescription);
   }
 
-  private setLocalDescription(localDescription: wireEvents.SDP): Promise<wireEvents.SDP> {
+  private setLocalDescription(localDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
     this.log.debug("Setting local RTC description.");
     return this.conn.setLocalDescription(new RTCSessionDescription(localDescription)).then(() => localDescription);
   }
@@ -231,23 +231,23 @@ export class RTCConnection {
     }
   }
 
-  private getRole(descr: wireEvents.SDP): string {
+  private getRole(descr: RTCSessionDescriptionInit): string {
     return /a=setup:([^\r\n]+)/.exec(descr.sdp)[1];
   }
 
-  private updateRole(descr: wireEvents.SDP, role: string): wireEvents.SDP {
+  private updateRole(descr: RTCSessionDescriptionInit, role: string): RTCSessionDescriptionInit {
     const hackedDescr = descr;
     hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\r\n]+/, "a=setup:" + role);
     return hackedDescr;
   }
 
-  private extractRole(descr: wireEvents.SDP) {
+  private extractRole(descr: RTCSessionDescriptionInit) {
     if (this.localRole === undefined) {
       this.localRole = (this.getRole(descr) === "active") ? "passive" : "active";
     }
   }
 
-  private patchSDP(descr: wireEvents.SDP): wireEvents.SDP {
+  private patchSDP(descr: RTCSessionDescriptionInit): RTCSessionDescriptionInit {
     if (this.localRole !== undefined) {
       return this.updateRole(descr, this.localRole);
     } else {
@@ -270,7 +270,7 @@ export class RTCPool {
   private readonly uuid: UUID = randomUUID();
 
   private api: ArtichokeAPI;
-  private events: EventHandler<Event>;
+  private events: EventHandler;
   private log: Logger;
 
   private call: ID;
@@ -283,7 +283,7 @@ export class RTCPool {
   private tracks: Array<MediaStreamAndTrack>;
   private onRemoteStreamCallback: RemoteStreamCallback;
 
-  constructor(call: ID, config: RTCConfig, log: Logger, events: EventHandler<Event>, api: ArtichokeAPI) {
+  constructor(call: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.api = api;
     this.events = events;
     this.log = log;
@@ -301,41 +301,42 @@ export class RTCPool {
       // Do nothing.
     };
 
-    events.onConcreteEvent(eventTypes.RTC_DESCRIPTION, this.call, "singleton", (msg: RTCDescription) => {
-      this.log.debug("Received an RTC description: " + msg.description.sdp);
+    events.onConcreteEvent(rtcEvents.DescriptionSent.tag, this.call, "singleton", (msg: rtcEvents.DescriptionSent) => {
+      this.log.debug("Received an RTC description: " + msg.sdp.sdp);
 
-      if (msg.description.type === "offer") {
-        if (msg.peer in this.connections) {
-          this.connections[msg.peer].addOffer(msg.description).catch((err) => {
-            events.notify(error("Could not process the RTC description: ", err));
+      if (msg.sdp.type === "offer") {
+        if (msg.sender in this.connections) {
+          this.connections[msg.sender].addOffer(msg.sdp).catch((err) => {
+            events.notify(new errorEvents.Error("Could not process the RTC description: " + err));
           });
         } else {
-          const rtc = this.createRTC(msg.peer);
-          rtc.addOffer(msg.description).catch((err) => {
-            events.notify(error("Could not process the RTC description: ", err));
+          const rtc = this.createRTC(msg.sender);
+          rtc.addOffer(msg.sdp).catch((err) => {
+            events.notify(new errorEvents.Error("Could not process the RTC description: " + err));
           });
         }
-      } else if (msg.description.type === "answer") {
-        if (msg.peer in this.connections) {
-          this.connections[msg.peer].addAnswer(msg.description).catch((err) => {
-            events.notify(error("Could not process the RTC description: ", err));
+      } else if (msg.sdp.type === "answer") {
+        if (msg.sender in this.connections) {
+          this.connections[msg.sender].addAnswer(msg.sdp).catch((err) => {
+            events.notify(new errorEvents.Error("Could not process the RTC description: " + err));
           });
         } else {
-          events.notify(error("Received an invalid RTC answer from " + msg.peer));
+          events.notify(new errorEvents.Error("Received an invalid RTC answer from " + msg.sender));
         }
       } else {
-        events.notify(error("Received an invalid RTC description type " + msg.description.type));
+        events.notify(new errorEvents.Error("Received an invalid RTC description type " + msg.sdp.type));
       }
     });
 
-    events.onConcreteEvent(eventTypes.RTC_CANDIDATE, this.call, "singleton", (msg: RTCCandidate) => {
+    events.onConcreteEvent(rtcEvents.CandidateSent.tag, this.call, "singleton", (msg: rtcEvents.CandidateSent) => {
       this.log.debug("Received an RTC candidate: " + msg.candidate);
-      if (msg.peer in this.connections) {
-        this.connections[msg.peer].addCandidate(msg.candidate).catch((err) => {
-          events.notify(error("Could not process the RTC candidate: ", err));
+      if (msg.sender in this.connections) {
+        this.connections[msg.sender].addCandidate(msg.candidate).catch((err) => {
+          events.notify(new errorEvents.Error("Could not process the RTC candidate: " + err));
         });
       } else {
-        events.notify(error("Received an invalid RTC candidate. " +  msg.peer + " is not currently in this call."));
+        events.notify(new errorEvents.Error("Received an invalid RTC candidate. " + msg.sender +
+          " is not currently in this call."));
       }
     });
   }
@@ -364,7 +365,7 @@ export class RTCPool {
   create(peer: ID): RTCConnection {
     const rtc = this.createRTC(peer);
     rtc.offer(this.offerOptions).catch((err) => {
-      this.events.notify(error("Could not create an RTC offer.", err));
+      this.events.notify(new errorEvents.Error(`Could not create an RTC offer: ${err}`));
     });
     return rtc;
   }
@@ -402,7 +403,7 @@ export class RTCPool {
   }
 }
 
-export function createRTCConnection(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler<Event>,
+export function createRTCConnection(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler,
                                     api: ArtichokeAPI, constraints?: RTCConnectionConstraints,
                                     answerOptions?: RTCAnswerOptions,
                                     offerOptions?: HackedRTCOfferOptions): RTCConnection {
@@ -410,6 +411,6 @@ export function createRTCConnection(call: ID, peer: ID, config: RTCConfig, log: 
 }
 
 export function createRTCPool(call: ID, config: RTCConfig, log: Logger,
-                              events: EventHandler<Event>, api: ArtichokeAPI): RTCPool {
+                              events: EventHandler, api: ArtichokeAPI): RTCPool {
   return new RTCPool(call, config, log, events, api);
 }

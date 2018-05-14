@@ -2,9 +2,13 @@ import { ArtichokeAPI } from "./api";
 import { Artichoke } from "./artichoke";
 import { EventHandler } from "./events";
 import { apiKey, config, deviceId, log, sessionId } from "./fixtures.spec";
-import { Event, Hello } from "./protocol/events";
+import { callEvents } from "./protocol/events/call-events";
+import { decoder } from "./protocol/events/domain-event";
+import { errorEvents } from "./protocol/events/error-events";
+import { internalEvents } from "./protocol/events/internal-events";
+import { roomEvents } from "./protocol/events/room-events";
+import { serverEvents } from "./protocol/events/server-events";
 import { Call, Room } from "./protocol/wire-entities";
-import { codec, disconnect, error, eventTypes } from "./protocol/wire-events";
 
 const roomId = "234";
 const callId = "123";
@@ -31,43 +35,32 @@ class APIMock extends ArtichokeAPI {
 }
 
 describe("Artichoke", () => {
-  let events: EventHandler<Event>;
+  let events: EventHandler;
   let api;
-  let chat;
+  let chat: Artichoke;
 
   beforeEach(() => {
-    events = new EventHandler(log, codec);
+    events = new EventHandler(log, decoder);
     api = new APIMock();
     chat = new Artichoke(config.chat, log, events, api);
   });
 
   it("should notify on a new event", (done) => {
-    events.onEvent(eventTypes.HELLO, (msg: Hello) => done());
+    events.onEvent(serverEvents.Hello.tag, (msg: serverEvents.Hello) => done());
     chat.connect();
-    api.cb({
-      type: eventTypes.HELLO,
-      deviceId,
-      heartbeatTimeout: 200,
-    } as Event);
+    api.cb(new serverEvents.Hello(deviceId, Date.now(), 200));
   });
 
   it("should call a callback on server connection", (done) => {
     chat.onConnect((msg) => done());
     chat.connect();
-    api.cb({
-      type: eventTypes.HELLO,
-      deviceId,
-      heartbeatTimeout: 200,
-    } as Event);
+    api.cb(new serverEvents.Hello(deviceId, Date.now(), 200));
   });
 
   it("should call a callback on server heartbeat", (done) => {
     chat.onHeartbeat((hb) => done());
     chat.connect();
-    api.cb({
-      type: eventTypes.HEARTBEAT,
-      timestamp: 1234,
-    } as Event);
+    api.cb(new serverEvents.OutputHeartbeat(Date.now()));
   });
 
   it("should invoke \"onServerUnreachable\" if no heartbeat received within double time given in hello", (done) => {
@@ -77,11 +70,7 @@ describe("Artichoke", () => {
 
     chat.onServerUnreachable(() => done());
     chat.connect();
-    api.cb({
-      type: eventTypes.HELLO,
-      deviceId,
-      heartbeatTimeout,
-    } as Event);
+    api.cb(new serverEvents.Hello(deviceId, Date.now(), heartbeatTimeout));
 
     jasmine.clock().tick(2 * heartbeatTimeout + 1);
     jasmine.clock().uninstall();
@@ -94,17 +83,10 @@ describe("Artichoke", () => {
     chat.onServerUnreachable(() => done.fail());
     chat.connect();
 
-    api.cb({
-      type: eventTypes.HELLO,
-      deviceId,
-      heartbeatTimeout,
-    } as Event);
+    api.cb(new serverEvents.Hello(deviceId, Date.now(), heartbeatTimeout));
 
     const interval = setInterval(() => {
-      api.cb({
-        type: eventTypes.HEARTBEAT,
-        timestamp: 1234,
-      } as Event);
+      api.cb(new serverEvents.OutputHeartbeat(Date.now()));
     }, heartbeatTimeout);
 
     jasmine.clock().tick(10 * heartbeatTimeout);
@@ -121,11 +103,7 @@ describe("Artichoke", () => {
 
     chat.onServerUnreachable(() => done.fail());
     chat.connect();
-    api.cb({
-      type: eventTypes.HELLO,
-      deviceId,
-      heartbeatTimeout,
-    } as Event);
+    api.cb(new serverEvents.Hello(deviceId, Date.now(), heartbeatTimeout));
 
     chat.disconnect();
     jasmine.clock().tick(2 * heartbeatTimeout + 1);
@@ -137,55 +115,34 @@ describe("Artichoke", () => {
   it("should call a callback on server disconnection", (done) => {
     chat.onDisconnect((msg) => done());
     chat.connect();
-    api.cb(disconnect(1023, "Too much effort."));
+    api.cb(new internalEvents.WebsocketDisconnected(1023, "Too much effort."));
   });
 
   it("should call a callback on server error", (done) => {
     chat.onError((error) => done());
     chat.connect();
-    api.cb(error("why not?"));
+    api.cb(new errorEvents.Error("why not?"));
   });
 
   it("should run a callback when a room is created", (done) => {
-    events.onEvent(eventTypes.ERROR, (error) => done.fail());
-
-    const roomObj = {
-      id: roomId,
-      name: "room",
-      created: 123,
-      users: [alice],
-      direct: false,
-    } as Room;
+    events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
     chat.onRoomCreated((e) => {
-      expect(e.room).toBe(roomObj);
+      expect(e.roomId).toBe(roomId);
       done();
     });
 
-    events.notify({
-      type: eventTypes.ROOM_CREATED,
-      room: roomObj
-    } as Event);
+    events.notify(new roomEvents.Created(roomId, alice, Date.now()));
   });
 
   it("should run a callback when a call is created", (done) => {
-    events.onEvent(eventTypes.ERROR, (error) => done.fail());
-
-    const callObj = {
-      id: callId,
-      created: 123,
-      users: [alice],
-      direct: true
-    } as Call;
+    events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
     chat.onCallCreated((c) => {
-      expect(c.call).toBe(callObj);
+      expect(c.callId).toBe(callId);
       done();
     });
 
-    events.notify({
-      type: eventTypes.CALL_CREATED,
-      call: callObj
-    } as Event);
+    events.notify(new callEvents.Created(callId, alice, Date.now()));
   });
 });
