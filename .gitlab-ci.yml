@@ -50,7 +50,8 @@ publish:
   only:
     - tags
   script:
-    - VERSION=$(cat package.json | grep version | head -1 | awk -F':' '{ print $2 }' | sed 's/[",\t ]//g')
+    - npm install
+    - npm run build
     - npm publish
   stage: publish
   tags:
