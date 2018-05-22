@@ -16,13 +16,15 @@ export namespace roomCommand {
   export class SendMessage extends RoomCommand {
     static readonly tag = "room_send_message";
 
-    constructor(roomId: string, body: string, ref?: string) {
+    constructor(roomId: string, body: string, context: Object, ref?: string) {
       super(roomId, SendMessage.tag);
       this.body = body;
+      this.context = context;
       this.ref = ref;
     }
 
     readonly body: string;
+    readonly context: Object;
     ref: string | undefined;
   }
 

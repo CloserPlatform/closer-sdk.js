@@ -21,7 +21,7 @@ const msg2 = "1313";
 const msg3 = "4545";
 
 function msg(id: string, body?: string): roomEvents.MessageSent {
-  return new roomEvents.MessageSent(roomId, alice, body ? body : "Hi!", id, 123);
+  return new roomEvents.MessageSent(roomId, alice, body ? body : "Hi!", id, {}, 123);
 }
 
 class APIMock extends ArtichokeAPI {
@@ -166,7 +166,7 @@ function makeRoom(roomType: RoomType) {
         done();
       });
 
-      const m = new roomEvents.MessageSent(roomId, chad, "Hi!", msg1, 123);
+      const m = new roomEvents.MessageSent(roomId, chad, "Hi!", msg1, {}, 123);
       events.notify(m);
     });
 
