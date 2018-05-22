@@ -70,15 +70,18 @@ export namespace roomEvents {
   export class MessageSent extends RoomEvent {
     static readonly tag = "room_message_sent";
 
-    constructor(roomId: string, authorId: string, message: string, messageId: string, timestamp: number) {
+    constructor(roomId: string, authorId: string, message: string, messageId: string, context: Object,
+                timestamp: number) {
       super(roomId, authorId, timestamp, MessageSent.tag);
 
       this.message = message;
       this.messageId = messageId;
+      this.context = messageId;
     }
 
     readonly message: string;
     readonly messageId: string;
+    readonly context: Object;
   }
 
   export class CustomMessageSent extends RoomEvent {
