@@ -1,8 +1,8 @@
-import {} from "jasmine";
+import {} from 'jasmine';
 
-import { Config, load } from "../src/config";
-import * as logger from "../src/logger";
-import { isBrowserSupported, isChrome, isFirefox } from "./utils";
+import { Config, load } from './config/config';
+import * as logger from '../src/logger';
+import { isBrowserSupported, isChrome, isFirefox } from './utils/utils';
 
 export const log = new logger.ConsoleLogger(logger.LogLevel.WARN);
 
@@ -15,9 +15,9 @@ export const config: Config = load({
   }
 } as Config);
 
-export const sessionId = "12345678";
-export const deviceId = "6515ea03-7421-4fa5-b02c-bf339c18abbf";
-export const apiKey = "8615ea03-7421-4fa5-b02c-bf339c18abbf";
+export const sessionIdMock = '12345678';
+export const deviceIdMock = '6515ea03-7421-4fa5-b02c-bf339c18abbf';
+export const apiKeyMock = '8615ea03-7421-4fa5-b02c-bf339c18abbf';
 
 export function sleep(time: number): Promise<void> {
   return new Promise<void>(function(resolve, reject) {
@@ -39,6 +39,6 @@ export function getStream(onStream, onError, constraints?) {
     audio: true
   };
   cs.fake = true; // NOTE For FireFox.
-  log.info("Creating a stream with constraints: " + JSON.stringify(cs));
+  log.info('Creating a stream with constraints: ' + JSON.stringify(cs));
   navigator.mediaDevices.getUserMedia(cs).then(onStream).catch(onError);
 }

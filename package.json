@@ -1,10 +1,12 @@
 {
   "name": "ratel-sdk-js",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "description": "Ratel JavaScript SDK",
   "main": "dist/ratel-sdk.js",
   "types": "dist/main.d.ts",
   "scripts": {
+    "prebuild": "npm run lint",
+    "prebuild:ci": "npm run lint",
     "build": "cross-env NODE_ENV=production webpack",
     "build:ci": "cross-env NODE_ENV=development webpack",
     "build-demo-app": "cross-env NODE_ENV=production webpack --config webpack.demo-app.config.js && npm run commit-hash",

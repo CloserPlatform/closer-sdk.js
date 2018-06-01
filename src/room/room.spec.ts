@@ -1,27 +1,27 @@
-import { ArtichokeAPI } from "./api";
-import { EventHandler } from "./events";
-import {apiKey, config, log, sessionId } from "./fixtures.spec";
-import { chatEvents } from "./protocol/events/chat-events";
-import { decoder } from "./protocol/events/domain-event";
-import { errorEvents } from "./protocol/events/error-events";
-import { roomEvents } from "./protocol/events/room-events";
-import * as wireEntities from "./protocol/wire-entities";
-import { createRoom, DirectRoom, GroupRoom, Room, roomType } from "./room";
+import { EventHandler } from '../events/events';
+import {apiKeyMock, config, log, sessionIdMock } from '../test-utils';
+import { chatEvents } from '../protocol/events/chat-events';
+import { decoder } from '../protocol/events/domain-event';
+import { errorEvents } from '../protocol/events/error-events';
+import { roomEvents } from '../protocol/events/room-events';
+import * as wireEntities from '../protocol/wire-entities';
+import { createRoom, DirectRoom, GroupRoom, Room, roomType } from './room';
 
 import RoomType = roomType.RoomType;
 import NormalizedEvent = chatEvents.NormalizedEvent;
 import EndReason = roomEvents.EndReason;
+import { ArtichokeAPI } from '../apis/artichoke-api';
 
-const roomId = "123";
-const alice = "321";
-const bob = "456";
-const chad = "987";
-const msg1 = "2323";
-const msg2 = "1313";
-const msg3 = "4545";
+const roomId = '123';
+const alice = '321';
+const bob = '456';
+const chad = '987';
+const msg1 = '2323';
+const msg2 = '1313';
+const msg3 = '4545';
 
-function msg(id: string, body?: string): roomEvents.MessageSent {
-  return new roomEvents.MessageSent(roomId, alice, body ? body : "Hi!", id, {}, 123);
+function msgFn(id: string, body?: string): roomEvents.MessageSent {
+  return new roomEvents.MessageSent(roomId, alice, body ? body : 'Hi!', id, {}, 123);
 }
 
 class APIMock extends ArtichokeAPI {
@@ -32,7 +32,7 @@ class APIMock extends ArtichokeAPI {
   invited: string;
 
   constructor() {
-    super(sessionId, apiKey, config.chat, log);
+    super(sessionIdMock, apiKeyMock, config.chat, log);
   }
 
   joinRoom(id) {
@@ -54,7 +54,7 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve({
       offset: 0,
       limit: 2,
-      items: [msg(msg1), msg(msg2)]
+      items: [msgFn(msg1), msgFn(msg2)]
     });
   }
 
@@ -62,7 +62,7 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve({
       offset: 0,
       limit: 2,
-      items: [msg(msg1), msg(msg2)]
+      items: [msgFn(msg1), msgFn(msg2)]
     });
   }
 
@@ -76,7 +76,7 @@ class APIMock extends ArtichokeAPI {
   }
 
   sendMessage(id, body) {
-    const m = msg(msg3, body);
+    const m = msgFn(msg3, body);
     const n: NormalizedEvent = {
       id: m.messageId,
       authorId: m.authorId,
@@ -94,33 +94,33 @@ class APIMock extends ArtichokeAPI {
   }
 }
 
-function makeRoom(roomType: RoomType) {
+function makeRoom(type: RoomType) {
   const room = {
     id: roomId,
-    name: "room",
+    name: 'room',
     created: 123,
     users: [alice],
     direct: false,
   } as wireEntities.Room;
 
-  switch (roomType) {
+  switch (type) {
     case RoomType.DIRECT:
       room.direct = true;
       return room;
 
     case RoomType.BUSINESS:
-      room.orgId = "1234";
+      room.orgId = '1234';
       return room;
 
     case RoomType.GROUP:
       return room;
 
     default:
-      throw Error("invalid RoomType");
+      throw Error('invalid RoomType');
   }
 }
 
-["DirectRoom", "GroupRoom"].forEach((d) => {
+['DirectRoom', 'GroupRoom'].forEach((d) => {
   describe(d, () => {
     let events: EventHandler;
     let api: APIMock;
@@ -130,13 +130,13 @@ function makeRoom(roomType: RoomType) {
     beforeEach(() => {
       events = new EventHandler(log, decoder);
       api = new APIMock();
-      const roomType = d === "DirectRoom" ? RoomType.DIRECT : RoomType.GROUP;
-      room = createRoom(makeRoom(roomType), log, events, api);
-      uid = "123";
+      const type = d === 'DirectRoom' ? RoomType.DIRECT : RoomType.GROUP;
+      room = createRoom(makeRoom(type), log, events, api);
+      uid = '123';
     });
 
-    it("should maintain a high water mark", (done) => {
-      room.getMark(sessionId).then((hwm) => {
+    it('should maintain a high water mark', (done) => {
+      room.getMark(sessionIdMock).then((hwm) => {
         expect(hwm).toBe(0);
 
         let t = Date.now();
@@ -144,14 +144,14 @@ function makeRoom(roomType: RoomType) {
 
         expect(api.marked).toBe(true);
 
-        room.getMark(sessionId).then((newHwm) => {
+        room.getMark(sessionIdMock).then((newHwm) => {
           expect(newHwm).toBe(t);
           done();
         });
       });
     });
 
-    it("should run a callback on typing indication", (done) => {
+    it('should run a callback on typing indication', (done) => {
       room.onTyping((msg) => {
         expect(msg.authorId).toBe(chad);
         done();
@@ -160,27 +160,27 @@ function makeRoom(roomType: RoomType) {
       events.notify(new roomEvents.TypingSent(room.id, chad, Date.now()));
     });
 
-    it("should run a callback on incoming message", (done) => {
+    it('should run a callback on incoming message', (done) => {
       room.onMessage((msg) => {
         expect(msg.authorId).toBe(chad);
         done();
       });
 
-      const m = new roomEvents.MessageSent(roomId, chad, "Hi!", msg1, {}, 123);
+      const m = new roomEvents.MessageSent(roomId, chad, 'Hi!', msg1, {}, 123);
       events.notify(m);
     });
 
-    it("should run a callback on incoming custom message", (done) => {
-      room.onCustom("json", (msg) => {
+    it('should run a callback on incoming custom message', (done) => {
+      room.onCustom('json', (msg) => {
         expect(msg.authorId).toBe(chad);
         done();
       });
 
-      const m = new roomEvents.CustomMessageSent(roomId, chad, "Hi!", msg1, "json", {}, 123);
+      const m = new roomEvents.CustomMessageSent(roomId, chad, 'Hi!', msg1, 'json', {}, 123);
       events.notify(m);
     });
 
-    it("should run a callback on incoming mark", (done) => {
+    it('should run a callback on incoming mark', (done) => {
       const t = Date.now();
 
       room.onMarked((msg) => {
@@ -195,7 +195,7 @@ function makeRoom(roomType: RoomType) {
     });
 
     // FIXME These should be moved to integration tests:
-    it("should retrieve history", (done) => {
+    it('should retrieve history', (done) => {
       room.getLatestMessages().then((msgs) => {
         const ids = msgs.items.map((m: roomEvents.MessageSent) => m.messageId);
         expect(ids).toContain(msg1);
@@ -204,22 +204,22 @@ function makeRoom(roomType: RoomType) {
       });
     });
 
-    it("should allow typing indication", () => {
+    it('should allow typing indication', () => {
       room.indicateTyping();
 
       expect(api.sentTyping).toBe(true);
     });
 
-    it("should allow sending messages", (done) => {
-      room.send("hello").then((msg) => {
-        expect((msg.message.data as any).message).toBe("hello");
+    it('should allow sending messages', (done) => {
+      room.send('hello').then((msg) => {
+        expect((msg.message.data as any).message).toBe('hello');
         done();
       });
     });
   });
 });
 
-describe("DirectRoom", () => {
+describe('DirectRoom', () => {
   let events;
   let api;
   let room;
@@ -230,7 +230,7 @@ describe("DirectRoom", () => {
     room = createRoom(makeRoom(RoomType.DIRECT), log, events, api) as DirectRoom;
   });
 
-  it("should retrieve users", (done) => {
+  it('should retrieve users', (done) => {
     room.getUsers().then((users) => {
       expect(users).toContain(bob);
       done();
@@ -238,7 +238,7 @@ describe("DirectRoom", () => {
   });
 });
 
-describe("GroupRoom", () => {
+describe('GroupRoom', () => {
   let events: EventHandler;
   let api: APIMock;
   let room: GroupRoom;
@@ -249,7 +249,7 @@ describe("GroupRoom", () => {
     room = createRoom(makeRoom(RoomType.GROUP), log, events, api) as GroupRoom;
   });
 
-  it("should maintain the user list", (done) => {
+  it('should maintain the user list', (done) => {
     events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
     room.onJoined((joined) => {
@@ -276,7 +276,7 @@ describe("GroupRoom", () => {
     events.notify(new roomEvents.Joined(room.id, bob, Date.now()));
   });
 
-  it("should run callback on room joined", (done) => {
+  it('should run callback on room joined', (done) => {
     room.onJoined((msg) => {
       expect(msg.authorId).toBe(alice);
       done();
@@ -285,7 +285,7 @@ describe("GroupRoom", () => {
     events.notify(new roomEvents.Joined(room.id, alice, Date.now()));
   });
 
-  it("should run callback on room left", (done) => {
+  it('should run callback on room left', (done) => {
     room.onLeft((msg) => {
       expect(msg.authorId).toBe(alice);
       expect(msg.endReason).toBe(EndReason.Terminated);
@@ -295,7 +295,7 @@ describe("GroupRoom", () => {
     events.notify(new roomEvents.Left(room.id, alice, EndReason.Terminated, Date.now()));
   });
 
-  it("should run callback on room invite", (done) => {
+  it('should run callback on room invite', (done) => {
     room.onInvited((msg) => {
       expect(msg.authorId).toBe(alice);
       expect(msg.invitee).toBe(bob);
@@ -306,27 +306,27 @@ describe("GroupRoom", () => {
   });
 
   // FIXME These should be moved to integration tests:
-  it("should allow joining", () => {
+  it('should allow joining', () => {
     room.join();
     expect(api.joined).toBe(true);
   });
 
-  it("should allow leaving", () => {
+  it('should allow leaving', () => {
     room.leave();
     expect(api.left).toBe(true);
   });
 
-  it("should allow inviting others", () => {
+  it('should allow inviting others', () => {
     room.invite(chad);
     expect(api.invited).toBe(chad);
   });
 });
 
-describe("GroupRoom, BusinessRoom, DirectRoom", () => {
+describe('GroupRoom, BusinessRoom, DirectRoom', () => {
   const events = new EventHandler(log, decoder);
   const api = new APIMock();
 
-  it("should have proper roomType field defined", (done) => {
+  it('should have proper roomType field defined', (done) => {
     const businessRoom: Room = createRoom(makeRoom(RoomType.BUSINESS), log, events, api);
     const directRoom: Room = createRoom(makeRoom(RoomType.DIRECT), log, events, api);
     const groupRoom: Room = createRoom(makeRoom(RoomType.GROUP), log, events, api);

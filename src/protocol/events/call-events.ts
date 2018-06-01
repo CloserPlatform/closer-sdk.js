@@ -1,15 +1,15 @@
-import { DomainEvent } from "./domain-event";
+import { DomainEvent } from './domain-event';
 
 export namespace callEvents {
   export enum EndReason {
-    Terminated = "terminated",
-    Timeout = "timeout",
-    Ended = "ended",
-    Hangup = "hangup",
-    ConnectionDropped = "connection_dropped",
-    Disconnected = "disconnected",
-    CallRejected = "rejected",
-    Busy = "busy",
+    Terminated = 'terminated',
+    Timeout = 'timeout',
+    Ended = 'ended',
+    Hangup = 'hangup',
+    ConnectionDropped = 'connection_dropped',
+    Disconnected = 'disconnected',
+    CallRejected = 'rejected',
+    Busy = 'busy',
   }
 
   export abstract class CallEvent implements DomainEvent {
@@ -22,11 +22,11 @@ export namespace callEvents {
     readonly callId: string;
     readonly timestamp: number;
     readonly tag: string;
-    readonly __discriminator__ = "domainEvent";
+    readonly __discriminator__ = 'domainEvent';
   }
 
   export class Created extends CallEvent {
-    static readonly tag = "call_created";
+    static readonly tag = 'call_created';
 
     constructor(callId: string, authorId: string, timestamp: number) {
       super(callId, timestamp, Created.tag);
@@ -37,7 +37,7 @@ export namespace callEvents {
   }
 
   export class Invited extends CallEvent {
-    static readonly tag = "call_invited";
+    static readonly tag = 'call_invited';
 
     constructor(callId: string, authorId: string, invitee: string, context: Object, timestamp: number) {
       super(callId, timestamp, Invited.tag);
@@ -53,7 +53,7 @@ export namespace callEvents {
   }
 
   export class Answered extends CallEvent {
-    static readonly tag = "call_answered";
+    static readonly tag = 'call_answered';
 
     constructor(callId: string, authorId: string, timestamp: number) {
       super(callId, timestamp, Answered.tag);
@@ -64,7 +64,7 @@ export namespace callEvents {
   }
 
   export class Joined extends CallEvent {
-    static readonly tag = "call_joined";
+    static readonly tag = 'call_joined';
 
     constructor(callId: string, authorId: string, timestamp: number) {
       super(callId, timestamp, Joined.tag);
@@ -75,7 +75,7 @@ export namespace callEvents {
   }
 
   export class Left extends CallEvent {
-    static readonly tag = "call_left";
+    static readonly tag = 'call_left';
 
     constructor(callId: string, authorId: string, reason: EndReason, timestamp: number) {
       super(callId, timestamp, Left.tag);
@@ -89,7 +89,7 @@ export namespace callEvents {
   }
 
   export class Rejected extends CallEvent {
-    static readonly tag = "call_rejected";
+    static readonly tag = 'call_rejected';
     constructor(callId: string, authorId: string, reason: EndReason, timestamp: number) {
       super(callId, timestamp, Rejected.tag);
 
@@ -102,7 +102,7 @@ export namespace callEvents {
   }
 
   export class Ended extends CallEvent {
-    static readonly tag = "call_ended";
+    static readonly tag = 'call_ended';
     constructor(callId: string, reason: EndReason, timestamp: number) {
       super(callId, timestamp, Ended.tag);
 
@@ -113,7 +113,7 @@ export namespace callEvents {
   }
 
   export class CallHandledOnDevice extends CallEvent {
-    static readonly tag = "call_handled_on_device";
+    static readonly tag = 'call_handled_on_device';
     constructor(callId: string, authorId: string, device: string, timestamp: number) {
       super(callId, timestamp, CallHandledOnDevice.tag);
 
@@ -126,7 +126,7 @@ export namespace callEvents {
   }
 
   export class DeviceOffline extends CallEvent {
-    static readonly tag = "device_offline";
+    static readonly tag = 'device_offline';
     constructor(callId: string, userId: string, deviceId: string, timestamp: number) {
       super(callId, timestamp, DeviceOffline.tag);
 
@@ -139,7 +139,7 @@ export namespace callEvents {
   }
 
   export class DeviceOnline extends CallEvent {
-    static readonly tag = "device_online";
+    static readonly tag = 'device_online';
     constructor(callId: string, userId: string, deviceId: string, timestamp: number) {
       super(callId, timestamp, DeviceOnline.tag);
 

@@ -1,9 +1,8 @@
-import { ArtichokeAPI, CallReason } from "./api";
-import { Callback, EventHandler } from "./events";
-import { Logger } from "./logger";
-import { callEvents } from "./protocol/events/call-events";
-import * as proto from "./protocol/protocol";
-import * as wireEntities from "./protocol/wire-entities";
+import { Callback, EventHandler } from '../events/events';
+import { Logger } from '../logger';
+import { callEvents } from '../protocol/events/call-events';
+import * as proto from '../protocol/protocol';
+import * as wireEntities from '../protocol/wire-entities';
 import {
   createRTCPool,
   HackedRTCOfferOptions as RTCOfferOptions,
@@ -12,8 +11,10 @@ import {
   RTCConfig,
   RTCConnectionConstraints,
   RTCPool
-} from "./rtc";
-import { randomUUID, UUID } from "./utils";
+} from '../rtc/rtc';
+import { randomUUID, UUID } from '../utils/utils';
+import { ArtichokeAPI } from '../apis/artichoke-api';
+import { CallReason } from '../apis/call-reason';
 
 export namespace callType {
   export enum CallType {

@@ -1,13 +1,13 @@
-import { ArtichokeAPI } from "./api";
-import { Callback, EventHandler } from "./events";
-import { Logger } from "./logger";
-import { chatEvents } from "./protocol/events/chat-events";
-import { errorEvents } from "./protocol/events/error-events";
-import { roomEvents } from "./protocol/events/room-events";
-import { ID } from "./protocol/protocol";
-import * as proto from "./protocol/protocol";
-import * as wireEntities from "./protocol/wire-entities";
-import { randomUUID, TransferFunction, UUID } from "./utils";
+import { Callback, EventHandler } from '../events/events';
+import { Logger } from '../logger';
+import { chatEvents } from '../protocol/events/chat-events';
+import { errorEvents } from '../protocol/events/error-events';
+import { roomEvents } from '../protocol/events/room-events';
+import { ID } from '../protocol/protocol';
+import * as proto from '../protocol/protocol';
+import * as wireEntities from '../protocol/wire-entities';
+import { randomUUID, TransferFunction, UUID } from '../utils/utils';
+import { ArtichokeAPI } from '../apis/artichoke-api';
 
 export namespace roomType {
   export enum RoomType {
@@ -76,7 +76,7 @@ export abstract class Room implements wireEntities.Room {
         if (e.subtag in this.onCustomCallbacks) {
           this.onCustomCallbacks[e.subtag](e);
         } else {
-          this.events.notify(new errorEvents.Error("Unhandled custom message with subtag: : " + e.subtag));
+          this.events.notify(new errorEvents.Error('Unhandled custom message with subtag: : ' + e.subtag));
         }
       }
     );
@@ -204,7 +204,7 @@ export class GroupRoom extends Room {
         if (e.subtag in this.onCustomCallbacks) {
           this.onCustomCallbacks[e.subtag](e);
         } else {
-          this.events.notify(new errorEvents.Error("Unhandled custom message with subtag: : " + e.subtag));
+          this.events.notify(new errorEvents.Error('Unhandled custom message with subtag: : ' + e.subtag));
         }
       }
     );

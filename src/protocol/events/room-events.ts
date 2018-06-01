@@ -1,15 +1,15 @@
-import { DomainEvent } from "./domain-event";
+import { DomainEvent } from './domain-event';
 
 export namespace roomEvents {
   export enum EndReason {
-    Terminated = "terminated",
-    Timeout = "timeout",
-    Ended = "ended",
-    Hangup = "hangup",
-    ConnectionDropped = "connection_dropped",
-    Disconnected = "disconnected",
-    CallRejected = "rejected",
-    Busy = "busy",
+    Terminated = 'terminated',
+    Timeout = 'timeout',
+    Ended = 'ended',
+    Hangup = 'hangup',
+    ConnectionDropped = 'connection_dropped',
+    Disconnected = 'disconnected',
+    CallRejected = 'rejected',
+    Busy = 'busy',
   }
 
   export abstract class RoomEvent implements DomainEvent {
@@ -24,11 +24,11 @@ export namespace roomEvents {
     readonly authorId: string;
     readonly timestamp: number;
     readonly tag: string;
-    readonly __discriminator__ = "domainEvent";
+    readonly __discriminator__ = 'domainEvent';
   }
 
   export class Created extends RoomEvent {
-    static readonly tag = "room_created";
+    static readonly tag = 'room_created';
 
     constructor(roomId: string, authorId: string, timestamp: number) {
       super(roomId, authorId, timestamp, Created.tag);
@@ -36,7 +36,7 @@ export namespace roomEvents {
   }
 
   export class Invited extends RoomEvent {
-    static readonly tag = "room_invited";
+    static readonly tag = 'room_invited';
 
     constructor(roomId: string, authorId: string, invitee: string, timestamp: number) {
       super(roomId, authorId, timestamp, Invited.tag);
@@ -48,7 +48,7 @@ export namespace roomEvents {
   }
 
   export class Joined extends RoomEvent {
-    static readonly tag = "room_joined";
+    static readonly tag = 'room_joined';
 
     constructor(roomId: string, authorId: string, timestamp: number) {
       super(roomId, authorId, timestamp, Joined.tag);
@@ -56,7 +56,7 @@ export namespace roomEvents {
   }
 
   export class Left extends RoomEvent {
-    static readonly tag = "room_left";
+    static readonly tag = 'room_left';
 
     constructor(roomId: string, authorId: string, endReason: EndReason, timestamp: number) {
       super(roomId, authorId, timestamp, Left.tag);
@@ -68,7 +68,7 @@ export namespace roomEvents {
   }
 
   export class MessageSent extends RoomEvent {
-    static readonly tag = "room_message_sent";
+    static readonly tag = 'room_message_sent';
 
     constructor(roomId: string, authorId: string, message: string, messageId: string, context: Object,
                 timestamp: number) {
@@ -85,7 +85,7 @@ export namespace roomEvents {
   }
 
   export class CustomMessageSent extends RoomEvent {
-    static readonly tag = "room_custom_message_sent";
+    static readonly tag = 'room_custom_message_sent';
 
     constructor(roomId: string, authorId: string, message: string, messageId: string, subtag: string, context: Object,
                 timestamp: number) {
@@ -104,7 +104,7 @@ export namespace roomEvents {
   }
 
   export class TypingSent extends RoomEvent {
-    static readonly tag = "room_typing_sent";
+    static readonly tag = 'room_typing_sent';
 
     constructor(roomId: string, authorId: string, timestamp: number) {
       super(roomId, authorId, timestamp, TypingSent.tag);
@@ -112,7 +112,7 @@ export namespace roomEvents {
   }
 
   export class MarkSent extends RoomEvent {
-    static readonly tag = "room_mark_sent";
+    static readonly tag = 'room_mark_sent';
 
     constructor(roomId: string, authorId: string, timestamp: number) {
       super(roomId, authorId, timestamp, MarkSent.tag);
@@ -120,7 +120,7 @@ export namespace roomEvents {
   }
 
   export class MessageDelivered extends RoomEvent {
-    static readonly tag = "room_message_delivered";
+    static readonly tag = 'room_message_delivered';
 
     constructor(roomId: string, authorId: string, messageId: string, timestamp: number) {
       super(roomId, authorId, timestamp, MessageDelivered.tag);

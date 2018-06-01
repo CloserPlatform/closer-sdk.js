@@ -1,10 +1,8 @@
-import * as RatelSDK from "../";
-import {CallReason} from "../src/api";
-import { GroupCall } from "../src/call";
-import { roomEvents } from "../src/main";
-import { BusinessRoom } from "../src/room";
-import {displayVersion} from "./version";
-import * as View from "./view";
+import * as RatelSDK from '../src/main';
+import {CallReason} from '../src/main';
+import { roomEvents } from '../src/main';
+import {displayVersion} from './version';
+import * as View from './view';
 
 $(function () {
     displayVersion();

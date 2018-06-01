@@ -1,4 +1,4 @@
-import { DomainEvent } from "./domain-event";
+import { DomainEvent } from './domain-event';
 
 export namespace chatEvents {
 
@@ -10,7 +10,7 @@ export namespace chatEvents {
 
     readonly eventId: string;
     readonly tag: string;
-    readonly __discriminator__ = "domainEvent";
+    readonly __discriminator__ = 'domainEvent';
   }
 
   export interface NormalizedEvent {
@@ -23,7 +23,7 @@ export namespace chatEvents {
   }
 
   export class Received extends ChatEvent {
-    static readonly tag = "chat_received";
+    static readonly tag = 'chat_received';
 
     constructor(eventId: string, message: NormalizedEvent, ref?: string) {
       super(eventId, Received.tag);

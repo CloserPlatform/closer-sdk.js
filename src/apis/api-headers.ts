@@ -1,11 +1,11 @@
-import { HeaderValue } from "./api";
-import { ApiKey } from "./auth";
-import * as proto from "./protocol/protocol";
+import { HeaderValue } from './header-value';
+import { ApiKey } from '../auth/auth';
+import * as proto from '../protocol/protocol';
 
 export class ApiHeaders {
 
-  private readonly deviceIdKey = "X-Device-Id";
-  private readonly apiKeyKey = "X-Api-Key";
+  private readonly deviceIdKey = 'X-Device-Id';
+  private readonly apiKeyKey = 'X-Api-Key';
 
   private _deviceId: proto.ID;
   private _apiKey: ApiKey;

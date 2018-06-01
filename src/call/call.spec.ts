@@ -1,25 +1,28 @@
-import { ArtichokeAPI, CallReason } from "./api";
-import { Call, callType as ct, createCall, GroupCall } from "./call";
-import { EventHandler } from "./events";
-import { apiKey, config, deviceId, getStream, isWebRTCSupported, log, sessionId, whenever } from "./fixtures.spec";
-import { callEvents } from "./protocol/events/call-events";
-import { decoder } from "./protocol/events/domain-event";
-import { errorEvents } from "./protocol/events/error-events";
-import { ID } from "./protocol/protocol";
-import { Call as ProtoCall } from "./protocol/wire-entities";
-import { RTCPool } from "./rtc";
+import { Call, callType as ct, createCall, GroupCall } from './call';
+import { EventHandler } from '../events/events';
+import {
+  apiKeyMock, config, deviceIdMock, getStream, isWebRTCSupported, log, sessionIdMock, whenever
+} from '../test-utils';
+import { callEvents } from '../protocol/events/call-events';
+import { decoder } from '../protocol/events/domain-event';
+import { errorEvents } from '../protocol/events/error-events';
+import { ID } from '../protocol/protocol';
+import { Call as ProtoCall } from '../protocol/wire-entities';
+import { RTCPool } from '../rtc/rtc';
 import EndReason = callEvents.EndReason;
 import CallType = ct.CallType;
+import { ArtichokeAPI } from '../apis/artichoke-api';
+import { CallReason } from '../apis/call-reason';
 
-const callId = "123";
-const alice = "321";
-const bob = "456";
-const chad = "987";
-const david = "654";
-const msg1 = 2323;
-const msg2 = 1313;
+const callId = '123';
+const alice = '321';
+const bob = '456';
+const chad = '987';
+const david = '654';
+const msg1Mock = 2323;
+const msg2Mock = 1313;
 
-function msg(ts: number): callEvents.Joined {
+function msgFn(ts: number): callEvents.Joined {
   return new callEvents.Joined(callId, alice, ts);
 }
 
@@ -31,11 +34,11 @@ class APIMock extends ArtichokeAPI {
   invited: string;
 
   constructor(sessionId) {
-    super(sessionId, apiKey, config.chat, log);
+    super(sessionId, apiKeyMock, config.chat, log);
   }
 
   getCallHistory(id) {
-    return Promise.resolve([msg(msg1), msg(msg2)]);
+    return Promise.resolve([msgFn(msg1Mock), msgFn(msg2Mock)]);
   }
 
   getCallUsers(id) {
@@ -98,7 +101,7 @@ function makeCall(callType: CallType) {
       return call;
 
     default:
-      throw Error("invalid CallType");
+      throw Error('invalid CallType');
   }
 }
 
@@ -112,7 +115,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
   } as ProtoCall;
 }
 
-["DirectCall", "GroupCall"].forEach((d) => {
+['DirectCall', 'GroupCall'].forEach((d) => {
   describe(d, () => {
     let events;
     let api;
@@ -120,19 +123,19 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
 
     beforeEach(() => {
       events = new EventHandler(log, decoder);
-      api = new APIMock(sessionId);
-      const callType = d === "DirectCall" ? CallType.DIRECT : CallType.GROUP;
+      api = new APIMock(sessionIdMock);
+      const callType = d === 'DirectCall' ? CallType.DIRECT : CallType.GROUP;
       call = createCall(makeCall(callType), config.chat.rtc, log, events, api);
     });
 
-    it("for creator should create RTC connection with old users in call", (done) => {
-      const api = new APIMock(alice);
-      spyOn(api, "getCallUsers").and.returnValue(Promise.resolve([alice, bob, chad, david]));
+    it('for creator should create RTC connection with old users in call', (done) => {
+      const apiMock = new APIMock(alice);
+      spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([alice, bob, chad, david]));
 
       const usersToOffer = new Set([bob, chad, david]);
       const usersNotToOffer = new Set([alice]);
 
-      spyOn(RTCPool.prototype, "create").and.callFake((u) => {
+      spyOn(RTCPool.prototype, 'create').and.callFake((u) => {
         if (usersNotToOffer.has(u)) {
           done.fail();
         } else {
@@ -142,28 +145,31 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
           }
         }
       });
-      createCall(makeGroupCall(alice, [alice, david]), config.chat.rtc, log, events, api) as GroupCall;
 
+      // tslint:disable-next-line
+      createCall(makeGroupCall(alice, [alice, david]), config.chat.rtc, log, events, apiMock) as GroupCall;
     });
 
-    it("for not creator should not create RTC connection with old users in call", (done) => {
-      const api = new APIMock(bob);
-      spyOn(api, "getCallUsers").and.returnValue(Promise.resolve([alice, bob, chad, david]));
-      spyOn(RTCPool.prototype, "create").and.callFake((u) => done.fail());
-      createCall(makeGroupCall(alice, [alice, david]), config.chat.rtc, log, events, api) as GroupCall;
+    it('for not creator should not create RTC connection with old users in call', (done) => {
+      const apiMock = new APIMock(bob);
+      spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([alice, bob, chad, david]));
+      spyOn(RTCPool.prototype, 'create').and.callFake((u) => done.fail());
+
+      // tslint:disable-next-line
+      createCall(makeGroupCall(alice, [alice, david]), config.chat.rtc, log, events, apiMock) as GroupCall;
       done();
     });
 
-    it("should retrieve history", (done) => {
+    it('should retrieve history', (done) => {
       call.getMessages().then((msgs) => {
         let tss = msgs.map((m) => m.timestamp);
-        expect(tss).toContain(msg1);
-        expect(tss).toContain(msg2);
+        expect(tss).toContain(msg1Mock);
+        expect(tss).toContain(msg2Mock);
         done();
       });
     });
 
-    it("should allow rejecting", (done) => {
+    it('should allow rejecting', (done) => {
       events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
       call.reject(CallReason.CallRejected).then(() => {
@@ -172,7 +178,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       });
     });
 
-    whenever(isWebRTCSupported())("should run a callback on join", (done) => {
+    whenever(isWebRTCSupported())('should run a callback on join', (done) => {
       getStream((stream) => {
         call.addStream(stream);
 
@@ -187,7 +193,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       }, (error) => done.fail());
     });
 
-    it("should run a callback on leave", (done) => {
+    it('should run a callback on leave', (done) => {
       events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
       call.onLeft((msg) => {
@@ -198,7 +204,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       events.notify(new callEvents.Left(call.id, alice, EndReason.CallRejected, Date.now()));
     });
 
-    it("should run a callback on offline call action", (done) => {
+    it('should run a callback on offline call action', (done) => {
       events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
       call.onOffline((msg) => {
@@ -206,10 +212,10 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
         done();
       });
 
-      events.notify(new callEvents.DeviceOffline(call.id, alice, deviceId, Date.now()));
+      events.notify(new callEvents.DeviceOffline(call.id, alice, deviceIdMock, Date.now()));
     });
 
-    it("should run a callback on online call action", (done) => {
+    it('should run a callback on online call action', (done) => {
       events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
       call.onOnline((msg) => {
@@ -217,10 +223,10 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
         done();
       });
 
-      events.notify(new callEvents.DeviceOnline(call.id, alice, deviceId, Date.now()));
+      events.notify(new callEvents.DeviceOnline(call.id, alice, deviceIdMock, Date.now()));
     });
 
-    it("should run a callback on answer", (done) => {
+    it('should run a callback on answer', (done) => {
       events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
       call.onAnswered((msg) => {
@@ -231,7 +237,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       events.notify(new callEvents.Answered(call.id, alice, Date.now()));
     });
 
-    whenever(isWebRTCSupported())("should run a callback on active device", (done) => {
+    whenever(isWebRTCSupported())('should run a callback on active device', (done) => {
       getStream((stream) => {
         call.pull(stream);
 
@@ -242,11 +248,11 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
           done();
         });
 
-        events.notify(new callEvents.CallHandledOnDevice(call.id, chad, deviceId, Date.now()));
+        events.notify(new callEvents.CallHandledOnDevice(call.id, chad, deviceIdMock, Date.now()));
       }, (error) => done.fail());
     });
 
-    it("should run a callback on reject", (done) => {
+    it('should run a callback on reject', (done) => {
       events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
       call.onRejected((msg) => {
@@ -257,7 +263,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       events.notify(new callEvents.Rejected(call.id, alice, EndReason.Disconnected, Date.now()));
     });
 
-    it("should run a callback on end", (done) => {
+    it('should run a callback on end', (done) => {
       events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
       call.onEnd((msg) => {
@@ -268,9 +274,9 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       events.notify(new callEvents.Ended(call.id, EndReason.Disconnected, Date.now()));
     });
 
-    it("should run a callback on ActiveDevice", (done) => {
+    it('should run a callback on ActiveDevice', (done) => {
       events.onEvent(errorEvents.Error.tag, (error) => done.fail());
-      const deviceId = "aliceDevice";
+      const deviceId = 'aliceDevice';
 
       call.onActiveDevice((msg) => {
         expect(msg.callId).toBe(call.id);
@@ -281,7 +287,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       events.notify(new callEvents.CallHandledOnDevice(call.id, alice, deviceId, Date.now()));
     });
 
-    whenever(isWebRTCSupported())("should maintain the user list", (done) => {
+    whenever(isWebRTCSupported())('should maintain the user list', (done) => {
       getStream((stream) => {
         call.addStream(stream);
 
@@ -313,7 +319,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
     });
 
     // FIXME These should be moved to integration tests:
-    whenever(isWebRTCSupported())("should allow answering", (done) => {
+    whenever(isWebRTCSupported())('should allow answering', (done) => {
       getStream((stream) => {
         events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
@@ -324,7 +330,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
       }, (error) => done.fail());
     });
 
-    it("should allow leaving", (done) => {
+    it('should allow leaving', (done) => {
       events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
       call.leave(CallReason.CallRejected).then(() => {
@@ -335,21 +341,21 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
   });
 });
 
-describe("GroupCall", () => {
+describe('GroupCall', () => {
   let events;
   let api;
   let call: GroupCall;
 
   beforeEach(() => {
     events = new EventHandler(log, decoder);
-    api = new APIMock(sessionId);
+    api = new APIMock(sessionIdMock);
     call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api) as GroupCall;
   });
 
-  it("should run a callback on invitation", (done) => {
+  it('should run a callback on invitation', (done) => {
     events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
-    const ctx = {exampleField: "exampleField"};
+    const ctx = {exampleField: 'exampleField'};
     call.onInvited((msg) => {
       expect(msg.authorId).toBe(alice);
       expect(msg.invitee).toBe(chad);
@@ -361,7 +367,7 @@ describe("GroupCall", () => {
   });
 
   // FIXME These should be moved to integration tests:
-  whenever(isWebRTCSupported())("should allow joining", (done) => {
+  whenever(isWebRTCSupported())('should allow joining', (done) => {
     getStream((stream) => {
       events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
@@ -372,7 +378,7 @@ describe("GroupCall", () => {
     }, (error) => done.fail());
   });
 
-  it("should allow inviting users", (done) => {
+  it('should allow inviting users', (done) => {
     events.onEvent(errorEvents.Error.tag, (error) => done.fail());
 
     call.invite(bob).then(() => {
@@ -382,11 +388,11 @@ describe("GroupCall", () => {
   });
 });
 
-describe("DirectCall, GroupCall", () => {
+describe('DirectCall, GroupCall', () => {
   const events = new EventHandler(log, decoder);
-  const api = new APIMock(sessionId);
+  const api = new APIMock(sessionIdMock);
 
-  it("should have proper callType field defined", () => {
+  it('should have proper callType field defined', () => {
     const directCall: Call = createCall(makeCall(CallType.DIRECT), config.chat.rtc, log, events, api);
     const groupCall: Call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api);
     expect(directCall.callType).toEqual(CallType.DIRECT);

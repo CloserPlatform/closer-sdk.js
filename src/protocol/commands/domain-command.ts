@@ -1,8 +1,8 @@
-import { Encoder } from "../../codec";
+import { Encoder } from '../../codec';
 
 export interface DomainCommand {
   readonly tag: string;
-  readonly __discriminator__: "domainCommand";
+  readonly __discriminator__: 'domainCommand';
 }
 
 export const encoder: Encoder<DomainCommand> = {

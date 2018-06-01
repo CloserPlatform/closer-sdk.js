@@ -1,4 +1,4 @@
-import { DomainCommand } from "./domain-command";
+import { DomainCommand } from './domain-command';
 
 export namespace rtcCommands {
 
@@ -12,11 +12,11 @@ export namespace rtcCommands {
     readonly callId: string;
     readonly peer: string;
     readonly tag: string;
-    readonly __discriminator__ = "domainCommand";
+    readonly __discriminator__ = 'domainCommand';
   }
 
   export class SendDescription extends RTCSignallingCommand {
-    static readonly tag = "rtc_send_description";
+    static readonly tag = 'rtc_send_description';
     constructor(callId: string, peer: string, sdp: RTCSessionDescriptionInit) {
       super(callId, peer, SendDescription.tag);
       this.sdp = sdp;
@@ -25,7 +25,7 @@ export namespace rtcCommands {
   }
 
   export class SendCandidate extends RTCSignallingCommand {
-    static readonly tag = "rtc_send_candidate";
+    static readonly tag = 'rtc_send_candidate';
     constructor(callId: string, peer: string, iceCandidate: RTCIceCandidate) {
       super(callId, peer, SendCandidate.tag);
       this.iceCandidate = iceCandidate;

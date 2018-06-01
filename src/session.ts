@@ -1,11 +1,11 @@
-import { ArtichokeAPI } from "./api";
-import { Artichoke } from "./artichoke";
-import { ApiKey } from "./auth";
-import { Config } from "./config";
-import { EventHandler } from "./events";
-import * as logger from "./logger";
-import { decoder } from "./protocol/events/domain-event";
-import { ID } from "./protocol/protocol";
+import { Artichoke } from './artichoke/artichoke';
+import { ApiKey } from './auth/auth';
+import { Config } from './config/config';
+import { EventHandler } from './events/events';
+import * as logger from './logger';
+import { decoder } from './protocol/events/domain-event';
+import { ID } from './protocol/protocol';
+import { ArtichokeAPI } from './apis/artichoke-api';
 
 export class Session {
   public id: ID;
@@ -15,7 +15,7 @@ export class Session {
     const logLevel = config.logLevel !== undefined ? config.logLevel : logger.LogLevel.NONE;
     const log = new logger.ConsoleLogger(logLevel);
 
-    log.info("Configuration: " + JSON.stringify(config));
+    log.info('Configuration: ' + JSON.stringify(config));
 
     this.id = id;
     const events: EventHandler = new EventHandler(log, decoder);

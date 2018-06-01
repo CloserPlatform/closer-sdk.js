@@ -1,20 +1,20 @@
-import { ArtichokeAPI } from "./api";
-import { Call, createCall, DirectCall, GroupCall } from "./call";
-import { ChatConfig } from "./config";
-import { Callback, EventHandler } from "./events";
-import { Logger } from "./logger";
-import { serverCommands } from "./protocol/commands/server-command";
-import { callEvents } from "./protocol/events/call-events";
-import { chatEvents } from "./protocol/events/chat-events";
-import { DomainEvent } from "./protocol/events/domain-event";
-import { errorEvents } from "./protocol/events/error-events";
-import { internalEvents } from "./protocol/events/internal-events";
-import { roomEvents } from "./protocol/events/room-events";
-import { serverEvents } from "./protocol/events/server-events";
-import * as proto from "./protocol/protocol";
-import * as wireEntities from "./protocol/wire-entities";
-import { createRoom, DirectRoom, GroupRoom, Room } from "./room";
-import { BumpableTimeout, wrapPromise } from "./utils";
+import { Call, createCall, DirectCall, GroupCall } from '../call/call';
+import { ChatConfig } from '../config/config';
+import { Callback, EventHandler } from '../events/events';
+import { Logger } from '../logger';
+import { serverCommands } from '../protocol/commands/server-command';
+import { callEvents } from '../protocol/events/call-events';
+import { chatEvents } from '../protocol/events/chat-events';
+import { DomainEvent } from '../protocol/events/domain-event';
+import { errorEvents } from '../protocol/events/error-events';
+import { internalEvents } from '../protocol/events/internal-events';
+import { roomEvents } from '../protocol/events/room-events';
+import { serverEvents } from '../protocol/events/server-events';
+import * as proto from '../protocol/protocol';
+import * as wireEntities from '../protocol/wire-entities';
+import { createRoom, DirectRoom, GroupRoom, Room } from '../room/room';
+import { BumpableTimeout, wrapPromise } from '../utils/utils';
+import { ArtichokeAPI } from '../apis/artichoke-api';
 
 export class Artichoke {
   private api: ArtichokeAPI;
@@ -172,7 +172,7 @@ export class Artichoke {
 
   private notify(event: DomainEvent): void {
     this.events.notify(event, (e) =>
-      this.events.notify(new errorEvents.Error("Unhandled event: " + e.tag))
+      this.events.notify(new errorEvents.Error('Unhandled event: ' + e.tag))
     );
   }
 

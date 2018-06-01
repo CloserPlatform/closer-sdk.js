@@ -1,8 +1,8 @@
-import { RatelAPI } from "./api";
-import { Config, load } from "./config";
-import * as logger from "./logger";
-import { ID, Timestamp } from "./protocol/protocol";
-import { Session } from "./session";
+import { Config, load } from '../config/config';
+import * as logger from '../logger';
+import { ID, Timestamp } from '../protocol/protocol';
+import { Session } from '../session';
+import { RatelAPI } from '../apis/ratel-api';
 
 export type ApiKey = string;
 export type Signature = string;
