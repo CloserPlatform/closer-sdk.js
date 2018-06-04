@@ -1,0 +1,1 @@
+Refactored calls without logic

@@ -1,7 +1,7 @@
 import { Artichoke } from './artichoke/artichoke';
 import { ApiKey } from './auth/auth';
 import { Config } from './config/config';
-import { EventHandler } from './events/events';
+import { EventHandler } from './events/event-handler';
 import * as logger from './logger';
 import { decoder } from './protocol/events/domain-event';
 import { ID } from './protocol/protocol';

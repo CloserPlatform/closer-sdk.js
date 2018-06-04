@@ -6,7 +6,7 @@ import * as proto from '../protocol/protocol';
 import { Logger } from '../logger';
 import { internalEvents } from '../protocol/events/internal-events';
 import { roomCommand } from '../protocol/commands/room-commands';
-import { Callback } from '../events/events';
+import { Callback } from '../events/event-handler';
 import { RESTfulAPI } from './restful-api';
 import { PromiseFunctions } from '../utils/promise';
 

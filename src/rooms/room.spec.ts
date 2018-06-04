@@ -1,4 +1,4 @@
-import { EventHandler } from '../events/events';
+import { EventHandler } from '../events/event-handler';
 import { apiKeyMock, config, log, sessionIdMock } from '../test-utils';
 import { chatEvents } from '../protocol/events/chat-events';
 import { decoder } from '../protocol/events/domain-event';

@@ -1,40 +1,19 @@
-import { Callback, EventHandler } from '../events/events';
 import { Logger } from '../logger';
 import { callEvents } from '../protocol/events/call-events';
 import * as proto from '../protocol/protocol';
 import * as wireEntities from '../protocol/wire-entities';
-import {
-  createRTCPool,
-  HackedRTCOfferOptions as RTCOfferOptions,
-  RemoteStreamCallback,
-  RTCAnswerOptions,
-  RTCConfig,
-  RTCConnectionConstraints,
-  RTCPool
-} from '../rtc/rtc';
 import { randomUUID, UUID } from '../utils/utils';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { CallReason } from '../apis/call-reason';
-
-export namespace callType {
-  export enum CallType {
-    DIRECT,
-    GROUP,
-    BUSINESS,
-  }
-
-  export function isDirect(call: Call): call is DirectCall {
-    return call.callType === CallType.DIRECT;
-  }
-
-  export function isGroup(call: Call): call is GroupCall {
-    return call.callType === CallType.GROUP;
-  }
-
-  export function isBusiness(call: Call): call is BusinessCall {
-    return call.callType === CallType.BUSINESS;
-  }
-}
+import { CallType } from './call-type';
+import { Callback, EventHandler } from '../events/event-handler';
+import { RTCPool } from '../rtc/rtc-pool';
+import { createRTCPool } from '../rtc/create-rtc-pool';
+import { RTCConfig } from '../rtc/rtc-config';
+import { RemoteStreamCallback } from '../rtc/remote-stream-callback';
+import { RTCAnswerOptions } from '../rtc/rtc-answer-options';
+import { RTCConnectionConstraints } from '../rtc/rtc-connection-constraints';
+import { HackedRTCOfferOptions } from '../rtc/hacked-rtc-offer-options';
 
 export abstract class Call implements wireEntities.Call {
   private readonly uuid: UUID = randomUUID();
@@ -61,7 +40,7 @@ export abstract class Call implements wireEntities.Call {
   private onAnsweredCallback: Callback<callEvents.Answered>;
   private onRejectedCallback: Callback<callEvents.Rejected>;
 
-  public abstract readonly callType: callType.CallType;
+  public abstract readonly callType: CallType;
 
   constructor(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
               api: ArtichokeAPI, stream?: MediaStream) {
@@ -169,7 +148,7 @@ export abstract class Call implements wireEntities.Call {
     this.pool.setAnswerOptions(options);
   }
 
-  setOfferOptions(options: RTCOfferOptions) {
+  setOfferOptions(options: HackedRTCOfferOptions) {
     this.pool.setOfferOptions(options);
   }
 
@@ -237,41 +216,5 @@ export abstract class Call implements wireEntities.Call {
       this.ended = e.timestamp;
       callback(e);
     });
-  }
-}
-
-export class DirectCall extends Call {
-  public readonly callType: callType.CallType = callType.CallType.DIRECT;
-}
-
-export class GroupCall extends Call {
-  public readonly callType: callType.CallType = callType.CallType.GROUP;
-
-  invite(user: proto.ID): Promise<void> {
-    return this.api.inviteToCall(this.id, user);
-  }
-
-  join(stream: MediaStream): Promise<void> {
-    this.addStream(stream);
-    return this.api.joinCall(this.id);
-  }
-
-  onInvited(callback: Callback<callEvents.Invited>) {
-    this.onInvitedCallback = callback;
-  }
-}
-
-export class BusinessCall extends GroupCall {
-  public readonly callType: callType.CallType = callType.CallType.BUSINESS;
-}
-
-export function createCall(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
-                           api: ArtichokeAPI, stream?: MediaStream): Call {
-  if (call.direct) {
-    return new DirectCall(call, config, log, events, api, stream);
-  } else if (call.orgId) {
-    return new BusinessCall(call, config, log, events, api, stream);
-  } else {
-    return new GroupCall(call, config, log, events, api, stream);
   }
 }
