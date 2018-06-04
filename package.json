@@ -67,7 +67,7 @@
     "tslint-immutable": "^4.5.4",
     "tslint-loader": "^3.5.3",
     "typedoc": "^0.7.1",
-    "typescript": "^2.7.1",
+    "typescript": "^2.9.1",
     "watchify": "^3.9.0",
     "webpack": "^3.8.1"
   },
