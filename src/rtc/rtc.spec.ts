@@ -26,23 +26,20 @@ const callIdMock = '123';
 const peerAId = '321';
 const peerBId = '333';
 
-function descr(sdp): rtcEvents.DescriptionSent {
-  return new rtcEvents.DescriptionSent(callIdMock, peerAId, sdp);
-}
+const descr = (sdp): rtcEvents.DescriptionSent =>
+  new rtcEvents.DescriptionSent(callIdMock, peerAId, sdp);
 
-function logError(done): (err) => void {
-  return function (error): void {
+const logError = (done): (err) => void =>
+  (error): void => {
     log.error('Got an error: ' + error + ' (' + JSON.stringify(error) + ')');
     if (typeof error.cause !== 'undefined') {
       log.error('Cause: ' + error.cause);
     }
     done.fail();
   };
-}
 
-function addLocalStream(pool: RTCPool | RTCConnection, stream: MediaStream): void {
+const addLocalStream = (pool: RTCPool | RTCConnection, stream: MediaStream): void =>
   stream.getTracks().forEach((t) => pool.addTrack(t, stream));
-}
 
 class APIMock extends ArtichokeAPI {
   public descriptionSent = false;
@@ -135,7 +132,7 @@ describe('RTCConnection', () => {
     }, logError(done));
   });
 
-  function testRenegotiation(peerA, peerB, trigger, calleeId, done): void {
+  const testRenegotiation = (peerA, peerB, trigger, calleeId, done): void => {
     // 0. Initial setup...
     getStream((streamA) => {
       log.info('Got stream A.');
@@ -152,7 +149,7 @@ describe('RTCConnection', () => {
           candidates.push({peer, candidate});
         };
 
-        function exchange(): void {
+        const exchange = (): void => {
           log.info('Exchanging candidates.');
           Promise.all(candidates.map((c) => {
             if (c.peer === peerAId) {
@@ -183,7 +180,7 @@ describe('RTCConnection', () => {
             // FIXME transition into an established state.
             sleep(100).then(trigger);
           }).catch(logError(done));
-        }
+        };
 
         let doneA = false;
         let doneB = false;
@@ -216,7 +213,7 @@ describe('RTCConnection', () => {
         }).catch(logError(done));
       }, logError(done));
     }, logError(done));
-  }
+  };
 
   whenever(isWebRTCSupported())('should renegotiate SDP on caller side', (done) => {
     const peerB = createRTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
@@ -272,7 +269,7 @@ describe('RTCPool', () => {
 
   whenever(isWebRTCSupported())('should create an RTC connection', (done) => {
     getStream((stream) => {
-      api.onDescription = function (id, peer, sdp): void {
+      api.onDescription = (id, peer, sdp): void => {
         expect(api.descriptionSent).toBe(true);
         expect(id).toBe(callIdMock);
         expect(peer).toBe(peerAId);

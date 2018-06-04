@@ -8,7 +8,7 @@ import { internalEvents } from '../protocol/events/internal-events';
 import { roomCommand } from '../protocol/commands/room-commands';
 import { Callback } from '../events/event-handler';
 import { RESTfulAPI } from './restful-api';
-import { PromiseFunctions } from '../utils/promise';
+import { PromiseFunctions } from '../utils/promise-utils';
 
 export class APIWithWebsocket extends RESTfulAPI {
   private socket: JSONWebSocket;

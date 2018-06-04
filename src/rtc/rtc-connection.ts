@@ -1,7 +1,6 @@
 // FIXME Unfuck when Chrome transitions to the Unified Plan.
 import { errorEvents } from '../protocol/events/error-events';
 import { Logger } from '../logger';
-import { onceDelayed } from '../utils/utils';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { ID } from '../protocol/protocol';
 import { Callback, EventHandler } from '../events/event-handler';
@@ -11,6 +10,7 @@ import { HackedRTCOfferOptions } from './hacked-rtc-offer-options';
 import { RTCAnswerOptions } from './rtc-answer-options';
 import { RTCConfig } from './rtc-config';
 import { RTCConnectionConstraints } from './rtc-connection-constraints';
+import { TimeUtils } from '../utils/time-utils';
 
 export class RTCConnection {
   private call: ID;
@@ -77,7 +77,7 @@ export class RTCConnection {
       // FIXME Chrome triggers renegotiation on... Initial offer creation...
       // FIXME Firefox triggers renegotiation when remote offer is received.
       if (this.isEstablished()) {
-        this.renegotiationTimer = onceDelayed(this.renegotiationTimer, 100, () => {
+        this.renegotiationTimer = TimeUtils.onceDelayed(this.renegotiationTimer, 100, () => {
           this.log.debug('Renegotiating an RTC connection.');
           this.offer().catch((err) => {
             this.events.notify(new errorEvents.Error('Could not renegotiate the connection: ' + err));

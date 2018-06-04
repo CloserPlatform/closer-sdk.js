@@ -1,8 +1,8 @@
 import { ApiKey } from '../auth/auth';
 import * as logger from '../logger';
 import { ID } from '../protocol/protocol';
-import { deepcopy } from '../utils/utils';
 import { RTCConfig } from '../rtc/rtc-config';
+import { ObjectUtils } from '../utils/object-utils';
 
 export interface URLConfig {
   protocol?: string;
@@ -57,10 +57,10 @@ export const defaultConfig: Config = {
   },
 };
 
-export function load(conf: Config): Config {
+export const load = (conf: Config): Config => {
 
   // tslint:disable-next-line:no-any
-  function merge(a: any, b: any): any {
+  const merge = (a: any, b: any): any => {
     if (Array.isArray(a)) {
       return a.map((ai, i) => merge(ai, b[i]));
     } else if (typeof a === 'object') {
@@ -73,7 +73,7 @@ export function load(conf: Config): Config {
     } else {
       return a;
     }
-  }
+  };
 
-  return merge(deepcopy(conf), deepcopy(defaultConfig));
-}
+  return merge(ObjectUtils.deepcopy(conf), ObjectUtils.deepcopy(defaultConfig));
+};

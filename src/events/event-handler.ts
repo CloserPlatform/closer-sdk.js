@@ -2,7 +2,7 @@ import { Decoder } from '../codec';
 import { Logger } from '../logger';
 import { DomainEvent } from '../protocol/events/domain-event';
 import { ID, Type } from '../protocol/protocol';
-import { UUID } from '../utils/utils';
+import { UUID } from '../utils/random-utils';
 
 export type Callback<T> = (arg: T) => void;
 

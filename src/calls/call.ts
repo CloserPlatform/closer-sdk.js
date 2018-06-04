@@ -2,7 +2,6 @@ import { Logger } from '../logger';
 import { callEvents } from '../protocol/events/call-events';
 import * as proto from '../protocol/protocol';
 import * as wireEntities from '../protocol/wire-entities';
-import { randomUUID, UUID } from '../utils/utils';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { CallReason } from '../apis/call-reason';
 import { CallType } from './call-type';
@@ -14,6 +13,7 @@ import { RemoteStreamCallback } from '../rtc/remote-stream-callback';
 import { RTCAnswerOptions } from '../rtc/rtc-answer-options';
 import { RTCConnectionConstraints } from '../rtc/rtc-connection-constraints';
 import { HackedRTCOfferOptions } from '../rtc/hacked-rtc-offer-options';
+import { RandomUtils, UUID } from '../utils/random-utils';
 
 export abstract class Call implements wireEntities.Call {
   public id: proto.ID;
@@ -40,7 +40,7 @@ export abstract class Call implements wireEntities.Call {
   private onAnsweredCallback: Callback<callEvents.Answered>;
   private onRejectedCallback: Callback<callEvents.Rejected>;
 
-  private readonly uuid: UUID = randomUUID();
+  private readonly uuid: UUID = RandomUtils.randomUUID();
 
   constructor(call: wireEntities.Call, config: RTCConfig, log: Logger, events: EventHandler,
               api: ArtichokeAPI, stream?: MediaStream) {

@@ -25,9 +25,8 @@ const msg1 = '2323';
 const msg2 = '1313';
 const msg3 = '4545';
 
-function msgFn(id: string, body?: string): roomEvents.MessageSent {
-  return new roomEvents.MessageSent(roomId, alice, body ? body : 'Hi!', id, {}, 123);
-}
+const msgFn = (id: string, body?: string): roomEvents.MessageSent =>
+  new roomEvents.MessageSent(roomId, alice, body ? body : 'Hi!', id, {}, 123);
 
 class APIMock extends ArtichokeAPI {
   public sentTyping = false;
@@ -105,7 +104,7 @@ class APIMock extends ArtichokeAPI {
   }
 }
 
-function makeRoom(type: RoomType): wireEntities.Room {
+const makeRoom = (type: RoomType): wireEntities.Room => {
   const room: wireEntities.Room = {
     id: roomId,
     name: 'room',
@@ -132,7 +131,7 @@ function makeRoom(type: RoomType): wireEntities.Room {
     default:
       throw Error('invalid RoomType');
   }
-}
+};
 
 ['DirectRoom', 'GroupRoom'].forEach((d) => {
   describe(d, () => {

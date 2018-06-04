@@ -7,10 +7,10 @@ import { ID, Paginated } from '../protocol/protocol';
 // tslint:disable-next-line:no-duplicate-imports
 import * as proto from '../protocol/protocol';
 import * as wireEntities from '../protocol/wire-entities';
-import { randomUUID, TransferFunction, UUID } from '../utils/utils';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { RoomType } from './room-type';
 import RoomEvent = roomEvents.RoomEvent;
+import { RandomUtils, UUID } from '../utils/random-utils';
 
 export abstract class Room implements wireEntities.Room {
 
@@ -23,7 +23,7 @@ export abstract class Room implements wireEntities.Room {
     public marks: { [type: string]: proto.Timestamp };
 
     public abstract readonly roomType: RoomType;
-    protected readonly uuid: UUID = randomUUID();
+    protected readonly uuid: UUID = RandomUtils.randomUUID();
     protected events: EventHandler;
     protected api: ArtichokeAPI;
 
@@ -139,7 +139,7 @@ export abstract class Room implements wireEntities.Room {
         return this.wrapPagination(p, (m: roomEvents.RoomEvent) => m);
     }
 
-    private wrapPagination<T, U>(p: Promise<proto.Paginated<T>>, f: TransferFunction<T, U>):
+    private wrapPagination<T, U>(p: Promise<proto.Paginated<T>>, f: (arg: T) => U):
     Promise<proto.Paginated<U>> {
         return p.then((t) =>
             ({

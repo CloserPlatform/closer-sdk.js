@@ -1,22 +1,26 @@
-import { BumpableTimeout, deepcopy, isBrowserSupported, isChrome, isFirefox, onceDelayed, wrapPromise } from './utils';
+import { PromiseUtils } from './promise-utils';
+import { ObjectUtils } from './object-utils';
+import { BrowserUtils } from './browser-utils';
+import { TimeUtils } from './time-utils';
+import { BumpableTimeout } from './bumpable-timeout';
 
 describe('Utils', () => {
   it('wrapPromise should replace a Promise', (done) => {
     const fun = (i: number): string => i.toString();
 
-    wrapPromise(Promise.resolve([23]), fun).then((i) => {
+    PromiseUtils.wrapPromise(Promise.resolve([23]), fun).then((i) => {
       expect(i).toEqual(['23']);
       done();
     }).catch((error) => done.fail());
 
-    wrapPromise(Promise.reject<Array<number>>('nope'), fun).then((i) => done.fail()).catch((error) => {
+    PromiseUtils.wrapPromise(Promise.reject<Array<number>>('nope'), fun).then((i) => done.fail()).catch((error) => {
       expect(error).toEqual('nope');
       done();
     });
   });
 
   it('wrapPromise should reject if an error appears in mapping', (done) => {
-    wrapPromise(Promise.resolve([23]), (i: number) => {
+    PromiseUtils.wrapPromise(Promise.resolve([23]), (i: number) => {
       throw Error('error!');
     }).then((i) => done.fail()).catch((error) => done());
   });
@@ -29,7 +33,7 @@ describe('Utils', () => {
       }
     };
 
-    const cpy = deepcopy(obj) as typeof obj;
+    const cpy = ObjectUtils.deepcopy(obj) as typeof obj;
     expect(cpy).toEqual(obj);
 
     obj.bar.baz = 42;
@@ -37,19 +41,19 @@ describe('Utils', () => {
   });
 
   it('isBrowserSupported should check if browser is supported', () => {
-    if (isChrome()) {
-      expect(isBrowserSupported()).toEqual(true);
-    } else if (isFirefox()) {
-      expect(isBrowserSupported()).toEqual(true);
+    if (BrowserUtils.isChrome()) {
+      expect(BrowserUtils.isBrowserSupported()).toEqual(true);
+    } else if (BrowserUtils.isFirefox()) {
+      expect(BrowserUtils.isBrowserSupported()).toEqual(true);
     }
   });
 
   it('onceDelayed should only execute once', (done) => {
     let timer: number;
-    timer = onceDelayed(timer, 50, () => {
+    timer = TimeUtils.onceDelayed(timer, 50, () => {
       done.fail();
     });
-    timer = onceDelayed(timer, 100, () => {
+    timer = TimeUtils.onceDelayed(timer, 100, () => {
       done();
     });
   });

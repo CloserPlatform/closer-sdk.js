@@ -29,8 +29,6 @@
     "test:watch:chrome": "karma start --singleRun false --browsers ChromeWithFakeUserMedia",
     "test:grep": "karma run -- --grep"
   },
-  "author": "Kajetan Rzepecki <kajtek@idorobots.org>",
-  "license": "MIT",
   "dependencies": {
     "webrtc-adapter": "^6.0.4"
   },

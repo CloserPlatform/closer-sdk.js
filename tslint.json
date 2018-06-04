@@ -126,7 +126,7 @@
     "number-literal-format": true,
     // "object-literal-sort-keys": true,
     "one-variable-per-declaration": true,
-    // "only-arrow-functions": true,
+    "only-arrow-functions": true,
     // "ordered-imports": true,
     // "prefer-conditional-expression": true,
     "prefer-for-of": true,

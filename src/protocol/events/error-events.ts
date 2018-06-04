@@ -1,26 +1,20 @@
 // tslint:disable:no-namespace
-// tslint:disable:max-classes-per-file
-// tslint:disable:ban-types
-// tslint:disable:member-ordering
-// tslint:disable:member-access
 import { DomainEvent } from './domain-event';
 
 export namespace errorEvents {
   export class Error implements DomainEvent {
-    static readonly tag = 'error';
+    public static readonly tag = 'error';
+    public readonly reason: string;
+    public readonly tag: string;
+    public readonly __discriminator__ = 'domainEvent';
 
     constructor(reason: string) {
       this.reason = reason;
       this.tag = Error.tag;
     }
 
-    readonly reason: string;
-    readonly tag: string;
-    readonly __discriminator__ = 'domainEvent';
   }
 
-  export function isError(evt: DomainEvent): evt is errorEvents.Error {
-    return evt.tag === errorEvents.Error.tag;
-  }
-
+  export const isError = (evt: DomainEvent): evt is errorEvents.Error =>
+    evt.tag === errorEvents.Error.tag;
 }

@@ -137,12 +137,9 @@ export namespace roomEvents {
 
   }
 
-  export function isMessage(evt: RoomEvent): evt is MessageSent {
-    return evt.tag === MessageSent.tag;
-  }
+  export const isMessage = (evt: RoomEvent): evt is MessageSent =>
+    evt.tag === MessageSent.tag;
 
-  export function isCustomMessage(evt: RoomEvent): evt is CustomMessageSent {
-    return evt.tag === CustomMessageSent.tag;
-  }
-
+  export const isCustomMessage = (evt: RoomEvent): evt is CustomMessageSent =>
+    evt.tag === CustomMessageSent.tag;
 }

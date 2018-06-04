@@ -24,11 +24,10 @@ export interface AgentContext {
   apiKey: ApiKey;
 }
 
-export function withApiKey(sessionId: ID, apiKey: ApiKey, config: Config): Promise<Session> {
-  return Promise.resolve(new Session(sessionId, apiKey, load(config)));
-}
+export const withApiKey = (sessionId: ID, apiKey: ApiKey, config: Config): Promise<Session> =>
+  Promise.resolve(new Session(sessionId, apiKey, load(config)));
 
-export function withSignedAuth(sessionData: SessionData, config: Config): Promise<Session> {
+export const withSignedAuth = (sessionData: SessionData, config: Config): Promise<Session> => {
   const cfg = load(config);
   // FIXME Logger should be the common logger.
   const logLevel = config.logLevel !== undefined ? config.logLevel : logger.LogLevel.NONE;
@@ -36,4 +35,4 @@ export function withSignedAuth(sessionData: SessionData, config: Config): Promis
 
   return api.verifySignature(sessionData).then((context: AgentContext) =>
     withApiKey(context.id, context.apiKey, cfg));
-}
+};

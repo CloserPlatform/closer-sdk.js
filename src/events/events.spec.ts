@@ -3,8 +3,8 @@ import { log } from '../test-utils';
 import { decoder } from '../protocol/events/domain-event';
 import { errorEvents } from '../protocol/events/error-events';
 import { roomEvents } from '../protocol/events/room-events';
-import { randomUUID } from '../utils/utils';
 import MarkSent = roomEvents.MarkSent;
+import { RandomUtils } from '../utils/random-utils';
 
 class ErrorWithCause extends errorEvents.Error {
   public cause: boolean;
@@ -15,9 +15,8 @@ class ErrorWithCause extends errorEvents.Error {
   }
 }
 
-function msgFn(id: string): MarkSent {
-  return new roomEvents.MarkSent(id, '123', Date.now());
-}
+const msgFn = (id: string): MarkSent =>
+  new roomEvents.MarkSent(id, '123', Date.now());
 
 describe('Event Handler', () => {
   let events: EventHandler;
@@ -75,7 +74,8 @@ describe('Event Handler', () => {
   it('should allow defining concrete event handlers', () => {
     let ok = '0';
 
-    events.onConcreteEvent(roomEvents.MarkSent.tag, '3', randomUUID(), (msg: roomEvents.MarkSent) => ok = msg.roomId);
+    events.onConcreteEvent(roomEvents.MarkSent.tag, '3', RandomUtils.randomUUID(),
+      (msg: roomEvents.MarkSent) => ok = msg.roomId);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msgFn(i.toString())));
 
@@ -86,8 +86,10 @@ describe('Event Handler', () => {
     let first = false;
     let second = false;
 
-    events.onConcreteEvent(roomEvents.MarkSent.tag, '3', randomUUID(), (msg: roomEvents.MarkSent) => first = true);
-    events.onConcreteEvent(roomEvents.MarkSent.tag, '1', randomUUID(), (msg: roomEvents.MarkSent) => second = true);
+    events.onConcreteEvent(roomEvents.MarkSent.tag, '3', RandomUtils.randomUUID(),
+      (msg: roomEvents.MarkSent) => first = true);
+    events.onConcreteEvent(roomEvents.MarkSent.tag, '1', RandomUtils.randomUUID(),
+      (msg: roomEvents.MarkSent) => second = true);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msgFn(i.toString())));
 
@@ -99,7 +101,8 @@ describe('Event Handler', () => {
     let first = false;
     let second = 0;
 
-    events.onConcreteEvent(roomEvents.MarkSent.tag, '3', randomUUID(), (msg: roomEvents.MarkSent) => first = true);
+    events.onConcreteEvent(roomEvents.MarkSent.tag, '3', RandomUtils.randomUUID(),
+      (msg: roomEvents.MarkSent) => first = true);
     events.onEvent(roomEvents.MarkSent.tag, (msg: roomEvents.MarkSent) => second++);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msgFn(i.toString())));
@@ -112,7 +115,8 @@ describe('Event Handler', () => {
     let first: roomEvents.MarkSent;
     let second: roomEvents.MarkSent;
 
-    events.onConcreteEvent(roomEvents.MarkSent.tag, '3', randomUUID(), (msg: roomEvents.MarkSent) => first = msg);
+    events.onConcreteEvent(roomEvents.MarkSent.tag, '3', RandomUtils.randomUUID(),
+      (msg: roomEvents.MarkSent) => first = msg);
     events.onEvent(roomEvents.MarkSent.tag, (msg: roomEvents.MarkSent) => {
       if (msg.roomId === '3') {
         second = msg;

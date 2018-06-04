@@ -26,9 +26,8 @@ const david = '654';
 const msg1Mock = 2323;
 const msg2Mock = 1313;
 
-function msgFn(ts: number): callEvents.Joined {
-  return new callEvents.Joined(callId, alice, ts);
-}
+const msgFn = (ts: number): callEvents.Joined =>
+  new callEvents.Joined(callId, alice, ts);
 
 class APIMock extends ArtichokeAPI {
   public joined = false;
@@ -92,7 +91,7 @@ class APIMock extends ArtichokeAPI {
   }
 }
 
-function makeCall(callType: CallType): ProtoCall {
+const makeCall = (callType: CallType): ProtoCall => {
   const call: ProtoCall = {
     id: callId,
     created: 123,
@@ -115,17 +114,16 @@ function makeCall(callType: CallType): ProtoCall {
     default:
       throw Error('invalid CallType');
   }
-}
+};
 
-function makeGroupCall(creator: ID, users: Array<ID>): ProtoCall {
-  return {
+const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
+  ({
     id: callId,
     created: 123,
     creator,
     users,
     direct: false,
-  };
-}
+  });
 
 ['DirectCall', 'GroupCall'].forEach((d) => {
   describe(d, () => {

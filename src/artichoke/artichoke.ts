@@ -11,7 +11,6 @@ import { roomEvents } from '../protocol/events/room-events';
 import { serverEvents } from '../protocol/events/server-events';
 import * as proto from '../protocol/protocol';
 import * as wireEntities from '../protocol/wire-entities';
-import { BumpableTimeout, wrapPromise } from '../utils/utils';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { GroupRoom } from '../rooms/group-room';
 import { DirectRoom } from '../rooms/direct-room';
@@ -21,6 +20,8 @@ import { GroupCall } from '../calls/group-call';
 import { DirectCall } from '../calls/direct-call';
 import { Call } from '../calls/call';
 import { createCall } from '../calls/create-call';
+import { BumpableTimeout } from '../utils/bumpable-timeout';
+import { PromiseUtils } from '../utils/promise-utils';
 
 export class Artichoke {
   private api: ArtichokeAPI;
@@ -118,17 +119,17 @@ export class Artichoke {
   }
 
   public getCalls(): Promise<Array<Call>> {
-    return wrapPromise(this.api.getCalls(),
+    return PromiseUtils.wrapPromise(this.api.getCalls(),
                        (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
   public getActiveCalls(): Promise<Array<Call>> {
-    return wrapPromise(this.api.getActiveCalls(),
+    return PromiseUtils.wrapPromise(this.api.getActiveCalls(),
                       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
   public getCallsWithPendingInvitations(): Promise<Array<Call>> {
-    return wrapPromise(this.api.getCallsWithPendingInvitations(),
+    return PromiseUtils.wrapPromise(this.api.getCallsWithPendingInvitations(),
       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
@@ -154,11 +155,11 @@ export class Artichoke {
   }
 
   public getRooms(): Promise<Array<Room>> {
-    return wrapPromise(this.api.getRooms(), (room) => createRoom(room, this.log, this.events, this.api));
+    return PromiseUtils.wrapPromise(this.api.getRooms(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
   public getRoster(): Promise<Array<Room>> {
-    return wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
+    return PromiseUtils.wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
   public registerForPushNotifications(pushId: proto.ID): Promise<void> {

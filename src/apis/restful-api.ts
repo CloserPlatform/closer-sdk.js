@@ -1,7 +1,7 @@
 import { errorEvents } from '../protocol/events/error-events';
 import { Logger } from '../logger';
 import { HeaderValue } from './header-value';
-import { PromiseReject, PromiseResolve } from '../utils/promise';
+import { PromiseReject, PromiseResolve } from '../utils/promise-utils';
 
 export class RESTfulAPI {
 
