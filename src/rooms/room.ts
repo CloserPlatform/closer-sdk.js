@@ -8,26 +8,10 @@ import * as proto from '../protocol/protocol';
 import * as wireEntities from '../protocol/wire-entities';
 import { randomUUID, TransferFunction, UUID } from '../utils/utils';
 import { ArtichokeAPI } from '../apis/artichoke-api';
-
-export namespace roomType {
-  export enum RoomType {
-    GROUP,
-    DIRECT,
-    BUSINESS,
-  }
-
-  export function isDirect(room: Room): room is DirectRoom {
-    return room.roomType === RoomType.DIRECT;
-  }
-
-  export function isGroup(room: Room): room is GroupRoom {
-    return room.roomType === RoomType.GROUP;
-  }
-
-  export function isBusiness(room: Room): room is BusinessRoom {
-    return room.roomType === RoomType.BUSINESS;
-  }
-}
+import { DirectRoom } from './direct-room';
+import { BusinessRoom } from './business-room';
+import { GroupRoom } from './group-room';
+import { RoomType } from './room-type';
 
 export abstract class Room implements wireEntities.Room {
   protected readonly uuid: UUID = randomUUID();
@@ -47,7 +31,7 @@ export abstract class Room implements wireEntities.Room {
   protected onTextMessageCallback: Callback<roomEvents.MessageSent>;
   protected onCustomCallbacks: { [tag: string]: Callback<roomEvents.CustomMessageSent> };
 
-  public abstract readonly roomType: roomType.RoomType;
+  public abstract readonly roomType: RoomType;
 
   constructor(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     this.id = room.id;
@@ -65,6 +49,28 @@ export abstract class Room implements wireEntities.Room {
       // Do nothing.
     };
     this.defineCallbacks();
+  }
+
+  public static create(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): Room {
+    if (room.direct) {
+      return new DirectRoom(room, log, events, api);
+    } else if (room.orgId) {
+      return new BusinessRoom(room, log, events, api);
+    } else {
+      return new GroupRoom(room, log, events, api);
+    }
+  }
+
+  public static isDirect(room: Room): room is DirectRoom {
+      return room.roomType === RoomType.DIRECT;
+  }
+
+  public static isGroup(room: Room): room is GroupRoom {
+      return room.roomType === RoomType.GROUP;
+  }
+
+  public static isBusiness(room: Room): room is BusinessRoom {
+      return room.roomType === RoomType.BUSINESS;
   }
 
   protected defineCallbacks() {
@@ -162,94 +168,5 @@ export abstract class Room implements wireEntities.Room {
 
   onTyping(callback: Callback<roomEvents.TypingSent>) {
     this.events.onConcreteEvent(roomEvents.TypingSent.tag, this.id, this.uuid, callback);
-  }
-}
-
-export class DirectRoom extends Room {
-  public readonly roomType: roomType.RoomType = roomType.RoomType.DIRECT;
-}
-
-export class GroupRoom extends Room {
-  public readonly roomType: roomType.RoomType = roomType.RoomType.GROUP;
-
-  private onJoinedCallback: Callback<roomEvents.Joined>;
-  private onLeftCallback: Callback<roomEvents.Left>;
-  private onInvitedCallback: Callback<roomEvents.Invited>;
-
-  constructor(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
-    super(room, log, events, api);
-
-    this.onLeftCallback = (e: roomEvents.Left) => { /* nothing */ };
-    this.onJoinedCallback = (e: roomEvents.Joined) => { /* nothing */ };
-    this.onInvitedCallback = (e: roomEvents.Invited) => { /* nothing */ };
-  }
-
-  protected defineCallbacks() {
-    this.events.onConcreteEvent(roomEvents.Joined.tag, this.id, this.uuid, (e: roomEvents.Joined) => {
-      this.users.push(e.authorId);
-      this.onJoinedCallback(e);
-    });
-    this.events.onConcreteEvent(roomEvents.Left.tag, this.id, this.uuid, (e: roomEvents.Left) => {
-      this.users = this.users.filter((u) => u !== e.authorId);
-      this.onLeftCallback(e);
-    });
-    this.events.onConcreteEvent(roomEvents.Invited.tag, this.id, this.uuid, (e: roomEvents.Invited) => {
-      this.onInvitedCallback(e);
-    });
-    this.events.onConcreteEvent(roomEvents.MessageSent.tag, this.id, this.uuid, (e: roomEvents.MessageSent) => {
-      this.onTextMessageCallback(e);
-    });
-    this.events.onConcreteEvent(roomEvents.CustomMessageSent.tag, this.id, this.uuid,
-      (e: roomEvents.CustomMessageSent) => {
-        if (e.subtag in this.onCustomCallbacks) {
-          this.onCustomCallbacks[e.subtag](e);
-        } else {
-          this.events.notify(new errorEvents.Error('Unhandled custom message with subtag: : ' + e.subtag));
-        }
-      }
-    );
-  }
-
-  getUsers(): Promise<Array<proto.ID>> {
-    // NOTE No need to retrieve the list if it's cached here.
-    return Promise.resolve(this.users);
-  }
-
-  join(): Promise<void> {
-    return this.api.joinRoom(this.id);
-  }
-
-  leave(): Promise<void> {
-    return this.api.leaveRoom(this.id);
-  }
-
-  invite(user: proto.ID): Promise<void> {
-    return this.api.inviteToRoom(this.id, user);
-  }
-
-  onJoined(callback: Callback<roomEvents.Joined>) {
-    this.onJoinedCallback = callback;
-  }
-
-  onLeft(callback: Callback<roomEvents.Left>) {
-    this.onLeftCallback = callback;
-  }
-
-  onInvited(callback: Callback<roomEvents.Invited>) {
-    this.onInvitedCallback = callback;
-  }
-}
-
-export class BusinessRoom extends GroupRoom {
-  public readonly roomType: roomType.RoomType = roomType.RoomType.BUSINESS;
-}
-
-export function createRoom(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): Room {
-  if (room.direct) {
-    return new DirectRoom(room, log, events, api);
-  } else if (room.orgId) {
-    return new BusinessRoom(room, log, events, api);
-  } else {
-    return new GroupRoom(room, log, events, api);
   }
 }

@@ -12,9 +12,11 @@ import { roomEvents } from '../protocol/events/room-events';
 import { serverEvents } from '../protocol/events/server-events';
 import * as proto from '../protocol/protocol';
 import * as wireEntities from '../protocol/wire-entities';
-import { createRoom, DirectRoom, GroupRoom, Room } from '../room/room';
 import { BumpableTimeout, wrapPromise } from '../utils/utils';
 import { ArtichokeAPI } from '../apis/artichoke-api';
+import { GroupRoom } from '../rooms/group-room';
+import { DirectRoom } from '../rooms/direct-room';
+import { Room } from '../rooms/room';
 
 export class Artichoke {
   private api: ArtichokeAPI;
@@ -148,11 +150,11 @@ export class Artichoke {
   }
 
   getRooms(): Promise<Array<Room>> {
-    return wrapPromise(this.api.getRooms(), (room) => createRoom(room, this.log, this.events, this.api));
+    return wrapPromise(this.api.getRooms(), (room) => Room.create(room, this.log, this.events, this.api));
   }
 
   getRoster(): Promise<Array<Room>> {
-    return wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
+    return wrapPromise(this.api.getRoster(), (room) => Room.create(room, this.log, this.events, this.api));
   }
 
   registerForPushNotifications(pushId: proto.ID): Promise<void> {
@@ -182,6 +184,6 @@ export class Artichoke {
   }
 
   private wrapRoom(promise: Promise<wireEntities.Room>) {
-    return promise.then((room) => createRoom(room, this.log, this.events, this.api));
+    return promise.then((room) => Room.create(room, this.log, this.events, this.api));
   }
 }

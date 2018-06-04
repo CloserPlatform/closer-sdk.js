@@ -1,7 +1,7 @@
 import * as RatelSDK from '../src/main';
-import {CallReason} from '../src/main';
+import { CallReason } from '../src/main';
 import { roomEvents } from '../src/main';
-import {displayVersion} from './version';
+import { displayVersion } from './version';
 import * as View from './view';
 
 $(function () {

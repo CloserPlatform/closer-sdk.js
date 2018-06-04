@@ -5,10 +5,16 @@ export * from './auth/auth';
 export { Artichoke as Chat } from './artichoke/artichoke';
 export { BusinessCall, callType, DirectCall, GroupCall, Call } from './call/call';
 export { Config } from './config/config';
-export { BusinessRoom, DirectRoom, GroupRoom, Room, roomType } from './room/room';
 export { Session } from './session';
 export { Callback, EventHandler } from './events/events';
 export { JSONWebSocket } from './json-websocket/json-websocket';
+
+// Rooms
+export { Room } from './rooms/room';
+export { BusinessRoom } from './rooms/business-room';
+export { DirectRoom } from './rooms/direct-room';
+export { GroupRoom } from './rooms/group-room';
+export { RoomType } from './rooms/room-type';
 
 // Apis
 export { ApiHeaders } from './apis/api-headers';
