@@ -3,11 +3,17 @@ export * from './auth/auth';
 
 // Some useful types:
 export { Artichoke as Chat } from './artichoke/artichoke';
-export { BusinessCall, callType, DirectCall, GroupCall, Call } from './call/call';
 export { Config } from './config/config';
 export { Session } from './session';
-export { Callback, EventHandler } from './events/events';
+export { Callback, EventHandler } from './events/event-handler';
 export { JSONWebSocket } from './json-websocket/json-websocket';
+
+// Calls
+export { Call } from './calls/call';
+export { GroupCall } from './calls/group-call';
+export { DirectCall } from './calls/direct-call';
+export { CallType } from './calls/call-type';
+export { BusinessCall } from './calls/business-call';
 
 // Rooms
 export { Room } from './rooms/room';

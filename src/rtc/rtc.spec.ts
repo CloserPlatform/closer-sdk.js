@@ -1,4 +1,3 @@
-import { EventHandler } from '../events/events';
 import {
   apiKeyMock,
   config,
@@ -13,8 +12,12 @@ import { decoder } from '../protocol/events/domain-event';
 import { errorEvents } from '../protocol/events/error-events';
 import { rtcEvents } from '../protocol/events/rtc-events';
 import { ID } from '../protocol/protocol';
-import { createRTCConnection, createRTCPool, RTCConnection, RTCPool } from './rtc';
 import { ArtichokeAPI } from '../apis/artichoke-api';
+import { RTCConnection } from './rtc-connection';
+import { RTCPool } from './rtc-pool';
+import { EventHandler } from '../events/event-handler';
+import { createRTCConnection } from './create-rtc-connection';
+import { createRTCPool } from './create-rtc-pool';
 
 const invalidSDP = 'this is not a valid SDP';
 
@@ -36,7 +39,7 @@ function logError(done) {
   };
 }
 
-function addLocalStream(pool: RTCPool|RTCConnection, stream: MediaStream) {
+function addLocalStream(pool: RTCPool | RTCConnection, stream: MediaStream) {
   stream.getTracks().forEach((t) => pool.addTrack(t, stream));
 }
 

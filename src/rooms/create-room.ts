@@ -3,7 +3,7 @@ import * as wireEntities from '../protocol/wire-entities';
 import { GroupRoom } from './group-room';
 import { Room } from './room';
 import { Logger } from '../logger';
-import { EventHandler } from '../events/events';
+import { EventHandler } from '../events/event-handler';
 import { DirectRoom } from './direct-room';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 

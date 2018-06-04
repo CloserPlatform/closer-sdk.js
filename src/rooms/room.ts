@@ -1,4 +1,4 @@
-import { Callback, EventHandler } from '../events/events';
+import { Callback, EventHandler } from '../events/event-handler';
 import { Logger } from '../logger';
 import { chatEvents } from '../protocol/events/chat-events';
 import { errorEvents } from '../protocol/events/error-events';

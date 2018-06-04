@@ -1,5 +1,5 @@
-import { Call, callType as ct, createCall, GroupCall } from './call';
-import { EventHandler } from '../events/events';
+import { Call } from './call';
+import { EventHandler } from '../events/event-handler';
 import {
   apiKeyMock, config, deviceIdMock, getStream, isWebRTCSupported, log, sessionIdMock, whenever
 } from '../test-utils';
@@ -8,11 +8,13 @@ import { decoder } from '../protocol/events/domain-event';
 import { errorEvents } from '../protocol/events/error-events';
 import { ID } from '../protocol/protocol';
 import { Call as ProtoCall } from '../protocol/wire-entities';
-import { RTCPool } from '../rtc/rtc';
 import EndReason = callEvents.EndReason;
-import CallType = ct.CallType;
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { CallReason } from '../apis/call-reason';
+import { CallType } from './call-type';
+import { createCall } from './create-call';
+import { GroupCall } from './group-call';
+import { RTCPool } from '../rtc/rtc-pool';
 
 const callId = '123';
 const alice = '321';

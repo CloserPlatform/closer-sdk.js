@@ -1,6 +1,5 @@
-import { Call, createCall, DirectCall, GroupCall } from '../call/call';
 import { ChatConfig } from '../config/config';
-import { Callback, EventHandler } from '../events/events';
+import { Callback, EventHandler } from '../events/event-handler';
 import { Logger } from '../logger';
 import { serverCommands } from '../protocol/commands/server-command';
 import { callEvents } from '../protocol/events/call-events';
@@ -18,6 +17,10 @@ import { GroupRoom } from '../rooms/group-room';
 import { DirectRoom } from '../rooms/direct-room';
 import { Room } from '../rooms/room';
 import { createRoom } from '../rooms/create-room';
+import { GroupCall } from '../calls/group-call';
+import { DirectCall } from '../calls/direct-call';
+import { Call } from '../calls/call';
+import { createCall } from '../calls/create-call';
 
 export class Artichoke {
   private api: ArtichokeAPI;

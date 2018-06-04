@@ -1,8 +1,8 @@
 import { ApiKey } from '../auth/auth';
 import * as logger from '../logger';
 import { ID } from '../protocol/protocol';
-import { RTCConfig } from '../rtc/rtc';
 import { deepcopy } from '../utils/utils';
+import { RTCConfig } from '../rtc/rtc-config';
 
 export interface URLConfig {
   protocol?: string;

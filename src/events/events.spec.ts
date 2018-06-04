@@ -1,4 +1,4 @@
-import { EventHandler } from './events';
+import { EventHandler } from './event-handler';
 import { log } from '../test-utils';
 import { decoder } from '../protocol/events/domain-event';
 import { errorEvents } from '../protocol/events/error-events';

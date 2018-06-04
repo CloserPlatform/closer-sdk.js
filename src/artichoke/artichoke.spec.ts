@@ -1,5 +1,5 @@
 import { Artichoke } from './artichoke';
-import { EventHandler } from '../events/events';
+import { EventHandler } from '../events/event-handler';
 import { apiKeyMock, config, deviceIdMock, log, sessionIdMock } from '../test-utils';
 import { callEvents } from '../protocol/events/call-events';
 import { decoder } from '../protocol/events/domain-event';

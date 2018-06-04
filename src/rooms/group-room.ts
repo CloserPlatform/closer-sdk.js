@@ -3,7 +3,7 @@ import * as wireEntities from '../protocol/wire-entities';
 import { roomEvents } from '../protocol/events/room-events';
 import * as proto from '../protocol/protocol';
 import { Logger } from '../logger';
-import { Callback, EventHandler } from '../events/events';
+import { Callback, EventHandler } from '../events/event-handler';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { Room } from './room';
 import { RoomType } from './room-type';

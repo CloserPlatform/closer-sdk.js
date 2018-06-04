@@ -13,7 +13,7 @@ import { PushRegistration } from '../protocol/protocol';
 import { ApiHeaders } from './api-headers';
 import { callEvents } from '../protocol/events/call-events';
 import { roomCommand } from '../protocol/commands/room-commands';
-import { Callback } from '../events/events';
+import { Callback } from '../events/event-handler';
 import { APIWithWebsocket } from './api-with-websocket';
 
 export class ArtichokeAPI extends APIWithWebsocket {
