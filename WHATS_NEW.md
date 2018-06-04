@@ -1,0 +1,1 @@
+Changes project files structure & small linter improvements

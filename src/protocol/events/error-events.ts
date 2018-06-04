@@ -1,8 +1,8 @@
-import { DomainEvent } from "./domain-event";
+import { DomainEvent } from './domain-event';
 
 export namespace errorEvents {
   export class Error implements DomainEvent {
-    static readonly tag = "error";
+    static readonly tag = 'error';
 
     constructor(reason: string) {
       this.reason = reason;
@@ -11,7 +11,7 @@ export namespace errorEvents {
 
     readonly reason: string;
     readonly tag: string;
-    readonly __discriminator__ = "domainEvent";
+    readonly __discriminator__ = 'domainEvent';
   }
 
   export function isError(evt: DomainEvent): evt is errorEvents.Error {

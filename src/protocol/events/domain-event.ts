@@ -1,8 +1,8 @@
-import { Decoder } from "../../codec";
+import { Decoder } from '../../codec';
 
 export interface DomainEvent {
   readonly tag: string;
-  readonly __discriminator__: "domainEvent";
+  readonly __discriminator__: 'domainEvent';
 }
 
 export const decoder: Decoder<DomainEvent> = {

@@ -1,8 +1,8 @@
-import { ApiKey } from "./auth";
-import * as logger from "./logger";
-import { ID } from "./protocol/protocol";
-import { RTCConfig } from "./rtc";
-import { deepcopy } from "./utils";
+import { ApiKey } from '../auth/auth';
+import * as logger from '../logger';
+import { ID } from '../protocol/protocol';
+import { RTCConfig } from '../rtc/rtc';
+import { deepcopy } from '../utils/utils';
 
 export interface URLConfig {
   protocol?: string;
@@ -31,16 +31,16 @@ export const defaultConfig: Config = {
   logLevel: logger.LogLevel.WARN,
 
   chat: {
-    protocol: "https:",
-    hostname: "artichoke.ratel.io",
-    port: "",
+    protocol: 'https:',
+    hostname: 'artichoke.ratel.io',
+    port: '',
     rtc: {
-      rtcpMuxPolicy: "negotiate",
-      bundlePolicy: "balanced",
+      rtcpMuxPolicy: 'negotiate',
+      bundlePolicy: 'balanced',
       iceServers: [{
-        urls: ["stun:turn.ratel.im:3478", "turn:turn.ratel.im:3478"],
-        username: "test123",
-        credential: "test456"
+        urls: ['stun:turn.ratel.im:3478', 'turn:turn.ratel.im:3478'],
+        username: 'test123',
+        credential: 'test456'
       }],
       defaultOfferOptions: {
         offerToReceiveAudio: true,
@@ -50,9 +50,9 @@ export const defaultConfig: Config = {
   },
 
   ratel: {
-    protocol: "https:",
-    hostname: "api.dev.ratel.io",
-    port: "",
+    protocol: 'https:',
+    hostname: 'api.dev.ratel.io',
+    port: '',
   },
 };
 
@@ -61,11 +61,11 @@ export function load(conf: Config): Config {
   function merge(a: any, b: any): any {
     if (Array.isArray(a)) {
       return a.map((ai, i) => merge(ai, b[i]));
-    } else if (typeof a === "object") {
+    } else if (typeof a === 'object') {
       const result = a;
       Object.getOwnPropertyNames(b).forEach((p) => result[p] = merge(a[p], b[p]));
       return result;
-    } else if (typeof a === "undefined") {
+    } else if (typeof a === 'undefined') {
       return b;
     } else {
       return a;

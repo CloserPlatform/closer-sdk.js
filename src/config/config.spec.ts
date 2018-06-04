@@ -1,9 +1,9 @@
-import { Config, defaultConfig, load } from "./config";
-import { LogLevel } from "./logger";
-import { deepcopy } from "./utils";
+import { Config, defaultConfig, load } from './config';
+import { LogLevel } from '../logger';
+import { deepcopy } from '../utils/utils';
 
-describe("Config", () => {
-  it("should load with defaults", () => {
+describe('Config', () => {
+  it('should load with defaults', () => {
     const d = load({});
 
     const c = load({logLevel: LogLevel.INFO});
@@ -14,30 +14,30 @@ describe("Config", () => {
     expect(c.chat).toBeDefined();
   });
 
-  it("should not override provided service config", () => {
+  it('should not override provided service config', () => {
     const c = load({
       chat: {
-        hostname: "chat-nonlocalhost"
+        hostname: 'chat-nonlocalhost'
       },
       ratel: {
-        hostname: "ratel-nonlocalhost"
+        hostname: 'ratel-nonlocalhost'
       },
     });
 
-    expect(c.chat.hostname).toBe("chat-nonlocalhost");
-    expect(c.ratel.hostname).toBe("ratel-nonlocalhost");
+    expect(c.chat.hostname).toBe('chat-nonlocalhost');
+    expect(c.ratel.hostname).toBe('ratel-nonlocalhost');
   });
 
-  it("should not override defaultConfig", () => {
+  it('should not override defaultConfig', () => {
     const d = deepcopy(defaultConfig);
     load({});
     expect(defaultConfig).toEqual(d);
   });
 
-  it("should not override supplied in config", () => {
+  it('should not override supplied in config', () => {
     const cfg: Config = {
       ratel: {
-        hostname: "ratel-host"
+        hostname: 'ratel-host'
       }
     };
 
@@ -47,11 +47,11 @@ describe("Config", () => {
     expect(cfg).toEqual(c);
   });
 
-  it("should merge config deeply", () => {
+  it('should merge config deeply', () => {
     const cfg: Config = {
       chat: {
         rtc: {
-          rtcpMuxPolicy: "require",
+          rtcpMuxPolicy: 'require',
           defaultOfferOptions: {
             offerToReceiveAudio: false,
             offerToReceiveVideo: false

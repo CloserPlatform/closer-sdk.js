@@ -1,4 +1,4 @@
-import { DomainCommand } from "./domain-command";
+import { DomainCommand } from './domain-command';
 
 export namespace roomCommand {
 
@@ -10,11 +10,11 @@ export namespace roomCommand {
 
     readonly roomId: string;
     readonly tag: string;
-    readonly __discriminator__ = "domainCommand";
+    readonly __discriminator__ = 'domainCommand';
   }
 
   export class SendMessage extends RoomCommand {
-    static readonly tag = "room_send_message";
+    static readonly tag = 'room_send_message';
 
     constructor(roomId: string, body: string, context: Object, ref?: string) {
       super(roomId, SendMessage.tag);
@@ -29,7 +29,7 @@ export namespace roomCommand {
   }
 
   export class SendCustomMessage extends RoomCommand {
-    static readonly tag = "room_send_custom_message";
+    static readonly tag = 'room_send_custom_message';
 
     constructor(roomId: string, body: string, subtag: string, context: Object, ref?: string) {
       super(roomId, SendCustomMessage.tag);
@@ -46,7 +46,7 @@ export namespace roomCommand {
   }
 
   export class SendTyping extends RoomCommand {
-    static readonly tag = "room_send_typing";
+    static readonly tag = 'room_send_typing';
 
     constructor(roomId: string) {
       super(roomId, SendTyping.tag);
@@ -54,7 +54,7 @@ export namespace roomCommand {
   }
 
   export class SendMark extends RoomCommand {
-    static readonly tag = "room_send_mark";
+    static readonly tag = 'room_send_mark';
 
     constructor(roomId: string, timestamp: number) {
       super(roomId, SendMark.tag);
@@ -65,7 +65,7 @@ export namespace roomCommand {
   }
 
   export class ConfirmMessageDelivery extends RoomCommand {
-    static readonly tag = "room_confirm_message_delivery";
+    static readonly tag = 'room_confirm_message_delivery';
 
     constructor(roomId: string, eventId: string, timestamp: number) {
       super(roomId, ConfirmMessageDelivery.tag);

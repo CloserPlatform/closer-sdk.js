@@ -1,4 +1,4 @@
-import { DomainEvent } from "./domain-event";
+import { DomainEvent } from './domain-event';
 
 export namespace rtcEvents {
 
@@ -12,11 +12,11 @@ export namespace rtcEvents {
     readonly callId: string;
     readonly sender: string;
     readonly tag: string;
-    readonly __discriminator__ = "domainEvent";
+    readonly __discriminator__ = 'domainEvent';
   }
 
   export class DescriptionSent extends RTCSignallingEvent {
-    static readonly tag = "rtc_description_sent";
+    static readonly tag = 'rtc_description_sent';
 
     constructor(callId: string, sender: string, sdp: RTCSessionDescriptionInit) {
       super(callId, sender, DescriptionSent.tag);
@@ -27,7 +27,7 @@ export namespace rtcEvents {
   }
 
   export class CandidateSent extends RTCSignallingEvent {
-    static readonly tag = "rtc_candidate_sent";
+    static readonly tag = 'rtc_candidate_sent';
 
     constructor(callId: string, sender: string, candidate: RTCIceCandidate) {
       super(callId, sender, CandidateSent.tag);

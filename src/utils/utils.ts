@@ -1,4 +1,4 @@
-import * as adapter from "webrtc-adapter";
+import * as adapter from 'webrtc-adapter';
 
 // Various utilities.
 
@@ -23,19 +23,19 @@ export function isBrowserSupported(): boolean {
 }
 
 export function isChrome() {
-  return adapter.browserDetails.browser === "chrome";
+  return adapter.browserDetails.browser === 'chrome';
 }
 
 export function isFirefox() {
-  return adapter.browserDetails.browser === "firefox";
+  return adapter.browserDetails.browser === 'firefox';
 }
 
 export function isEdge() {
-  return adapter.browserDetails.browser === "edge";
+  return adapter.browserDetails.browser === 'edge';
 }
 
 export function isSafari() {
-  return adapter.browserDetails.browser === "safari";
+  return adapter.browserDetails.browser === 'safari';
 }
 
 export function onceDelayed(timer: number, timeout: number, fun: () => void): number {
@@ -46,9 +46,9 @@ export function onceDelayed(timer: number, timeout: number, fun: () => void): nu
 export type UUID = string;
 
 export function randomUUID(): UUID {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0; // tslint:disable-line
-    const v = c === "x" ? r : (r & 0x3 | 0x8); // tslint:disable-line
+    const v = c === 'x' ? r : (r & 0x3 | 0x8); // tslint:disable-line
     return v.toString(16);
   });
 }

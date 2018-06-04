@@ -1,10 +1,10 @@
-import { ArtichokeAPI } from "./api";
-import { Callback, EventHandler } from "./events";
-import { Logger } from "./logger";
-import { errorEvents } from "./protocol/events/error-events";
-import { rtcEvents } from "./protocol/events/rtc-events";
-import { ID } from "./protocol/protocol";
-import { onceDelayed, randomUUID, Thunk, UUID } from "./utils";
+import { Callback, EventHandler } from '../events/events';
+import { Logger } from '../logger';
+import { errorEvents } from '../protocol/events/error-events';
+import { rtcEvents } from '../protocol/events/rtc-events';
+import { ID } from '../protocol/protocol';
+import { onceDelayed, randomUUID, Thunk, UUID } from '../utils/utils';
+import { ArtichokeAPI } from '../apis/artichoke-api';
 
 export interface RTCConnectionConstraints {
   // FIXME @types/webrtc currently does not have this interface defined.
@@ -29,8 +29,8 @@ export interface RTCConfig extends RTCConfiguration {
   defaultOfferOptions?: HackedRTCOfferOptions;
   defaultAnswerOptions?: RTCAnswerOptions;
   defaultConnectionConstraints?: RTCConnectionConstraints;
-  rtcpMuxPolicy?: "require" | "negotiate";
-  bundlePolicy?: "balanced" | "max-compat" | "max-bundle";
+  rtcpMuxPolicy?: 'require' | 'negotiate';
+  bundlePolicy?: 'balanced' | 'max-compat' | 'max-bundle';
 }
 
 // FIXME Can't extends RTCPeerConnection, cause createOffer & createAnswer are of the wrong type.
@@ -46,7 +46,7 @@ type HackedRTCPeerConnection = RTCPeerConnection & {
 };
 
 function supportsTracks(pc: HackedRTCPeerConnection): boolean {
-  return (typeof pc.addTrack !== "undefined") && (typeof pc.removeTrack !== "undefined");
+  return (typeof pc.addTrack !== 'undefined') && (typeof pc.removeTrack !== 'undefined');
 }
 
 // FIXME Unfuck when Chrome transitions to the Unified Plan.
@@ -70,7 +70,7 @@ export class RTCConnection {
   constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI,
               constraints?: RTCConnectionConstraints, answerOptions?: RTCAnswerOptions,
               offerOptions?: HackedRTCOfferOptions) {
-    log.info("Connecting an RTC connection to " + peer + " on " + call);
+    log.info('Connecting an RTC connection to ' + peer + ' on ' + call);
     this.call = call;
     this.peer = peer;
     this.api = api;
@@ -93,19 +93,19 @@ export class RTCConnection {
 
     this.conn.onicecandidate = (event) => {
       if (event.candidate) {
-        this.log.debug("Created ICE candidate: " + event.candidate.candidate);
+        this.log.debug('Created ICE candidate: ' + event.candidate.candidate);
         this.api.sendCandidate(this.call, this.peer, event.candidate).catch((err) => {
-          this.events.notify(new errorEvents.Error("Could not send an ICE candidate: " + err));
+          this.events.notify(new errorEvents.Error('Could not send an ICE candidate: ' + err));
         });
       } else {
-        this.log.debug("Done gathering ICE candidates.");
+        this.log.debug('Done gathering ICE candidates.');
         this.onICEDoneCallback();
       }
     };
 
     this.conn.ontrack = (event: HackedMediaStreamEvent) => {
-      this.log.info("Received a remote stream.");
-      const streams = (typeof event.streams !== "undefined") ? event.streams : [event.stream];
+      this.log.info('Received a remote stream.');
+      const streams = (typeof event.streams !== 'undefined') ? event.streams : [event.stream];
       streams.forEach((stream) => {
         this.onRemoteStreamCallback(stream);
       });
@@ -116,9 +116,9 @@ export class RTCConnection {
       // FIXME Firefox triggers renegotiation when remote offer is received.
       if (this.isEstablished()) {
         this.renegotiationTimer = onceDelayed(this.renegotiationTimer, 100, () => {
-          this.log.debug("Renegotiating an RTC connection.");
+          this.log.debug('Renegotiating an RTC connection.');
           this.offer().catch((err) => {
-            this.events.notify(new errorEvents.Error("Could not renegotiate the connection: " + err));
+            this.events.notify(new errorEvents.Error('Could not renegotiate the connection: ' + err));
           });
         });
       }
@@ -126,12 +126,12 @@ export class RTCConnection {
   }
 
   disconnect() {
-    this.log.info("Disconnecting an RTC connection.");
+    this.log.info('Disconnecting an RTC connection.');
     this.conn.close();
   }
 
   addTrack(track: MediaStreamTrack, stream?: MediaStream) {
-    this.log.debug("Adding a stream track.");
+    this.log.debug('Adding a stream track.');
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (supportsTracks(this.conn)) {
       this.conn.addTrack(track, stream);
@@ -143,7 +143,7 @@ export class RTCConnection {
   }
 
   removeTrack(track: MediaStreamTrack) {
-    this.log.debug("Removing a stream track.");
+    this.log.debug('Removing a stream track.');
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (supportsTracks(this.conn)) {
       this.conn.getSenders().filter((s) => s.track === track).forEach((t) => this.conn.removeTrack(t));
@@ -153,32 +153,32 @@ export class RTCConnection {
   }
 
   addCandidate(candidate: RTCIceCandidate): Promise<void> {
-    this.log.debug("Received an RTC candidate: " + candidate.candidate);
+    this.log.debug('Received an RTC candidate: ' + candidate.candidate);
     return this.conn.addIceCandidate(new RTCIceCandidate(candidate));
   }
 
   offer(options?: HackedRTCOfferOptions): Promise<RTCSessionDescriptionInit> {
-    this.log.debug("Creating an RTC offer.");
+    this.log.debug('Creating an RTC offer.');
 
     return this.conn.createOffer(options || this.offerOptions).then((offer) => {
       return this.setLocalDescription(offer);
     }).then((offer) => {
       return this.api.sendDescription(this.call, this.peer, offer).then(() => offer);
     }).then((offer) => {
-      this.log.debug("Sent an RTC offer: " + offer.sdp);
+      this.log.debug('Sent an RTC offer: ' + offer.sdp);
       return offer;
     });
   }
 
   addOffer(remoteDescription: RTCSessionDescriptionInit,
            options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
-    this.log.debug("Received an RTC offer.");
+    this.log.debug('Received an RTC offer.');
 
     return this.setRemoteDescription(remoteDescription).then((descr) => this.answer(options));
   }
 
   answer(options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
-    this.log.debug("Creating an RTC answer.");
+    this.log.debug('Creating an RTC answer.');
 
     return this.conn.createAnswer(options || this.answerOptions).then((answer) => {
       // FIXME Chrome does not support DTLS role changes.
@@ -186,13 +186,13 @@ export class RTCConnection {
     }).then((answer) => {
       return this.api.sendDescription(this.call, this.peer, answer).then(() => answer);
     }).then((answer) => {
-      this.log.debug("Sent an RTC answer: " + answer.sdp);
+      this.log.debug('Sent an RTC answer: ' + answer.sdp);
       return answer;
     });
   }
 
   addAnswer(remoteDescription: RTCSessionDescriptionInit): Promise<void> {
-    this.log.debug("Received an RTC answer.");
+    this.log.debug('Received an RTC answer.');
     return this.setRemoteDescription(remoteDescription).then((descr) => {
       // FIXME Chrome does not support DTLS role changes.
       this.extractRole(descr);
@@ -210,24 +210,24 @@ export class RTCConnection {
 
   // FIXME This should be private.
   setRemoteDescription(remoteDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
-    this.log.debug("Setting remote RTC description.");
+    this.log.debug('Setting remote RTC description.');
     return this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription)).then(() => remoteDescription);
   }
 
   private setLocalDescription(localDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
-    this.log.debug("Setting local RTC description.");
+    this.log.debug('Setting local RTC description.');
     return this.conn.setLocalDescription(new RTCSessionDescription(localDescription)).then(() => localDescription);
   }
 
   private isEstablished(): boolean {
-    // NOTE "stable" means no exchange is going on, which encompases "fresh"
+    // NOTE 'stable' means no exchange is going on, which encompases 'fresh'
     // NOTE RTC connections as well as established ones.
-    if (typeof this.conn.connectionState !== "undefined") {
-      return this.conn.connectionState === "connected";
+    if (typeof this.conn.connectionState !== 'undefined') {
+      return this.conn.connectionState === 'connected';
     } else {
       // FIXME Firefox does not support connectionState: https://bugzilla.mozilla.org/show_bug.cgi?id=1265827
-      return this.conn.signalingState === "stable" &&
-        (this.conn.iceConnectionState === "connected" || this.conn.iceConnectionState === "completed");
+      return this.conn.signalingState === 'stable' &&
+        (this.conn.iceConnectionState === 'connected' || this.conn.iceConnectionState === 'completed');
     }
   }
 
@@ -237,13 +237,13 @@ export class RTCConnection {
 
   private updateRole(descr: RTCSessionDescriptionInit, role: string): RTCSessionDescriptionInit {
     const hackedDescr = descr;
-    hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\r\n]+/, "a=setup:" + role);
+    hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\r\n]+/, 'a=setup:' + role);
     return hackedDescr;
   }
 
   private extractRole(descr: RTCSessionDescriptionInit) {
     if (this.localRole === undefined) {
-      this.localRole = (this.getRole(descr) === "active") ? "passive" : "active";
+      this.localRole = (this.getRole(descr) === 'active') ? 'passive' : 'active';
     }
   }
 
@@ -301,42 +301,42 @@ export class RTCPool {
       // Do nothing.
     };
 
-    events.onConcreteEvent(rtcEvents.DescriptionSent.tag, this.call, "singleton", (msg: rtcEvents.DescriptionSent) => {
-      this.log.debug("Received an RTC description: " + msg.sdp.sdp);
+    events.onConcreteEvent(rtcEvents.DescriptionSent.tag, this.call, 'singleton', (msg: rtcEvents.DescriptionSent) => {
+      this.log.debug('Received an RTC description: ' + msg.sdp.sdp);
 
-      if (msg.sdp.type === "offer") {
+      if (msg.sdp.type === 'offer') {
         if (msg.sender in this.connections) {
           this.connections[msg.sender].addOffer(msg.sdp).catch((err) => {
-            events.notify(new errorEvents.Error("Could not process the RTC description: " + err));
+            events.notify(new errorEvents.Error('Could not process the RTC description: ' + err));
           });
         } else {
           const rtc = this.createRTC(msg.sender);
           rtc.addOffer(msg.sdp).catch((err) => {
-            events.notify(new errorEvents.Error("Could not process the RTC description: " + err));
+            events.notify(new errorEvents.Error('Could not process the RTC description: ' + err));
           });
         }
-      } else if (msg.sdp.type === "answer") {
+      } else if (msg.sdp.type === 'answer') {
         if (msg.sender in this.connections) {
           this.connections[msg.sender].addAnswer(msg.sdp).catch((err) => {
-            events.notify(new errorEvents.Error("Could not process the RTC description: " + err));
+            events.notify(new errorEvents.Error('Could not process the RTC description: ' + err));
           });
         } else {
-          events.notify(new errorEvents.Error("Received an invalid RTC answer from " + msg.sender));
+          events.notify(new errorEvents.Error('Received an invalid RTC answer from ' + msg.sender));
         }
       } else {
-        events.notify(new errorEvents.Error("Received an invalid RTC description type " + msg.sdp.type));
+        events.notify(new errorEvents.Error('Received an invalid RTC description type ' + msg.sdp.type));
       }
     });
 
-    events.onConcreteEvent(rtcEvents.CandidateSent.tag, this.call, "singleton", (msg: rtcEvents.CandidateSent) => {
-      this.log.debug("Received an RTC candidate: " + msg.candidate);
+    events.onConcreteEvent(rtcEvents.CandidateSent.tag, this.call, 'singleton', (msg: rtcEvents.CandidateSent) => {
+      this.log.debug('Received an RTC candidate: ' + msg.candidate);
       if (msg.sender in this.connections) {
         this.connections[msg.sender].addCandidate(msg.candidate).catch((err) => {
-          events.notify(new errorEvents.Error("Could not process the RTC candidate: " + err));
+          events.notify(new errorEvents.Error('Could not process the RTC candidate: ' + err));
         });
       } else {
-        events.notify(new errorEvents.Error("Received an invalid RTC candidate. " + msg.sender +
-          " is not currently in this call."));
+        events.notify(new errorEvents.Error('Received an invalid RTC candidate. ' + msg.sender +
+          ' is not currently in this call.'));
       }
     });
   }

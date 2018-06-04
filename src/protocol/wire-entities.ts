@@ -1,4 +1,4 @@
-import { ID, Timestamp } from "./protocol";
+import { ID, Timestamp } from './protocol';
 
 export interface Call {
   id: ID;
