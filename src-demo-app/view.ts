@@ -1,14 +1,13 @@
-export function fn() {
-    return 123;
-}
-
 export function makeLoginForm(id, onClick) {
-    let form = $("<form id=\"login_form\">")
-        .append([makeInput("server", "Server:", "Server", "artichoke.ratel.io"),
-            makeInput("ratel-server", "RatelServer:", "RatelServer", "briefcase.ratel.io"),
-            makeInput("user-phone", "Phone:", "+48123456789")]);
+    const form = $("<form id=\"login_form\">")
+        .append([
+            makeInput("server", "Server:", "Server", "https://artichoke.stage.closerapp.com"),
+            makeInput("ratel-server", "RatelServer:", "RatelServer", "https://spinner.stage.closerapp.com"),
+            makeInput("user-email", "Email:", "charlie@ratel.io", "charlie@ratel.io"),
+            makeInput("user-password", "Password:", "stokrotka2817", "stokrotka2817")
+        ]);
 
-    let button = $("<button class=\"btn btn-primary\" form=\"login_form\">")
+    const button = $("<button class=\"btn btn-primary\" form=\"login_form\">")
         .append("Login!")
         .click(onClick);
 

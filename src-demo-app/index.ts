@@ -16,7 +16,8 @@ $(function () {
     const chat = makeChat();
 
     let sessionId = undefined;
-    let userPhone = undefined;
+    let userEmail = undefined;
+    let userPassword = undefined;
 
     let chatboxes = {};
     let callIndex = 1;
@@ -64,8 +65,9 @@ $(function () {
         console.log("Building the login box!");
         let form = View.makeLoginForm("login-box", function (event) {
             event.preventDefault();
-            userPhone = $("#user-phone").val();
-            run($("#server").val(), $("#ratel-server").val(), userPhone).then(
+            userEmail = $("#user-email").val();
+            userPassword = $("#user-password").val();
+            run($("#server").val(), $("#ratel-server").val(), userEmail, userPassword).then(
                 function () {
                     loginBox.element.hide();
                     chat.element.show();
@@ -400,7 +402,7 @@ $(function () {
 
         room.getUsers().then(function (list) {
             list.filter(function (u) {
-                return u !== getSessionId(userPhone);
+                return u !== getSessionId(userEmail);
             }).forEach(function (u) {
                 _users.add(u);
             });
@@ -412,7 +414,7 @@ $(function () {
         let receive = makeReceiver(room, text);
 
         room.onJoined(function (msg) {
-            if (msg.user !== getSessionId(userPhone)) {
+            if (msg.user !== getSessionId(userEmail)) {
                 _users.add(msg.user);
             }
             receive.action(msg);
@@ -956,13 +958,13 @@ $(function () {
         }
     }
 
-    function logIn(url, phone, code) {
+    function logIn(url, email, password) {
         let xhttp = new XMLHttpRequest();
         xhttp.open("POST", url + "api/session", false);
         xhttp.setRequestHeader("Content-Type", "application/json");
         xhttp.send(JSON.stringify({
-            "phone": phone,
-            "code": code
+            "email": email,
+            "password": password
         }));
         if (xhttp.status !== 200) {
             throw "Invalid credentials.";
@@ -970,14 +972,13 @@ $(function () {
         return JSON.parse(xhttp.responseText);
     }
 
-    function run(chatServer, ratelServer, phone) {
+    function run(chatServer, ratelServer, email, password) {
         let chatUrl = getURL(chatServer);
         let ratelUrl = getURL(ratelServer);
 
         let user = undefined;
         try {
-            // sendCode(ratelUrl, phone);
-            user = logIn(ratelUrl, phone, "1234"); // Master code.
+            user = logIn(ratelUrl, email, password); // Master code.
         } catch (e) {
             return Promise.reject(e);
         }
@@ -1006,7 +1007,7 @@ $(function () {
         };
 
         return RatelSDK.withApiKey(
-            user.user.id, // Well fuck.
+            user.id,
             user.apiKey,
             {
                 "logLevel": 0, // FIXME "DEBUG",
@@ -1052,12 +1053,12 @@ $(function () {
             });
 
             session.chat.onDisconnect(function (close) {
-                $("#demo-name").html("Disconnected - " + user.user.name);
+                $("#demo-name").html("Disconnected - " + user.firstName);
                 console.log("Session disconnected: ", close);
                 if (close.code !== 1000) { // CLOSE_NORMAL
                     // TODO Add exponential backoff not to DDoS other Artichoke nodes if one of them dies.
                     session.chat.connect();
-                    $("#demo-name").html("Connecting - " + user.user.name);
+                    $("#demo-name").html("Connecting - " + user.firstName);
                 }
             });
 
@@ -1066,7 +1067,7 @@ $(function () {
             });
 
             session.chat.onConnect(function (m) {
-                $("#demo-name").html("Connected - " + user.user.name);
+                $("#demo-name").html("Connected - " + user.firstName);
                 console.log("Connected to Artichoke!");
 
                 lektaVIGButton.click(function () {
@@ -1171,7 +1172,7 @@ $(function () {
             });
 
             session.chat.connect();
-            $("#demo-name").html("Connecting - " + user.user.name);
+            $("#demo-name").html("Connecting - " + user.firstName);
         });
     }
 });
