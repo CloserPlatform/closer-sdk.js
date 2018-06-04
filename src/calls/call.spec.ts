@@ -1,3 +1,4 @@
+// tslint:disable:max-file-line-count
 import { Call } from './call';
 import { EventHandler } from '../events/event-handler';
 import {
@@ -15,6 +16,7 @@ import { CallType } from './call-type';
 import { createCall } from './create-call';
 import { GroupCall } from './group-call';
 import { RTCPool } from '../rtc/rtc-pool';
+import CallEvent = callEvents.CallEvent;
 
 const callId = '123';
 const alice = '321';
@@ -29,77 +31,85 @@ function msgFn(ts: number): callEvents.Joined {
 }
 
 class APIMock extends ArtichokeAPI {
-  joined = false;
-  left: string;
-  answered = false;
-  rejected: string;
-  invited: string;
+  public joined = false;
+  public left: string;
+  public answered = false;
+  public rejected: string;
+  public invited: string;
 
   constructor(sessionId) {
     super(sessionId, apiKeyMock, config.chat, log);
   }
 
-  getCallHistory(id) {
+  public getCallHistory(id): Promise<CallEvent[]> {
     return Promise.resolve([msgFn(msg1Mock), msgFn(msg2Mock)]);
   }
 
-  getCallUsers(id) {
+  public getCallUsers(id): Promise<string[]> {
     return Promise.resolve([alice, bob, chad]);
   }
 
-  answerCall(id) {
+  public answerCall(id): Promise<void> {
     this.answered = true;
+
     return Promise.resolve(undefined);
   }
 
-  rejectCall(id, reason: CallReason) {
+  public rejectCall(id, reason: CallReason): Promise<void> {
     this.rejected = reason;
+
     return Promise.resolve(undefined);
   }
 
-  joinCall(id) {
+  public joinCall(id): Promise<void> {
     this.joined = true;
+
     return Promise.resolve(undefined);
   }
 
-  leaveCall(id, reason: CallReason) {
+  public leaveCall(id, reason: CallReason): Promise<void> {
     this.left = reason;
+
     return Promise.resolve(undefined);
   }
 
-  pullCall(id) {
+  public pullCall(id): Promise<void> {
     return Promise.resolve(undefined);
   }
 
-  inviteToCall(id, peer) {
+  public inviteToCall(id, peer): Promise<void> {
     this.invited = peer;
+
     return Promise.resolve(undefined);
   }
 
-  sendDescription(id, peer, sdp) {
+  public sendDescription(id, peer, sdp): Promise<void> {
     return Promise.resolve();
   }
 
-  sendCandidate(id, peer, candidate) {
+  public sendCandidate(id, peer, candidate): Promise<void> {
     return Promise.resolve();
   }
 }
 
-function makeCall(callType: CallType) {
-  const call = {
+function makeCall(callType: CallType): ProtoCall {
+  const call: ProtoCall = {
     id: callId,
     created: 123,
     creator: alice,
     users: [alice],
-  } as ProtoCall;
+    direct: false
+  };
 
   switch (callType) {
     case CallType.DIRECT:
       call.direct = true;
+
       return call;
 
     case CallType.GROUP:
       call.direct = false;
+
       return call;
 
     default:
@@ -107,14 +117,14 @@ function makeCall(callType: CallType) {
   }
 }
 
-function makeGroupCall(creator: ID, users: Array<ID>) {
+function makeGroupCall(creator: ID, users: Array<ID>): ProtoCall {
   return {
     id: callId,
     created: 123,
     creator,
     users,
     direct: false,
-  } as ProtoCall;
+  };
 }
 
 ['DirectCall', 'GroupCall'].forEach((d) => {
@@ -164,7 +174,7 @@ function makeGroupCall(creator: ID, users: Array<ID>) {
 
     it('should retrieve history', (done) => {
       call.getMessages().then((msgs) => {
-        let tss = msgs.map((m) => m.timestamp);
+        const tss = msgs.map((m) => m.timestamp);
         expect(tss).toContain(msg1Mock);
         expect(tss).toContain(msg2Mock);
         done();

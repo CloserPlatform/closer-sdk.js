@@ -19,20 +19,21 @@ export class APIWithWebsocket extends RESTfulAPI {
         this.socket = new JSONWebSocket(this.log, encoder, decoder);
     }
 
-    connect(url: string) {
+    public connect(url: string): void {
         this.socket.connect(url);
     }
 
-    disconnect() {
+    public disconnect(): void {
         this.socket.disconnect();
     }
 
-    send(command: DomainCommand): Promise<void> {
+    public send(command: DomainCommand): Promise<void> {
         return this.socket.send(command);
     }
 
-    ask<Response extends DomainEvent>(cmd: roomCommand.SendMessage | roomCommand.SendCustomMessage): Promise<Response> {
-        return new Promise<Response>((resolve, reject) => {
+    public ask<Response extends DomainEvent>(cmd: roomCommand.SendMessage | roomCommand.SendCustomMessage):
+    Promise<Response> {
+        return new Promise<Response>((resolve, reject): void => {
             const ref = 'ref' + Date.now(); // FIXME Use UUID instead.
             this.promises[ref] = {
                 resolve,
@@ -43,7 +44,7 @@ export class APIWithWebsocket extends RESTfulAPI {
         });
     }
 
-    onEvent(callback: Callback<DomainEvent>) {
+    public onEvent(callback: Callback<DomainEvent>): void {
         this.socket.onDisconnect((ev) =>
             callback(new internalEvents.WebsocketDisconnected(ev.code, ev.reason))
         );
@@ -62,14 +63,14 @@ export class APIWithWebsocket extends RESTfulAPI {
         });
     }
 
-    private resolve(ref: proto.Ref, event: DomainEvent) {
+    private resolve(ref: proto.Ref, event: DomainEvent): void {
         if (ref && ref in this.promises) {
             this.promises[ref].resolve(event);
             delete this.promises[ref];
         }
     }
 
-    private reject(ref: proto.Ref, error: errorEvents.Error) {
+    private reject(ref: proto.Ref, error: errorEvents.Error): void {
         if (ref && ref in this.promises) {
             this.promises[ref].reject(error);
             delete this.promises[ref];

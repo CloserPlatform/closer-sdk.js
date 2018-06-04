@@ -14,21 +14,21 @@ const callId = '123';
 const alice = '321';
 
 class APIMock extends ArtichokeAPI {
-  cb;
+  public cb;
 
   constructor() {
     super(sessionIdMock, apiKeyMock, config.chat, log);
   }
 
-  onEvent(callback) {
+  public onEvent(callback): void {
     this.cb = callback;
   }
 
-  connect() {
+  public connect(): void {
     // Do nothing.
   }
 
-  disconnect() {
+  public disconnect(): void {
     // Do nothing.
   }
 }
@@ -67,11 +67,11 @@ describe('Artichoke', () => {
 
     const heartbeatTimeout = 20;
 
-    chat.onServerUnreachable(() => done());
+    chat.onServerUnreachable(done);
     chat.connect();
     api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), heartbeatTimeout));
 
-    jasmine.clock().tick(2 * heartbeatTimeout + 1);
+    jasmine.clock().tick(heartbeatTimeout * 2 + 1);
     jasmine.clock().uninstall();
   });
 
@@ -88,7 +88,7 @@ describe('Artichoke', () => {
       api.cb(new serverEvents.OutputHeartbeat(Date.now()));
     }, heartbeatTimeout);
 
-    jasmine.clock().tick(10 * heartbeatTimeout);
+    jasmine.clock().tick(heartbeatTimeout * 10);
     clearInterval(interval);
     done();
 
@@ -105,7 +105,7 @@ describe('Artichoke', () => {
     api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), heartbeatTimeout));
 
     chat.disconnect();
-    jasmine.clock().tick(2 * heartbeatTimeout + 1);
+    jasmine.clock().tick(heartbeatTimeout * 2 + 1);
     done();
 
     jasmine.clock().uninstall();

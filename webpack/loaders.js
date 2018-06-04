@@ -5,6 +5,9 @@ exports.tslint = {
     test: /\.tsx?$/,
     loader: 'tslint-loader',
     exclude: [/node_modules/],
+    options: {
+      emitErrors: true
+    }
 };
 
 exports.tsx = {

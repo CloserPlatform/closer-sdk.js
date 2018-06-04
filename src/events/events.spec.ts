@@ -7,11 +7,12 @@ import { randomUUID } from '../utils/utils';
 import MarkSent = roomEvents.MarkSent;
 
 class ErrorWithCause extends errorEvents.Error {
+  public cause: boolean;
+
   constructor(reason: string, cause: boolean) {
     super(reason);
     this.cause = cause;
   }
-  cause: boolean;
 }
 
 function msgFn(id: string): MarkSent {
@@ -108,8 +109,8 @@ describe('Event Handler', () => {
   });
 
   it('onConcreteEvent() should be equivalent to onEvent() with id assertion', () => {
-    let first: roomEvents.MarkSent = undefined;
-    let second: roomEvents.MarkSent = undefined;
+    let first: roomEvents.MarkSent;
+    let second: roomEvents.MarkSent;
 
     events.onConcreteEvent(roomEvents.MarkSent.tag, '3', randomUUID(), (msg: roomEvents.MarkSent) => first = msg);
     events.onEvent(roomEvents.MarkSent.tag, (msg: roomEvents.MarkSent) => {

@@ -15,6 +15,7 @@ export interface ChatConfig extends URLConfig {
   rtc?: RTCConfig;
 }
 
+// tslint:disable-next-line:no-empty-interface
 export interface RatelConfig extends URLConfig {}
 
 export interface Config {
@@ -64,6 +65,7 @@ export function load(conf: Config): Config {
     } else if (typeof a === 'object') {
       const result = a;
       Object.getOwnPropertyNames(b).forEach((p) => result[p] = merge(a[p], b[p]));
+
       return result;
     } else if (typeof a === 'undefined') {
       return b;

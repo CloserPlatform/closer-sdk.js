@@ -29,11 +29,11 @@ export function withApiKey(sessionId: ID, apiKey: ApiKey, config: Config): Promi
 }
 
 export function withSignedAuth(sessionData: SessionData, config: Config): Promise<Session> {
-  let cfg = load(config);
+  const cfg = load(config);
   // FIXME Logger should be the common logger.
   const logLevel = config.logLevel !== undefined ? config.logLevel : logger.LogLevel.NONE;
   const api = new RatelAPI(cfg.ratel, new logger.ConsoleLogger(logLevel));
-  return api.verifySignature(sessionData).then((context: AgentContext) => {
-    return withApiKey(context.id, context.apiKey, cfg);
-  });
+
+  return api.verifySignature(sessionData).then((context: AgentContext) =>
+    withApiKey(context.id, context.apiKey, cfg));
 }

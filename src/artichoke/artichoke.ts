@@ -43,8 +43,8 @@ export class Artichoke {
       this.clearHeartbeatTimeout();
 
       this.heartbeatTimeout = new BumpableTimeout(
-        2 * hello.heartbeatTimeout,
-        () => this.events.notify(new internalEvents.ServerBecameUnreachable())
+        hello.heartbeatTimeout * 2,
+        (): void => this.events.notify(new internalEvents.ServerBecameUnreachable())
       );
     });
 
@@ -59,28 +59,28 @@ export class Artichoke {
   }
 
   // Callbacks:
-  onConnect(callback: Callback<serverEvents.Hello>) {
+  public onConnect(callback: Callback<serverEvents.Hello>): void {
     this.events.onEvent(serverEvents.Hello.tag, callback);
   }
 
-  onHeartbeat(callback: Callback<serverEvents.OutputHeartbeat>) {
+  public onHeartbeat(callback: Callback<serverEvents.OutputHeartbeat>): void {
     this.events.onEvent(serverEvents.OutputHeartbeat.tag, callback);
   }
 
-  onServerUnreachable(callback: Callback<internalEvents.ServerBecameUnreachable>) {
+  public onServerUnreachable(callback: Callback<internalEvents.ServerBecameUnreachable>): void {
     this.events.onEvent(internalEvents.ServerBecameUnreachable.tag, callback);
   }
 
-  onDisconnect(callback: Callback<internalEvents.WebsocketDisconnected>) {
+  public onDisconnect(callback: Callback<internalEvents.WebsocketDisconnected>): void {
     this.events.onEvent(internalEvents.WebsocketDisconnected.tag, callback);
   }
 
-  onError(callback: Callback<errorEvents.Error>) {
+  public onError(callback: Callback<errorEvents.Error>): void {
     this.events.onEvent(errorEvents.Error.tag, callback);
   }
 
   // API:
-  connect() {
+  public connect(): void {
     this.api.onEvent((e: DomainEvent) => {
       this.notify(e);
     });
@@ -88,7 +88,7 @@ export class Artichoke {
     this.api.connect();
   }
 
-  disconnect() {
+  public disconnect(): void {
     if (this.heartbeatTimeout) {
       this.heartbeatTimeout.clear();
       this.heartbeatTimeout = undefined;
@@ -97,75 +97,75 @@ export class Artichoke {
   }
 
   // Call API:
-  onCallCreated(callback: Callback<callEvents.Created>) {
+  public onCallCreated(callback: Callback<callEvents.Created>): void {
     this.events.onEvent(callEvents.Created.tag, callback);
   }
 
-  onCallInvitation(callback: Callback<callEvents.Invited>) {
+  public onCallInvitation(callback: Callback<callEvents.Invited>): void {
     this.events.onEvent(callEvents.Invited.tag, callback);
   }
 
-  createCall(stream: MediaStream, users: Array<proto.ID>): Promise<GroupCall> {
+  public createCall(stream: MediaStream, users: Array<proto.ID>): Promise<GroupCall> {
     return this.wrapCall(this.api.createCall(users), stream) as Promise<GroupCall>; // Trust me.
   }
 
-  createDirectCall(stream: MediaStream, peer: proto.ID, timeout?: number): Promise<DirectCall> {
+  public createDirectCall(stream: MediaStream, peer: proto.ID, timeout?: number): Promise<DirectCall> {
     return this.wrapCall(this.api.createDirectCall(peer, timeout), stream);
   }
 
-  getCall(call: proto.ID): Promise<Call> {
+  public getCall(call: proto.ID): Promise<Call> {
     return this.wrapCall(this.api.getCall(call));
   }
 
-  getCalls(): Promise<Array<Call>> {
+  public getCalls(): Promise<Array<Call>> {
     return wrapPromise(this.api.getCalls(),
                        (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
-  getActiveCalls(): Promise<Array<Call>> {
+  public getActiveCalls(): Promise<Array<Call>> {
     return wrapPromise(this.api.getActiveCalls(),
                       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
-  getCallsWithPendingInvitations(): Promise<Array<Call>> {
+  public getCallsWithPendingInvitations(): Promise<Array<Call>> {
     return wrapPromise(this.api.getCallsWithPendingInvitations(),
       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
   // Chat room API:
-  onRoomCreated(callback: Callback<roomEvents.Created>) {
+  public onRoomCreated(callback: Callback<roomEvents.Created>): void {
     this.events.onEvent(roomEvents.Created.tag, callback);
   }
 
-  onRoomInvitation(callback: Callback<roomEvents.Invited>) {
+  public onRoomInvitation(callback: Callback<roomEvents.Invited>): void {
     this.events.onEvent(roomEvents.Invited.tag, callback);
   }
 
-  createRoom(name: string): Promise<GroupRoom> {
+  public createRoom(name: string): Promise<GroupRoom> {
     return this.wrapRoom(this.api.createRoom(name)) as Promise<GroupRoom>; // Trust me.
   }
 
-  createDirectRoom(peer: proto.ID, context?: proto.Context): Promise<DirectRoom> {
+  public createDirectRoom(peer: proto.ID, context?: proto.Context): Promise<DirectRoom> {
     return this.wrapRoom(this.api.createDirectRoom(peer, context));
   }
 
-  getRoom(room: proto.ID): Promise<Room> {
+  public getRoom(room: proto.ID): Promise<Room> {
     return this.wrapRoom(this.api.getRoom(room));
   }
 
-  getRooms(): Promise<Array<Room>> {
+  public getRooms(): Promise<Array<Room>> {
     return wrapPromise(this.api.getRooms(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
-  getRoster(): Promise<Array<Room>> {
+  public getRoster(): Promise<Array<Room>> {
     return wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
-  registerForPushNotifications(pushId: proto.ID): Promise<void> {
+  public registerForPushNotifications(pushId: proto.ID): Promise<void> {
     return this.api.registerForPushNotifications(pushId);
   }
 
-  unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
+  public unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
     return this.api.unregisterFromPushNotifications(pushId);
   }
 
@@ -183,11 +183,11 @@ export class Artichoke {
   }
 
   // Utils:
-  private wrapCall(promise: Promise<wireEntities.Call>, stream?: MediaStream) {
+  private wrapCall(promise: Promise<wireEntities.Call>, stream?: MediaStream): Promise<Call> {
     return promise.then((call) => createCall(call, this.config.rtc, this.log, this.events, this.api, stream));
   }
 
-  private wrapRoom(promise: Promise<wireEntities.Room>) {
+  private wrapRoom(promise: Promise<wireEntities.Room>): Promise<Room> {
     return promise.then((room) => createRoom(room, this.log, this.events, this.api));
   }
 }

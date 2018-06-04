@@ -2,7 +2,7 @@ import { BumpableTimeout, deepcopy, isBrowserSupported, isChrome, isFirefox, onc
 
 describe('Utils', () => {
   it('wrapPromise should replace a Promise', (done) => {
-    let fun = (i: number) => i.toString();
+    const fun = (i: number): string => i.toString();
 
     wrapPromise(Promise.resolve([23]), fun).then((i) => {
       expect(i).toEqual(['23']);
@@ -22,14 +22,14 @@ describe('Utils', () => {
   });
 
   it('deepcopy should perform a deep copy', () => {
-    let obj = {
+    const obj = {
       foo: 23,
       bar: {
         baz: 5
       }
     };
 
-    let cpy = deepcopy(obj) as typeof obj;
+    const cpy = deepcopy(obj) as typeof obj;
     expect(cpy).toEqual(obj);
 
     obj.bar.baz = 42;
@@ -58,7 +58,7 @@ describe('Utils', () => {
     jasmine.clock().install();
 
     const ms = 10;
-    const bumpableTimeout = new BumpableTimeout(ms, () => done());
+    const bumpableTimeout = new BumpableTimeout(ms, done);
 
     jasmine.clock().tick(ms + 1);
     jasmine.clock().uninstall();
@@ -68,11 +68,10 @@ describe('Utils', () => {
     jasmine.clock().install();
 
     const ms = 10;
-    const bumpableTimeout = new BumpableTimeout(ms, () => done.fail());
+    const bumpableTimeout = new BumpableTimeout(ms, (): void => done.fail());
 
     const interval = setInterval(() => bumpableTimeout.bump(), ms - 1);
-
-    jasmine.clock().tick(10 * ms);
+    jasmine.clock().tick(ms * 10);
     clearInterval(interval);
     done();
 
@@ -83,7 +82,7 @@ describe('Utils', () => {
     jasmine.clock().install();
 
     const ms = 10;
-    const bumpableTimeout = new BumpableTimeout(ms, () => done.fail());
+    const bumpableTimeout = new BumpableTimeout(ms, (): void => done.fail());
 
     setTimeout(() => bumpableTimeout.clear(), ms - 1);
     jasmine.clock().tick(ms + 1);
