@@ -1,4 +1,5 @@
-import * as adapter from 'webrtc-adapter';
+// tslint:disable-next-line
+const adapter = require('webrtc-adapter');
 
 // tslint:disable:no-unnecessary-class
 export class BrowserUtils {

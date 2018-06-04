@@ -9,18 +9,19 @@ import { roomEvents } from '../protocol/events/room-events';
 import { serverEvents } from '../protocol/events/server-events';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 
+// tslint:disable:no-any
 const roomId = '234';
 const callId = '123';
 const alice = '321';
 
 class APIMock extends ArtichokeAPI {
-  public cb;
+  public cb: any;
 
   constructor() {
     super(sessionIdMock, apiKeyMock, config.chat, log);
   }
 
-  public onEvent(callback): void {
+  public onEvent(callback: any): void {
     this.cb = callback;
   }
 
@@ -35,7 +36,7 @@ class APIMock extends ArtichokeAPI {
 
 describe('Artichoke', () => {
   let events: EventHandler;
-  let api;
+  let api: any;
   let chat: Artichoke;
 
   beforeEach(() => {

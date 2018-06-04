@@ -100,7 +100,7 @@ export class JSONWebSocket {
     }
   }
 
-  private setupOnClose(callback): void {
+  private setupOnClose(callback: Callback<CloseEvent>): void {
     this.socket.onclose = callback;
   }
 }

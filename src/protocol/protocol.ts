@@ -69,7 +69,7 @@ export const createDirectRoom = (user: ID, context?: Context): CreateDirectRoom 
     context
   });
 
-export const invite = (user): Invite =>
+export const invite = (user: ID): Invite =>
   ({
     user
   });

@@ -228,11 +228,11 @@ export class ArtichokeAPI extends APIWithWebsocket {
         return this.deleteAuth([this.url, this.pushNotifsPath, 'unregister', pushId]);
     }
 
-    private postAuth<Body, Response>(path, body?: Body): Promise<Response> {
+    private postAuth<Body, Response>(path: string[], body?: Body): Promise<Response> {
         return this.post<Body, Response>(path, this.apiHeaders.getHeaders(), body);
     }
 
-    private deleteAuth<Body, Response>(path, body?: Body): Promise<Response> {
+    private deleteAuth<Body, Response>(path: string[], body?: Body): Promise<Response> {
         return this.delete<Body, Response>(path, this.apiHeaders.getHeaders(), body);
     }
 

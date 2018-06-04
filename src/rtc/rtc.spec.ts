@@ -20,16 +20,19 @@ import { EventHandler } from '../events/event-handler';
 import { createRTCConnection } from './create-rtc-connection';
 import { createRTCPool } from './create-rtc-pool';
 
+// FIXME
+// tslint:disable:no-any
+
 const invalidSDP = 'this is not a valid SDP';
 
 const callIdMock = '123';
 const peerAId = '321';
 const peerBId = '333';
 
-const descr = (sdp): rtcEvents.DescriptionSent =>
+const descr = (sdp: any): rtcEvents.DescriptionSent =>
   new rtcEvents.DescriptionSent(callIdMock, peerAId, sdp);
 
-const logError = (done): (err) => void =>
+const logError = (done: any): (err: any) => void =>
   (error): void => {
     log.error('Got an error: ' + error + ' (' + JSON.stringify(error) + ')');
     if (typeof error.cause !== 'undefined') {
@@ -69,9 +72,9 @@ class APIMock extends ArtichokeAPI {
 }
 
 describe('RTCConnection', () => {
-  let events;
-  let api;
-  let peerAtest;
+  let events: any;
+  let api: any;
+  let peerAtest: any;
 
   beforeEach(() => {
     api = new APIMock();
@@ -85,7 +88,7 @@ describe('RTCConnection', () => {
 
       expect(api.descriptionSent).toBe(false);
 
-      peerAtest.offer().then((offer) => {
+      peerAtest.offer().then((offer: any) => {
         expect(api.descriptionSent).toBe(true);
         done();
       }).catch(logError(done));
@@ -98,7 +101,7 @@ describe('RTCConnection', () => {
     getStream((streamA) => {
       addLocalStream(peerAtest, streamA);
       // Peer A offers a connection.
-      peerAtest.offer().then((offer) => {
+      peerAtest.offer().then((offer: any) => {
         getStream((streamB) => {
           addLocalStream(peerB, streamB);
 
@@ -125,14 +128,14 @@ describe('RTCConnection', () => {
 
       expect(api.descriptionSent).toBe(false);
 
-      peerAtest.addOffer(sdp).then((answer) => done.fail()).catch((error) => {
+      peerAtest.addOffer(sdp).then((answer: any) => done.fail()).catch((error: any) => {
         expect(api.descriptionSent).toBe(false);
         done();
       });
     }, logError(done));
   });
 
-  const testRenegotiation = (peerA, peerB, trigger, calleeId, done): void => {
+  const testRenegotiation = (peerA: any, peerB: any, trigger: any, calleeId: any, done: any): void => {
     // 0. Initial setup...
     getStream((streamA) => {
       log.info('Got stream A.');
@@ -145,7 +148,7 @@ describe('RTCConnection', () => {
         // FIXME
         // tslint:disable-next-line:no-any
         const candidates: Array<any> = [];
-        api.onCandidate = (call, peer, candidate): void => {
+        api.onCandidate = (call: any, peer: any, candidate: any): void => {
           candidates.push({peer, candidate});
         };
 
@@ -168,7 +171,7 @@ describe('RTCConnection', () => {
             });
 
             // 6. Innitiator sends an offer to the peer.
-            api.onDescription = (id, peer, description): void => {
+            api.onDescription = (id: any, peer: any, description: any): void => {
               expect(description.type).toBe('offer');
               expect(peer).toBe(calleeId);
               log.info('Renegotiation successful.');
@@ -200,10 +203,10 @@ describe('RTCConnection', () => {
         });
 
         // 1. Peer A offers a connection.
-        peerA.offer().then((offer) => {
+        peerA.offer().then((offer: any) => {
           log.info('Sent offer.');
           // 2. Peer B answers it.
-          peerB.addOffer(offer).then((answer) => {
+          peerB.addOffer(offer).then((answer: any) => {
             log.info('Received offer & sent answer.');
             // 3. Peer A establishes a connection.
             peerA.addAnswer(answer).then(() => {
@@ -258,8 +261,8 @@ describe('RTCConnection', () => {
 
 describe('RTCPool', () => {
   let events: EventHandler;
-  let api;
-  let pool;
+  let api: any;
+  let pool: any;
 
   beforeEach(() => {
     events = new EventHandler(log, decoder);
@@ -269,7 +272,7 @@ describe('RTCPool', () => {
 
   whenever(isWebRTCSupported())('should create an RTC connection', (done) => {
     getStream((stream) => {
-      api.onDescription = (id, peer, sdp): void => {
+      api.onDescription = (id: any, peer: any, sdp: any): void => {
         expect(api.descriptionSent).toBe(true);
         expect(id).toBe(callIdMock);
         expect(peer).toBe(peerAId);
@@ -292,7 +295,7 @@ describe('RTCPool', () => {
 
         peerTest.offer().then((offer) => {
 
-          api.onDescription = (id, peer, sdp): void => {
+          api.onDescription = (id: any, peer: any, sdp: any): void => {
             expect(api.descriptionSent).toBe(true);
             expect(id).toBe(callIdMock);
             expect(peer).toBe(peerAId);
@@ -303,7 +306,7 @@ describe('RTCPool', () => {
           events.onEvent(errorEvents.Error.tag, logError(done));
 
           addLocalStream(pool, streamPool);
-          pool.onRemoteStream((peer, stream) => {
+          pool.onRemoteStream((peer: any, stream: any) => {
             expect(peer).toBe(peerAId);
           });
 
@@ -317,7 +320,7 @@ describe('RTCPool', () => {
     getStream((stream) => {
       addLocalStream(pool, stream);
       events.onEvent(errorEvents.Error.tag, (error) => done());
-      api.onDescription = (id, peer, sdp): void => done.fail();
+      api.onDescription = (id: any, peer: any, sdp: any): void => done.fail();
 
       events.notify(descr({
         type: 'offer',
@@ -330,7 +333,7 @@ describe('RTCPool', () => {
     getStream((stream) => {
       addLocalStream(pool, stream);
       events.onEvent(errorEvents.Error.tag, (error) => done());
-      api.onDescription = (id, peer, sdp): void => done.fail();
+      api.onDescription = (id: any, peer: any, sdp: any): void => done.fail();
 
       events.notify(descr({
         type: 'answer',
@@ -348,13 +351,13 @@ describe('RTCPool', () => {
 
         events.onEvent(errorEvents.Error.tag, logError(done));
 
-        api.onDescription = (id, peerId, sdp): void => {
+        api.onDescription = (id: any, peerId: any, sdp: any): void => {
           expect(api.descriptionSent).toBe(true);
           expect(id).toBe(callIdMock);
           expect(peerId).toBe(peerAId);
           expect(sdp.type).toBe('offer');
 
-          api.onDescription = (id2, peerId2, sdp2): void => {
+          api.onDescription = (id2: any, peerId2: any, sdp2: any): void => {
             expect(api.descriptionSent).toBe(true);
             expect(id2).toBe(callIdMock);
             expect(peerId2).toBe(peerBId);
@@ -365,7 +368,7 @@ describe('RTCPool', () => {
 
           peer.addOffer(sdp).then((answer) => {
             // Should not answer the answer.
-            api.onDescription = (id3, peerId3, sdp3): void => done.fail();
+            api.onDescription = (id3: any, peerId3: any, sdp3: any): void => done.fail();
             events.notify(descr(answer));
             done();
           }).catch(logError(done));

@@ -128,7 +128,7 @@
     "one-variable-per-declaration": true,
     "only-arrow-functions": true,
     // "ordered-imports": true,
-    // "prefer-conditional-expression": true,
+    "prefer-conditional-expression": true,
     "prefer-for-of": true,
     "prefer-method-signature": true,
     "prefer-object-spread": true,

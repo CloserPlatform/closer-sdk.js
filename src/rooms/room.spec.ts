@@ -17,6 +17,9 @@ import { createRoom } from './create-room';
 import { Paginated } from '../protocol/protocol';
 import MessageSent = roomEvents.MessageSent;
 
+// FIXME
+// tslint:disable:no-any
+
 const roomId = '123';
 const alice = '321';
 const bob = '456';
@@ -39,25 +42,25 @@ class APIMock extends ArtichokeAPI {
     super(sessionIdMock, apiKeyMock, config.chat, log);
   }
 
-  public joinRoom(id): Promise<void> {
+  public joinRoom(id: any): Promise<void> {
     this.joined = true;
 
     return Promise.resolve();
   }
 
-  public leaveRoom(id): Promise<void> {
+  public leaveRoom(id: any): Promise<void> {
     this.left = true;
 
     return Promise.resolve();
   }
 
-  public inviteToRoom(id, user): Promise<void> {
+  public inviteToRoom(id: any, user: any): Promise<void> {
     this.invited = user;
 
     return Promise.resolve();
   }
 
-  public getRoomHistoryLast(id, count, filter): Promise<Paginated<MessageSent>> {
+  public getRoomHistoryLast(id: any, count: any, filter: any): Promise<Paginated<MessageSent>> {
     return Promise.resolve({
       offset: 0,
       limit: 2,
@@ -65,7 +68,7 @@ class APIMock extends ArtichokeAPI {
     });
   }
 
-  public getRoomHistoryPage(id, offset, limit, filter): Promise<Paginated<MessageSent>> {
+  public getRoomHistoryPage(id: any, offset: any, limit: any, filter: any): Promise<Paginated<MessageSent>> {
     return Promise.resolve({
       offset: 0,
       limit: 2,
@@ -73,17 +76,17 @@ class APIMock extends ArtichokeAPI {
     });
   }
 
-  public getRoomUsers(id): Promise<string[]> {
+  public getRoomUsers(id: any): Promise<string[]> {
     return Promise.resolve([bob]);
   }
 
-  public sendTyping(id): Promise<void> {
+  public sendTyping(id: any): Promise<void> {
     this.sentTyping = true;
 
     return Promise.resolve();
   }
 
-  public sendMessage(id, body): Promise<chatEvents.Received> {
+  public sendMessage(id: any, body: any): Promise<chatEvents.Received> {
     const m = msgFn(msg3, body);
     const n: NormalizedEvent = {
       id: m.messageId,
@@ -97,7 +100,7 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve(new chatEvents.Received(m.messageId, n));
   }
 
-  public setMark(id, timestamp): Promise<void> {
+  public setMark(id: any, timestamp: any): Promise<void> {
     this.marked = true;
 
     return Promise.resolve();
@@ -138,7 +141,7 @@ const makeRoom = (type: RoomType): wireEntities.Room => {
     let events: EventHandler;
     let api: APIMock;
     let room: Room;
-    let uid;
+    let uid: any;
 
     beforeEach(() => {
       events = new EventHandler(log, decoder);
@@ -234,9 +237,9 @@ const makeRoom = (type: RoomType): wireEntities.Room => {
 });
 
 describe('DirectRoom', () => {
-  let events;
-  let api;
-  let room;
+  let events: any;
+  let api: any;
+  let room: any;
 
   beforeEach(() => {
     events = new EventHandler(log, decoder);
@@ -245,7 +248,7 @@ describe('DirectRoom', () => {
   });
 
   it('should retrieve users', (done) => {
-    room.getUsers().then((users) => {
+    room.getUsers().then((users: any) => {
       expect(users).toContain(bob);
       done();
     });

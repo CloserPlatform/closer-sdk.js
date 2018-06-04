@@ -12,12 +12,12 @@ export class BumpableTimeout {
 
   public bump(): void {
     this.clear();
-    this.timeoutId = setTimeout(this.onTimeoutClb, this.timeout_ms);
+    this.timeoutId = window.setTimeout(this.onTimeoutClb, this.timeout_ms);
   }
 
   public clear(): void {
     if (this.timeoutId) {
-      clearTimeout(this.timeoutId);
+      window.clearTimeout(this.timeoutId);
       this.timeoutId = undefined;
     }
   }

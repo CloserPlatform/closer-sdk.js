@@ -33,7 +33,8 @@ export const whenever = (condition: boolean):
 export const isWebRTCSupported = (): boolean =>
   BrowserUtils.isBrowserSupported();
 
-export const getStream = (onStream, onError, constraints?): void => {
+export const getStream = (onStream: (stream: MediaStream) => void, onError: (err: Error) => void,
+                          constraints?: MediaStreamConstraints): void => {
   const cs: MediaStreamConstraints & { fake?: boolean } = constraints ? constraints : {
     video: true,
     audio: true

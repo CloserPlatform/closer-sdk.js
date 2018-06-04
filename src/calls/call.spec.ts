@@ -17,6 +17,8 @@ import { createCall } from './create-call';
 import { GroupCall } from './group-call';
 import { RTCPool } from '../rtc/rtc-pool';
 import CallEvent = callEvents.CallEvent;
+// FIXME
+// tslint:disable:no-any
 
 const callId = '123';
 const alice = '321';
@@ -36,57 +38,57 @@ class APIMock extends ArtichokeAPI {
   public rejected: string;
   public invited: string;
 
-  constructor(sessionId) {
+  constructor(sessionId: string) {
     super(sessionId, apiKeyMock, config.chat, log);
   }
 
-  public getCallHistory(id): Promise<CallEvent[]> {
+  public getCallHistory(id: string): Promise<CallEvent[]> {
     return Promise.resolve([msgFn(msg1Mock), msgFn(msg2Mock)]);
   }
 
-  public getCallUsers(id): Promise<string[]> {
+  public getCallUsers(id: string): Promise<string[]> {
     return Promise.resolve([alice, bob, chad]);
   }
 
-  public answerCall(id): Promise<void> {
+  public answerCall(id: string): Promise<void> {
     this.answered = true;
 
     return Promise.resolve(undefined);
   }
 
-  public rejectCall(id, reason: CallReason): Promise<void> {
+  public rejectCall(id: string, reason: CallReason): Promise<void> {
     this.rejected = reason;
 
     return Promise.resolve(undefined);
   }
 
-  public joinCall(id): Promise<void> {
+  public joinCall(id: string): Promise<void> {
     this.joined = true;
 
     return Promise.resolve(undefined);
   }
 
-  public leaveCall(id, reason: CallReason): Promise<void> {
+  public leaveCall(id: string, reason: CallReason): Promise<void> {
     this.left = reason;
 
     return Promise.resolve(undefined);
   }
 
-  public pullCall(id): Promise<void> {
+  public pullCall(id: string): Promise<void> {
     return Promise.resolve(undefined);
   }
 
-  public inviteToCall(id, peer): Promise<void> {
+  public inviteToCall(id: string, peer: any): Promise<void> {
     this.invited = peer;
 
     return Promise.resolve(undefined);
   }
 
-  public sendDescription(id, peer, sdp): Promise<void> {
+  public sendDescription(id: string, peer: any, sdp: any): Promise<void> {
     return Promise.resolve();
   }
 
-  public sendCandidate(id, peer, candidate): Promise<void> {
+  public sendCandidate(id: string, peer: any, candidate: any): Promise<void> {
     return Promise.resolve();
   }
 }
@@ -127,8 +129,8 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
 
 ['DirectCall', 'GroupCall'].forEach((d) => {
   describe(d, () => {
-    let events;
-    let api;
+    let events: any;
+    let api: any;
     let call: Call;
 
     beforeEach(() => {
@@ -145,7 +147,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
       const usersToOffer = new Set([bob, chad, david]);
       const usersNotToOffer = new Set([alice]);
 
-      spyOn(RTCPool.prototype, 'create').and.callFake((u) => {
+      spyOn(RTCPool.prototype, 'create').and.callFake((u: any) => {
         if (usersNotToOffer.has(u)) {
           done.fail();
         } else {
@@ -163,7 +165,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     it('for not creator should not create RTC connection with old users in call', (done) => {
       const apiMock = new APIMock(bob);
       spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([alice, bob, chad, david]));
-      spyOn(RTCPool.prototype, 'create').and.callFake((u) => done.fail());
+      spyOn(RTCPool.prototype, 'create').and.callFake((u: any) => done.fail());
 
       // tslint:disable-next-line
       createCall(makeGroupCall(alice, [alice, david]), config.chat.rtc, log, events, apiMock) as GroupCall;
@@ -180,7 +182,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     });
 
     it('should allow rejecting', (done) => {
-      events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+      events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
       call.reject(CallReason.CallRejected).then(() => {
         expect(api.rejected).toBe(CallReason.CallRejected);
@@ -192,7 +194,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
       getStream((stream) => {
         call.addStream(stream);
 
-        events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+        events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
         call.onJoined((msg) => {
           expect(msg.authorId).toBe(chad);
@@ -204,7 +206,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     });
 
     it('should run a callback on leave', (done) => {
-      events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+      events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
       call.onLeft((msg) => {
         expect(msg.authorId).toBe(alice);
@@ -215,7 +217,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     });
 
     it('should run a callback on offline call action', (done) => {
-      events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+      events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
       call.onOffline((msg) => {
         expect(msg.userId).toBe(alice);
@@ -226,7 +228,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     });
 
     it('should run a callback on online call action', (done) => {
-      events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+      events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
       call.onOnline((msg) => {
         expect(msg.userId).toBe(alice);
@@ -237,7 +239,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     });
 
     it('should run a callback on answer', (done) => {
-      events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+      events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
       call.onAnswered((msg) => {
         expect(msg.authorId).toBe(alice);
@@ -251,7 +253,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
       getStream((stream) => {
         call.pull(stream);
 
-        events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+        events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
         call.onActiveDevice((msg) => {
           expect(msg.authorId).toBe(chad);
@@ -263,7 +265,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     });
 
     it('should run a callback on reject', (done) => {
-      events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+      events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
       call.onRejected((msg) => {
         expect(msg.authorId).toBe(alice);
@@ -274,7 +276,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     });
 
     it('should run a callback on end', (done) => {
-      events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+      events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
       call.onEnd((msg) => {
         expect(msg.reason).toBe(EndReason.Disconnected);
@@ -285,7 +287,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     });
 
     it('should run a callback on ActiveDevice', (done) => {
-      events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+      events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
       const deviceId = 'aliceDevice';
 
       call.onActiveDevice((msg) => {
@@ -301,7 +303,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
       getStream((stream) => {
         call.addStream(stream);
 
-        events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+        events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
         call.onJoined((msg1) => {
           expect(msg1.authorId).toBe(bob);
@@ -331,7 +333,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     // FIXME These should be moved to integration tests:
     whenever(isWebRTCSupported())('should allow answering', (done) => {
       getStream((stream) => {
-        events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+        events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
         call.answer(stream).then(() => {
           expect(api.answered).toBe(true);
@@ -341,7 +343,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     });
 
     it('should allow leaving', (done) => {
-      events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+      events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
       call.leave(CallReason.CallRejected).then(() => {
         expect(api.left).toBe(CallReason.CallRejected);
@@ -352,8 +354,8 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
 });
 
 describe('GroupCall', () => {
-  let events;
-  let api;
+  let events: any;
+  let api: any;
   let call: GroupCall;
 
   beforeEach(() => {
@@ -363,7 +365,7 @@ describe('GroupCall', () => {
   });
 
   it('should run a callback on invitation', (done) => {
-    events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+    events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
     const ctx = {exampleField: 'exampleField'};
     call.onInvited((msg) => {
@@ -379,7 +381,7 @@ describe('GroupCall', () => {
   // FIXME These should be moved to integration tests:
   whenever(isWebRTCSupported())('should allow joining', (done) => {
     getStream((stream) => {
-      events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+      events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
       call.join(stream).then(() => {
         expect(api.joined).toBe(true);
@@ -389,7 +391,7 @@ describe('GroupCall', () => {
   });
 
   it('should allow inviting users', (done) => {
-    events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+    events.onEvent(errorEvents.Error.tag, (error: any) => done.fail());
 
     call.invite(bob).then(() => {
       expect(api.invited).toBe(bob);
