@@ -1,5 +1,5 @@
 import { EventHandler } from '../events/events';
-import {apiKeyMock, config, log, sessionIdMock } from '../test-utils';
+import { apiKeyMock, config, log, sessionIdMock } from '../test-utils';
 import { chatEvents } from '../protocol/events/chat-events';
 import { decoder } from '../protocol/events/domain-event';
 import { errorEvents } from '../protocol/events/error-events';
@@ -12,6 +12,7 @@ import { RoomType } from './room-type';
 import { Room } from './room';
 import { DirectRoom } from './direct-room';
 import { GroupRoom } from './group-room';
+import { createRoom } from './create-room';
 
 const roomId = '123';
 const alice = '321';
@@ -132,7 +133,7 @@ function makeRoom(type: RoomType) {
       events = new EventHandler(log, decoder);
       api = new APIMock();
       const type = d === 'DirectRoom' ? RoomType.DIRECT : RoomType.GROUP;
-      room = Room.create(makeRoom(type), log, events, api);
+      room = createRoom(makeRoom(type), log, events, api);
       uid = '123';
     });
 
@@ -228,7 +229,7 @@ describe('DirectRoom', () => {
   beforeEach(() => {
     events = new EventHandler(log, decoder);
     api = new APIMock();
-    room = Room.create(makeRoom(RoomType.DIRECT), log, events, api) as DirectRoom;
+    room = createRoom(makeRoom(RoomType.DIRECT), log, events, api) as DirectRoom;
   });
 
   it('should retrieve users', (done) => {
@@ -247,7 +248,7 @@ describe('GroupRoom', () => {
   beforeEach(() => {
     events = new EventHandler(log, decoder);
     api = new APIMock();
-    room = Room.create(makeRoom(RoomType.GROUP), log, events, api) as GroupRoom;
+    room = createRoom(makeRoom(RoomType.GROUP), log, events, api) as GroupRoom;
   });
 
   it('should maintain the user list', (done) => {
@@ -328,9 +329,9 @@ describe('GroupRoom, BusinessRoom, DirectRoom', () => {
   const api = new APIMock();
 
   it('should have proper roomType field defined', (done) => {
-    const businessRoom: Room = Room.create(makeRoom(RoomType.BUSINESS), log, events, api);
-    const directRoom: Room = Room.create(makeRoom(RoomType.DIRECT), log, events, api);
-    const groupRoom: Room = Room.create(makeRoom(RoomType.GROUP), log, events, api);
+    const businessRoom: Room = createRoom(makeRoom(RoomType.BUSINESS), log, events, api);
+    const directRoom: Room = createRoom(makeRoom(RoomType.DIRECT), log, events, api);
+    const groupRoom: Room = createRoom(makeRoom(RoomType.GROUP), log, events, api);
     expect(businessRoom.roomType).toEqual(RoomType.BUSINESS);
     expect(directRoom.roomType).toEqual(RoomType.DIRECT);
     expect(groupRoom.roomType).toEqual(RoomType.GROUP);

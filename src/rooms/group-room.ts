@@ -23,6 +23,10 @@ export class GroupRoom extends Room {
         this.onInvitedCallback = (e: roomEvents.Invited) => { /* nothing */ };
     }
 
+    public static isGroup(room: Room): room is GroupRoom {
+        return room.roomType === RoomType.GROUP;
+    }
+
     protected defineCallbacks() {
         this.events.onConcreteEvent(roomEvents.Joined.tag, this.id, this.uuid, (e: roomEvents.Joined) => {
             this.users.push(e.authorId);

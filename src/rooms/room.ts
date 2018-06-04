@@ -8,9 +8,6 @@ import * as proto from '../protocol/protocol';
 import * as wireEntities from '../protocol/wire-entities';
 import { randomUUID, TransferFunction, UUID } from '../utils/utils';
 import { ArtichokeAPI } from '../apis/artichoke-api';
-import { DirectRoom } from './direct-room';
-import { BusinessRoom } from './business-room';
-import { GroupRoom } from './group-room';
 import { RoomType } from './room-type';
 
 export abstract class Room implements wireEntities.Room {
@@ -49,28 +46,6 @@ export abstract class Room implements wireEntities.Room {
       // Do nothing.
     };
     this.defineCallbacks();
-  }
-
-  public static create(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI): Room {
-    if (room.direct) {
-      return new DirectRoom(room, log, events, api);
-    } else if (room.orgId) {
-      return new BusinessRoom(room, log, events, api);
-    } else {
-      return new GroupRoom(room, log, events, api);
-    }
-  }
-
-  public static isDirect(room: Room): room is DirectRoom {
-      return room.roomType === RoomType.DIRECT;
-  }
-
-  public static isGroup(room: Room): room is GroupRoom {
-      return room.roomType === RoomType.GROUP;
-  }
-
-  public static isBusiness(room: Room): room is BusinessRoom {
-      return room.roomType === RoomType.BUSINESS;
   }
 
   protected defineCallbacks() {
