@@ -1,6 +1,5 @@
 import { errorEvents } from '../protocol/events/error-events';
 import { Logger } from '../logger';
-import { Thunk } from '../utils/utils';
 import { HeaderValue } from './header-value';
 import { PromiseReject, PromiseResolve } from '../utils/promise';
 
@@ -42,7 +41,7 @@ export class RESTfulAPI {
 
   private responseCallback(xhttp: XMLHttpRequest,
                            resolve: PromiseResolve<XMLHttpRequest>,
-                           reject: PromiseReject): Thunk {
+                           reject: PromiseReject): () => void {
     return (): void => {
       if (xhttp.readyState === 4 && (xhttp.status === 200 || xhttp.status === 204)) {
         this.log.debug('OK response: ' + xhttp.responseText);
@@ -55,6 +54,8 @@ export class RESTfulAPI {
         } catch (err) {
           this.log.debug('Api - responseCallback: Cannot parse error response: ' + err +
             '\n Tried to parse: ' + xhttp.responseText);
+          // FIXME
+          // tslint:disable-next-line:no-any
           reject(('Cannot parse Error response: ' + err + '\nError response: ' + xhttp.responseText) as any);
         }
       }
@@ -90,6 +91,8 @@ export class RESTfulAPI {
 
   private parseData<T>(resp: XMLHttpRequest): T {
     if (resp.status === 204) {
+      // FIXME
+      // tslint:disable-next-line:no-any
       return resp.responseText as any as T;
     }
     try {
@@ -97,6 +100,8 @@ export class RESTfulAPI {
     } catch (err) {
       this.log.debug('Api - parseData: Cannot parse response: ' + err + '\n Tried to parse: ' + resp.responseText);
 
+      // FIXME
+      // tslint:disable-next-line:no-any
       return resp.responseText as any as T;
     }
   }

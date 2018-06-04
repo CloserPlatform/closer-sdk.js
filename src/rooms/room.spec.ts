@@ -226,6 +226,7 @@ function makeRoom(type: RoomType): wireEntities.Room {
 
     it('should allow sending messages', (done) => {
       room.send('hello').then((msg) => {
+        // tslint:disable-next-line:no-any
         expect((msg.message.data as any).message).toBe('hello');
         done();
       });

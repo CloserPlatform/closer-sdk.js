@@ -72,7 +72,7 @@
     "new-parens": true,
     "newline-before-return": true,
     "no-angle-bracket-type-assertion": true,
-    // "no-any": true,
+    "no-any": true,
     "no-bitwise": true,
     "no-arg": true,
     // "no-boolean-literal-compare": true,

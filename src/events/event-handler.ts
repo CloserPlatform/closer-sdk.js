@@ -59,6 +59,8 @@ export class EventHandler {
   }
 
   private notifyById(event: DomainEvent): boolean {
+    // FIXME
+    // tslint:disable-next-line:no-any
     const id = (event as any).roomId || (event as any).callId;
     if (id && event.tag in this.perId && id in this.perId[event.tag]) {
       this.log.debug('Running callbacks for event type ' + event.tag + ', id ' + id);

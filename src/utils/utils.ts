@@ -2,8 +2,6 @@ import * as adapter from 'webrtc-adapter';
 
 // Various utilities.
 
-export type Thunk = () => void;
-
 export type TransferFunction<T, U> = (arg: T) => U;
 
 export function wrapPromise<T, U>(promise: Promise<Array<T>>, fun: TransferFunction<T, U>): Promise<Array<U>> {

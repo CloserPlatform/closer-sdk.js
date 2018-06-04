@@ -1,7 +1,7 @@
 // FIXME Unfuck when Chrome transitions to the Unified Plan.
 import { errorEvents } from '../protocol/events/error-events';
 import { Logger } from '../logger';
-import { onceDelayed, Thunk } from '../utils/utils';
+import { onceDelayed } from '../utils/utils';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { ID } from '../protocol/protocol';
 import { Callback, EventHandler } from '../events/event-handler';
@@ -19,7 +19,7 @@ export class RTCConnection {
   private events: EventHandler;
   private log: Logger;
   private conn: HackedRTCPeerConnection;
-  private onICEDoneCallback: Thunk;
+  private onICEDoneCallback: () => void;
   private onRemoteStreamCallback: Callback<MediaStream>;
   private offerOptions: HackedRTCOfferOptions;
   private answerOptions: RTCAnswerOptions;
@@ -167,7 +167,7 @@ export class RTCConnection {
   }
 
   // FIXME This is only used by tests...
-  public onICEDone(callback: Thunk): void {
+  public onICEDone(callback: () => void): void {
     this.onICEDoneCallback = callback;
   }
 

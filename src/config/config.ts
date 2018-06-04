@@ -59,6 +59,7 @@ export const defaultConfig: Config = {
 
 export function load(conf: Config): Config {
 
+  // tslint:disable-next-line:no-any
   function merge(a: any, b: any): any {
     if (Array.isArray(a)) {
       return a.map((ai, i) => merge(ai, b[i]));

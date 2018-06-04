@@ -5,6 +5,8 @@ export type Ref = string;
 export type Timestamp = number;
 
 // // Datatypes:
+// FIXME
+// tslint:disable-next-line:no-any
 export type Context = any;
 
 // // REST API:

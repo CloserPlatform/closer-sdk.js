@@ -145,6 +145,8 @@ describe('RTCConnection', () => {
         addLocalStream(peerB, streamB);
 
         // 4. Peers exchange candidates.
+        // FIXME
+        // tslint:disable-next-line:no-any
         const candidates: Array<any> = [];
         api.onCandidate = (call, peer, candidate): void => {
           candidates.push({peer, candidate});
@@ -250,6 +252,8 @@ describe('RTCConnection', () => {
     const peerB = createRTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
     testRenegotiation(peerAtest, peerB, () => {
       log.info('Removing a stream track...');
+      // FIXME
+      // tslint:disable-next-line:no-any
       peerAtest.removeTrack((peerAtest as any).conn.getLocalStreams()[0].getTracks()[0]);
     }, peerBId, done);
   });
