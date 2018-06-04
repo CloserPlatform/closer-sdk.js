@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ##  - 2018-06-04
 
+Fix demo app
+
+##  - 2018-06-04
+
 Refactored calls without logic
 
 ##  - 2018-06-04
