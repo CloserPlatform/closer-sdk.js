@@ -18,6 +18,7 @@ import { RTCPool } from '../rtc/rtc-pool';
 import CallEvent = callEvents.CallEvent;
 // FIXME
 // tslint:disable:no-any
+// tslint:disable:no-let
 
 const callId = '123';
 const alice = '321';

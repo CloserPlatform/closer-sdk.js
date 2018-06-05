@@ -21,6 +21,7 @@ import { createRTCPool } from './create-rtc-pool';
 
 // FIXME
 // tslint:disable:no-any
+// tslint:disable:no-let
 
 const invalidSDP = 'this is not a valid SDP';
 

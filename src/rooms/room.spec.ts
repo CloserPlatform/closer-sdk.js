@@ -18,6 +18,7 @@ import MessageSent = roomEvents.MessageSent;
 
 // FIXME
 // tslint:disable:no-any
+// tslint:disable:no-let
 
 const roomId = '123';
 const alice = '321';

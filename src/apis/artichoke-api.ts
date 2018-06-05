@@ -245,22 +245,21 @@ export class ArtichokeAPI extends APIWithWebsocket {
   private getAuthPaginated<Item>(path: string[]): Promise<proto.Paginated<Item>> {
     return this.getRaw(path, this.apiHeaders.getHeaders())
       .then((resp) => {
-        let items;
         try {
-          items = JSON.parse(resp.responseText) as Item[];
+          const items = JSON.parse(resp.responseText) as Item[];
+          const offset = parseInt(resp.getResponseHeader('X-Paging-Offset') || '0', 10);
+          const limit = parseInt(resp.getResponseHeader('X-Paging-Limit') || '0', 10);
+
+          return {
+            items,
+            offset,
+            limit
+          };
         } catch (err) {
           this.log.debug(
             `Api - getAuthPaginated: Cannot parse response: ${err}\n Tried to parse:  ${resp.responseText}`);
           throw new Error('Api - getAuthPaginated: Cannot parse response');
         }
-        const offset = parseInt(resp.getResponseHeader('X-Paging-Offset') || '0', 10);
-        const limit = parseInt(resp.getResponseHeader('X-Paging-Limit') || '0', 10);
-
-        return {
-          items,
-          offset,
-          limit
-        };
       });
   }
 }

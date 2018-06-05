@@ -244,7 +244,7 @@
     // Immutability rules
     // "readonly-keyword": true, // Impossible for angular
     // "readonly-array": true,
-    // "no-let": true,
+    "no-let": true,
     // "no-object-mutation": true, // Impossible for angular
     // "no-delete": true,
     // "no-method-signature": true,
