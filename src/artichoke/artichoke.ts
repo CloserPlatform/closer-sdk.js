@@ -36,9 +36,12 @@ export class Artichoke {
     this.log = log;
     this.events = events;
 
-    events.onEvent(errorEvents.Error.tag, (e: errorEvents.Error) => { /* do nothing */ });
-    events.onEvent(chatEvents.Received.tag, (e: chatEvents.Received) => { /* do nothing */ });
-    events.onEvent(roomEvents.MessageDelivered.tag, (e: roomEvents.MessageDelivered) => { /* do nothing */ });
+    events.onEvent(errorEvents.Error.tag, (e: errorEvents.Error) =>
+      this.log.warn('Event error not handled: ' + e));
+    events.onEvent(chatEvents.Received.tag, (e: chatEvents.Received) =>
+      this.log.warn('Event received not handled: ' + e));
+    events.onEvent(roomEvents.MessageDelivered.tag, (e: roomEvents.MessageDelivered) =>
+      this.log.warn('Event message delivered not handled: ' + e));
 
     events.onEvent(serverEvents.Hello.tag, (hello: serverEvents.Hello) => {
       this.clearHeartbeatTimeout();

@@ -81,7 +81,7 @@ export namespace roomEvents {
 
       this.message = message;
       this.messageId = messageId;
-      this.context = messageId;
+      this.context = context;
     }
 
     readonly message: string;

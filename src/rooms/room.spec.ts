@@ -42,25 +42,25 @@ class APIMock extends ArtichokeAPI {
     super(sessionIdMock, apiKeyMock, config.chat, log);
   }
 
-  public joinRoom(id: any): Promise<void> {
+  public joinRoom(_id: any): Promise<void> {
     this.joined = true;
 
     return Promise.resolve();
   }
 
-  public leaveRoom(id: any): Promise<void> {
+  public leaveRoom(_id: any): Promise<void> {
     this.left = true;
 
     return Promise.resolve();
   }
 
-  public inviteToRoom(id: any, user: any): Promise<void> {
+  public inviteToRoom(_id: any, user: any): Promise<void> {
     this.invited = user;
 
     return Promise.resolve();
   }
 
-  public getRoomHistoryLast(id: any, count: any, filter: any): Promise<Paginated<MessageSent>> {
+  public getRoomHistoryLast(_id: any, _count: any, _filter: any): Promise<Paginated<MessageSent>> {
     return Promise.resolve({
       offset: 0,
       limit: 2,
@@ -68,7 +68,7 @@ class APIMock extends ArtichokeAPI {
     });
   }
 
-  public getRoomHistoryPage(id: any, offset: any, limit: any, filter: any): Promise<Paginated<MessageSent>> {
+  public getRoomHistoryPage(_id: any, _offset: any, _limit: any, _filter: any): Promise<Paginated<MessageSent>> {
     return Promise.resolve({
       offset: 0,
       limit: 2,
@@ -76,17 +76,17 @@ class APIMock extends ArtichokeAPI {
     });
   }
 
-  public getRoomUsers(id: any): Promise<string[]> {
+  public getRoomUsers(_id: any): Promise<string[]> {
     return Promise.resolve([bob]);
   }
 
-  public sendTyping(id: any): Promise<void> {
+  public sendTyping(_id: any): Promise<void> {
     this.sentTyping = true;
 
     return Promise.resolve();
   }
 
-  public sendMessage(id: any, body: any): Promise<chatEvents.Received> {
+  public sendMessage(_id: any, body: any): Promise<chatEvents.Received> {
     const m = msgFn(msg3, body);
     const n: NormalizedEvent = {
       id: m.messageId,
@@ -100,7 +100,7 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve(new chatEvents.Received(m.messageId, n));
   }
 
-  public setMark(id: any, timestamp: any): Promise<void> {
+  public setMark(_id: any, _timestamp: any): Promise<void> {
     this.marked = true;
 
     return Promise.resolve();
@@ -267,7 +267,7 @@ describe('GroupRoom', () => {
   });
 
   it('should maintain the user list', (done) => {
-    events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+    events.onEvent(errorEvents.Error.tag, (_error) => done.fail());
 
     room.onJoined((joined) => {
       expect(joined.authorId).toBe(bob);

@@ -40,7 +40,10 @@ export class APIWithWebsocket extends RESTfulAPI {
         reject
       };
       cmd.ref = ref;
-      this.send(cmd).catch((e) => this.reject(ref, new errorEvents.Error('Ask failed')));
+      this.send(cmd).catch((e) => {
+        this.log.warn('Ask failed with error: ' + e);
+        this.reject(ref, new errorEvents.Error('Ask failed'));
+      });
     });
   }
 

@@ -45,8 +45,9 @@ export class RTCConnection {
     this.localRole = undefined;
     this.attachedStreams = {};
 
-    this.onRemoteStreamCallback = (stream): void => {
+    this.onRemoteStreamCallback = (_stream): void => {
       // Do nothing.
+      this.log.warn('Empty onRemoteStreamCallback called');
     };
 
     this.onICEDoneCallback = (): void => {
@@ -73,7 +74,7 @@ export class RTCConnection {
       });
     };
 
-    this.conn.onnegotiationneeded = (event): void => {
+    this.conn.onnegotiationneeded = (_event): void => {
       // FIXME Chrome triggers renegotiation on... Initial offer creation...
       // FIXME Firefox triggers renegotiation when remote offer is received.
       if (this.isEstablished()) {
@@ -136,7 +137,7 @@ export class RTCConnection {
                   options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
     this.log.debug('Received an RTC offer.');
 
-    return this.setRemoteDescription(remoteDescription).then((descr) => this.answer(options));
+    return this.setRemoteDescription(remoteDescription).then((_descr) => this.answer(options));
   }
 
   public answer(options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {

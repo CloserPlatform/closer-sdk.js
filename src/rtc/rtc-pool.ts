@@ -45,8 +45,8 @@ export class RTCPool {
         this.connections = {};
         this.tracks = [];
 
-        this.onRemoteStreamCallback = (peer, stream): void => {
-            // Do nothing.
+        this.onRemoteStreamCallback = (_peer, _stream): void => {
+            this.log.warn('Event onRemoteStream received but not handled!');
         };
 
         events.onConcreteEvent(rtcEvents.DescriptionSent.tag, this.call, 'singleton',

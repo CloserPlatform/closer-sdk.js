@@ -22,7 +22,7 @@ export const deviceIdMock = '6515ea03-7421-4fa5-b02c-bf339c18abbf';
 export const apiKeyMock = '8615ea03-7421-4fa5-b02c-bf339c18abbf';
 
 export const sleep = (time: number): Promise<void> =>
-  new Promise<void>((resolve, reject): void => {
+  new Promise<void>((resolve, _reject): void => {
     setTimeout(resolve, time);
   });
 

@@ -63,8 +63,8 @@ export abstract class Call implements wireEntities.Call {
     }
 
     // By default do nothing:
-    this.onActiveDeviceCallback = (e: callEvents.CallHandledOnDevice): void => { /* Do nothing */
-    };
+    this.onActiveDeviceCallback = (e: callEvents.CallHandledOnDevice): void =>
+      this.log.warn('Event active device not handled: ' + e);
 
     this.events.onConcreteEvent(callEvents.CallHandledOnDevice.tag, this.id, this.uuid,
       (e: callEvents.CallHandledOnDevice) => {
@@ -72,20 +72,20 @@ export abstract class Call implements wireEntities.Call {
         this.onActiveDeviceCallback(e);
       });
 
-    this.onLeftCallback = (e: callEvents.Left): void => { /* Do nothing */
-    };
-    this.onOfflineCallback = (e: callEvents.DeviceOffline): void => { /* Do nothing */
-    };
-    this.onOnlineCallback = (e: callEvents.DeviceOnline): void => { /* Do nothing */
-    };
-    this.onJoinedCallback = (e: callEvents.Joined): void => { /* Do nothing */
-    };
-    this.onInvitedCallback = (e: callEvents.Invited): void => { /* Do nothing */
-    };
-    this.onAnsweredCallback = (e: callEvents.Answered): void => { /* Do nothing */
-    };
-    this.onRejectedCallback = (e: callEvents.Rejected): void => { /* Do nothing */
-    };
+    this.onLeftCallback = (e: callEvents.Left): void =>
+      this.log.warn('Event LEFT not handled: ' + e);
+    this.onOfflineCallback = (e: callEvents.DeviceOffline): void =>
+      this.log.warn('Event DEVICE OFFLINE not handled: ' + e);
+    this.onOnlineCallback = (e: callEvents.DeviceOnline): void =>
+      this.log.warn('Event DEVICE ONLINE not handled: ' + e);
+    this.onJoinedCallback = (e: callEvents.Joined): void =>
+      this.log.warn('Event JOIN not handled: ' + e);
+    this.onInvitedCallback = (e: callEvents.Invited): void =>
+      this.log.warn('Event INVITED not handled: ' + e);
+    this.onAnsweredCallback = (e: callEvents.Answered): void =>
+      this.log.warn('Event ANSWERED not handled: ' + e);
+    this.onRejectedCallback = (e: callEvents.Rejected): void =>
+      this.log.warn('Event REJECTED not handled: ' + e);
 
     if (this.creator === this.api.sessionId) {
       this.users = [];

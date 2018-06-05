@@ -7,6 +7,6 @@ describe('Authorization', () => {
       expect(session.id).toBe('12345');
       expect(session.chat).toBeDefined();
       done();
-    }).catch((error) => done.fail());
+    }).catch((_error) => done.fail());
   });
 });

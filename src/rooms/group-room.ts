@@ -18,11 +18,11 @@ export class GroupRoom extends Room {
   constructor(room: wireEntities.Room, log: Logger, events: EventHandler, api: ArtichokeAPI) {
     super(room, log, events, api);
 
-    this.onLeftCallback = (e: roomEvents.Left): void => { /* nothing */
+    this.onLeftCallback = (_e: roomEvents.Left): void => { /* nothing */
     };
-    this.onJoinedCallback = (e: roomEvents.Joined): void => { /* nothing */
+    this.onJoinedCallback = (_e: roomEvents.Joined): void => { /* nothing */
     };
-    this.onInvitedCallback = (e: roomEvents.Invited): void => { /* nothing */
+    this.onInvitedCallback = (_e: roomEvents.Invited): void => { /* nothing */
     };
   }
 

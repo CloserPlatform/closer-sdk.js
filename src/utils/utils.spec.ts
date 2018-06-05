@@ -11,18 +11,18 @@ describe('Utils', () => {
     PromiseUtils.wrapPromise(Promise.resolve([23]), fun).then((i) => {
       expect(i).toEqual(['23']);
       done();
-    }).catch((error) => done.fail());
+    }).catch((_error) => done.fail());
 
-    PromiseUtils.wrapPromise(Promise.reject<Array<number>>('nope'), fun).then((i) => done.fail()).catch((error) => {
+    PromiseUtils.wrapPromise(Promise.reject<Array<number>>('nope'), fun).then((_i) => done.fail()).catch((error) => {
       expect(error).toEqual('nope');
       done();
     });
   });
 
   it('wrapPromise should reject if an error appears in mapping', (done) => {
-    PromiseUtils.wrapPromise(Promise.resolve([23]), (i: number) => {
+    PromiseUtils.wrapPromise(Promise.resolve([23]), (_i: number) => {
       throw Error('error!');
-    }).then((i) => done.fail()).catch((error) => done());
+    }).then((_i) => done.fail()).catch((_error) => done());
   });
 
   it('deepcopy should perform a deep copy', () => {

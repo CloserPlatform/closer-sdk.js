@@ -14,7 +14,7 @@ export class RESTfulAPI {
   constructor(protected log: Logger) {
   }
 
-  public getRaw<Response>(path: Array<string>, headers?: Array<HeaderValue>): Promise<XMLHttpRequest> {
+  public getRaw(path: Array<string>, headers?: Array<HeaderValue>): Promise<XMLHttpRequest> {
     return new Promise<XMLHttpRequest>((resolve, reject): void => {
       const url = path.join('/');
       this.log.debug('GET ' + url);

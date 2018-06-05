@@ -39,7 +39,7 @@ describe('Event Handler', () => {
   it('should run error handler on unhandled event', () => {
     let ok = false;
 
-    events.onEvent(errorEvents.Error.tag, (error: ErrorWithCause) => ok = true);
+    events.onEvent(errorEvents.Error.tag, (_error: ErrorWithCause) => ok = true);
     expect(ok).toBe(false);
     events.notify({ tag: 'unhandled', __discriminator__: 'domainEvent' },
       () => events.notify(new errorEvents.Error('Unhandled')));
@@ -49,7 +49,7 @@ describe('Event Handler', () => {
   it('should allow defining event handlers', () => {
     let ok = 0;
 
-    events.onEvent(roomEvents.MarkSent.tag, (msg: roomEvents.MarkSent) => ok++);
+    events.onEvent(roomEvents.MarkSent.tag, (_msg: roomEvents.MarkSent) => ok++);
     expect(ok).toBe(0);
 
     [1, 2, 3, 4, 5].forEach((i) => {
@@ -62,8 +62,8 @@ describe('Event Handler', () => {
     let first = 0;
     let second = 0;
 
-    events.onEvent(roomEvents.MarkSent.tag, (msg: roomEvents.MarkSent) => first++);
-    events.onEvent(roomEvents.MarkSent.tag, (msg: roomEvents.MarkSent) => second++);
+    events.onEvent(roomEvents.MarkSent.tag, (_msg: roomEvents.MarkSent) => first++);
+    events.onEvent(roomEvents.MarkSent.tag, (_msg: roomEvents.MarkSent) => second++);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msgFn(i.toString())));
 
@@ -87,9 +87,9 @@ describe('Event Handler', () => {
     let second = false;
 
     events.onConcreteEvent(roomEvents.MarkSent.tag, '3', RandomUtils.randomUUID(),
-      (msg: roomEvents.MarkSent) => first = true);
+      (_msg: roomEvents.MarkSent) => first = true);
     events.onConcreteEvent(roomEvents.MarkSent.tag, '1', RandomUtils.randomUUID(),
-      (msg: roomEvents.MarkSent) => second = true);
+      (_msg: roomEvents.MarkSent) => second = true);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msgFn(i.toString())));
 
@@ -102,8 +102,8 @@ describe('Event Handler', () => {
     let second = 0;
 
     events.onConcreteEvent(roomEvents.MarkSent.tag, '3', RandomUtils.randomUUID(),
-      (msg: roomEvents.MarkSent) => first = true);
-    events.onEvent(roomEvents.MarkSent.tag, (msg: roomEvents.MarkSent) => second++);
+      (_msg: roomEvents.MarkSent) => first = true);
+    events.onEvent(roomEvents.MarkSent.tag, (_msg: roomEvents.MarkSent) => second++);
 
     [1, 2, 3, 4, 5].forEach((i) => events.notify(msgFn(i.toString())));
 

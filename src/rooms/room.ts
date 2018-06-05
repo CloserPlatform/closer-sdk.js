@@ -44,8 +44,9 @@ export abstract class Room implements wireEntities.Room {
         this.events = events;
         this.api = api;
         this.onCustomCallbacks = {};
-        this.onTextMessageCallback = (m: roomEvents.MessageSent): void => {
+        this.onTextMessageCallback = (_m: roomEvents.MessageSent): void => {
             // Do nothing.
+          this.log.warn('Empty onTextMessageCallback called');
         };
         this.defineCallbacks();
     }

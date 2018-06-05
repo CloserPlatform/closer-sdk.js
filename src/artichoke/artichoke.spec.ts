@@ -46,19 +46,19 @@ describe('Artichoke', () => {
   });
 
   it('should notify on a new event', (done) => {
-    events.onEvent(serverEvents.Hello.tag, (msg: serverEvents.Hello) => done());
+    events.onEvent(serverEvents.Hello.tag, (_msg: serverEvents.Hello) => done());
     chat.connect();
     api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), 200));
   });
 
   it('should call a callback on server connection', (done) => {
-    chat.onConnect((msg) => done());
+    chat.onConnect((_msg) => done());
     chat.connect();
     api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), 200));
   });
 
   it('should call a callback on server heartbeat', (done) => {
-    chat.onHeartbeat((hb) => done());
+    chat.onHeartbeat((_hb) => done());
     chat.connect();
     api.cb(new serverEvents.OutputHeartbeat(Date.now()));
   });
@@ -113,19 +113,19 @@ describe('Artichoke', () => {
   });
 
   it('should call a callback on server disconnection', (done) => {
-    chat.onDisconnect((msg) => done());
+    chat.onDisconnect((_msg) => done());
     chat.connect();
     api.cb(new internalEvents.WebsocketDisconnected(1023, 'Too much effort.'));
   });
 
   it('should call a callback on server error', (done) => {
-    chat.onError((error) => done());
+    chat.onError((_error) => done());
     chat.connect();
     api.cb(new errorEvents.Error('why not?'));
   });
 
   it('should run a callback when a room is created', (done) => {
-    events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+    events.onEvent(errorEvents.Error.tag, (_error) => done.fail());
 
     chat.onRoomCreated((e) => {
       expect(e.roomId).toBe(roomId);
@@ -136,7 +136,7 @@ describe('Artichoke', () => {
   });
 
   it('should run a callback when a call is created', (done) => {
-    events.onEvent(errorEvents.Error.tag, (error) => done.fail());
+    events.onEvent(errorEvents.Error.tag, (_error) => done.fail());
 
     chat.onCallCreated((c) => {
       expect(c.callId).toBe(callId);
