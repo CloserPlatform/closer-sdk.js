@@ -120,7 +120,8 @@ export class RTCPool {
     public destroy(peer: ID): void {
         if (peer in this.connections) {
             this.connections[peer].disconnect();
-            delete this.connections[peer];
+            const { [peer]: value, ...withoutPeerConnection } = this.connections;
+            this.connections = withoutPeerConnection;
         }
     }
 

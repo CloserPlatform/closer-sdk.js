@@ -74,14 +74,16 @@ export class APIWithWebsocket extends RESTfulAPI {
   private resolve(ref: proto.Ref, event: DomainEvent): void {
     if (ref && ref in this.promises) {
       this.promises[ref].resolve(event);
-      delete this.promises[ref];
+      const { [ref]: value, ...withoutRefPromise } = this.promises;
+      this.promises = withoutRefPromise;
     }
   }
 
   private reject(ref: proto.Ref, error: errorEvents.Error): void {
     if (ref && ref in this.promises) {
       this.promises[ref].reject(error);
-      delete this.promises[ref];
+      const { [ref]: value, ...withoutRefPromise } = this.promises;
+      this.promises = withoutRefPromise;
     }
   }
 }

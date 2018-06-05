@@ -246,7 +246,7 @@
     // "readonly-array": true,
     "no-let": true,
     // "no-object-mutation": true, // Impossible for angular
-    // "no-delete": true,
+    "no-delete": true,
     // "no-method-signature": true,
 
     // Functional style rules
