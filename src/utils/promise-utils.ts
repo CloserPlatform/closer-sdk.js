@@ -12,3 +12,11 @@ export interface PromiseFunctions {
     resolve: PromiseResolve<DomainEvent>;
     reject: PromiseReject;
 }
+
+// tslint:disable:no-unnecessary-class
+export class PromiseUtils {
+
+  public static wrapPromise<T, U>(promise: Promise<T[]>, fun: (arg: T) => U): Promise<U[]> {
+    return promise.then((arr: T[]) => arr.map(fun));
+  }
+}

@@ -11,16 +11,17 @@ export class GroupCall extends Call {
         return call.callType === CallType.GROUP;
     }
 
-    invite(user: proto.ID): Promise<void> {
+    public invite(user: proto.ID): Promise<void> {
         return this.api.inviteToCall(this.id, user);
     }
 
-    join(stream: MediaStream): Promise<void> {
+    public join(stream: MediaStream): Promise<void> {
         this.addStream(stream);
+
         return this.api.joinCall(this.id);
     }
 
-    onInvited(callback: Callback<callEvents.Invited>) {
+    public onInvited(callback: Callback<callEvents.Invited>): void {
         this.onInvitedCallback = callback;
     }
 }

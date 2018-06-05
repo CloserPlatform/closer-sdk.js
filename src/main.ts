@@ -32,7 +32,7 @@ export { RatelAPI } from './apis/ratel-api';
 export { RESTfulAPI } from './apis/restful-api';
 
 // Other
-export { isBrowserSupported } from './utils/utils';
+export { BrowserUtils } from './utils/browser-utils';
 import * as logger from './logger';
 
 import { callEvents } from './protocol/events/call-events';

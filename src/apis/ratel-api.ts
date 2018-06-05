@@ -12,11 +12,11 @@ export class RatelAPI extends RESTfulAPI {
 
     const pathname = config.pathname ? config.pathname : '';
 
-    let host = config.hostname + ':' + config.port;
+    const host = config.hostname + ':' + config.port;
     this.url = [config.protocol, '//', host, pathname, '/api'].join('');
   }
 
-  verifySignature(sessionData: SessionData): Promise<AgentContext> {
+  public verifySignature(sessionData: SessionData): Promise<AgentContext> {
     return this.post<SessionData, AgentContext>([this.url, this.verifyPath], [], sessionData);
   }
 }

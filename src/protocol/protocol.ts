@@ -5,11 +5,13 @@ export type Ref = string;
 export type Timestamp = number;
 
 // // Datatypes:
+// FIXME
+// tslint:disable-next-line:no-any
 export type Context = any;
 
 // // REST API:
 export interface CreateCall {
-  users: Array<ID>;
+  users: ID[];
 }
 
 export interface CreateDirectCall extends CreateDirectEntity {
@@ -40,49 +42,42 @@ export interface PushRegistration {
   pushId: ID;
 }
 
-export function createCall(users: Array<ID>): CreateCall {
-  return {
+export const createCall = (users: Array<ID>): CreateCall =>
+  ({
     users
-  };
-}
+  });
 
-export function createDirectCall(user: ID, timeout?: number): CreateDirectCall {
-  return {
+export const createDirectCall = (user: ID, timeout?: number): CreateDirectCall =>
+  ({
     user,
     timeout
-  };
-}
+  });
 
-export function leaveReason(reason: string): LeaveReason {
-  return {
+export const leaveReason = (reason: string): LeaveReason =>
+  ({
     reason
-  };
-}
+  });
 
-export function createRoom(name: string): CreateRoom {
-  return {
+export const createRoom = (name: string): CreateRoom =>
+  ({
     name
-  };
-}
+  });
 
-export function createDirectRoom(user: ID, context?: Context): CreateDirectRoom {
-  return {
+export const createDirectRoom = (user: ID, context?: Context): CreateDirectRoom =>
+  ({
     user,
     context
-  };
-}
+  });
 
-export function invite(user): Invite {
-  return {
+export const invite = (user: ID): Invite =>
+  ({
     user
-  };
-}
+  });
 
-export function pushRegistration(pushId: ID): PushRegistration {
-  return {
+export const pushRegistration = (pushId: ID): PushRegistration =>
+  ({
     pushId,
-  };
-}
+  });
 
 export interface HistoryFilter {
   filter: Array<string>;

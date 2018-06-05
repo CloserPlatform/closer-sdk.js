@@ -16,13 +16,13 @@ export class JSONWebSocket {
               private decoder: Decoder<DomainEvent>) {
   }
 
-  connect(url: string) {
+  public connect(url: string): void {
     this.cleanupBeforeConnecting();
     this.log.info('WS connecting to: ' + url);
 
     this.socket = new WebSocket(url);
 
-    this.socket.onopen = () => {
+    this.socket.onopen = (): void => {
       this.log.info('WS connected to: ' + url);
     };
 
@@ -31,12 +31,12 @@ export class JSONWebSocket {
     this.socket.onmessage = this.onMessageCallback;
   }
 
-  disconnect() {
+  public disconnect(): void {
     this.socket.close();
   }
 
-  onDisconnect(callback: Callback<CloseEvent>) {
-    this.onCloseCallback = (close) => {
+  public onDisconnect(callback: Callback<CloseEvent>): void {
+    this.onCloseCallback = (close): void => {
       this.unregisterCallbacks();
       this.socket = undefined;
       this.log.info('WS disconnected: ' + close.reason);
@@ -48,8 +48,8 @@ export class JSONWebSocket {
     }
   }
 
-  onError(callback: Callback<Event>) {
-    this.onErrorCallback = (err) => {
+  public onError(callback: Callback<Event>): void {
+    this.onErrorCallback = (err): void => {
       this.log.warn('WS error: ' + err);
       callback(err);
     };
@@ -59,8 +59,8 @@ export class JSONWebSocket {
     }
   }
 
-  onEvent(callback: Callback<DomainEvent>) {
-    this.onMessageCallback = (event) => {
+  public onEvent(callback: Callback<DomainEvent>): void {
+    this.onMessageCallback = (event): void => {
       this.log.debug('WS received: ' + event.data);
       callback(this.decoder.decode(event.data));
     };
@@ -70,11 +70,12 @@ export class JSONWebSocket {
     }
   }
 
-  send(event: DomainCommand): Promise<void> {
+  public send(event: DomainCommand): Promise<void> {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       const json = this.encoder.encode(event);
       this.log.debug('WS sent: ' + json);
       this.socket.send(json);
+
       return Promise.resolve();
     } else {
       return Promise.reject<void>(new Error('Websocket is not connected!'));
@@ -99,7 +100,7 @@ export class JSONWebSocket {
     }
   }
 
-  private setupOnClose(callback): void {
+  private setupOnClose(callback: Callback<CloseEvent>): void {
     this.socket.onclose = callback;
   }
 }

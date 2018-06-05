@@ -1,8 +1,8 @@
 import { ApiKey } from '../auth/auth';
 import * as logger from '../logger';
 import { ID } from '../protocol/protocol';
-import { deepcopy } from '../utils/utils';
 import { RTCConfig } from '../rtc/rtc-config';
+import { ObjectUtils } from '../utils/object-utils';
 
 export interface URLConfig {
   protocol?: string;
@@ -15,6 +15,7 @@ export interface ChatConfig extends URLConfig {
   rtc?: RTCConfig;
 }
 
+// tslint:disable-next-line:no-empty-interface
 export interface RatelConfig extends URLConfig {}
 
 export interface Config {
@@ -56,21 +57,23 @@ export const defaultConfig: Config = {
   },
 };
 
-export function load(conf: Config): Config {
+export const load = (conf: Config): Config => {
 
-  function merge(a: any, b: any): any {
+  // tslint:disable-next-line:no-any
+  const merge = (a: any, b: any): any => {
     if (Array.isArray(a)) {
       return a.map((ai, i) => merge(ai, b[i]));
     } else if (typeof a === 'object') {
       const result = a;
       Object.getOwnPropertyNames(b).forEach((p) => result[p] = merge(a[p], b[p]));
+
       return result;
     } else if (typeof a === 'undefined') {
       return b;
     } else {
       return a;
     }
-  }
+  };
 
-  return merge(deepcopy(conf), deepcopy(defaultConfig));
-}
+  return merge(ObjectUtils.deepcopy(conf), ObjectUtils.deepcopy(defaultConfig));
+};

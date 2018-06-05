@@ -10,22 +10,22 @@ export class ApiHeaders {
   private _deviceId: proto.ID;
   private _apiKey: ApiKey;
 
-  get deviceId(): proto.ID {
+  public get deviceId(): proto.ID {
     return this._deviceId;
   }
 
-  set deviceId(value: proto.ID) {
+  public set deviceId(value: proto.ID) {
     this._deviceId = value;
   }
 
-  get apiKey(): ApiKey {
+  public get apiKey(): ApiKey {
     return this._apiKey;
   }
 
-  set apiKey(value: ApiKey) {
+  public set apiKey(value: ApiKey) {
     this._apiKey = value;
   }
 
-  public getHeaders = (): HeaderValue[] =>
+  public getHeaders = (): Array<HeaderValue> =>
     [new HeaderValue(this.apiKeyKey, this._apiKey), new HeaderValue(this.deviceIdKey, this._deviceId)]
 }

@@ -1,5 +1,4 @@
 import { Logger } from '../logger';
-import { randomUUID, UUID } from '../utils/utils';
 import { errorEvents } from '../protocol/events/error-events';
 import { rtcEvents } from '../protocol/events/rtc-events';
 import { ArtichokeAPI } from '../apis/artichoke-api';
@@ -15,8 +14,6 @@ import { RemoteStreamCallback } from './remote-stream-callback';
 import { createRTCConnection } from './create-rtc-connection';
 
 export class RTCPool {
-    private readonly uuid: UUID = randomUUID();
-
     private api: ArtichokeAPI;
     private events: EventHandler;
     private log: Logger;
@@ -45,8 +42,8 @@ export class RTCPool {
         this.connections = {};
         this.tracks = [];
 
-        this.onRemoteStreamCallback = (peer, stream) => {
-            // Do nothing.
+        this.onRemoteStreamCallback = (_peer, _stream): void => {
+            this.log.warn('Event onRemoteStream received but not handled!');
         };
 
         events.onConcreteEvent(rtcEvents.DescriptionSent.tag, this.call, 'singleton',
@@ -90,11 +87,11 @@ export class RTCPool {
         });
     }
 
-    onRemoteStream(callback: RemoteStreamCallback) {
+    public onRemoteStream(callback: RemoteStreamCallback): void {
         this.onRemoteStreamCallback = callback;
     }
 
-    addTrack(track: MediaStreamTrack, stream?: MediaStream) {
+    public addTrack(track: MediaStreamTrack, stream?: MediaStream): void {
         this.tracks.push({
             track,
             stream
@@ -104,41 +101,42 @@ export class RTCPool {
         });
     }
 
-    removeTrack(track: MediaStreamTrack) {
+    public removeTrack(track: MediaStreamTrack): void {
         this.tracks = this.tracks.filter((t) => t.track !== track);
         Object.keys(this.connections).forEach((peer) => {
             this.connections[peer].removeTrack(track);
         });
     }
 
-    create(peer: ID): RTCConnection {
+    public create(peer: ID): RTCConnection {
         const rtc = this.createRTC(peer);
         rtc.offer(this.offerOptions).catch((err) => {
             this.events.notify(new errorEvents.Error(`Could not create an RTC offer: ${err}`));
         });
+
         return rtc;
     }
 
-    destroy(peer: ID) {
+    public destroy(peer: ID): void {
         if (peer in this.connections) {
             this.connections[peer].disconnect();
             delete this.connections[peer];
         }
     }
 
-    destroyAll() {
+    public destroyAll(): void {
         Object.keys(this.connections).forEach((key) => this.destroy(key));
     }
 
-    setAnswerOptions(options: RTCAnswerOptions) {
+    public setAnswerOptions(options: RTCAnswerOptions): void {
         this.answerOptions = options;
     }
 
-    setOfferOptions(options: HackedRTCOfferOptions) {
+    public setOfferOptions(options: HackedRTCOfferOptions): void {
         this.offerOptions = options;
     }
 
-    setConnectionConstraints(constraints: RTCConnectionConstraints) {
+    public setConnectionConstraints(constraints: RTCConnectionConstraints): void {
         this.connectionConstraints = constraints;
     }
 
@@ -148,6 +146,7 @@ export class RTCPool {
         rtc.onRemoteStream((s) => this.onRemoteStreamCallback(peer, s));
         this.connections[peer] = rtc;
         this.tracks.forEach((t) => rtc.addTrack(t.track, t.stream));
+
         return rtc;
     }
 }

@@ -11,7 +11,6 @@ import { roomEvents } from '../protocol/events/room-events';
 import { serverEvents } from '../protocol/events/server-events';
 import * as proto from '../protocol/protocol';
 import * as wireEntities from '../protocol/wire-entities';
-import { BumpableTimeout, wrapPromise } from '../utils/utils';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { GroupRoom } from '../rooms/group-room';
 import { DirectRoom } from '../rooms/direct-room';
@@ -21,6 +20,8 @@ import { GroupCall } from '../calls/group-call';
 import { DirectCall } from '../calls/direct-call';
 import { Call } from '../calls/call';
 import { createCall } from '../calls/create-call';
+import { BumpableTimeout } from '../utils/bumpable-timeout';
+import { PromiseUtils } from '../utils/promise-utils';
 
 export class Artichoke {
   private api: ArtichokeAPI;
@@ -35,16 +36,19 @@ export class Artichoke {
     this.log = log;
     this.events = events;
 
-    events.onEvent(errorEvents.Error.tag, (e: errorEvents.Error) => { /* do nothing */ });
-    events.onEvent(chatEvents.Received.tag, (e: chatEvents.Received) => { /* do nothing */ });
-    events.onEvent(roomEvents.MessageDelivered.tag, (e: roomEvents.MessageDelivered) => { /* do nothing */ });
+    events.onEvent(errorEvents.Error.tag, (e: errorEvents.Error) =>
+      this.log.warn('Event error not handled: ' + e));
+    events.onEvent(chatEvents.Received.tag, (e: chatEvents.Received) =>
+      this.log.warn('Event received not handled: ' + e));
+    events.onEvent(roomEvents.MessageDelivered.tag, (e: roomEvents.MessageDelivered) =>
+      this.log.warn('Event message delivered not handled: ' + e));
 
     events.onEvent(serverEvents.Hello.tag, (hello: serverEvents.Hello) => {
       this.clearHeartbeatTimeout();
 
       this.heartbeatTimeout = new BumpableTimeout(
-        2 * hello.heartbeatTimeout,
-        () => this.events.notify(new internalEvents.ServerBecameUnreachable())
+        hello.heartbeatTimeout * 2,
+        (): void => this.events.notify(new internalEvents.ServerBecameUnreachable())
       );
     });
 
@@ -59,28 +63,28 @@ export class Artichoke {
   }
 
   // Callbacks:
-  onConnect(callback: Callback<serverEvents.Hello>) {
+  public onConnect(callback: Callback<serverEvents.Hello>): void {
     this.events.onEvent(serverEvents.Hello.tag, callback);
   }
 
-  onHeartbeat(callback: Callback<serverEvents.OutputHeartbeat>) {
+  public onHeartbeat(callback: Callback<serverEvents.OutputHeartbeat>): void {
     this.events.onEvent(serverEvents.OutputHeartbeat.tag, callback);
   }
 
-  onServerUnreachable(callback: Callback<internalEvents.ServerBecameUnreachable>) {
+  public onServerUnreachable(callback: Callback<internalEvents.ServerBecameUnreachable>): void {
     this.events.onEvent(internalEvents.ServerBecameUnreachable.tag, callback);
   }
 
-  onDisconnect(callback: Callback<internalEvents.WebsocketDisconnected>) {
+  public onDisconnect(callback: Callback<internalEvents.WebsocketDisconnected>): void {
     this.events.onEvent(internalEvents.WebsocketDisconnected.tag, callback);
   }
 
-  onError(callback: Callback<errorEvents.Error>) {
+  public onError(callback: Callback<errorEvents.Error>): void {
     this.events.onEvent(errorEvents.Error.tag, callback);
   }
 
   // API:
-  connect() {
+  public connect(): void {
     this.api.onEvent((e: DomainEvent) => {
       this.notify(e);
     });
@@ -88,7 +92,7 @@ export class Artichoke {
     this.api.connect();
   }
 
-  disconnect() {
+  public disconnect(): void {
     if (this.heartbeatTimeout) {
       this.heartbeatTimeout.clear();
       this.heartbeatTimeout = undefined;
@@ -97,75 +101,75 @@ export class Artichoke {
   }
 
   // Call API:
-  onCallCreated(callback: Callback<callEvents.Created>) {
+  public onCallCreated(callback: Callback<callEvents.Created>): void {
     this.events.onEvent(callEvents.Created.tag, callback);
   }
 
-  onCallInvitation(callback: Callback<callEvents.Invited>) {
+  public onCallInvitation(callback: Callback<callEvents.Invited>): void {
     this.events.onEvent(callEvents.Invited.tag, callback);
   }
 
-  createCall(stream: MediaStream, users: Array<proto.ID>): Promise<GroupCall> {
+  public createCall(stream: MediaStream, users: Array<proto.ID>): Promise<GroupCall> {
     return this.wrapCall(this.api.createCall(users), stream) as Promise<GroupCall>; // Trust me.
   }
 
-  createDirectCall(stream: MediaStream, peer: proto.ID, timeout?: number): Promise<DirectCall> {
+  public createDirectCall(stream: MediaStream, peer: proto.ID, timeout?: number): Promise<DirectCall> {
     return this.wrapCall(this.api.createDirectCall(peer, timeout), stream);
   }
 
-  getCall(call: proto.ID): Promise<Call> {
+  public getCall(call: proto.ID): Promise<Call> {
     return this.wrapCall(this.api.getCall(call));
   }
 
-  getCalls(): Promise<Array<Call>> {
-    return wrapPromise(this.api.getCalls(),
+  public getCalls(): Promise<Array<Call>> {
+    return PromiseUtils.wrapPromise(this.api.getCalls(),
                        (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
-  getActiveCalls(): Promise<Array<Call>> {
-    return wrapPromise(this.api.getActiveCalls(),
+  public getActiveCalls(): Promise<Array<Call>> {
+    return PromiseUtils.wrapPromise(this.api.getActiveCalls(),
                       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
-  getCallsWithPendingInvitations(): Promise<Array<Call>> {
-    return wrapPromise(this.api.getCallsWithPendingInvitations(),
+  public getCallsWithPendingInvitations(): Promise<Array<Call>> {
+    return PromiseUtils.wrapPromise(this.api.getCallsWithPendingInvitations(),
       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
   // Chat room API:
-  onRoomCreated(callback: Callback<roomEvents.Created>) {
+  public onRoomCreated(callback: Callback<roomEvents.Created>): void {
     this.events.onEvent(roomEvents.Created.tag, callback);
   }
 
-  onRoomInvitation(callback: Callback<roomEvents.Invited>) {
+  public onRoomInvitation(callback: Callback<roomEvents.Invited>): void {
     this.events.onEvent(roomEvents.Invited.tag, callback);
   }
 
-  createRoom(name: string): Promise<GroupRoom> {
+  public createRoom(name: string): Promise<GroupRoom> {
     return this.wrapRoom(this.api.createRoom(name)) as Promise<GroupRoom>; // Trust me.
   }
 
-  createDirectRoom(peer: proto.ID, context?: proto.Context): Promise<DirectRoom> {
+  public createDirectRoom(peer: proto.ID, context?: proto.Context): Promise<DirectRoom> {
     return this.wrapRoom(this.api.createDirectRoom(peer, context));
   }
 
-  getRoom(room: proto.ID): Promise<Room> {
+  public getRoom(room: proto.ID): Promise<Room> {
     return this.wrapRoom(this.api.getRoom(room));
   }
 
-  getRooms(): Promise<Array<Room>> {
-    return wrapPromise(this.api.getRooms(), (room) => createRoom(room, this.log, this.events, this.api));
+  public getRooms(): Promise<Array<Room>> {
+    return PromiseUtils.wrapPromise(this.api.getRooms(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
-  getRoster(): Promise<Array<Room>> {
-    return wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
+  public getRoster(): Promise<Array<Room>> {
+    return PromiseUtils.wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
-  registerForPushNotifications(pushId: proto.ID): Promise<void> {
+  public registerForPushNotifications(pushId: proto.ID): Promise<void> {
     return this.api.registerForPushNotifications(pushId);
   }
 
-  unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
+  public unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
     return this.api.unregisterFromPushNotifications(pushId);
   }
 
@@ -183,11 +187,11 @@ export class Artichoke {
   }
 
   // Utils:
-  private wrapCall(promise: Promise<wireEntities.Call>, stream?: MediaStream) {
+  private wrapCall(promise: Promise<wireEntities.Call>, stream?: MediaStream): Promise<Call> {
     return promise.then((call) => createCall(call, this.config.rtc, this.log, this.events, this.api, stream));
   }
 
-  private wrapRoom(promise: Promise<wireEntities.Room>) {
+  private wrapRoom(promise: Promise<wireEntities.Room>): Promise<Room> {
     return promise.then((room) => createRoom(room, this.log, this.events, this.api));
   }
 }

@@ -1,6 +1,6 @@
 import { Config, defaultConfig, load } from './config';
 import { LogLevel } from '../logger';
-import { deepcopy } from '../utils/utils';
+import { ObjectUtils } from '../utils/object-utils';
 
 describe('Config', () => {
   it('should load with defaults', () => {
@@ -29,7 +29,7 @@ describe('Config', () => {
   });
 
   it('should not override defaultConfig', () => {
-    const d = deepcopy(defaultConfig);
+    const d = ObjectUtils.deepcopy(defaultConfig);
     load({});
     expect(defaultConfig).toEqual(d);
   });
@@ -41,7 +41,7 @@ describe('Config', () => {
       }
     };
 
-    const c = deepcopy(cfg);
+    const c = ObjectUtils.deepcopy(cfg);
     load(cfg);
 
     expect(cfg).toEqual(c);
@@ -60,8 +60,8 @@ describe('Config', () => {
       }
     };
 
-    const d = deepcopy(defaultConfig);
-    const copy = deepcopy(cfg);
+    const d = ObjectUtils.deepcopy(defaultConfig);
+    const copy = ObjectUtils.deepcopy(cfg);
     const c = load(cfg);
 
     expect(c.chat.rtc.rtcpMuxPolicy).toEqual(copy.chat.rtc.rtcpMuxPolicy);

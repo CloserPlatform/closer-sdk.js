@@ -1,35 +1,39 @@
-import { BumpableTimeout, deepcopy, isBrowserSupported, isChrome, isFirefox, onceDelayed, wrapPromise } from './utils';
+import { PromiseUtils } from './promise-utils';
+import { ObjectUtils } from './object-utils';
+import { BrowserUtils } from './browser-utils';
+import { TimeUtils } from './time-utils';
+import { BumpableTimeout } from './bumpable-timeout';
 
 describe('Utils', () => {
   it('wrapPromise should replace a Promise', (done) => {
-    let fun = (i: number) => i.toString();
+    const fun = (i: number): string => i.toString();
 
-    wrapPromise(Promise.resolve([23]), fun).then((i) => {
+    PromiseUtils.wrapPromise(Promise.resolve([23]), fun).then((i) => {
       expect(i).toEqual(['23']);
       done();
-    }).catch((error) => done.fail());
+    }).catch((_error) => done.fail());
 
-    wrapPromise(Promise.reject<Array<number>>('nope'), fun).then((i) => done.fail()).catch((error) => {
+    PromiseUtils.wrapPromise(Promise.reject<Array<number>>('nope'), fun).then((_i) => done.fail()).catch((error) => {
       expect(error).toEqual('nope');
       done();
     });
   });
 
   it('wrapPromise should reject if an error appears in mapping', (done) => {
-    wrapPromise(Promise.resolve([23]), (i: number) => {
+    PromiseUtils.wrapPromise(Promise.resolve([23]), (_i: number) => {
       throw Error('error!');
-    }).then((i) => done.fail()).catch((error) => done());
+    }).then((_i) => done.fail()).catch((_error) => done());
   });
 
   it('deepcopy should perform a deep copy', () => {
-    let obj = {
+    const obj = {
       foo: 23,
       bar: {
         baz: 5
       }
     };
 
-    let cpy = deepcopy(obj) as typeof obj;
+    const cpy = ObjectUtils.deepcopy(obj) as typeof obj;
     expect(cpy).toEqual(obj);
 
     obj.bar.baz = 42;
@@ -37,19 +41,19 @@ describe('Utils', () => {
   });
 
   it('isBrowserSupported should check if browser is supported', () => {
-    if (isChrome()) {
-      expect(isBrowserSupported()).toEqual(true);
-    } else if (isFirefox()) {
-      expect(isBrowserSupported()).toEqual(true);
+    if (BrowserUtils.isChrome()) {
+      expect(BrowserUtils.isBrowserSupported()).toEqual(true);
+    } else if (BrowserUtils.isFirefox()) {
+      expect(BrowserUtils.isBrowserSupported()).toEqual(true);
     }
   });
 
   it('onceDelayed should only execute once', (done) => {
     let timer: number;
-    timer = onceDelayed(timer, 50, () => {
+    timer = TimeUtils.onceDelayed(timer, 50, () => {
       done.fail();
     });
-    timer = onceDelayed(timer, 100, () => {
+    timer = TimeUtils.onceDelayed(timer, 100, () => {
       done();
     });
   });
@@ -58,21 +62,22 @@ describe('Utils', () => {
     jasmine.clock().install();
 
     const ms = 10;
-    const bumpableTimeout = new BumpableTimeout(ms, () => done());
+    const bumpableTimeout = new BumpableTimeout(ms, done);
 
     jasmine.clock().tick(ms + 1);
     jasmine.clock().uninstall();
+
+    return bumpableTimeout;
   });
 
   it('BumpableTimeout should not fail if bumped within given timeout', (done) => {
     jasmine.clock().install();
 
     const ms = 10;
-    const bumpableTimeout = new BumpableTimeout(ms, () => done.fail());
+    const bumpableTimeout = new BumpableTimeout(ms, (): void => done.fail());
 
     const interval = setInterval(() => bumpableTimeout.bump(), ms - 1);
-
-    jasmine.clock().tick(10 * ms);
+    jasmine.clock().tick(ms * 10);
     clearInterval(interval);
     done();
 
@@ -83,7 +88,7 @@ describe('Utils', () => {
     jasmine.clock().install();
 
     const ms = 10;
-    const bumpableTimeout = new BumpableTimeout(ms, () => done.fail());
+    const bumpableTimeout = new BumpableTimeout(ms, (): void => done.fail());
 
     setTimeout(() => bumpableTimeout.clear(), ms - 1);
     jasmine.clock().tick(ms + 1);

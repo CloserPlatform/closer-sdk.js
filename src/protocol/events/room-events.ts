@@ -1,3 +1,8 @@
+// tslint:disable:no-namespace
+// tslint:disable:max-classes-per-file
+// tslint:disable:ban-types
+// tslint:disable:member-ordering
+// tslint:disable:member-access
 import { DomainEvent } from './domain-event';
 
 export namespace roomEvents {
@@ -76,7 +81,7 @@ export namespace roomEvents {
 
       this.message = message;
       this.messageId = messageId;
-      this.context = messageId;
+      this.context = context;
     }
 
     readonly message: string;
@@ -132,12 +137,9 @@ export namespace roomEvents {
 
   }
 
-  export function isMessage(evt: RoomEvent): evt is MessageSent {
-    return evt.tag === MessageSent.tag;
-  }
+  export const isMessage = (evt: RoomEvent): evt is MessageSent =>
+    evt.tag === MessageSent.tag;
 
-  export function isCustomMessage(evt: RoomEvent): evt is CustomMessageSent {
-    return evt.tag === CustomMessageSent.tag;
-  }
-
+  export const isCustomMessage = (evt: RoomEvent): evt is CustomMessageSent =>
+    evt.tag === CustomMessageSent.tag;
 }

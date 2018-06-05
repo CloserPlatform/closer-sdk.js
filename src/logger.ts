@@ -7,12 +7,16 @@ export enum LogLevel {
 }
 
 export interface Logger {
-  error: (line: any) => void;
-  warn: (line: any) => void;
-  info: (line: any) => void;
-  debug: (line: any) => void;
+  // tslint:disable-next-line:no-any
+  error(line: any): void;
+  // tslint:disable-next-line:no-any
+  warn(line: any): void;
+  // tslint:disable-next-line:no-any
+  info(line: any): void;
+  // tslint:disable-next-line:no-any
+  debug(line: any): void;
 
-  setLevel: (level: LogLevel) => void;
+  setLevel(level: LogLevel): void;
 }
 
 export class ConsoleLogger implements Logger {
@@ -22,11 +26,36 @@ export class ConsoleLogger implements Logger {
     this.logLevel = level;
   }
 
+  public setLevel(level: LogLevel): void {
+    this.logLevel = level;
+  }
+
+  // tslint:disable-next-line:no-any
+  public error(message: any): void {
+    this.log(LogLevel.ERROR, message);
+  }
+
+  // tslint:disable-next-line:no-any
+  public warn(message: any): void {
+    this.log(LogLevel.WARN, message);
+  }
+
+  // tslint:disable-next-line:no-any
+  public info(message: any): void {
+    this.log(LogLevel.INFO, message);
+  }
+
+  // tslint:disable-next-line:no-any
+  public debug(message: any): void {
+    this.log(LogLevel.DEBUG, message);
+  }
+
   private shouldLog(level: LogLevel): boolean {
     return level >= this.logLevel;
   }
 
-  private log(level: LogLevel, message: any) {
+  // tslint:disable-next-line:no-any
+  private log(level: LogLevel, message: any): void {
     if (!this.shouldLog(level)) {
       return;
     }
@@ -36,25 +65,5 @@ export class ConsoleLogger implements Logger {
       level: LogLevel[level],
       message
     });
-  }
-
-  setLevel(level: LogLevel) {
-    this.logLevel = level;
-  }
-
-  error(message: any) {
-    this.log(LogLevel.ERROR, message);
-  }
-
-  warn(message: any) {
-    this.log(LogLevel.WARN, message);
-  }
-
-  info(message: any) {
-    this.log(LogLevel.INFO, message);
-  }
-
-  debug(message: any) {
-    this.log(LogLevel.DEBUG, message);
   }
 }
