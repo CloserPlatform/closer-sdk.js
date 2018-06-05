@@ -40,7 +40,7 @@ describe('Event Handler', () => {
 
     events.onEvent(errorEvents.Error.tag, (_error: ErrorWithCause) => ok = true);
     expect(ok).toBe(false);
-    events.notify({ tag: 'unhandled', __discriminator__: 'domainEvent' },
+    events.notify({tag: 'unhandled', __discriminator__: 'domainEvent'},
       () => events.notify(new errorEvents.Error('Unhandled')));
     expect(ok).toBe(true);
   });
@@ -111,8 +111,10 @@ describe('Event Handler', () => {
   });
 
   it('onConcreteEvent() should be equivalent to onEvent() with id assertion', () => {
-    let first: roomEvents.MarkSent;
-    let second: roomEvents.MarkSent;
+    // tslint:disable-next-line:no-any
+    let first: any;
+    // tslint:disable-next-line:no-any
+    let second: any;
 
     events.onConcreteEvent(roomEvents.MarkSent.tag, '3', RandomUtils.randomUUID(),
       (msg: roomEvents.MarkSent) => first = msg);

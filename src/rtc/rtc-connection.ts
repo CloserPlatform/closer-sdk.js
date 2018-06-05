@@ -1,3 +1,4 @@
+// tslint:disable:max-file-line-count
 // FIXME Unfuck when Chrome transitions to the Unified Plan.
 import { errorEvents } from '../protocol/events/error-events';
 import { Logger } from '../logger';
@@ -21,11 +22,11 @@ export class RTCConnection {
   private conn: HackedRTCPeerConnection;
   private onICEDoneCallback: () => void;
   private onRemoteStreamCallback: Callback<MediaStream>;
-  private offerOptions: HackedRTCOfferOptions;
-  private answerOptions: RTCAnswerOptions;
+  private offerOptions?: HackedRTCOfferOptions;
+  private answerOptions?: RTCAnswerOptions;
 
   // FIXME Required by the various hacks:
-  private localRole: string;
+  private localRole?: string;
   private attachedStreams: { [trackId: string]: MediaStream };
   private renegotiationTimer: number;
 
@@ -52,6 +53,7 @@ export class RTCConnection {
 
     this.onICEDoneCallback = (): void => {
       // Do nothing.
+      this.log.warn('Empty onICEDoneCallback called');
     };
 
     this.conn.onicecandidate = (event): void => {
@@ -70,7 +72,11 @@ export class RTCConnection {
       this.log.info('Received a remote stream.');
       const streams = (typeof event.streams !== 'undefined') ? event.streams : [event.stream];
       streams.forEach((stream) => {
-        this.onRemoteStreamCallback(stream);
+        if (stream) {
+          this.onRemoteStreamCallback(stream);
+        } else {
+          this.log.warn('Received stream is null');
+        }
       });
     };
 
@@ -118,14 +124,14 @@ export class RTCConnection {
   public addCandidate(candidate: RTCIceCandidate): Promise<void> {
     this.log.debug('Received an RTC candidate: ' + candidate.candidate);
 
-    return this.conn.addIceCandidate(new RTCIceCandidate(candidate));
+    return this.conn.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit));
   }
 
   public offer(options?: HackedRTCOfferOptions): Promise<RTCSessionDescriptionInit> {
     this.log.debug('Creating an RTC offer.');
 
     return this.conn.createOffer(options || this.offerOptions).then((offer) =>
-      this.setLocalDescription(offer)).then((offer) =>
+      this.setLocalDescription(offer as RTCSessionDescriptionInit)).then((offer) =>
       this.api.sendDescription(this.call, this.peer, offer).then(() => offer)).then((offer) => {
       this.log.debug('Sent an RTC offer: ' + offer.sdp);
 
@@ -145,7 +151,7 @@ export class RTCConnection {
 
     return this.conn.createAnswer(options || this.answerOptions).then((answer) =>
       // FIXME Chrome does not support DTLS role changes.
-      this.setLocalDescription(this.patchSDP(answer))
+      this.setLocalDescription(this.patchSDP(answer as RTCSessionDescriptionInit))
     ).then((answer) =>
       this.api.sendDescription(this.call, this.peer, answer).then(() => answer)).then((answer) => {
       this.log.debug('Sent an RTC answer: ' + answer.sdp);
@@ -176,18 +182,47 @@ export class RTCConnection {
   public setRemoteDescription(remoteDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
     this.log.debug('Setting remote RTC description.');
 
-    return this.conn.setRemoteDescription(
-      new RTCSessionDescription(remoteDescription)).then(() => remoteDescription);
+    // FIXME
+    // sdp is string | null or string | undefined - remove casting
+    return this.conn.setRemoteDescription(new RTCSessionDescription(remoteDescription) as RTCSessionDescriptionInit)
+      .then(() => remoteDescription);
+  }
+
+  private static getRole(descr: RTCSessionDescriptionInit): string | undefined {
+    if (descr.sdp) {
+      const reg = /a=setup:([^\r\n]+)/.exec(descr.sdp);
+      if (reg) {
+        return reg[1];
+      } else {
+        return undefined;
+      }
+    } else {
+      return undefined;
+    }
   }
 
   private static supportsTracks(pc: HackedRTCPeerConnection): boolean {
     return (typeof pc.addTrack !== 'undefined') && (typeof pc.removeTrack !== 'undefined');
   }
 
+  private updateRole(descr: RTCSessionDescriptionInit, role: string): RTCSessionDescriptionInit {
+    const hackedDescr = descr;
+    if (hackedDescr.sdp) {
+      hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\r\n]+/, 'a=setup:' + role);
+    } else {
+      this.log.warn('Cannot update ROLE, there is not sdp in RTCSessionDescriptionInit');
+    }
+
+    return hackedDescr;
+  }
+
   private setLocalDescription(localDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
     this.log.debug('Setting local RTC description.');
 
-    return this.conn.setLocalDescription(new RTCSessionDescription(localDescription)).then(() => localDescription);
+    // FIXME
+    // sdp is string | null or string | undefined - remove casting
+    return this.conn.setLocalDescription(new RTCSessionDescription(localDescription) as RTCSessionDescriptionInit)
+      .then(() => localDescription);
   }
 
   private isEstablished(): boolean {
@@ -202,20 +237,9 @@ export class RTCConnection {
     }
   }
 
-  private getRole(descr: RTCSessionDescriptionInit): string {
-    return /a=setup:([^\r\n]+)/.exec(descr.sdp)[1];
-  }
-
-  private updateRole(descr: RTCSessionDescriptionInit, role: string): RTCSessionDescriptionInit {
-    const hackedDescr = descr;
-    hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\r\n]+/, 'a=setup:' + role);
-
-    return hackedDescr;
-  }
-
   private extractRole(descr: RTCSessionDescriptionInit): void {
     if (this.localRole === undefined) {
-      this.localRole = (this.getRole(descr) === 'active') ? 'passive' : 'active';
+      this.localRole = (RTCConnection.getRole(descr) === 'active') ? 'passive' : 'active';
     }
   }
 
@@ -223,7 +247,7 @@ export class RTCConnection {
     if (this.localRole !== undefined) {
       return this.updateRole(descr, this.localRole);
     } else {
-      this.localRole = this.getRole(descr);
+      this.localRole = RTCConnection.getRole(descr);
 
       return descr;
     }

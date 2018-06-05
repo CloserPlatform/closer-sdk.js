@@ -12,7 +12,7 @@
     "noImplicitReturns": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    // "strictNullChecks": true,
+    "strictNullChecks": true,
     "removeComments": false,
     "inlineSourceMap": true,
     "noEmitHelpers": false,

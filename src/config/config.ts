@@ -1,6 +1,4 @@
-import { ApiKey } from '../auth/auth';
 import * as logger from '../logger';
-import { ID } from '../protocol/protocol';
 import { RTCConfig } from '../rtc/rtc-config';
 import { ObjectUtils } from '../utils/object-utils';
 
@@ -11,21 +9,27 @@ export interface URLConfig {
   port?: string;
 }
 
-export interface ChatConfig extends URLConfig {
+export interface UserChatConfig extends URLConfig {
   rtc?: RTCConfig;
+}
+
+export interface ChatConfig extends URLConfig {
+  rtc: RTCConfig;
 }
 
 // tslint:disable-next-line:no-empty-interface
 export interface RatelConfig extends URLConfig {}
 
-export interface Config {
+export interface UserConfig {
   logLevel?: logger.LogLevel;
-
-  apiKey?: ApiKey;
-  sessionId?: ID;
-
-  chat?: ChatConfig;
+  chat?: UserChatConfig;
   ratel?: RatelConfig;
+}
+
+export interface Config {
+  logLevel: logger.LogLevel;
+  chat: ChatConfig;
+  ratel: RatelConfig;
 }
 
 export const defaultConfig: Config = {
@@ -57,7 +61,7 @@ export const defaultConfig: Config = {
   },
 };
 
-export const load = (conf: Config): Config => {
+export const load = (conf: UserConfig): Config => {
 
   // tslint:disable-next-line:no-any
   const merge = (a: any, b: any): any => {

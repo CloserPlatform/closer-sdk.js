@@ -18,11 +18,11 @@ import { RandomUtils, UUID } from '../utils/random-utils';
 export abstract class Call implements wireEntities.Call {
   public id: proto.ID;
   public created: proto.Timestamp;
-  public ended: proto.Timestamp;
+  public ended?: proto.Timestamp;
   public creator: proto.ID;
   public users: Array<proto.ID>;
   public direct: boolean;
-  public orgId: proto.ID;
+  public orgId?: proto.ID;
   public abstract readonly callType: CallType;
 
   protected api: ArtichokeAPI;

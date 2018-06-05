@@ -1,7 +1,7 @@
 export class BumpableTimeout {
   private readonly timeout_ms: number;
   private readonly onTimeoutClb: () => void;
-  private timeoutId: number;
+  private timeoutId?: number;
 
   constructor(timeout_ms: number, onTimeoutClb: () => void) {
     this.timeout_ms = timeout_ms;

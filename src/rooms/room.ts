@@ -19,7 +19,7 @@ export abstract class Room implements wireEntities.Room {
     public created: proto.Timestamp;
     public users: Array<proto.ID>;
     public direct: boolean;
-    public orgId: proto.ID;
+    public orgId?: proto.ID;
     public marks: { [type: string]: proto.Timestamp };
 
     public abstract readonly roomType: RoomType;

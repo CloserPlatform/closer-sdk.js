@@ -2,17 +2,17 @@ import { Artichoke } from './artichoke/artichoke';
 import { ApiKey } from './auth/auth';
 import { Config } from './config/config';
 import { EventHandler } from './events/event-handler';
-import * as logger from './logger';
 import { ID } from './protocol/protocol';
 import { ArtichokeAPI } from './apis/artichoke-api';
+import { ConsoleLogger, LogLevel } from './logger';
 
 export class Session {
   public id: ID;
   public chat: Artichoke;
 
   constructor(id: ID, apiKey: ApiKey, config: Config) {
-    const logLevel = config.logLevel !== undefined ? config.logLevel : logger.LogLevel.NONE;
-    const log = new logger.ConsoleLogger(logLevel);
+    const logLevel = config.logLevel !== undefined ? config.logLevel : LogLevel.NONE;
+    const log = new ConsoleLogger(logLevel);
 
     log.info('Configuration: ' + JSON.stringify(config));
 
