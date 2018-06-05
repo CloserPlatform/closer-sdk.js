@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ##  - 2018-06-05
 
+Enable strict null checks
+
+##  - 2018-06-05
+
 Make linter more strict & refactor code style
 
 ##  - 2018-06-04
