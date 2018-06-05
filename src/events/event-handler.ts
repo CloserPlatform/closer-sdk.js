@@ -7,7 +7,7 @@ export type Callback<T> = (arg: T) => void;
 
 export class EventHandler {
   private log: Logger;
-  private perType: { [type: string]: Callback<DomainEvent>[] } = {};
+  private perType: { [type: string]: ReadonlyArray<Callback<DomainEvent>> } = {};
   private perId: { [type: string]: { [id: string]: { [uuid: string]: Callback<DomainEvent> } } } = {};
 
   constructor(log: Logger) {
@@ -29,7 +29,8 @@ export class EventHandler {
     if (!(type in this.perType)) {
       this.perType[type] = [];
     }
-    this.perType[type].push(callback);
+    const typeArr = this.perType[type];
+    this.perType[type] = [...typeArr, callback];
   }
 
   public onConcreteEvent(type: Type, id: ID, uuid: UUID, callback: Callback<DomainEvent>): void {

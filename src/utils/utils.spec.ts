@@ -12,7 +12,8 @@ describe('Utils', () => {
       done();
     }).catch((_error) => done.fail());
 
-    PromiseUtils.wrapPromise(Promise.reject<number[]>('nope'), fun).then((_i) => done.fail()).catch((error) => {
+    PromiseUtils.wrapPromise(Promise.reject<ReadonlyArray<number>>('nope'), fun)
+      .then((_i) => done.fail()).catch((error) => {
       expect(error).toEqual('nope');
       done();
     });

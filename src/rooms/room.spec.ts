@@ -76,7 +76,7 @@ class APIMock extends ArtichokeAPI {
     });
   }
 
-  public getRoomUsers(_id: any): Promise<string[]> {
+  public getRoomUsers(_id: any): Promise<ReadonlyArray<string>> {
     return Promise.resolve([bob]);
   }
 

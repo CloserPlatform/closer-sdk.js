@@ -25,7 +25,7 @@ export class RTCPool {
     private answerOptions?: RTCAnswerOptions;
 
     private connections: { [user: string]: RTCConnection };
-    private tracks: MediaStreamAndTrack[];
+    private tracks: ReadonlyArray<MediaStreamAndTrack>;
     private onRemoteStreamCallback: RemoteStreamCallback;
 
     constructor(call: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
@@ -92,10 +92,11 @@ export class RTCPool {
     }
 
     public addTrack(track: MediaStreamTrack, stream?: MediaStream): void {
-        this.tracks.push({
-            track,
-            stream
-        });
+        const newTrackObj = {
+          track,
+          stream
+        };
+        this.tracks = [...this.tracks, newTrackObj];
         Object.keys(this.connections).forEach((peer) => {
             this.connections[peer].addTrack(track, stream);
         });

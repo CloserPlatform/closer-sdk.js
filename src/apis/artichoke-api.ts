@@ -72,7 +72,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.send(new rtcCommands.SendCandidate(callId, sessionId, candidate));
   }
 
-  public createCall(sessionIds: proto.ID[]): Promise<wireEntities.Call> {
+  public createCall(sessionIds: ReadonlyArray<proto.ID>): Promise<wireEntities.Call> {
     return this.postAuth<proto.CreateCall, wireEntities.Call>(
       [this.url, this.callPath], proto.createCall(sessionIds));
   }
@@ -86,24 +86,24 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<wireEntities.Call>([this.url, this.callPath, callId]);
   }
 
-  public getCalls(): Promise<wireEntities.Call[]> {
-    return this.getAuth<wireEntities.Call[]>([this.url, this.callPath]);
+  public getCalls(): Promise<ReadonlyArray<wireEntities.Call>> {
+    return this.getAuth<ReadonlyArray<wireEntities.Call>>([this.url, this.callPath]);
   }
 
-  public getActiveCalls(): Promise<wireEntities.Call[]> {
-    return this.getAuth<wireEntities.Call[]>([this.url, this.callPath, 'active']);
+  public getActiveCalls(): Promise<ReadonlyArray<wireEntities.Call>> {
+    return this.getAuth<ReadonlyArray<wireEntities.Call>>([this.url, this.callPath, 'active']);
   }
 
-  public getCallsWithPendingInvitations(): Promise<wireEntities.Call[]> {
-    return this.getAuth<wireEntities.Call[]>([this.url, this.callPath, 'pending-invitation']);
+  public getCallsWithPendingInvitations(): Promise<ReadonlyArray<wireEntities.Call>> {
+    return this.getAuth<ReadonlyArray<wireEntities.Call>>([this.url, this.callPath, 'pending-invitation']);
   }
 
-  public getCallHistory(callId: proto.ID): Promise<callEvents.CallEvent[]> {
-    return this.getAuth<callEvents.CallEvent[]>([this.url, this.callPath, callId, 'history']);
+  public getCallHistory(callId: proto.ID): Promise<ReadonlyArray<callEvents.CallEvent>> {
+    return this.getAuth<ReadonlyArray<callEvents.CallEvent>>([this.url, this.callPath, callId, 'history']);
   }
 
-  public getCallUsers(callId: proto.ID): Promise<proto.ID[]> {
-    return this.getAuth<proto.ID[]>([this.url, this.callPath, callId, 'users']);
+  public getCallUsers(callId: proto.ID): Promise<ReadonlyArray<proto.ID>> {
+    return this.getAuth<ReadonlyArray<proto.ID>>([this.url, this.callPath, callId, 'users']);
   }
 
   public answerCall(callId: proto.ID): Promise<void> {
@@ -148,16 +148,16 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<wireEntities.Room>([this.url, this.roomPath, roomId]);
   }
 
-  public getRooms(): Promise<wireEntities.Room[]> {
-    return this.getAuth<wireEntities.Room[]>([this.url, this.roomPath]);
+  public getRooms(): Promise<ReadonlyArray<wireEntities.Room>> {
+    return this.getAuth<ReadonlyArray<wireEntities.Room>>([this.url, this.roomPath]);
   }
 
-  public getRoster(): Promise<wireEntities.Room[]> {
-    return this.getAuth<wireEntities.Room[]>([this.url, this.roomPath, 'roster']);
+  public getRoster(): Promise<ReadonlyArray<wireEntities.Room>> {
+    return this.getAuth<ReadonlyArray<wireEntities.Room>>([this.url, this.roomPath, 'roster']);
   }
 
-  public getRoomUsers(roomId: proto.ID): Promise<proto.ID[]> {
-    return this.getAuth<proto.ID[]>([this.url, this.roomPath, roomId, 'users']);
+  public getRoomUsers(roomId: proto.ID): Promise<ReadonlyArray<proto.ID>> {
+    return this.getAuth<ReadonlyArray<proto.ID>>([this.url, this.roomPath, roomId, 'users']);
   }
 
   public getRoomHistoryLast(roomId: proto.ID,
@@ -230,23 +230,23 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.deleteAuth([this.url, this.pushNotifsPath, 'unregister', pushId]);
   }
 
-  private postAuth<Body, Response>(path: string[], body?: Body): Promise<Response> {
+  private postAuth<Body, Response>(path: ReadonlyArray<string>, body?: Body): Promise<Response> {
     return this.post<Body, Response>(path, this.apiHeaders.getHeaders(), body);
   }
 
-  private deleteAuth<Body, Response>(path: string[], body?: Body): Promise<Response> {
+  private deleteAuth<Body, Response>(path: ReadonlyArray<string>, body?: Body): Promise<Response> {
     return this.delete<Body, Response>(path, this.apiHeaders.getHeaders(), body);
   }
 
-  private getAuth<Response>(path: string[]): Promise<Response> {
+  private getAuth<Response>(path: ReadonlyArray<string>): Promise<Response> {
     return this.get<Response>(path, this.apiHeaders.getHeaders());
   }
 
-  private getAuthPaginated<Item>(path: string[]): Promise<proto.Paginated<Item>> {
+  private getAuthPaginated<Item>(path: ReadonlyArray<string>): Promise<proto.Paginated<Item>> {
     return this.getRaw(path, this.apiHeaders.getHeaders())
       .then((resp) => {
         try {
-          const items = JSON.parse(resp.responseText) as Item[];
+          const items = JSON.parse(resp.responseText) as ReadonlyArray<Item>;
           const offset = parseInt(resp.getResponseHeader('X-Paging-Offset') || '0', 10);
           const limit = parseInt(resp.getResponseHeader('X-Paging-Limit') || '0', 10);
 

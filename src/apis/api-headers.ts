@@ -26,6 +26,6 @@ export class ApiHeaders {
     this._apiKey = value;
   }
 
-  public getHeaders = (): HeaderValue[] =>
+  public getHeaders = (): ReadonlyArray<HeaderValue> =>
     [new HeaderValue(this.apiKeyKey, this._apiKey), new HeaderValue(this.deviceIdKey, this._deviceId)]
 }

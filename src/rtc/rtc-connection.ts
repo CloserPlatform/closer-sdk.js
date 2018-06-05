@@ -71,7 +71,8 @@ export class RTCConnection {
 
     this.conn.ontrack = (event: HackedMediaStreamEvent): void => {
       this.log.info('Received a remote stream.');
-      const streams = (typeof event.streams !== 'undefined') ? event.streams : [event.stream];
+      const streams: ReadonlyArray<MediaStream | null> =
+        (typeof event.streams !== 'undefined') ? event.streams : [event.stream];
       streams.forEach((stream) => {
         if (stream) {
           this.onRemoteStreamCallback(stream);

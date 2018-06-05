@@ -15,7 +15,7 @@ export interface PromiseFunctions<T> {
 // tslint:disable:no-unnecessary-class
 export class PromiseUtils {
 
-  public static wrapPromise<T, U>(promise: Promise<T[]>, fun: (arg: T) => U): Promise<U[]> {
-    return promise.then((arr: T[]) => arr.map(fun));
+  public static wrapPromise<T, U>(promise: Promise<ReadonlyArray<T>>, fun: (arg: T) => U): Promise<ReadonlyArray<U>> {
+    return promise.then((arr: ReadonlyArray<T>) => arr.map(fun));
   }
 }
