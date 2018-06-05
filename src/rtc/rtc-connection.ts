@@ -107,9 +107,9 @@ export class RTCConnection {
     if (RTCConnection.supportsTracks(this.conn)) {
       this.conn.addTrack(track, stream);
     } else {
-      stream = stream || new MediaStream([track]);
-      this.attachedStreams[track.id] = stream;
-      this.conn.addStream(stream);
+      const hackedStream = stream || new MediaStream([track]);
+      this.attachedStreams[track.id] = hackedStream;
+      this.conn.addStream(hackedStream);
     }
   }
 
