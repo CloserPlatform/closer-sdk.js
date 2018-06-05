@@ -13,7 +13,7 @@ import RoomEvent = roomEvents.RoomEvent;
 import { RandomUtils, UUID } from '../utils/random-utils';
 
 export abstract class Room implements wireEntities.Room {
-
+    private static defaultRoomCount = 100;
     public id: proto.ID;
     public name: string;
     public created: proto.Timestamp;
@@ -53,7 +53,7 @@ export abstract class Room implements wireEntities.Room {
 
     public getLatestMessages(count?: number, filter?: proto.HistoryFilter):
     Promise<proto.Paginated<roomEvents.RoomEvent>> {
-        return this.doGetHistory(this.api.getRoomHistoryLast(this.id, count || 100, filter));
+        return this.doGetHistory(this.api.getRoomHistoryLast(this.id, count || Room.defaultRoomCount, filter));
     }
 
     public getMessages(offset: number, limit: number,

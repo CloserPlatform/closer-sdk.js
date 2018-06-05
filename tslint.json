@@ -139,13 +139,13 @@
     "return-undefined": true,
     "space-before-function-paren": false,
     "space-within-parens": true,
-    // "strict-boolean-expressions": true, // TURN ME ON - HARD
+    "strict-boolean-expressions": true,
     "strict-type-predicates": true,
     "switch-default": true,
     "switch-final-break": true,
-    // "type-literal-delimiter": true,
+    "type-literal-delimiter": true,
     "typeof-compare": true,
-    // "unified-signatures": true,
+    "unified-signatures": true,
     "use-default-type-parameter": true,
     "use-isnan": true,
     "ban-types": [
@@ -200,7 +200,7 @@
       true,
       120
     ],
-    // "no-magic-numbers": true,
+    "no-magic-numbers": true,
     // "array-type": [true, "array"],
     // "object-literal-shorthand": true,
     // "object-literal-key-quotes": [true, "as-needed"],

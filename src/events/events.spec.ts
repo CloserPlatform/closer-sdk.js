@@ -5,6 +5,9 @@ import { roomEvents } from '../protocol/events/room-events';
 import MarkSent = roomEvents.MarkSent;
 import { RandomUtils } from '../utils/random-utils';
 
+// FIXME
+// tslint:disable:no-magic-numbers
+
 class ErrorWithCause extends errorEvents.Error {
   public cause: boolean;
 

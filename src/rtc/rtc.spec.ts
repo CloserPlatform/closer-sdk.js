@@ -180,7 +180,7 @@ describe('RTCConnection', () => {
             // 5. Innitiator triggers a renegotiation.
             // FIXME This sleep is required so that the connection has the time to
             // FIXME transition into an established state.
-            sleep(100).then(trigger);
+            sleep(RTCConnection.renegotiationTimeout).then(trigger);
           }).catch(logError(done));
         };
 

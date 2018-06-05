@@ -24,6 +24,7 @@ import { BumpableTimeout } from '../utils/bumpable-timeout';
 import { PromiseUtils } from '../utils/promise-utils';
 
 export class Artichoke {
+  private static heartbeatTimeoutMultiplier = 2;
   private api: ArtichokeAPI;
   private config: ChatConfig;
   private log: Logger;
@@ -47,7 +48,7 @@ export class Artichoke {
       this.clearHeartbeatTimeout();
 
       this.heartbeatTimeout = new BumpableTimeout(
-        hello.heartbeatTimeout * 2,
+        hello.heartbeatTimeout * Artichoke.heartbeatTimeoutMultiplier,
         (): void => this.events.notify(new internalEvents.ServerBecameUnreachable())
       );
     });

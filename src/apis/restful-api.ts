@@ -2,6 +2,7 @@ import { errorEvents } from '../protocol/events/error-events';
 import { Logger } from '../logger';
 import { HeaderValue } from './header-value';
 import { PromiseReject, PromiseResolve } from '../utils/promise-utils';
+import { HttpCodes } from '../utils/http-codes';
 
 export class RESTfulAPI {
 
@@ -43,10 +44,11 @@ export class RESTfulAPI {
                            resolve: PromiseResolve<XMLHttpRequest>,
                            reject: PromiseReject): () => void {
     return (): void => {
-      if (xhttp.readyState === 4 && (xhttp.status === 200 || xhttp.status === 204)) {
+      if (xhttp.readyState === XMLHttpRequest.DONE &&
+        (xhttp.status === HttpCodes.OK || xhttp.status === HttpCodes.NoContent)) {
         this.log.debug(`OK response: ${xhttp.responseText}`);
         resolve(xhttp);
-      } else if (xhttp.readyState === 4) {
+      } else if (xhttp.readyState === XMLHttpRequest.DONE) {
         this.log.debug(`Api - responseCallback: Error response: ${xhttp.responseText}`);
         try {
           const responseError = JSON.parse(xhttp.responseText);
@@ -90,7 +92,7 @@ export class RESTfulAPI {
   }
 
   private parseData<T>(resp: XMLHttpRequest): T {
-    if (resp.status === 204) {
+    if (resp.status === HttpCodes.NoContent) {
       // FIXME
       // tslint:disable-next-line:no-any
       return resp.responseText as any as T;

@@ -14,6 +14,7 @@ import { RTCConnectionConstraints } from './rtc-connection-constraints';
 import { TimeUtils } from '../utils/time-utils';
 
 export class RTCConnection {
+  public static readonly renegotiationTimeout = 100;
   private call: ID;
   private peer: ID;
   private api: ArtichokeAPI;
@@ -84,7 +85,8 @@ export class RTCConnection {
       // FIXME Chrome triggers renegotiation on... Initial offer creation...
       // FIXME Firefox triggers renegotiation when remote offer is received.
       if (this.isEstablished()) {
-        this.renegotiationTimer = TimeUtils.onceDelayed(this.renegotiationTimer, 100, () => {
+        this.renegotiationTimer = TimeUtils.onceDelayed(
+          this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
           this.log.debug('Renegotiating an RTC connection.');
           this.offer().catch((err) => {
             this.events.notify(new errorEvents.Error(`Could not renegotiate the connection: ${err}`));

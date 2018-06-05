@@ -26,9 +26,9 @@ const chad = '987';
 const msg1 = '2323';
 const msg2 = '1313';
 const msg3 = '4545';
-
+const timestamp = 123;
 const msgFn = (id: string, body?: string): roomEvents.MessageSent =>
-  new roomEvents.MessageSent(roomId, alice, body ? body : 'Hi!', id, {}, 123);
+  new roomEvents.MessageSent(roomId, alice, body ? body : 'Hi!', id, {}, timestamp);
 
 class APIMock extends ArtichokeAPI {
   public sentTyping = false;
@@ -181,7 +181,7 @@ const makeRoom = (type: RoomType): wireEntities.Room => {
         done();
       });
 
-      const m = new roomEvents.MessageSent(roomId, chad, 'Hi!', msg1, {}, 123);
+      const m = new roomEvents.MessageSent(roomId, chad, 'Hi!', msg1, {}, timestamp);
       events.notify(m);
     });
 
@@ -191,7 +191,7 @@ const makeRoom = (type: RoomType): wireEntities.Room => {
         done();
       });
 
-      const m = new roomEvents.CustomMessageSent(roomId, chad, 'Hi!', msg1, 'json', {}, 123);
+      const m = new roomEvents.CustomMessageSent(roomId, chad, 'Hi!', msg1, 'json', {}, timestamp);
       events.notify(m);
     });
 
