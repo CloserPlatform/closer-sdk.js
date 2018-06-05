@@ -14,6 +14,7 @@ import { RTCConnectionConstraints } from './rtc-connection-constraints';
 import { TimeUtils } from '../utils/time-utils';
 
 export class RTCConnection {
+  public static readonly renegotiationTimeout = 100;
   private call: ID;
   private peer: ID;
   private api: ArtichokeAPI;
@@ -33,7 +34,7 @@ export class RTCConnection {
   constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI,
               constraints?: RTCConnectionConstraints, answerOptions?: RTCAnswerOptions,
               offerOptions?: HackedRTCOfferOptions) {
-    log.info('Connecting an RTC connection to ' + peer + ' on ' + call);
+    log.info(`Connecting an RTC connection to ${peer} on ${call}`);
     this.call = call;
     this.peer = peer;
     this.api = api;
@@ -58,9 +59,9 @@ export class RTCConnection {
 
     this.conn.onicecandidate = (event): void => {
       if (event.candidate) {
-        this.log.debug('Created ICE candidate: ' + event.candidate.candidate);
+        this.log.debug(`Created ICE candidate: ${event.candidate.candidate}`);
         this.api.sendCandidate(this.call, this.peer, event.candidate).catch((err) => {
-          this.events.notify(new errorEvents.Error('Could not send an ICE candidate: ' + err));
+          this.events.notify(new errorEvents.Error(`Could not send an ICE candidate: ${err}`));
         });
       } else {
         this.log.debug('Done gathering ICE candidates.');
@@ -70,7 +71,8 @@ export class RTCConnection {
 
     this.conn.ontrack = (event: HackedMediaStreamEvent): void => {
       this.log.info('Received a remote stream.');
-      const streams = (typeof event.streams !== 'undefined') ? event.streams : [event.stream];
+      const streams: ReadonlyArray<MediaStream | null> =
+        (typeof event.streams !== 'undefined') ? event.streams : [event.stream];
       streams.forEach((stream) => {
         if (stream) {
           this.onRemoteStreamCallback(stream);
@@ -84,10 +86,11 @@ export class RTCConnection {
       // FIXME Chrome triggers renegotiation on... Initial offer creation...
       // FIXME Firefox triggers renegotiation when remote offer is received.
       if (this.isEstablished()) {
-        this.renegotiationTimer = TimeUtils.onceDelayed(this.renegotiationTimer, 100, () => {
+        this.renegotiationTimer = TimeUtils.onceDelayed(
+          this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
           this.log.debug('Renegotiating an RTC connection.');
           this.offer().catch((err) => {
-            this.events.notify(new errorEvents.Error('Could not renegotiate the connection: ' + err));
+            this.events.notify(new errorEvents.Error(`Could not renegotiate the connection: ${err}`));
           });
         });
       }
@@ -105,9 +108,9 @@ export class RTCConnection {
     if (RTCConnection.supportsTracks(this.conn)) {
       this.conn.addTrack(track, stream);
     } else {
-      stream = stream || new MediaStream([track]);
-      this.attachedStreams[track.id] = stream;
-      this.conn.addStream(stream);
+      const hackedStream = stream || new MediaStream([track]);
+      this.attachedStreams[track.id] = hackedStream;
+      this.conn.addStream(hackedStream);
     }
   }
 
@@ -122,7 +125,7 @@ export class RTCConnection {
   }
 
   public addCandidate(candidate: RTCIceCandidate): Promise<void> {
-    this.log.debug('Received an RTC candidate: ' + candidate.candidate);
+    this.log.debug(`Received an RTC candidate: ${candidate.candidate}`);
 
     return this.conn.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit));
   }
@@ -133,7 +136,7 @@ export class RTCConnection {
     return this.conn.createOffer(options || this.offerOptions).then((offer) =>
       this.setLocalDescription(offer as RTCSessionDescriptionInit)).then((offer) =>
       this.api.sendDescription(this.call, this.peer, offer).then(() => offer)).then((offer) => {
-      this.log.debug('Sent an RTC offer: ' + offer.sdp);
+      this.log.debug(`Sent an RTC offer: ${offer.sdp}`);
 
       return offer;
     });
@@ -154,7 +157,7 @@ export class RTCConnection {
       this.setLocalDescription(this.patchSDP(answer as RTCSessionDescriptionInit))
     ).then((answer) =>
       this.api.sendDescription(this.call, this.peer, answer).then(() => answer)).then((answer) => {
-      this.log.debug('Sent an RTC answer: ' + answer.sdp);
+      this.log.debug(`Sent an RTC answer: ${answer.sdp}`);
 
       return answer;
     });
@@ -208,7 +211,7 @@ export class RTCConnection {
   private updateRole(descr: RTCSessionDescriptionInit, role: string): RTCSessionDescriptionInit {
     const hackedDescr = descr;
     if (hackedDescr.sdp) {
-      hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\r\n]+/, 'a=setup:' + role);
+      hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\r\n]+/, `a=setup:${role}`);
     } else {
       this.log.warn('Cannot update ROLE, there is not sdp in RTCSessionDescriptionInit');
     }

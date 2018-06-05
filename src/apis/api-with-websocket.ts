@@ -34,7 +34,7 @@ export class APIWithWebsocket extends RESTfulAPI {
   public ask<ResponseT extends DomainEvent>(cmd: roomCommand.SendMessage | roomCommand.SendCustomMessage):
   Promise<ResponseT> {
     return new Promise<ResponseT>((resolve, reject): void => {
-      const ref = 'ref' + Date.now(); // FIXME Use UUID instead.
+      const ref = `ref${Date.now()}`; // FIXME Use UUID instead.
       this.promises[ref] = {
         // tslint:disable-next-line:no-unnecessary-callback-wrapper
         resolve: (ev: ResponseT): void => resolve(ev),
@@ -42,7 +42,7 @@ export class APIWithWebsocket extends RESTfulAPI {
       };
       cmd.ref = ref;
       this.send(cmd).catch((e) => {
-        this.log.warn('Ask failed with error: ' + e);
+        this.log.warn(`Ask failed with error: ${e}`);
         this.reject(ref, new errorEvents.Error('Ask failed'));
       });
     });
@@ -54,7 +54,7 @@ export class APIWithWebsocket extends RESTfulAPI {
     );
 
     this.socket.onError((ev) =>
-      callback(new errorEvents.Error('Websocket connection error.' + ev))
+      callback(new errorEvents.Error(`Websocket connection error. ${ev}`))
     );
 
     this.socket.onEvent((event: DomainEvent) => {
@@ -74,14 +74,16 @@ export class APIWithWebsocket extends RESTfulAPI {
   private resolve(ref: proto.Ref, event: DomainEvent): void {
     if (ref && ref in this.promises) {
       this.promises[ref].resolve(event);
-      delete this.promises[ref];
+      const { [ref]: value, ...withoutRefPromise } = this.promises;
+      this.promises = withoutRefPromise;
     }
   }
 
   private reject(ref: proto.Ref, error: errorEvents.Error): void {
     if (ref && ref in this.promises) {
       this.promises[ref].reject(error);
-      delete this.promises[ref];
+      const { [ref]: value, ...withoutRefPromise } = this.promises;
+      this.promises = withoutRefPromise;
     }
   }
 }

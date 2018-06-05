@@ -5,7 +5,7 @@ export interface Call {
   created: Timestamp;
   ended?: Timestamp;
   creator: ID;
-  users: Array<ID>;
+  users: ReadonlyArray<ID>;
   direct: boolean;
   orgId?: ID;
 }
@@ -16,6 +16,6 @@ export interface Room {
   created: Timestamp;
   direct: boolean;
   orgId?: ID;
-  users: Array<ID>;
+  users: ReadonlyArray<ID>;
   marks: { [type: string]: number };
 }

@@ -24,6 +24,7 @@ import { BumpableTimeout } from '../utils/bumpable-timeout';
 import { PromiseUtils } from '../utils/promise-utils';
 
 export class Artichoke {
+  private static heartbeatTimeoutMultiplier = 2;
   private api: ArtichokeAPI;
   private config: ChatConfig;
   private log: Logger;
@@ -37,17 +38,17 @@ export class Artichoke {
     this.events = events;
 
     events.onEvent(errorEvents.Error.tag, (e: errorEvents.Error) =>
-      this.log.warn('Event error not handled: ' + e));
+      this.log.warn(`Event error not handled: ${e}`));
     events.onEvent(chatEvents.Received.tag, (e: chatEvents.Received) =>
-      this.log.warn('Event received not handled: ' + e));
+      this.log.warn(`Event received not handled: ${e}`));
     events.onEvent(roomEvents.MessageDelivered.tag, (e: roomEvents.MessageDelivered) =>
-      this.log.warn('Event message delivered not handled: ' + e));
+      this.log.warn(`Event message delivered not handled: ${e}`));
 
     events.onEvent(serverEvents.Hello.tag, (hello: serverEvents.Hello) => {
       this.clearHeartbeatTimeout();
 
       this.heartbeatTimeout = new BumpableTimeout(
-        hello.heartbeatTimeout * 2,
+        hello.heartbeatTimeout * Artichoke.heartbeatTimeoutMultiplier,
         (): void => this.events.notify(new internalEvents.ServerBecameUnreachable())
       );
     });
@@ -109,7 +110,7 @@ export class Artichoke {
     this.events.onEvent(callEvents.Invited.tag, callback);
   }
 
-  public createCall(stream: MediaStream, users: Array<proto.ID>): Promise<GroupCall> {
+  public createCall(stream: MediaStream, users: ReadonlyArray<proto.ID>): Promise<GroupCall> {
     return this.wrapCall(this.api.createCall(users), stream) as Promise<GroupCall>; // Trust me.
   }
 
@@ -121,17 +122,17 @@ export class Artichoke {
     return this.wrapCall(this.api.getCall(call));
   }
 
-  public getCalls(): Promise<Array<Call>> {
+  public getCalls(): Promise<ReadonlyArray<Call>> {
     return PromiseUtils.wrapPromise(this.api.getCalls(),
                        (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
-  public getActiveCalls(): Promise<Array<Call>> {
+  public getActiveCalls(): Promise<ReadonlyArray<Call>> {
     return PromiseUtils.wrapPromise(this.api.getActiveCalls(),
                       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
-  public getCallsWithPendingInvitations(): Promise<Array<Call>> {
+  public getCallsWithPendingInvitations(): Promise<ReadonlyArray<Call>> {
     return PromiseUtils.wrapPromise(this.api.getCallsWithPendingInvitations(),
       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
@@ -157,11 +158,11 @@ export class Artichoke {
     return this.wrapRoom(this.api.getRoom(room));
   }
 
-  public getRooms(): Promise<Array<Room>> {
+  public getRooms(): Promise<ReadonlyArray<Room>> {
     return PromiseUtils.wrapPromise(this.api.getRooms(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
-  public getRoster(): Promise<Array<Room>> {
+  public getRoster(): Promise<ReadonlyArray<Room>> {
     return PromiseUtils.wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
@@ -182,7 +183,7 @@ export class Artichoke {
 
   private notify(event: DomainEvent): void {
     this.events.notify(event, (e) =>
-      this.events.notify(new errorEvents.Error('Unhandled event: ' + e.tag))
+      this.events.notify(new errorEvents.Error(`Unhandled event: ${e.tag}`))
     );
   }
 

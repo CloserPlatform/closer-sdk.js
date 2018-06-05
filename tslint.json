@@ -133,19 +133,19 @@
     "prefer-method-signature": true,
     "prefer-object-spread": true,
     "prefer-switch": true,
-    // "prefer-template": true,
+    "prefer-template": true,
     // "promise-function-async": true,
     "radix": true,
     "return-undefined": true,
     "space-before-function-paren": false,
     "space-within-parens": true,
-    // "strict-boolean-expressions": true, // TURN ME ON - HARD
+    "strict-boolean-expressions": true,
     "strict-type-predicates": true,
     "switch-default": true,
     "switch-final-break": true,
-    // "type-literal-delimiter": true,
+    "type-literal-delimiter": true,
     "typeof-compare": true,
-    // "unified-signatures": true,
+    "unified-signatures": true,
     "use-default-type-parameter": true,
     "use-isnan": true,
     "ban-types": [
@@ -200,10 +200,10 @@
       true,
       120
     ],
-    // "no-magic-numbers": true,
-    // "array-type": [true, "array"],
-    // "object-literal-shorthand": true,
-    // "object-literal-key-quotes": [true, "as-needed"],
+    "no-magic-numbers": true,
+    "array-type": [true, "array"],
+    "object-literal-shorthand": true,
+    "object-literal-key-quotes": [true, "as-needed"],
     "arrow-return-shorthand": [
       true,
       "multiline"
@@ -239,20 +239,20 @@
     ],
     // tslint-immutable
     // Recommended built-in rules
-    // "no-parameter-reassignment": true,
+    "no-parameter-reassignment": true,
 
     // Immutability rules
     // "readonly-keyword": true, // Impossible for angular
-    // "readonly-array": true,
-    // "no-let": true,
+    "readonly-array": true,
+    "no-let": true,
     // "no-object-mutation": true, // Impossible for angular
-    // "no-delete": true,
+    "no-delete": true,
     // "no-method-signature": true,
 
     // Functional style rules
-    "no-mixed-interface": true
+    "no-mixed-interface": true,
     // "no-expression-statement": true,
     // "no-if-statement": true,
-    // "no-loop-statement": true
+    "no-loop-statement": true
   }
 }

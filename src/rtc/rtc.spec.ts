@@ -21,6 +21,7 @@ import { createRTCPool } from './create-rtc-pool';
 
 // FIXME
 // tslint:disable:no-any
+// tslint:disable:no-let
 
 const invalidSDP = 'this is not a valid SDP';
 
@@ -33,9 +34,9 @@ const descr = (sdp: any): rtcEvents.DescriptionSent =>
 
 const logError = (done: any): (err: any) => void =>
   (error): void => {
-    log.error('Got an error: ' + error + ' (' + JSON.stringify(error) + ')');
+    log.error(`Got an error: ${error} (${JSON.stringify(error)})`);
     if (typeof error.cause !== 'undefined') {
-      log.error('Cause: ' + error.cause);
+      log.error(`Cause: ${error.cause}`);
     }
     done.fail();
   };
@@ -146,7 +147,8 @@ describe('RTCConnection', () => {
         // 4. Peers exchange candidates.
         // FIXME
         // tslint:disable-next-line:no-any
-        const candidates: Array<any> = [];
+        // tslint:disable-next-line:readonly-array
+        const candidates: any[] = [];
         api.onCandidate = (_call: any, peer: any, candidate: any): void => {
           candidates.push({peer, candidate});
         };
@@ -180,7 +182,7 @@ describe('RTCConnection', () => {
             // 5. Innitiator triggers a renegotiation.
             // FIXME This sleep is required so that the connection has the time to
             // FIXME transition into an established state.
-            sleep(100).then(trigger);
+            sleep(RTCConnection.renegotiationTimeout).then(trigger);
           }).catch(logError(done));
         };
 

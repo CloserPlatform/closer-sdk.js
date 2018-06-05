@@ -25,7 +25,7 @@ export class RTCPool {
     private answerOptions?: RTCAnswerOptions;
 
     private connections: { [user: string]: RTCConnection };
-    private tracks: Array<MediaStreamAndTrack>;
+    private tracks: ReadonlyArray<MediaStreamAndTrack>;
     private onRemoteStreamCallback: RemoteStreamCallback;
 
     constructor(call: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
@@ -48,41 +48,41 @@ export class RTCPool {
 
         events.onConcreteEvent(rtcEvents.DescriptionSent.tag, this.call, 'singleton',
             (msg: rtcEvents.DescriptionSent) => {
-            this.log.debug('Received an RTC description: ' + msg.sdp.sdp);
+            this.log.debug(`Received an RTC description: ${msg.sdp.sdp}`);
 
             if (msg.sdp.type === 'offer') {
                 if (msg.sender in this.connections) {
                     this.connections[msg.sender].addOffer(msg.sdp).catch((err) => {
-                        events.notify(new errorEvents.Error('Could not process the RTC description: ' + err));
+                        events.notify(new errorEvents.Error(`Could not process the RTC description: ${err}`));
                     });
                 } else {
                     const rtc = this.createRTC(msg.sender);
                     rtc.addOffer(msg.sdp).catch((err) => {
-                        events.notify(new errorEvents.Error('Could not process the RTC description: ' + err));
+                        events.notify(new errorEvents.Error(`Could not process the RTC description: ${err}`));
                     });
                 }
             } else if (msg.sdp.type === 'answer') {
                 if (msg.sender in this.connections) {
                     this.connections[msg.sender].addAnswer(msg.sdp).catch((err) => {
-                        events.notify(new errorEvents.Error('Could not process the RTC description: ' + err));
+                        events.notify(new errorEvents.Error(`Could not process the RTC description: ${err}`));
                     });
                 } else {
-                    events.notify(new errorEvents.Error('Received an invalid RTC answer from ' + msg.sender));
+                    events.notify(new errorEvents.Error(`Received an invalid RTC answer from ${msg.sender}`));
                 }
             } else {
-                events.notify(new errorEvents.Error('Received an invalid RTC description type ' + msg.sdp.type));
+                events.notify(new errorEvents.Error(`Received an invalid RTC description type ${msg.sdp.type}`));
             }
         });
 
         events.onConcreteEvent(rtcEvents.CandidateSent.tag, this.call, 'singleton', (msg: rtcEvents.CandidateSent) => {
-            this.log.debug('Received an RTC candidate: ' + msg.candidate);
+            this.log.debug(`Received an RTC candidate: ${msg.candidate}`);
             if (msg.sender in this.connections) {
                 this.connections[msg.sender].addCandidate(msg.candidate).catch((err) => {
-                    events.notify(new errorEvents.Error('Could not process the RTC candidate: ' + err));
+                    events.notify(new errorEvents.Error(`Could not process the RTC candidate: ${err}`));
                 });
             } else {
-                events.notify(new errorEvents.Error('Received an invalid RTC candidate. ' + msg.sender +
-                    ' is not currently in this call.'));
+                events.notify(new errorEvents.Error(
+                  `Received an invalid RTC candidate. ${msg.sender} is not currently in this call.`));
             }
         });
     }
@@ -92,10 +92,11 @@ export class RTCPool {
     }
 
     public addTrack(track: MediaStreamTrack, stream?: MediaStream): void {
-        this.tracks.push({
-            track,
-            stream
-        });
+        const newTrackObj = {
+          track,
+          stream
+        };
+        this.tracks = [...this.tracks, newTrackObj];
         Object.keys(this.connections).forEach((peer) => {
             this.connections[peer].addTrack(track, stream);
         });
@@ -120,7 +121,8 @@ export class RTCPool {
     public destroy(peer: ID): void {
         if (peer in this.connections) {
             this.connections[peer].disconnect();
-            delete this.connections[peer];
+            const { [peer]: value, ...withoutPeerConnection } = this.connections;
+            this.connections = withoutPeerConnection;
         }
     }
 

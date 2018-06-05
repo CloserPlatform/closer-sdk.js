@@ -12,7 +12,7 @@ export class RatelAPI extends RESTfulAPI {
 
     const pathname = config.pathname ? config.pathname : '';
 
-    const host = config.hostname + ':' + config.port;
+    const host = `${config.hostname}:${config.port}`;
     this.url = [config.protocol, '//', host, pathname, '/api'].join('');
   }
 

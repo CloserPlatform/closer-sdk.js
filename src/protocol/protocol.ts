@@ -11,7 +11,7 @@ export type Context = any;
 
 // // REST API:
 export interface CreateCall {
-  users: ID[];
+  users: ReadonlyArray<ID>;
 }
 
 export interface CreateDirectCall extends CreateDirectEntity {
@@ -42,7 +42,7 @@ export interface PushRegistration {
   pushId: ID;
 }
 
-export const createCall = (users: Array<ID>): CreateCall =>
+export const createCall = (users: ReadonlyArray<ID>): CreateCall =>
   ({
     users
   });
@@ -80,12 +80,12 @@ export const pushRegistration = (pushId: ID): PushRegistration =>
   });
 
 export interface HistoryFilter {
-  filter: Array<string>;
-  customFilter: Array<string>;
+  filter: ReadonlyArray<string>;
+  customFilter: ReadonlyArray<string>;
 }
 
 export interface Paginated<T> {
-  items: Array<T>;
+  items: ReadonlyArray<T>;
   offset: number;
   limit: number;
 }

@@ -13,11 +13,11 @@ import RoomEvent = roomEvents.RoomEvent;
 import { RandomUtils, UUID } from '../utils/random-utils';
 
 export abstract class Room implements wireEntities.Room {
-
+    private static defaultRoomCount = 100;
     public id: proto.ID;
     public name: string;
     public created: proto.Timestamp;
-    public users: Array<proto.ID>;
+    public users: ReadonlyArray<proto.ID>;
     public direct: boolean;
     public orgId?: proto.ID;
     public marks: { [type: string]: proto.Timestamp };
@@ -53,7 +53,7 @@ export abstract class Room implements wireEntities.Room {
 
     public getLatestMessages(count?: number, filter?: proto.HistoryFilter):
     Promise<proto.Paginated<roomEvents.RoomEvent>> {
-        return this.doGetHistory(this.api.getRoomHistoryLast(this.id, count || 100, filter));
+        return this.doGetHistory(this.api.getRoomHistoryLast(this.id, count || Room.defaultRoomCount, filter));
     }
 
     public getMessages(offset: number, limit: number,
@@ -61,7 +61,7 @@ export abstract class Room implements wireEntities.Room {
         return this.doGetHistory(this.api.getRoomHistoryPage(this.id, offset, limit, filter));
     }
 
-    public getUsers(): Promise<Array<proto.ID>> {
+    public getUsers(): Promise<ReadonlyArray<proto.ID>> {
         return this.api.getRoomUsers(this.id);
     }
 
@@ -130,7 +130,7 @@ export abstract class Room implements wireEntities.Room {
                 if (e.subtag in this.onCustomCallbacks) {
                     this.onCustomCallbacks[e.subtag](e);
                 } else {
-                    this.events.notify(new errorEvents.Error('Unhandled custom message with subtag: : ' + e.subtag));
+                    this.events.notify(new errorEvents.Error(`Unhandled custom message with subtag: : ${e.subtag}`));
                 }
             }
         );

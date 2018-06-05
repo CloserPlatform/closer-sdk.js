@@ -12,7 +12,7 @@ export type HackedRTCPeerConnection = RTCPeerConnection & {
   ontrack(event: HackedMediaStreamEvent): void;
   addTrack(track: MediaStreamTrack, stream?: MediaStream): RTCRtpSender;
   removeTrack(sender: RTCRtpSender): void;
-  getSenders(): Array<RTCRtpSender>;
+  getSenders(): ReadonlyArray<RTCRtpSender>;
   createOffer(options?: HackedRTCOfferOptions): Promise<RTCSessionDescription>;
   createAnswer(options?: RTCAnswerOptions): Promise<RTCSessionDescription>;
 };

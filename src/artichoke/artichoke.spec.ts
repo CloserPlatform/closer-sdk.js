@@ -9,6 +9,8 @@ import { serverEvents } from '../protocol/events/server-events';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 
 // tslint:disable:no-any
+// tslint:disable:no-magic-numbers
+// tslint:disable:no-let
 const roomId = '234';
 const callId = '123';
 const alice = '321';

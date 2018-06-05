@@ -18,6 +18,7 @@ import { RTCPool } from '../rtc/rtc-pool';
 import CallEvent = callEvents.CallEvent;
 // FIXME
 // tslint:disable:no-any
+// tslint:disable:no-let
 
 const callId = '123';
 const alice = '321';
@@ -41,11 +42,11 @@ class APIMock extends ArtichokeAPI {
     super(sessionId, apiKeyMock, config.chat, log);
   }
 
-  public getCallHistory(_id: string): Promise<CallEvent[]> {
+  public getCallHistory(_id: string): Promise<ReadonlyArray<CallEvent>> {
     return Promise.resolve([msgFn(msg1Mock), msgFn(msg2Mock)]);
   }
 
-  public getCallUsers(_id: string): Promise<string[]> {
+  public getCallUsers(_id: string): Promise<ReadonlyArray<string>> {
     return Promise.resolve([alice, bob, chad]);
   }
 
@@ -117,7 +118,7 @@ const makeCall = (callType: CallType): ProtoCall => {
   }
 };
 
-const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
+const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
   ({
     id: callId,
     created: 123,

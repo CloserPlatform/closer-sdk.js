@@ -20,7 +20,7 @@ export abstract class Call implements wireEntities.Call {
   public created: proto.Timestamp;
   public ended?: proto.Timestamp;
   public creator: proto.ID;
-  public users: Array<proto.ID>;
+  public users: ReadonlyArray<proto.ID>;
   public direct: boolean;
   public orgId?: proto.ID;
   public abstract readonly callType: CallType;
@@ -63,7 +63,7 @@ export abstract class Call implements wireEntities.Call {
 
     // By default do nothing:
     this.onActiveDeviceCallback = (e: callEvents.CallHandledOnDevice): void =>
-      this.log.warn('Event active device not handled: ' + e);
+      this.log.warn(`Event active device not handled: ${e}`);
 
     this.events.onConcreteEvent(callEvents.CallHandledOnDevice.tag, this.id, this.uuid,
       (e: callEvents.CallHandledOnDevice) => {
@@ -72,19 +72,19 @@ export abstract class Call implements wireEntities.Call {
       });
 
     this.onLeftCallback = (e: callEvents.Left): void =>
-      this.log.warn('Event LEFT not handled: ' + e);
+      this.log.warn(`Event LEFT not handled: ${e}`);
     this.onOfflineCallback = (e: callEvents.DeviceOffline): void =>
-      this.log.warn('Event DEVICE OFFLINE not handled: ' + e);
+      this.log.warn(`Event DEVICE OFFLINE not handled: ${e}`);
     this.onOnlineCallback = (e: callEvents.DeviceOnline): void =>
-      this.log.warn('Event DEVICE ONLINE not handled: ' + e);
+      this.log.warn(`Event DEVICE ONLINE not handled: ${e}`);
     this.onJoinedCallback = (e: callEvents.Joined): void =>
-      this.log.warn('Event JOIN not handled: ' + e);
+      this.log.warn(`Event JOIN not handled: ${e}`);
     this.onInvitedCallback = (e: callEvents.Invited): void =>
-      this.log.warn('Event INVITED not handled: ' + e);
+      this.log.warn(`Event INVITED not handled: ${e}`);
     this.onAnsweredCallback = (e: callEvents.Answered): void =>
-      this.log.warn('Event ANSWERED not handled: ' + e);
+      this.log.warn(`Event ANSWERED not handled: ${e}`);
     this.onRejectedCallback = (e: callEvents.Rejected): void =>
-      this.log.warn('Event REJECTED not handled: ' + e);
+      this.log.warn(`Event REJECTED not handled: ${e}`);
 
     if (this.creator === this.api.sessionId) {
       this.users = [];
@@ -127,11 +127,11 @@ export abstract class Call implements wireEntities.Call {
     this.pool.setConnectionConstraints(constraints);
   }
 
-  public getUsers(): Promise<Array<proto.ID>> {
+  public getUsers(): Promise<ReadonlyArray<proto.ID>> {
     return Promise.resolve(this.users);
   }
 
-  public getMessages(): Promise<Array<callEvents.CallEvent>> {
+  public getMessages(): Promise<ReadonlyArray<callEvents.CallEvent>> {
     return this.api.getCallHistory(this.id);
   }
 
@@ -202,7 +202,7 @@ export abstract class Call implements wireEntities.Call {
 
   private setupListeners(): void {
     this.events.onConcreteEvent(callEvents.Joined.tag, this.id, this.uuid, (e: callEvents.Joined) => {
-      this.users.push(e.authorId);
+      this.users = [...this.users, e.authorId];
       this.pool.create(e.authorId);
       this.onJoinedCallback(e);
     });

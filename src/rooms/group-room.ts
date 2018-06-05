@@ -30,7 +30,7 @@ export class GroupRoom extends Room {
     return room.roomType === RoomType.GROUP;
   }
 
-  public getUsers(): Promise<Array<proto.ID>> {
+  public getUsers(): Promise<ReadonlyArray<proto.ID>> {
     // NOTE No need to retrieve the list if it's cached here.
     return Promise.resolve(this.users);
   }
@@ -61,7 +61,7 @@ export class GroupRoom extends Room {
 
   protected defineCallbacks(): void {
     this.events.onConcreteEvent(roomEvents.Joined.tag, this.id, this.uuid, (e: roomEvents.Joined) => {
-      this.users.push(e.authorId);
+      this.users = [...this.users, e.authorId];
       this.onJoinedCallback(e);
     });
     this.events.onConcreteEvent(roomEvents.Left.tag, this.id, this.uuid, (e: roomEvents.Left) => {
@@ -79,7 +79,7 @@ export class GroupRoom extends Room {
         if (e.subtag in this.onCustomCallbacks) {
           this.onCustomCallbacks[e.subtag](e);
         } else {
-          this.events.notify(new errorEvents.Error('Unhandled custom message with subtag: : ' + e.subtag));
+          this.events.notify(new errorEvents.Error(`Unhandled custom message with subtag: : ${e.subtag}`));
         }
       }
     );
