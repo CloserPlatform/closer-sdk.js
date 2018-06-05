@@ -2,7 +2,6 @@
 import { EventHandler } from '../events/event-handler';
 import { apiKeyMock, config, log, sessionIdMock } from '../test-utils';
 import { chatEvents } from '../protocol/events/chat-events';
-import { decoder } from '../protocol/events/domain-event';
 import { errorEvents } from '../protocol/events/error-events';
 import { roomEvents } from '../protocol/events/room-events';
 import * as wireEntities from '../protocol/wire-entities';
@@ -144,7 +143,7 @@ const makeRoom = (type: RoomType): wireEntities.Room => {
     let uid: any;
 
     beforeEach(() => {
-      events = new EventHandler(log, decoder);
+      events = new EventHandler(log);
       api = new APIMock();
       const type = d === 'DirectRoom' ? RoomType.DIRECT : RoomType.GROUP;
       room = createRoom(makeRoom(type), log, events, api);
@@ -242,7 +241,7 @@ describe('DirectRoom', () => {
   let room: any;
 
   beforeEach(() => {
-    events = new EventHandler(log, decoder);
+    events = new EventHandler(log);
     api = new APIMock();
     room = createRoom(makeRoom(RoomType.DIRECT), log, events, api) as DirectRoom;
   });
@@ -261,7 +260,7 @@ describe('GroupRoom', () => {
   let room: GroupRoom;
 
   beforeEach(() => {
-    events = new EventHandler(log, decoder);
+    events = new EventHandler(log);
     api = new APIMock();
     room = createRoom(makeRoom(RoomType.GROUP), log, events, api) as GroupRoom;
   });
@@ -340,7 +339,7 @@ describe('GroupRoom', () => {
 });
 
 describe('GroupRoom, BusinessRoom, DirectRoom', () => {
-  const events = new EventHandler(log, decoder);
+  const events = new EventHandler(log);
   const api = new APIMock();
 
   it('should have proper roomType field defined', (done) => {

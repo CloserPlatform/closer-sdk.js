@@ -5,7 +5,6 @@ import {
   apiKeyMock, config, deviceIdMock, getStream, isWebRTCSupported, log, sessionIdMock, whenever
 } from '../test-utils';
 import { callEvents } from '../protocol/events/call-events';
-import { decoder } from '../protocol/events/domain-event';
 import { errorEvents } from '../protocol/events/error-events';
 import { ID } from '../protocol/protocol';
 import { Call as ProtoCall } from '../protocol/wire-entities';
@@ -134,7 +133,7 @@ const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
     let call: Call;
 
     beforeEach(() => {
-      events = new EventHandler(log, decoder);
+      events = new EventHandler(log);
       api = new APIMock(sessionIdMock);
       const callType = d === 'DirectCall' ? CallType.DIRECT : CallType.GROUP;
       call = createCall(makeCall(callType), config.chat.rtc, log, events, api);
@@ -359,7 +358,7 @@ describe('GroupCall', () => {
   let call: GroupCall;
 
   beforeEach(() => {
-    events = new EventHandler(log, decoder);
+    events = new EventHandler(log);
     api = new APIMock(sessionIdMock);
     call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api) as GroupCall;
   });
@@ -401,7 +400,7 @@ describe('GroupCall', () => {
 });
 
 describe('DirectCall, GroupCall', () => {
-  const events = new EventHandler(log, decoder);
+  const events = new EventHandler(log);
   const api = new APIMock(sessionIdMock);
 
   it('should have proper callType field defined', () => {

@@ -1,4 +1,3 @@
-import { Decoder } from '../codec';
 import { Logger } from '../logger';
 import { DomainEvent } from '../protocol/events/domain-event';
 import { ID, Type } from '../protocol/protocol';
@@ -10,11 +9,9 @@ export class EventHandler {
   private log: Logger;
   private perType: { [type: string]: Array<Callback<DomainEvent>> } = {};
   private perId: { [type: string]: { [id: string]: { [uuid: string]: Callback<DomainEvent> } } } = {};
-  private decoder: Decoder<DomainEvent>;
 
-  constructor(log: Logger, decoder: Decoder<DomainEvent>) {
+  constructor(log: Logger) {
     this.log = log;
-    this.decoder = decoder;
   }
 
   public notify(event: DomainEvent, onUnhandled?: (ev: DomainEvent) => void): void {

@@ -9,7 +9,6 @@ import {
   sleep,
   whenever
 } from '../test-utils';
-import { decoder } from '../protocol/events/domain-event';
 import { errorEvents } from '../protocol/events/error-events';
 import { rtcEvents } from '../protocol/events/rtc-events';
 import { ID } from '../protocol/protocol';
@@ -78,7 +77,7 @@ describe('RTCConnection', () => {
 
   beforeEach(() => {
     api = new APIMock();
-    events = new EventHandler(log, decoder);
+    events = new EventHandler(log);
     peerAtest = createRTCConnection(callIdMock, peerBId, config.chat.rtc, log, events, api);
   });
 
@@ -265,7 +264,7 @@ describe('RTCPool', () => {
   let pool: any;
 
   beforeEach(() => {
-    events = new EventHandler(log, decoder);
+    events = new EventHandler(log);
     api = new APIMock();
     pool = createRTCPool(callIdMock, config.chat.rtc, log, events, api);
   });

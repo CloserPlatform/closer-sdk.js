@@ -3,7 +3,6 @@ import { ApiKey } from './auth/auth';
 import { Config } from './config/config';
 import { EventHandler } from './events/event-handler';
 import * as logger from './logger';
-import { decoder } from './protocol/events/domain-event';
 import { ID } from './protocol/protocol';
 import { ArtichokeAPI } from './apis/artichoke-api';
 
@@ -18,7 +17,7 @@ export class Session {
     log.info('Configuration: ' + JSON.stringify(config));
 
     this.id = id;
-    const events: EventHandler = new EventHandler(log, decoder);
+    const events: EventHandler = new EventHandler(log);
     const chatApi = new ArtichokeAPI(id, apiKey, config.chat, log);
     this.chat = new Artichoke(config.chat, log, events, chatApi);
   }

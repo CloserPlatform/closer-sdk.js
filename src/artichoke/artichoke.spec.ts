@@ -2,7 +2,6 @@ import { Artichoke } from './artichoke';
 import { EventHandler } from '../events/event-handler';
 import { apiKeyMock, config, deviceIdMock, log, sessionIdMock } from '../test-utils';
 import { callEvents } from '../protocol/events/call-events';
-import { decoder } from '../protocol/events/domain-event';
 import { errorEvents } from '../protocol/events/error-events';
 import { internalEvents } from '../protocol/events/internal-events';
 import { roomEvents } from '../protocol/events/room-events';
@@ -40,7 +39,7 @@ describe('Artichoke', () => {
   let chat: Artichoke;
 
   beforeEach(() => {
-    events = new EventHandler(log, decoder);
+    events = new EventHandler(log);
     api = new APIMock();
     chat = new Artichoke(config.chat, log, events, api);
   });

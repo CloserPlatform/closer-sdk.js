@@ -36,7 +36,6 @@ export abstract class Call implements wireEntities.Call {
   private onOfflineCallback: Callback<callEvents.DeviceOffline>;
   private onOnlineCallback: Callback<callEvents.DeviceOnline>;
   private onJoinedCallback: Callback<callEvents.Joined>;
-  private onTransferredCallback: Callback<callEvents.CallHandledOnDevice>;
   private onAnsweredCallback: Callback<callEvents.Answered>;
   private onRejectedCallback: Callback<callEvents.Rejected>;
 

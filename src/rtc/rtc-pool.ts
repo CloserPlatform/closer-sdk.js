@@ -12,11 +12,8 @@ import { RTCConnection } from './rtc-connection';
 import { MediaStreamAndTrack } from './mediastream-and-track';
 import { RemoteStreamCallback } from './remote-stream-callback';
 import { createRTCConnection } from './create-rtc-connection';
-import { RandomUtils, UUID } from '../utils/random-utils';
 
 export class RTCPool {
-    private readonly uuid: UUID = RandomUtils.randomUUID();
-
     private api: ArtichokeAPI;
     private events: EventHandler;
     private log: Logger;

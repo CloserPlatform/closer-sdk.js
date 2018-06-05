@@ -66,6 +66,8 @@ describe('Utils', () => {
 
     jasmine.clock().tick(ms + 1);
     jasmine.clock().uninstall();
+
+    return bumpableTimeout;
   });
 
   it('BumpableTimeout should not fail if bumped within given timeout', (done) => {

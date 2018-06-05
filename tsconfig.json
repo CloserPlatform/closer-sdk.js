@@ -10,7 +10,7 @@
     "noImplicitThis": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
-    // "noUnusedLocals": true,
+    "noUnusedLocals": true,
     "noUnusedParameters": true,
     // "strictNullChecks": true,
     "removeComments": false,

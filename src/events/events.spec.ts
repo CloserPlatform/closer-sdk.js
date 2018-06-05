@@ -1,6 +1,5 @@
 import { EventHandler } from './event-handler';
 import { log } from '../test-utils';
-import { decoder } from '../protocol/events/domain-event';
 import { errorEvents } from '../protocol/events/error-events';
 import { roomEvents } from '../protocol/events/room-events';
 import MarkSent = roomEvents.MarkSent;
@@ -22,7 +21,7 @@ describe('Event Handler', () => {
   let events: EventHandler;
 
   beforeEach(() => {
-    events = new EventHandler(log, decoder);
+    events = new EventHandler(log);
   });
 
   it('should allow defining & invoking error handlers', () => {

@@ -24,7 +24,6 @@ export class ArtichokeAPI extends APIWithWebsocket {
     protected url: string;
 
     private deviceId: proto.ID;
-    private archivePath = 'archive/items';
     private callPath = 'calls';
     private roomPath = 'rooms';
     private pushNotifsPath = 'push';
