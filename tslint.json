@@ -201,7 +201,7 @@
       120
     ],
     "no-magic-numbers": true,
-    // "array-type": [true, "array"],
+    "array-type": [true, "array"],
     // "object-literal-shorthand": true,
     // "object-literal-key-quotes": [true, "as-needed"],
     "arrow-return-shorthand": [

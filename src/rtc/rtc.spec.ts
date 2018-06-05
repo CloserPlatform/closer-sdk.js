@@ -146,7 +146,7 @@ describe('RTCConnection', () => {
         // 4. Peers exchange candidates.
         // FIXME
         // tslint:disable-next-line:no-any
-        const candidates: Array<any> = [];
+        const candidates: any[] = [];
         api.onCandidate = (_call: any, peer: any, candidate: any): void => {
           candidates.push({peer, candidate});
         };

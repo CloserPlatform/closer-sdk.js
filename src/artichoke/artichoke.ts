@@ -110,7 +110,7 @@ export class Artichoke {
     this.events.onEvent(callEvents.Invited.tag, callback);
   }
 
-  public createCall(stream: MediaStream, users: Array<proto.ID>): Promise<GroupCall> {
+  public createCall(stream: MediaStream, users: proto.ID[]): Promise<GroupCall> {
     return this.wrapCall(this.api.createCall(users), stream) as Promise<GroupCall>; // Trust me.
   }
 
@@ -122,17 +122,17 @@ export class Artichoke {
     return this.wrapCall(this.api.getCall(call));
   }
 
-  public getCalls(): Promise<Array<Call>> {
+  public getCalls(): Promise<Call[]> {
     return PromiseUtils.wrapPromise(this.api.getCalls(),
                        (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
-  public getActiveCalls(): Promise<Array<Call>> {
+  public getActiveCalls(): Promise<Call[]> {
     return PromiseUtils.wrapPromise(this.api.getActiveCalls(),
                       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
 
-  public getCallsWithPendingInvitations(): Promise<Array<Call>> {
+  public getCallsWithPendingInvitations(): Promise<Call[]> {
     return PromiseUtils.wrapPromise(this.api.getCallsWithPendingInvitations(),
       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
   }
@@ -158,11 +158,11 @@ export class Artichoke {
     return this.wrapRoom(this.api.getRoom(room));
   }
 
-  public getRooms(): Promise<Array<Room>> {
+  public getRooms(): Promise<Room[]> {
     return PromiseUtils.wrapPromise(this.api.getRooms(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 
-  public getRoster(): Promise<Array<Room>> {
+  public getRoster(): Promise<Room[]> {
     return PromiseUtils.wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
   }
 

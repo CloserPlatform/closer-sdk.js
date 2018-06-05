@@ -42,7 +42,7 @@ export interface PushRegistration {
   pushId: ID;
 }
 
-export const createCall = (users: Array<ID>): CreateCall =>
+export const createCall = (users: ID[]): CreateCall =>
   ({
     users
   });
@@ -80,12 +80,12 @@ export const pushRegistration = (pushId: ID): PushRegistration =>
   });
 
 export interface HistoryFilter {
-  filter: Array<string>;
-  customFilter: Array<string>;
+  filter: string[];
+  customFilter: string[];
 }
 
 export interface Paginated<T> {
-  items: Array<T>;
+  items: T[];
   offset: number;
   limit: number;
 }

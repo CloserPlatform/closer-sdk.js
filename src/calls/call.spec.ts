@@ -117,7 +117,7 @@ const makeCall = (callType: CallType): ProtoCall => {
   }
 };
 
-const makeGroupCall = (creator: ID, users: Array<ID>): ProtoCall =>
+const makeGroupCall = (creator: ID, users: ID[]): ProtoCall =>
   ({
     id: callId,
     created: 123,

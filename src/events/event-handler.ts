@@ -7,7 +7,7 @@ export type Callback<T> = (arg: T) => void;
 
 export class EventHandler {
   private log: Logger;
-  private perType: { [type: string]: Array<Callback<DomainEvent>> } = {};
+  private perType: { [type: string]: Callback<DomainEvent>[] } = {};
   private perId: { [type: string]: { [id: string]: { [uuid: string]: Callback<DomainEvent> } } } = {};
 
   constructor(log: Logger) {

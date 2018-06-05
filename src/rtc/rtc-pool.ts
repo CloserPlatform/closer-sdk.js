@@ -25,7 +25,7 @@ export class RTCPool {
     private answerOptions?: RTCAnswerOptions;
 
     private connections: { [user: string]: RTCConnection };
-    private tracks: Array<MediaStreamAndTrack>;
+    private tracks: MediaStreamAndTrack[];
     private onRemoteStreamCallback: RemoteStreamCallback;
 
     constructor(call: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {

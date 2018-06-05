@@ -17,7 +17,7 @@ export abstract class Room implements wireEntities.Room {
     public id: proto.ID;
     public name: string;
     public created: proto.Timestamp;
-    public users: Array<proto.ID>;
+    public users: proto.ID[];
     public direct: boolean;
     public orgId?: proto.ID;
     public marks: { [type: string]: proto.Timestamp };
@@ -61,7 +61,7 @@ export abstract class Room implements wireEntities.Room {
         return this.doGetHistory(this.api.getRoomHistoryPage(this.id, offset, limit, filter));
     }
 
-    public getUsers(): Promise<Array<proto.ID>> {
+    public getUsers(): Promise<proto.ID[]> {
         return this.api.getRoomUsers(this.id);
     }
 

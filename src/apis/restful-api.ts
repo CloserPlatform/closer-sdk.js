@@ -6,16 +6,16 @@ import { HttpCodes } from '../utils/http-codes';
 
 export class RESTfulAPI {
 
-  public postRaw: <Body>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body) => Promise<XMLHttpRequest> =
+  public postRaw: <Body>(path: string[], headers?: HeaderValue[], body?: Body) => Promise<XMLHttpRequest> =
     this.httpRequestWithBody('POST');
 
-  public deleteRaw: <Body>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body) => Promise<XMLHttpRequest> =
+  public deleteRaw: <Body>(path: string[], headers?: HeaderValue[], body?: Body) => Promise<XMLHttpRequest> =
     this.httpRequestWithBody('DELETE');
 
   constructor(protected log: Logger) {
   }
 
-  public getRaw(path: Array<string>, headers?: Array<HeaderValue>): Promise<XMLHttpRequest> {
+  public getRaw(path: string[], headers?: HeaderValue[]): Promise<XMLHttpRequest> {
     return new Promise<XMLHttpRequest>((resolve, reject): void => {
       const url = path.join('/');
       this.log.debug(`GET ${url}`);
@@ -28,15 +28,15 @@ export class RESTfulAPI {
     });
   }
 
-  public get<Response>(path: Array<string>, headers?: Array<HeaderValue>): Promise<Response> {
+  public get<Response>(path: string[], headers?: HeaderValue[]): Promise<Response> {
     return this.getRaw(path, headers).then((resp) => this.parseData<Response>(resp));
   }
 
-  public post<Body, Response>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<Response> {
+  public post<Body, Response>(path: string[], headers?: HeaderValue[], body?: Body): Promise<Response> {
     return this.postRaw(path, headers, body).then((resp) => this.parseData<Response>(resp));
   }
 
-  public delete<Body, Response>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<Response> {
+  public delete<Body, Response>(path: string[], headers?: HeaderValue[], body?: Body): Promise<Response> {
     return this.deleteRaw(path, headers, body).then((resp) => this.parseData<Response>(resp));
   }
 
@@ -69,8 +69,8 @@ export class RESTfulAPI {
   }
 
   private httpRequestWithBody(method: 'POST' | 'DELETE'):
-  <Body>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body) => Promise<XMLHttpRequest> {
-    return <Body>(path: Array<string>, headers?: Array<HeaderValue>, body?: Body): Promise<XMLHttpRequest> =>
+  <Body>(path: string[], headers?: HeaderValue[], body?: Body) => Promise<XMLHttpRequest> {
+    return <Body>(path: string[], headers?: HeaderValue[], body?: Body): Promise<XMLHttpRequest> =>
       new Promise<XMLHttpRequest>((resolve, reject): void => {
         const url = path.join('/');
 

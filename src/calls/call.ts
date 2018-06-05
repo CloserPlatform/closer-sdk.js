@@ -20,7 +20,7 @@ export abstract class Call implements wireEntities.Call {
   public created: proto.Timestamp;
   public ended?: proto.Timestamp;
   public creator: proto.ID;
-  public users: Array<proto.ID>;
+  public users: proto.ID[];
   public direct: boolean;
   public orgId?: proto.ID;
   public abstract readonly callType: CallType;
@@ -127,11 +127,11 @@ export abstract class Call implements wireEntities.Call {
     this.pool.setConnectionConstraints(constraints);
   }
 
-  public getUsers(): Promise<Array<proto.ID>> {
+  public getUsers(): Promise<proto.ID[]> {
     return Promise.resolve(this.users);
   }
 
-  public getMessages(): Promise<Array<callEvents.CallEvent>> {
+  public getMessages(): Promise<callEvents.CallEvent[]> {
     return this.api.getCallHistory(this.id);
   }
 

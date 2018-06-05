@@ -30,7 +30,7 @@ export class GroupRoom extends Room {
     return room.roomType === RoomType.GROUP;
   }
 
-  public getUsers(): Promise<Array<proto.ID>> {
+  public getUsers(): Promise<proto.ID[]> {
     // NOTE No need to retrieve the list if it's cached here.
     return Promise.resolve(this.users);
   }

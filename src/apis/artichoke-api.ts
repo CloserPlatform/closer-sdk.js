@@ -72,7 +72,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.send(new rtcCommands.SendCandidate(callId, sessionId, candidate));
   }
 
-  public createCall(sessionIds: Array<proto.ID>): Promise<wireEntities.Call> {
+  public createCall(sessionIds: proto.ID[]): Promise<wireEntities.Call> {
     return this.postAuth<proto.CreateCall, wireEntities.Call>(
       [this.url, this.callPath], proto.createCall(sessionIds));
   }
@@ -86,24 +86,24 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<wireEntities.Call>([this.url, this.callPath, callId]);
   }
 
-  public getCalls(): Promise<Array<wireEntities.Call>> {
-    return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath]);
+  public getCalls(): Promise<wireEntities.Call[]> {
+    return this.getAuth<wireEntities.Call[]>([this.url, this.callPath]);
   }
 
-  public getActiveCalls(): Promise<Array<wireEntities.Call>> {
-    return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath, 'active']);
+  public getActiveCalls(): Promise<wireEntities.Call[]> {
+    return this.getAuth<wireEntities.Call[]>([this.url, this.callPath, 'active']);
   }
 
-  public getCallsWithPendingInvitations(): Promise<Array<wireEntities.Call>> {
-    return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath, 'pending-invitation']);
+  public getCallsWithPendingInvitations(): Promise<wireEntities.Call[]> {
+    return this.getAuth<wireEntities.Call[]>([this.url, this.callPath, 'pending-invitation']);
   }
 
-  public getCallHistory(callId: proto.ID): Promise<Array<callEvents.CallEvent>> {
-    return this.getAuth<Array<callEvents.CallEvent>>([this.url, this.callPath, callId, 'history']);
+  public getCallHistory(callId: proto.ID): Promise<callEvents.CallEvent[]> {
+    return this.getAuth<callEvents.CallEvent[]>([this.url, this.callPath, callId, 'history']);
   }
 
-  public getCallUsers(callId: proto.ID): Promise<Array<proto.ID>> {
-    return this.getAuth<Array<proto.ID>>([this.url, this.callPath, callId, 'users']);
+  public getCallUsers(callId: proto.ID): Promise<proto.ID[]> {
+    return this.getAuth<proto.ID[]>([this.url, this.callPath, callId, 'users']);
   }
 
   public answerCall(callId: proto.ID): Promise<void> {
@@ -148,16 +148,16 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.getAuth<wireEntities.Room>([this.url, this.roomPath, roomId]);
   }
 
-  public getRooms(): Promise<Array<wireEntities.Room>> {
-    return this.getAuth<Array<wireEntities.Room>>([this.url, this.roomPath]);
+  public getRooms(): Promise<wireEntities.Room[]> {
+    return this.getAuth<wireEntities.Room[]>([this.url, this.roomPath]);
   }
 
-  public getRoster(): Promise<Array<wireEntities.Room>> {
-    return this.getAuth<Array<wireEntities.Room>>([this.url, this.roomPath, 'roster']);
+  public getRoster(): Promise<wireEntities.Room[]> {
+    return this.getAuth<wireEntities.Room[]>([this.url, this.roomPath, 'roster']);
   }
 
-  public getRoomUsers(roomId: proto.ID): Promise<Array<proto.ID>> {
-    return this.getAuth<Array<proto.ID>>([this.url, this.roomPath, roomId, 'users']);
+  public getRoomUsers(roomId: proto.ID): Promise<proto.ID[]> {
+    return this.getAuth<proto.ID[]>([this.url, this.roomPath, roomId, 'users']);
   }
 
   public getRoomHistoryLast(roomId: proto.ID,
@@ -238,16 +238,16 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.delete<Body, Response>(path, this.apiHeaders.getHeaders(), body);
   }
 
-  private getAuth<Response>(path: Array<string>): Promise<Response> {
+  private getAuth<Response>(path: string[]): Promise<Response> {
     return this.get<Response>(path, this.apiHeaders.getHeaders());
   }
 
-  private getAuthPaginated<Item>(path: Array<string>): Promise<proto.Paginated<Item>> {
+  private getAuthPaginated<Item>(path: string[]): Promise<proto.Paginated<Item>> {
     return this.getRaw(path, this.apiHeaders.getHeaders())
       .then((resp) => {
         let items;
         try {
-          items = JSON.parse(resp.responseText) as Array<Item>;
+          items = JSON.parse(resp.responseText) as Item[];
         } catch (err) {
           this.log.debug(
             `Api - getAuthPaginated: Cannot parse response: ${err}\n Tried to parse:  ${resp.responseText}`);
