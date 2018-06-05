@@ -49,11 +49,10 @@ describe('Utils', () => {
   });
 
   it('onceDelayed should only execute once', (done) => {
-    let timer: number;
-    timer = TimeUtils.onceDelayed(timer, 50, () => {
+    const timer = TimeUtils.onceDelayed(0, 50, () => {
       done.fail();
     });
-    timer = TimeUtils.onceDelayed(timer, 100, () => {
+    TimeUtils.onceDelayed(timer, 100, () => {
       done();
     });
   });

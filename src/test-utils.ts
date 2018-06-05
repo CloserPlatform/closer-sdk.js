@@ -4,18 +4,19 @@ import {} from 'jasmine';
 import { Config, load } from './config/config';
 import * as logger from '../src/logger';
 import { BrowserUtils } from './utils/browser-utils';
+import { LogLevel } from './logger';
 
 export const log = new logger.ConsoleLogger(logger.LogLevel.WARN);
 
 // tslint:disable-next-line:no-object-literal-type-assertion
 export const config: Config = load({
-  debug: true,
+  logLevel: LogLevel.DEBUG,
   chat: {
     rtc: {
       iceServers: []
     }
   }
-} as Config);
+});
 
 export const sessionIdMock = '12345678';
 export const deviceIdMock = '6515ea03-7421-4fa5-b02c-bf339c18abbf';

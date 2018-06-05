@@ -164,9 +164,9 @@ export class ArtichokeAPI extends APIWithWebsocket {
     public getRoomHistoryLast(roomId: proto.ID,
                        count: number,
                        filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
-        const endpoint = 'history/last?count=' + count + (filter) ?
+        const endpoint = 'history/last?count=' + count + ((filter) ?
             filter.filter.map((tag) => '&filter=' + tag).join('') +
-            filter.customFilter.map((tag) => '&customFilter=' + tag).join('') : '';
+            filter.customFilter.map((tag) => '&customFilter=' + tag).join('') : '');
 
         return this.getAuthPaginated<roomEvents.RoomEvent>([this.url, this.roomPath, roomId, endpoint]);
     }
@@ -176,8 +176,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
                        limit: number,
                        filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
         const endpoint = 'history/page?offset=' + offset + '&limit=' + limit +
-            (filter) ? filter.filter.map((tag) => '&filter=' + tag).join('')
-            + filter.customFilter.map((tag) => '&customFilter=' + tag).join('') : '';
+          ((filter) ? filter.filter.map((tag) => '&filter=' + tag).join('')
+            + filter.customFilter.map((tag) => '&customFilter=' + tag).join('') : '');
 
         return this.getAuthPaginated<roomEvents.RoomEvent>([this.url, this.roomPath, roomId, endpoint]);
     }
@@ -250,8 +250,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
                         + '\n Tried to parse: ' + resp.responseText);
                     throw new Error('Api - getAuthPaginated: Cannot parse response');
                 }
-                const offset = +resp.getResponseHeader('X-Paging-Offset');
-                const limit = +resp.getResponseHeader('X-Paging-Limit');
+                const offset = parseInt(resp.getResponseHeader('X-Paging-Offset') || '0', 10);
+                const limit = parseInt(resp.getResponseHeader('X-Paging-Limit') || '0', 10);
 
                 return {
                     items,

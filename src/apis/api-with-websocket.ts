@@ -12,7 +12,7 @@ import { PromiseFunctions } from '../utils/promise-utils';
 
 export class APIWithWebsocket extends RESTfulAPI {
   private socket: JSONWebSocket;
-  private promises: { [ref: string]: PromiseFunctions } = {};
+  private promises: { [ref: string]: PromiseFunctions<DomainEvent> } = {};
 
   constructor(log: Logger) {
     super(log);
@@ -31,12 +31,13 @@ export class APIWithWebsocket extends RESTfulAPI {
     return this.socket.send(command);
   }
 
-  public ask<Response extends DomainEvent>(cmd: roomCommand.SendMessage | roomCommand.SendCustomMessage):
-  Promise<Response> {
-    return new Promise<Response>((resolve, reject): void => {
+  public ask<ResponseT extends DomainEvent>(cmd: roomCommand.SendMessage | roomCommand.SendCustomMessage):
+  Promise<ResponseT> {
+    return new Promise<ResponseT>((resolve, reject): void => {
       const ref = 'ref' + Date.now(); // FIXME Use UUID instead.
       this.promises[ref] = {
-        resolve,
+        // tslint:disable-next-line:no-unnecessary-callback-wrapper
+        resolve: (ev: ResponseT): void => resolve(ev),
         reject
       };
       cmd.ref = ref;

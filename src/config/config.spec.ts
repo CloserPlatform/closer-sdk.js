@@ -1,4 +1,4 @@
-import { Config, defaultConfig, load } from './config';
+import { defaultConfig, load, UserConfig } from './config';
 import { LogLevel } from '../logger';
 import { ObjectUtils } from '../utils/object-utils';
 
@@ -35,7 +35,7 @@ describe('Config', () => {
   });
 
   it('should not override supplied in config', () => {
-    const cfg: Config = {
+    const cfg: UserConfig = {
       ratel: {
         hostname: 'ratel-host'
       }
@@ -48,7 +48,8 @@ describe('Config', () => {
   });
 
   it('should merge config deeply', () => {
-    const cfg: Config = {
+    // tslint:disable-next-line:no-any
+    const cfg: any = {
       chat: {
         rtc: {
           rtcpMuxPolicy: 'require',
@@ -62,7 +63,8 @@ describe('Config', () => {
 
     const d = ObjectUtils.deepcopy(defaultConfig);
     const copy = ObjectUtils.deepcopy(cfg);
-    const c = load(cfg);
+    // tslint:disable-next-line:no-any
+    const c: any = load(cfg);
 
     expect(c.chat.rtc.rtcpMuxPolicy).toEqual(copy.chat.rtc.rtcpMuxPolicy);
     expect(c.chat.rtc.rtcpMuxPolicy).not.toEqual(d.chat.rtc.rtcpMuxPolicy);

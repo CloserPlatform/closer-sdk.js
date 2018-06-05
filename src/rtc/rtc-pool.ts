@@ -20,9 +20,9 @@ export class RTCPool {
 
     private call: ID;
     private config: RTCConfig;
-    private connectionConstraints: RTCConnectionConstraints;
-    private offerOptions: HackedRTCOfferOptions;
-    private answerOptions: RTCAnswerOptions;
+    private connectionConstraints?: RTCConnectionConstraints;
+    private offerOptions?: HackedRTCOfferOptions;
+    private answerOptions?: RTCAnswerOptions;
 
     private connections: { [user: string]: RTCConnection };
     private tracks: Array<MediaStreamAndTrack>;

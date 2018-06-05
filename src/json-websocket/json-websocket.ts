@@ -5,7 +5,7 @@ import { DomainEvent } from '../protocol/events/domain-event';
 import { Callback } from '../events/event-handler';
 
 export class JSONWebSocket {
-  private socket: WebSocket;
+  private socket?: WebSocket;
 
   private onCloseCallback: Callback<CloseEvent>;
   private onErrorCallback: Callback<Event>;
@@ -26,13 +26,17 @@ export class JSONWebSocket {
       this.log.info('WS connected to: ' + url);
     };
 
-    this.setupOnClose(this.onCloseCallback);
+    JSONWebSocket.setupOnClose(this.socket, this.onCloseCallback);
     this.socket.onerror = this.onErrorCallback;
     this.socket.onmessage = this.onMessageCallback;
   }
 
   public disconnect(): void {
-    this.socket.close();
+    if (this.socket) {
+      this.socket.close();
+    } else {
+      this.log.error('Cannot close: Socket is not connected');
+    }
   }
 
   public onDisconnect(callback: Callback<CloseEvent>): void {
@@ -44,7 +48,7 @@ export class JSONWebSocket {
     };
 
     if (this.socket) {
-      this.setupOnClose(this.onCloseCallback);
+      JSONWebSocket.setupOnClose(this.socket, this.onCloseCallback);
     }
   }
 
@@ -82,6 +86,10 @@ export class JSONWebSocket {
     }
   }
 
+  private static setupOnClose(socket: WebSocket, callback: Callback<CloseEvent>): void {
+    socket.onclose = callback;
+  }
+
   private cleanupBeforeConnecting(): void {
     if (this.socket) {
       this.log.info('Cleaning up previous websocket');
@@ -93,14 +101,10 @@ export class JSONWebSocket {
 
   private unregisterCallbacks(): void {
     if (this.socket) {
-      this.socket.onclose = undefined;
-      this.socket.onerror = undefined;
-      this.socket.onmessage = undefined;
-      this.socket.onopen = undefined;
+      this.socket.onclose = (): void => undefined;
+      this.socket.onerror = (): void => undefined;
+      this.socket.onmessage = (): void => undefined;
+      this.socket.onopen = (): void => undefined;
     }
-  }
-
-  private setupOnClose(callback: Callback<CloseEvent>): void {
-    this.socket.onclose = callback;
   }
 }

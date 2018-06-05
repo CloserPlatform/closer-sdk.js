@@ -1,4 +1,4 @@
-import { Config, load } from '../config/config';
+import { Config, load, UserConfig } from '../config/config';
 import * as logger from '../logger';
 import { ID, Timestamp } from '../protocol/protocol';
 import { Session } from '../session';
@@ -24,7 +24,7 @@ export interface AgentContext {
   apiKey: ApiKey;
 }
 
-export const withApiKey = (sessionId: ID, apiKey: ApiKey, config: Config): Promise<Session> =>
+export const withApiKey = (sessionId: ID, apiKey: ApiKey, config: UserConfig): Promise<Session> =>
   Promise.resolve(new Session(sessionId, apiKey, load(config)));
 
 export const withSignedAuth = (sessionData: SessionData, config: Config): Promise<Session> => {
