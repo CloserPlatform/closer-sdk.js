@@ -133,7 +133,7 @@
     "prefer-method-signature": true,
     "prefer-object-spread": true,
     "prefer-switch": true,
-    // "prefer-template": true,
+    "prefer-template": true,
     // "promise-function-async": true,
     "radix": true,
     "return-undefined": true,

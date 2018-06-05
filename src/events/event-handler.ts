@@ -16,7 +16,7 @@ export class EventHandler {
 
   public notify(event: DomainEvent, onUnhandled?: (ev: DomainEvent) => void): void {
     if ([this.notifyById(event), this.notifyByType(event)].every((r) => !r)) {
-      this.log.info('Unhandled event ' + event.tag + ': ' + event);
+      this.log.info(`Unhandled event ${event.tag}: ${event}`);
       if (onUnhandled) {
         onUnhandled(event);
       }
@@ -24,7 +24,7 @@ export class EventHandler {
   }
 
   public onEvent(type: Type, callback: Callback<DomainEvent>): void {
-    this.log.debug('Registered callback for event type ' + type);
+    this.log.debug(`Registered callback for event type ${type}`);
 
     if (!(type in this.perType)) {
       this.perType[type] = [];
@@ -33,7 +33,7 @@ export class EventHandler {
   }
 
   public onConcreteEvent(type: Type, id: ID, uuid: UUID, callback: Callback<DomainEvent>): void {
-    this.log.debug('Registered callback for event type ' + type + ', id ' + id);
+    this.log.debug(`Registered callback for event type ${type}, id ${id}`);
 
     if (!(type in this.perId)) {
       this.perId[type] = {};
@@ -46,7 +46,7 @@ export class EventHandler {
 
   private notifyByType(event: DomainEvent): boolean {
     if (event.tag in this.perType) {
-      this.log.debug('Running callbacks for event type ' + event.tag);
+      this.log.debug(`Running callbacks for event type ${event.tag}`);
       this.perType[event.tag].forEach((cb) => cb(event));
 
       return true;
@@ -60,7 +60,7 @@ export class EventHandler {
     // tslint:disable-next-line:no-any
     const id = (event as any).roomId || (event as any).callId;
     if (id && event.tag in this.perId && id in this.perId[event.tag]) {
-      this.log.debug('Running callbacks for event type ' + event.tag + ', id ' + id);
+      this.log.debug(`Running callbacks for event type ${event.tag}, id ${id}`);
       const callbacksForId = this.perId[event.tag][id];
       Object.keys(callbacksForId).forEach((uuid) => callbacksForId[uuid](event));
 

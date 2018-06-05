@@ -79,7 +79,7 @@ export class GroupRoom extends Room {
         if (e.subtag in this.onCustomCallbacks) {
           this.onCustomCallbacks[e.subtag](e);
         } else {
-          this.events.notify(new errorEvents.Error('Unhandled custom message with subtag: : ' + e.subtag));
+          this.events.notify(new errorEvents.Error(`Unhandled custom message with subtag: : ${e.subtag}`));
         }
       }
     );

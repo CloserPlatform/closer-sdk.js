@@ -19,245 +19,248 @@ import { Callback } from '../events/event-handler';
 import { APIWithWebsocket } from './api-with-websocket';
 
 export class ArtichokeAPI extends APIWithWebsocket {
-    public sessionId: proto.ID;
+  public sessionId: proto.ID;
 
-    protected url: string;
+  protected url: string;
 
-    private deviceId: proto.ID;
-    private callPath = 'calls';
-    private roomPath = 'rooms';
-    private pushNotifsPath = 'push';
+  private deviceId: proto.ID;
+  private callPath = 'calls';
+  private roomPath = 'rooms';
+  private pushNotifsPath = 'push';
 
-    private wsUrl: string;
+  private wsUrl: string;
 
-    private apiHeaders: ApiHeaders = new ApiHeaders();
+  private apiHeaders: ApiHeaders = new ApiHeaders();
 
-    constructor(sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, log: Logger) {
-        super(log);
+  constructor(sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, log: Logger) {
+    super(log);
 
-        this.sessionId = sessionId;
-        this.apiHeaders.apiKey = apiKey;
+    this.sessionId = sessionId;
+    this.apiHeaders.apiKey = apiKey;
 
-        const pathname = config.pathname ? config.pathname : '';
+    const pathname = config.pathname ? config.pathname : '';
 
-        const host = config.hostname + (config.port === '' ? '' : ':' + config.port);
-        this.url = [config.protocol, '//', host, pathname, '/api'].join('');
-        const wsProtocol = config.protocol === 'https:' ? 'wss:' : 'ws:';
-        this.wsUrl = [wsProtocol, '//', host, pathname, '/ws/', apiKey].join('');
-    }
+    const host = config.hostname + (config.port === '' ? '' : `:${config.port}`);
+    this.url = [config.protocol, '//', host, pathname, '/api'].join('');
+    const wsProtocol = config.protocol === 'https:' ? 'wss:' : 'ws:';
+    this.wsUrl = [wsProtocol, '//', host, pathname, '/ws/', apiKey].join('');
+  }
 
-    public onEvent(callback: Callback<DomainEvent>): void {
-        super.onEvent((event: DomainEvent) => {
-            // FIXME Apply this bandaid elsewhere.
-            if (event.tag === serverEvents.Hello.tag) {
-                this.deviceId = (event as serverEvents.Hello).deviceId;
-                this.apiHeaders.deviceId = this.deviceId;
-            }
+  public onEvent(callback: Callback<DomainEvent>): void {
+    super.onEvent((event: DomainEvent) => {
+      // FIXME Apply this bandaid elsewhere.
+      if (event.tag === serverEvents.Hello.tag) {
+        this.deviceId = (event as serverEvents.Hello).deviceId;
+        this.apiHeaders.deviceId = this.deviceId;
+      }
 
-            callback(event);
-        });
-    }
+      callback(event);
+    });
+  }
 
-    public connect(): void {
-        const url = this.deviceId ? [this.wsUrl, '/reconnect/', this.deviceId].join('') : this.wsUrl;
-        super.connect(url);
-    }
+  public connect(): void {
+    const url = this.deviceId ? [this.wsUrl, '/reconnect/', this.deviceId].join('') : this.wsUrl;
+    super.connect(url);
+  }
 
-    // GroupCall API:
-    public sendDescription(callId: proto.ID, sessionId: proto.ID, description: RTCSessionDescriptionInit):
-    Promise<void> {
-        return this.send(new rtcCommands.SendDescription(callId, sessionId, description));
-    }
+  // GroupCall API:
+  public sendDescription(callId: proto.ID, sessionId: proto.ID, description: RTCSessionDescriptionInit): Promise<void> {
+    return this.send(new rtcCommands.SendDescription(callId, sessionId, description));
+  }
 
-    public sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: RTCIceCandidate): Promise<void> {
-        return this.send(new rtcCommands.SendCandidate(callId, sessionId, candidate));
-    }
+  public sendCandidate(callId: proto.ID, sessionId: proto.ID, candidate: RTCIceCandidate): Promise<void> {
+    return this.send(new rtcCommands.SendCandidate(callId, sessionId, candidate));
+  }
 
-    public createCall(sessionIds: Array<proto.ID>): Promise<wireEntities.Call> {
-        return this.postAuth<proto.CreateCall, wireEntities.Call>(
-            [this.url, this.callPath], proto.createCall(sessionIds));
-    }
+  public createCall(sessionIds: Array<proto.ID>): Promise<wireEntities.Call> {
+    return this.postAuth<proto.CreateCall, wireEntities.Call>(
+      [this.url, this.callPath], proto.createCall(sessionIds));
+  }
 
-    public createDirectCall(sessionId: proto.ID, timeout?: number): Promise<wireEntities.Call> {
-        return this.postAuth<proto.CreateDirectCall, wireEntities.Call>([this.url, this.callPath],
-            proto.createDirectCall(sessionId, timeout));
-    }
+  public createDirectCall(sessionId: proto.ID, timeout?: number): Promise<wireEntities.Call> {
+    return this.postAuth<proto.CreateDirectCall, wireEntities.Call>([this.url, this.callPath],
+      proto.createDirectCall(sessionId, timeout));
+  }
 
-    public getCall(callId: proto.ID): Promise<wireEntities.Call> {
-        return this.getAuth<wireEntities.Call>([this.url, this.callPath, callId]);
-    }
+  public getCall(callId: proto.ID): Promise<wireEntities.Call> {
+    return this.getAuth<wireEntities.Call>([this.url, this.callPath, callId]);
+  }
 
-    public getCalls(): Promise<Array<wireEntities.Call>> {
-        return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath]);
-    }
+  public getCalls(): Promise<Array<wireEntities.Call>> {
+    return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath]);
+  }
 
-    public getActiveCalls(): Promise<Array<wireEntities.Call>> {
-        return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath, 'active']);
-    }
+  public getActiveCalls(): Promise<Array<wireEntities.Call>> {
+    return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath, 'active']);
+  }
 
-    public getCallsWithPendingInvitations(): Promise<Array<wireEntities.Call>> {
-        return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath, 'pending-invitation']);
-    }
+  public getCallsWithPendingInvitations(): Promise<Array<wireEntities.Call>> {
+    return this.getAuth<Array<wireEntities.Call>>([this.url, this.callPath, 'pending-invitation']);
+  }
 
-    public getCallHistory(callId: proto.ID): Promise<Array<callEvents.CallEvent>> {
-        return this.getAuth<Array<callEvents.CallEvent>>([this.url, this.callPath, callId, 'history']);
-    }
+  public getCallHistory(callId: proto.ID): Promise<Array<callEvents.CallEvent>> {
+    return this.getAuth<Array<callEvents.CallEvent>>([this.url, this.callPath, callId, 'history']);
+  }
 
-    public getCallUsers(callId: proto.ID): Promise<Array<proto.ID>> {
-        return this.getAuth<Array<proto.ID>>([this.url, this.callPath, callId, 'users']);
-    }
+  public getCallUsers(callId: proto.ID): Promise<Array<proto.ID>> {
+    return this.getAuth<Array<proto.ID>>([this.url, this.callPath, callId, 'users']);
+  }
 
-    public answerCall(callId: proto.ID): Promise<void> {
-        return this.postAuth<void, void>([this.url, this.callPath, callId, 'answer']);
-    }
+  public answerCall(callId: proto.ID): Promise<void> {
+    return this.postAuth<void, void>([this.url, this.callPath, callId, 'answer']);
+  }
 
-    public rejectCall(callId: proto.ID, reason: CallReason): Promise<void> {
-        return this.postAuth<proto.LeaveReason, void>([this.url, this.callPath, callId, 'reject'],
-            proto.leaveReason(reason));
-    }
+  public rejectCall(callId: proto.ID, reason: CallReason): Promise<void> {
+    return this.postAuth<proto.LeaveReason, void>([this.url, this.callPath, callId, 'reject'],
+      proto.leaveReason(reason));
+  }
 
-    public joinCall(callId: proto.ID): Promise<void> {
-        return this.postAuth<void, void>([this.url, this.callPath, callId, 'join']);
-    }
+  public joinCall(callId: proto.ID): Promise<void> {
+    return this.postAuth<void, void>([this.url, this.callPath, callId, 'join']);
+  }
 
-    public pullCall(callId: proto.ID): Promise<void> {
-        return this.postAuth<void, void>([this.url, this.callPath, callId, 'pull']);
-    }
+  public pullCall(callId: proto.ID): Promise<void> {
+    return this.postAuth<void, void>([this.url, this.callPath, callId, 'pull']);
+  }
 
-    public leaveCall(callId: proto.ID, reason: CallReason): Promise<void> {
-        return this.postAuth<proto.LeaveReason, void>([this.url, this.callPath, callId, 'leave'],
-            proto.leaveReason(reason));
-    }
+  public leaveCall(callId: proto.ID, reason: CallReason): Promise<void> {
+    return this.postAuth<proto.LeaveReason, void>([this.url, this.callPath, callId, 'leave'],
+      proto.leaveReason(reason));
+  }
 
-    public inviteToCall(callId: proto.ID, sessionId: proto.ID): Promise<void> {
-        return this.postAuth<void, void>([this.url, this.callPath, callId, 'invite', sessionId]);
-    }
+  public inviteToCall(callId: proto.ID, sessionId: proto.ID): Promise<void> {
+    return this.postAuth<void, void>([this.url, this.callPath, callId, 'invite', sessionId]);
+  }
 
-    // GroupRoom API:
-    public createRoom(name: string): Promise<wireEntities.Room> {
-        return this.postAuth<proto.CreateRoom, wireEntities.Room>([this.url, this.roomPath], proto.createRoom(name));
-    }
+  // GroupRoom API:
+  public createRoom(name: string): Promise<wireEntities.Room> {
+    return this.postAuth<proto.CreateRoom, wireEntities.Room>([this.url, this.roomPath], proto.createRoom(name));
+  }
 
-    public createDirectRoom(sessionId: proto.ID, context?: proto.Context): Promise<wireEntities.Room> {
-        return this.postAuth<proto.CreateDirectRoom, wireEntities.Room>(
-            [this.url, this.roomPath],
-            proto.createDirectRoom(sessionId, context)
-        );
-    }
+  public createDirectRoom(sessionId: proto.ID, context?: proto.Context): Promise<wireEntities.Room> {
+    return this.postAuth<proto.CreateDirectRoom, wireEntities.Room>(
+      [this.url, this.roomPath],
+      proto.createDirectRoom(sessionId, context)
+    );
+  }
 
-    public getRoom(roomId: proto.ID): Promise<wireEntities.Room> {
-        return this.getAuth<wireEntities.Room>([this.url, this.roomPath, roomId]);
-    }
+  public getRoom(roomId: proto.ID): Promise<wireEntities.Room> {
+    return this.getAuth<wireEntities.Room>([this.url, this.roomPath, roomId]);
+  }
 
-    public getRooms(): Promise<Array<wireEntities.Room>> {
-        return this.getAuth<Array<wireEntities.Room>>([this.url, this.roomPath]);
-    }
+  public getRooms(): Promise<Array<wireEntities.Room>> {
+    return this.getAuth<Array<wireEntities.Room>>([this.url, this.roomPath]);
+  }
 
-    public getRoster(): Promise<Array<wireEntities.Room>> {
-        return this.getAuth<Array<wireEntities.Room>>([this.url, this.roomPath, 'roster']);
-    }
+  public getRoster(): Promise<Array<wireEntities.Room>> {
+    return this.getAuth<Array<wireEntities.Room>>([this.url, this.roomPath, 'roster']);
+  }
 
-    public getRoomUsers(roomId: proto.ID): Promise<Array<proto.ID>> {
-        return this.getAuth<Array<proto.ID>>([this.url, this.roomPath, roomId, 'users']);
-    }
+  public getRoomUsers(roomId: proto.ID): Promise<Array<proto.ID>> {
+    return this.getAuth<Array<proto.ID>>([this.url, this.roomPath, roomId, 'users']);
+  }
 
-    public getRoomHistoryLast(roomId: proto.ID,
-                       count: number,
-                       filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
-        const endpoint = 'history/last?count=' + count + ((filter) ?
-            filter.filter.map((tag) => '&filter=' + tag).join('') +
-            filter.customFilter.map((tag) => '&customFilter=' + tag).join('') : '');
+  public getRoomHistoryLast(roomId: proto.ID,
+                            count: number,
+                            filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
+    const filters = filter ?
+      filter.filter.map(tag => `&filter=${tag}`).join('') +
+      filter.customFilter.map(tag => `&customFilter=${tag}`).join('') : '';
 
-        return this.getAuthPaginated<roomEvents.RoomEvent>([this.url, this.roomPath, roomId, endpoint]);
-    }
+    const endpoint = `history/last?count=${count}${filters}`;
 
-    public getRoomHistoryPage(roomId: proto.ID,
-                       offset: number,
-                       limit: number,
-                       filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
-        const endpoint = 'history/page?offset=' + offset + '&limit=' + limit +
-          ((filter) ? filter.filter.map((tag) => '&filter=' + tag).join('')
-            + filter.customFilter.map((tag) => '&customFilter=' + tag).join('') : '');
+    return this.getAuthPaginated<roomEvents.RoomEvent>([this.url, this.roomPath, roomId, endpoint]);
+  }
 
-        return this.getAuthPaginated<roomEvents.RoomEvent>([this.url, this.roomPath, roomId, endpoint]);
-    }
+  public getRoomHistoryPage(roomId: proto.ID,
+                            offset: number,
+                            limit: number,
+                            filter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
+    const filters = filter ?
+      filter.filter.map(tag => `&filter=${tag}`).join('') +
+      filter.customFilter.map((tag) => `&customFilter=${tag}`).join('') : '';
 
-    public joinRoom(roomId: proto.ID): Promise<void> {
-        return this.postAuth<void, void>([this.url, this.roomPath, roomId, 'join']);
-    }
+    const endpoint = `history/page?offset=${offset}&limit=${limit}${filters}`;
 
-    public leaveRoom(roomId: proto.ID): Promise<void> {
-        return this.postAuth<void, void>([this.url, this.roomPath, roomId, 'leave']);
-    }
+    return this.getAuthPaginated<roomEvents.RoomEvent>([this.url, this.roomPath, roomId, endpoint]);
+  }
 
-    public inviteToRoom(roomId: proto.ID, sessionId: proto.ID): Promise<void> {
-        return this.postAuth<proto.Invite, void>([this.url, this.roomPath, roomId, 'invite'], proto.invite(sessionId));
-    }
+  public joinRoom(roomId: proto.ID): Promise<void> {
+    return this.postAuth<void, void>([this.url, this.roomPath, roomId, 'join']);
+  }
 
-    // tslint:disable-next-line:ban-types
-    public sendMessage(roomId: proto.ID, body: string, context?: Object): Promise<chatEvents.Received> {
-        return this.ask<chatEvents.Received>(new roomCommand.SendMessage(roomId, body, context || {}));
-    }
+  public leaveRoom(roomId: proto.ID): Promise<void> {
+    return this.postAuth<void, void>([this.url, this.roomPath, roomId, 'leave']);
+  }
 
-    public sendCustom(roomId: proto.ID, body: string, subtag: string,
-               context: proto.Context): Promise<chatEvents.Received> {
-        return this.ask<chatEvents.Received>(new roomCommand.SendCustomMessage(roomId, body, subtag, context));
-    }
+  public inviteToRoom(roomId: proto.ID, sessionId: proto.ID): Promise<void> {
+    return this.postAuth<proto.Invite, void>([this.url, this.roomPath, roomId, 'invite'], proto.invite(sessionId));
+  }
 
-    public sendTyping(roomId: proto.ID): Promise<void> {
-        return this.send(new roomCommand.SendTyping(roomId));
-    }
+  // tslint:disable-next-line:ban-types
+  public sendMessage(roomId: proto.ID, body: string, context?: Object): Promise<chatEvents.Received> {
+    return this.ask<chatEvents.Received>(new roomCommand.SendMessage(roomId, body, context || {}));
+  }
 
-    public setMark(roomId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
-        return this.send(new roomCommand.SendMark(roomId, timestamp));
-    }
+  public sendCustom(roomId: proto.ID, body: string, subtag: string,
+                    context: proto.Context): Promise<chatEvents.Received> {
+    return this.ask<chatEvents.Received>(new roomCommand.SendCustomMessage(roomId, body, subtag, context));
+  }
 
-    // Archive API:
-    public setDelivered(roomId: proto.ID, messageId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
-        return this.send(new roomCommand.ConfirmMessageDelivery(roomId, messageId, timestamp));
-    }
+  public sendTyping(roomId: proto.ID): Promise<void> {
+    return this.send(new roomCommand.SendTyping(roomId));
+  }
 
-    // Push Notifications API:
-    public registerForPushNotifications(pushId: proto.ID): Promise<void> {
-        return this.postAuth<PushRegistration, void>([this.url, this.pushNotifsPath, 'register'],
-            proto.pushRegistration(pushId));
-    }
+  public setMark(roomId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
+    return this.send(new roomCommand.SendMark(roomId, timestamp));
+  }
 
-    public unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
-        return this.deleteAuth([this.url, this.pushNotifsPath, 'unregister', pushId]);
-    }
+  // Archive API:
+  public setDelivered(roomId: proto.ID, messageId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
+    return this.send(new roomCommand.ConfirmMessageDelivery(roomId, messageId, timestamp));
+  }
 
-    private postAuth<Body, Response>(path: string[], body?: Body): Promise<Response> {
-        return this.post<Body, Response>(path, this.apiHeaders.getHeaders(), body);
-    }
+  // Push Notifications API:
+  public registerForPushNotifications(pushId: proto.ID): Promise<void> {
+    return this.postAuth<PushRegistration, void>([this.url, this.pushNotifsPath, 'register'],
+      proto.pushRegistration(pushId));
+  }
 
-    private deleteAuth<Body, Response>(path: string[], body?: Body): Promise<Response> {
-        return this.delete<Body, Response>(path, this.apiHeaders.getHeaders(), body);
-    }
+  public unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
+    return this.deleteAuth([this.url, this.pushNotifsPath, 'unregister', pushId]);
+  }
 
-    private getAuth<Response>(path: Array<string>): Promise<Response> {
-        return this.get<Response>(path, this.apiHeaders.getHeaders());
-    }
+  private postAuth<Body, Response>(path: string[], body?: Body): Promise<Response> {
+    return this.post<Body, Response>(path, this.apiHeaders.getHeaders(), body);
+  }
 
-    private getAuthPaginated<Item>(path: Array<string>): Promise<proto.Paginated<Item>> {
-        return this.getRaw(path, this.apiHeaders.getHeaders())
-            .then((resp) => {
-                let items;
-                try {
-                    items = JSON.parse(resp.responseText) as Array<Item>;
-                } catch (err) {
-                    this.log.debug('Api - getAuthPaginated: Cannot parse response: ' + err
-                        + '\n Tried to parse: ' + resp.responseText);
-                    throw new Error('Api - getAuthPaginated: Cannot parse response');
-                }
-                const offset = parseInt(resp.getResponseHeader('X-Paging-Offset') || '0', 10);
-                const limit = parseInt(resp.getResponseHeader('X-Paging-Limit') || '0', 10);
+  private deleteAuth<Body, Response>(path: string[], body?: Body): Promise<Response> {
+    return this.delete<Body, Response>(path, this.apiHeaders.getHeaders(), body);
+  }
 
-                return {
-                    items,
-                    offset,
-                    limit
-                };
-            });
-    }
+  private getAuth<Response>(path: Array<string>): Promise<Response> {
+    return this.get<Response>(path, this.apiHeaders.getHeaders());
+  }
+
+  private getAuthPaginated<Item>(path: Array<string>): Promise<proto.Paginated<Item>> {
+    return this.getRaw(path, this.apiHeaders.getHeaders())
+      .then((resp) => {
+        let items;
+        try {
+          items = JSON.parse(resp.responseText) as Array<Item>;
+        } catch (err) {
+          this.log.debug(
+            `Api - getAuthPaginated: Cannot parse response: ${err}\n Tried to parse:  ${resp.responseText}`);
+          throw new Error('Api - getAuthPaginated: Cannot parse response');
+        }
+        const offset = parseInt(resp.getResponseHeader('X-Paging-Offset') || '0', 10);
+        const limit = parseInt(resp.getResponseHeader('X-Paging-Limit') || '0', 10);
+
+        return {
+          items,
+          offset,
+          limit
+        };
+      });
+  }
 }

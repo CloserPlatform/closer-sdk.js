@@ -37,11 +37,11 @@ export class Artichoke {
     this.events = events;
 
     events.onEvent(errorEvents.Error.tag, (e: errorEvents.Error) =>
-      this.log.warn('Event error not handled: ' + e));
+      this.log.warn(`Event error not handled: ${e}`));
     events.onEvent(chatEvents.Received.tag, (e: chatEvents.Received) =>
-      this.log.warn('Event received not handled: ' + e));
+      this.log.warn(`Event received not handled: ${e}`));
     events.onEvent(roomEvents.MessageDelivered.tag, (e: roomEvents.MessageDelivered) =>
-      this.log.warn('Event message delivered not handled: ' + e));
+      this.log.warn(`Event message delivered not handled: ${e}`));
 
     events.onEvent(serverEvents.Hello.tag, (hello: serverEvents.Hello) => {
       this.clearHeartbeatTimeout();
@@ -182,7 +182,7 @@ export class Artichoke {
 
   private notify(event: DomainEvent): void {
     this.events.notify(event, (e) =>
-      this.events.notify(new errorEvents.Error('Unhandled event: ' + e.tag))
+      this.events.notify(new errorEvents.Error(`Unhandled event: ${e.tag}`))
     );
   }
 

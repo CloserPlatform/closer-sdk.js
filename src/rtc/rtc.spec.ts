@@ -33,9 +33,9 @@ const descr = (sdp: any): rtcEvents.DescriptionSent =>
 
 const logError = (done: any): (err: any) => void =>
   (error): void => {
-    log.error('Got an error: ' + error + ' (' + JSON.stringify(error) + ')');
+    log.error(`Got an error: ${error} (${JSON.stringify(error)})`);
     if (typeof error.cause !== 'undefined') {
-      log.error('Cause: ' + error.cause);
+      log.error(`Cause: ${error.cause}`);
     }
     done.fail();
   };

@@ -17,7 +17,7 @@ export class RESTfulAPI {
   public getRaw(path: Array<string>, headers?: Array<HeaderValue>): Promise<XMLHttpRequest> {
     return new Promise<XMLHttpRequest>((resolve, reject): void => {
       const url = path.join('/');
-      this.log.debug('GET ' + url);
+      this.log.debug(`GET ${url}`);
 
       const xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = this.responseCallback(xhttp, resolve, reject);
@@ -44,24 +44,24 @@ export class RESTfulAPI {
                            reject: PromiseReject): () => void {
     return (): void => {
       if (xhttp.readyState === 4 && (xhttp.status === 200 || xhttp.status === 204)) {
-        this.log.debug('OK response: ' + xhttp.responseText);
+        this.log.debug(`OK response: ${xhttp.responseText}`);
         resolve(xhttp);
       } else if (xhttp.readyState === 4) {
-        this.log.debug('Api - responseCallback: Error response: ' + xhttp.responseText);
+        this.log.debug(`Api - responseCallback: Error response: ${xhttp.responseText}`);
         try {
           const responseError = JSON.parse(xhttp.responseText);
           reject(responseError);
         } catch (err) {
-          this.log.debug('Api - responseCallback: Cannot parse error response: ' + err +
-            '\n Tried to parse: ' + xhttp.responseText);
+          this.log.debug(`Api - responseCallback: Cannot parse error response: ${err}
+ Tried to parse: ${xhttp.responseText}`);
           // FIXME
           // tslint:disable-next-line:no-any
-          reject(('Cannot parse Error response: ' + err + '\nError response: ' + xhttp.responseText) as any);
+          reject((`Cannot parse Error response: ${err} \nError response: ${xhttp.responseText}`) as any);
         }
       }
 
       xhttp.onerror = (err): void => {
-        reject(new errorEvents.Error('XMLHttpRequest status: ' + xhttp.status + ' ' + err));
+        reject(new errorEvents.Error(`XMLHttpRequest status: ${xhttp.status} ${err}`));
       };
     };
   }
@@ -79,7 +79,7 @@ export class RESTfulAPI {
 
         if (body) {
           const json = JSON.stringify(body);
-          this.log.debug(method + url + ': ' + json);
+          this.log.debug(`${method + url}: ${json}`);
           xhttp.setRequestHeader('Content-Type', 'application/json');
           xhttp.send(json);
         } else {
@@ -98,7 +98,7 @@ export class RESTfulAPI {
     try {
       return JSON.parse(resp.responseText);
     } catch (err) {
-      this.log.debug('Api - parseData: Cannot parse response: ' + err + '\n Tried to parse: ' + resp.responseText);
+      this.log.debug(`Api - parseData: Cannot parse response: ${err}\nTried to parse: ${resp.responseText}`);
 
       // FIXME
       // tslint:disable-next-line:no-any

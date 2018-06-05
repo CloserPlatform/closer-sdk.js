@@ -14,7 +14,7 @@ export class Session {
     const logLevel = config.logLevel !== undefined ? config.logLevel : LogLevel.NONE;
     const log = new ConsoleLogger(logLevel);
 
-    log.info('Configuration: ' + JSON.stringify(config));
+    log.info(`Configuration: ${JSON.stringify(config)}`);
 
     this.id = id;
     const events: EventHandler = new EventHandler(log);

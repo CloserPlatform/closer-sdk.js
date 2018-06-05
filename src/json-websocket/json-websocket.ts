@@ -18,12 +18,12 @@ export class JSONWebSocket {
 
   public connect(url: string): void {
     this.cleanupBeforeConnecting();
-    this.log.info('WS connecting to: ' + url);
+    this.log.info(`WS connecting to: ${url}`);
 
     this.socket = new WebSocket(url);
 
     this.socket.onopen = (): void => {
-      this.log.info('WS connected to: ' + url);
+      this.log.info(`WS connected to: ${url}`);
     };
 
     JSONWebSocket.setupOnClose(this.socket, this.onCloseCallback);
@@ -43,7 +43,7 @@ export class JSONWebSocket {
     this.onCloseCallback = (close): void => {
       this.unregisterCallbacks();
       this.socket = undefined;
-      this.log.info('WS disconnected: ' + close.reason);
+      this.log.info(`WS disconnected: ${close.reason}`);
       callback(close);
     };
 
@@ -54,7 +54,7 @@ export class JSONWebSocket {
 
   public onError(callback: Callback<Event>): void {
     this.onErrorCallback = (err): void => {
-      this.log.warn('WS error: ' + err);
+      this.log.warn(`WS error: ${err}`);
       callback(err);
     };
 
@@ -65,7 +65,7 @@ export class JSONWebSocket {
 
   public onEvent(callback: Callback<DomainEvent>): void {
     this.onMessageCallback = (event): void => {
-      this.log.debug('WS received: ' + event.data);
+      this.log.debug(`WS received: ${event.data}`);
       callback(this.decoder.decode(event.data));
     };
 
@@ -77,7 +77,7 @@ export class JSONWebSocket {
   public send(event: DomainCommand): Promise<void> {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       const json = this.encoder.encode(event);
-      this.log.debug('WS sent: ' + json);
+      this.log.debug(`WS sent: ${json}`);
       this.socket.send(json);
 
       return Promise.resolve();
