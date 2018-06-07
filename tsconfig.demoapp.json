@@ -12,7 +12,8 @@
     "noEmitHelpers": false,
     "types": [
       "jquery",
-      "jqueryui"
+      "jqueryui",
+      "node"
     ],
     "lib": [
       "es2016",
