@@ -74,7 +74,7 @@ class APIMock extends ArtichokeAPI {
 describe('RTCConnection', () => {
   let events: any;
   let api: any;
-  let peerAtest: any;
+  let peerAtest: RTCConnection;
 
   beforeEach(() => {
     api = new APIMock();
@@ -255,7 +255,7 @@ describe('RTCConnection', () => {
       log.info('Removing a stream track...');
       // FIXME
       // tslint:disable-next-line:no-any
-      peerAtest.removeTrack((peerAtest as any).conn.getLocalStreams()[0].getTracks()[0]);
+      peerAtest.removeTrack((peerAtest as any).rtcPeerConnection.getLocalStreams()[0].getTracks()[0]);
     }, peerBId, done);
   });
 });

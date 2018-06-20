@@ -1,3 +1,4 @@
 ### Improve
 
-* Cleanup unused & not existing RTCConnectionConstraints
+* Remove legacy hacked rtc offer options
+* Update webrtc types

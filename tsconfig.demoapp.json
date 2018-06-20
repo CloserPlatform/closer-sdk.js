@@ -10,9 +10,13 @@
     "removeComments": false,
     "inlineSourceMap": true,
     "noEmitHelpers": false,
+    "typeRoots": [
+      "node_modules/@types"
+    ],
     "types": [
       "jquery",
       "jqueryui",
+      "webrtc",
       "node"
     ],
     "lib": [
