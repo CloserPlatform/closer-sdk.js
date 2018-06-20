@@ -1,3 +1,4 @@
+// tslint:disable:no-any
 // tslint:disable:max-file-line-count
 import * as wireEntities from '../protocol/wire-entities';
 import { rtcCommands } from '../protocol/commands/rtc-commands';
@@ -198,7 +199,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   // tslint:disable-next-line:ban-types
-  public sendMessage(roomId: proto.ID, body: string, context?: Object): Promise<chatEvents.Received> {
+  public sendMessage(roomId: proto.ID, body: string, context?: any): Promise<chatEvents.Received> {
     return this.ask<chatEvents.Received>(new roomCommand.SendMessage(roomId, body, context || {}));
   }
 

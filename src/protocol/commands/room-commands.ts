@@ -1,3 +1,4 @@
+// tslint:disable:no-any
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
 // tslint:disable:ban-types
@@ -21,7 +22,7 @@ export namespace roomCommand {
   export class SendMessage extends RoomCommand {
     static readonly tag = 'room_send_message';
 
-    constructor(roomId: string, body: string, context: Object, ref?: string) {
+    constructor(roomId: string, body: string, context: any, ref?: string) {
       super(roomId, SendMessage.tag);
       this.body = body;
       this.context = context;
@@ -29,14 +30,14 @@ export namespace roomCommand {
     }
 
     readonly body: string;
-    readonly context: Object;
+    readonly context: any;
     ref: string | undefined;
   }
 
   export class SendCustomMessage extends RoomCommand {
     static readonly tag = 'room_send_custom_message';
 
-    constructor(roomId: string, body: string, subtag: string, context: Object, ref?: string) {
+    constructor(roomId: string, body: string, subtag: string, context: any, ref?: string) {
       super(roomId, SendCustomMessage.tag);
       this.body = body;
       this.ref = ref;
@@ -46,7 +47,7 @@ export namespace roomCommand {
 
     readonly body: string;
     ref: string | undefined;
-    readonly context: Object;
+    readonly context: any;
     readonly subtag: string;
   }
 

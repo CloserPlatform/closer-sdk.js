@@ -1,3 +1,4 @@
+// tslint:disable:no-any
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
 // tslint:disable:ban-types
@@ -23,7 +24,7 @@ export namespace chatEvents {
     readonly authorId: string;
     readonly channelId: string;
     readonly tag: string;
-    readonly data: Object;
+    readonly data: any;
     readonly timestamp: number;
   }
 
