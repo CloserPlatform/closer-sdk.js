@@ -1,3 +1,4 @@
+// tslint:disable:no-any
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
 // tslint:disable:ban-types
@@ -43,9 +44,9 @@ export namespace callEvents {
     public static readonly tag = 'call_invited';
     public readonly authorId: string;
     public readonly invitee: string;
-    public readonly context: Object;
+    public readonly context: any;
 
-    constructor(callId: string, authorId: string, invitee: string, context: Object, timestamp: number) {
+    constructor(callId: string, authorId: string, invitee: string, context: any, timestamp: number) {
       super(callId, timestamp, Invited.tag);
 
       this.invitee = invitee;

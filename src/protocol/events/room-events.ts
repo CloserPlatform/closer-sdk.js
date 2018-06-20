@@ -1,3 +1,4 @@
+// tslint:disable:no-any
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
 // tslint:disable:ban-types
@@ -75,7 +76,7 @@ export namespace roomEvents {
   export class MessageSent extends RoomEvent {
     static readonly tag = 'room_message_sent';
 
-    constructor(roomId: string, authorId: string, message: string, messageId: string, context: Object,
+    constructor(roomId: string, authorId: string, message: string, messageId: string, context: any,
                 timestamp: number) {
       super(roomId, authorId, timestamp, MessageSent.tag);
 
@@ -86,13 +87,13 @@ export namespace roomEvents {
 
     readonly message: string;
     readonly messageId: string;
-    readonly context: Object;
+    readonly context: any;
   }
 
   export class CustomMessageSent extends RoomEvent {
     static readonly tag = 'room_custom_message_sent';
 
-    constructor(roomId: string, authorId: string, message: string, messageId: string, subtag: string, context: Object,
+    constructor(roomId: string, authorId: string, message: string, messageId: string, subtag: string, context: any,
                 timestamp: number) {
       super(roomId, authorId, timestamp, CustomMessageSent.tag);
 
@@ -105,7 +106,7 @@ export namespace roomEvents {
     readonly subtag: string;
     readonly message: string;
     readonly messageId: string;
-    readonly context: Object;
+    readonly context: any;
   }
 
   export class TypingSent extends RoomEvent {
