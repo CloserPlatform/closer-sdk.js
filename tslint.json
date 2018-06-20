@@ -112,7 +112,7 @@
     "no-this-assignment": true,
     "no-unbound-method": true,
     "no-unnecessary-callback-wrapper": true,
-    "no-unnecessary-class": true,
+    "no-unnecessary-class": false,
     "no-unnecessary-initializer": true,
     "no-unnecessary-qualifier": true,
     "no-unnecessary-type-assertion": true,
