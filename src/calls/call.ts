@@ -11,7 +11,6 @@ import { createRTCPool } from '../rtc/create-rtc-pool';
 import { RTCConfig } from '../rtc/rtc-config';
 import { RemoteStreamCallback } from '../rtc/remote-stream-callback';
 import { RTCAnswerOptions } from '../rtc/rtc-answer-options';
-import { RTCConnectionConstraints } from '../rtc/rtc-connection-constraints';
 import { HackedRTCOfferOptions } from '../rtc/hacked-rtc-offer-options';
 import { RandomUtils, UUID } from '../utils/random-utils';
 
@@ -121,10 +120,6 @@ export abstract class Call implements wireEntities.Call {
 
   public setOfferOptions(options: HackedRTCOfferOptions): void {
     this.pool.setOfferOptions(options);
-  }
-
-  public setConnectionConstraints(constraints: RTCConnectionConstraints): void {
-    this.pool.setConnectionConstraints(constraints);
   }
 
   public getUsers(): Promise<ReadonlyArray<proto.ID>> {
