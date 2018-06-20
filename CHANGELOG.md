@@ -11,39 +11,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
  * Fix versioning after a mess made by AnyMind guys ;)
 
-##  - 2018-06-20
-
-### Changed
-- change type of `context` from `Object` to `any`
-
-##  - 2018-06-05
-
-Improve linter
-
-##  - 2018-06-05
-
-Enable strict null checks
-
-##  - 2018-06-05
-
-Make linter more strict & refactor code style
-
-##  - 2018-06-04
-
-Fix demo app
-
-##  - 2018-06-04
-
-Refactored calls without logic
-
-##  - 2018-06-04
-
-Changes project files structure & small linter improvements
-
-## 0.6.2 - 2018-06-01
+## 0.6.2 - 2018-06-20
 
 ### Changed
 
+ * Change type of `context` from `Object` to `any`
+ * Improve linter
+ * Enable strict null checks
+ * Make linter more strict & refactor code style
+ * Fix demo app
+ * Refactored calls without logic
+ * Changes project files structure & small linter improvements
  * Project files structure & small linter improvements
 
 ## 0.6.1 - 2018-05-22
