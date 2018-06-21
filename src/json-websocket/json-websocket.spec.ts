@@ -5,10 +5,11 @@ import { roomCommand } from '../protocol/commands/room-commands';
 import { decoder } from '../protocol/events/domain-event';
 
 describe('JSONWebSocket', () => {
+
   it('should call a callback on connection error', (done) => {
     const jws = new JSONWebSocket(log, encoder, decoder);
     jws.onError((_e) => done());
-    jws.connect('ws://invalid.url');
+    jws.connect('ws://127.0.0.1');
   });
 
   it('should reject sending messages when connection is not established', (done) => {

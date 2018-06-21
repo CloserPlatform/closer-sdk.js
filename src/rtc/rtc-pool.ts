@@ -5,8 +5,6 @@ import { ArtichokeAPI } from '../apis/artichoke-api';
 import { ID } from '../protocol/protocol';
 import { EventHandler } from '../events/event-handler';
 import { RTCConfig } from './rtc-config';
-import { HackedRTCOfferOptions } from './hacked-rtc-offer-options';
-import { RTCAnswerOptions } from './rtc-answer-options';
 import { RTCConnection } from './rtc-connection';
 import { MediaStreamAndTrack } from './mediastream-and-track';
 import { RemoteStreamCallback } from './remote-stream-callback';
@@ -19,7 +17,7 @@ export class RTCPool {
 
     private call: ID;
     private config: RTCConfig;
-    private offerOptions?: HackedRTCOfferOptions;
+    private offerOptions?: RTCOfferOptions;
     private answerOptions?: RTCAnswerOptions;
 
     private connections: { [user: string]: RTCConnection };
@@ -131,7 +129,7 @@ export class RTCPool {
         this.answerOptions = options;
     }
 
-    public setOfferOptions(options: HackedRTCOfferOptions): void {
+    public setOfferOptions(options: RTCOfferOptions): void {
         this.offerOptions = options;
     }
 

@@ -10,8 +10,6 @@ import { RTCPool } from '../rtc/rtc-pool';
 import { createRTCPool } from '../rtc/create-rtc-pool';
 import { RTCConfig } from '../rtc/rtc-config';
 import { RemoteStreamCallback } from '../rtc/remote-stream-callback';
-import { RTCAnswerOptions } from '../rtc/rtc-answer-options';
-import { HackedRTCOfferOptions } from '../rtc/hacked-rtc-offer-options';
 import { RandomUtils, UUID } from '../utils/random-utils';
 
 export abstract class Call implements wireEntities.Call {
@@ -118,7 +116,7 @@ export abstract class Call implements wireEntities.Call {
     this.pool.setAnswerOptions(options);
   }
 
-  public setOfferOptions(options: HackedRTCOfferOptions): void {
+  public setOfferOptions(options: RTCOfferOptions): void {
     this.pool.setOfferOptions(options);
   }
 

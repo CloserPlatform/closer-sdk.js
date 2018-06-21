@@ -46,11 +46,7 @@ export const defaultConfig: Config = {
         urls: ['stun:turn.ratel.im:3478', 'turn:turn.ratel.im:3478'],
         username: 'test123',
         credential: 'test456'
-      }],
-      defaultOfferOptions: {
-        offerToReceiveAudio: true,
-        offerToReceiveVideo: true
-      }
+      }]
     }
   },
 

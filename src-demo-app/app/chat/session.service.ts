@@ -38,11 +38,7 @@ export class SessionService {
               urls: ['stun:turn.ratel.im:443?transport=udp', 'turn:turn.ratel.im:443?transport=udp'],
               username: 'test123',
               credential: 'test456'
-            }],
-            defaultOfferOptions: {
-              offerToReceiveAudio: true,
-              offerToReceiveVideo: true
-            }
+            }]
           }
         }
       }).then(this.onRatelConnected);
