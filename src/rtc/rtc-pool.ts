@@ -5,7 +5,6 @@ import { ArtichokeAPI } from '../apis/artichoke-api';
 import { ID } from '../protocol/protocol';
 import { EventHandler } from '../events/event-handler';
 import { RTCConfig } from './rtc-config';
-import { RTCConnectionConstraints } from './rtc-connection-constraints';
 import { HackedRTCOfferOptions } from './hacked-rtc-offer-options';
 import { RTCAnswerOptions } from './rtc-answer-options';
 import { RTCConnection } from './rtc-connection';
@@ -20,7 +19,6 @@ export class RTCPool {
 
     private call: ID;
     private config: RTCConfig;
-    private connectionConstraints?: RTCConnectionConstraints;
     private offerOptions?: HackedRTCOfferOptions;
     private answerOptions?: RTCAnswerOptions;
 
@@ -35,7 +33,6 @@ export class RTCPool {
 
         this.call = call;
         this.config = config;
-        this.connectionConstraints = config.defaultConnectionConstraints;
         this.offerOptions = config.defaultOfferOptions;
         this.answerOptions = config.defaultAnswerOptions;
 
@@ -138,13 +135,9 @@ export class RTCPool {
         this.offerOptions = options;
     }
 
-    public setConnectionConstraints(constraints: RTCConnectionConstraints): void {
-        this.connectionConstraints = constraints;
-    }
-
     private createRTC(peer: ID): RTCConnection {
         const rtc = createRTCConnection(this.call, peer, this.config, this.log, this.events, this.api,
-            this.connectionConstraints, this.answerOptions, this.offerOptions);
+            this.answerOptions, this.offerOptions);
         rtc.onRemoteStream((s) => this.onRemoteStreamCallback(peer, s));
         this.connections[peer] = rtc;
         this.tracks.forEach((t) => rtc.addTrack(t.track, t.stream));

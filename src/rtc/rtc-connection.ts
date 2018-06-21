@@ -10,7 +10,6 @@ import { HackedMediaStreamEvent } from './hacked-mediastream-event';
 import { HackedRTCOfferOptions } from './hacked-rtc-offer-options';
 import { RTCAnswerOptions } from './rtc-answer-options';
 import { RTCConfig } from './rtc-config';
-import { RTCConnectionConstraints } from './rtc-connection-constraints';
 import { TimeUtils } from '../utils/time-utils';
 
 export class RTCConnection {
@@ -32,8 +31,7 @@ export class RTCConnection {
   private renegotiationTimer: number;
 
   constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI,
-              constraints?: RTCConnectionConstraints, answerOptions?: RTCAnswerOptions,
-              offerOptions?: HackedRTCOfferOptions) {
+              answerOptions?: RTCAnswerOptions, offerOptions?: HackedRTCOfferOptions) {
     log.info(`Connecting an RTC connection to ${peer} on ${call}`);
     this.call = call;
     this.peer = peer;
@@ -42,7 +40,7 @@ export class RTCConnection {
     this.log = log;
     this.answerOptions = answerOptions;
     this.offerOptions = offerOptions;
-    this.conn = new (RTCPeerConnection as HackedRTCPeerConnection)(config, constraints);
+    this.conn = new (RTCPeerConnection as HackedRTCPeerConnection)(config);
 
     this.localRole = undefined;
     this.attachedStreams = {};
