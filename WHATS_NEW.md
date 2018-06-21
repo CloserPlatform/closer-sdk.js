@@ -1,4 +1,4 @@
 ### Improve
 
-* Remove legacy hacked rtc offer options
-* Update webrtc types
+* Cleanup class members
+* Refactor rtc variables names

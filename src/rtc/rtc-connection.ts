@@ -1,5 +1,3 @@
-// tslint:disable:max-file-line-count
-// FIXME Unfuck when Chrome transitions to the Unified Plan.
 import { errorEvents } from '../protocol/events/error-events';
 import { Logger } from '../logger';
 import { ArtichokeAPI } from '../apis/artichoke-api';
@@ -10,32 +8,19 @@ import { TimeUtils } from '../utils/time-utils';
 
 export class RTCConnection {
   public static readonly renegotiationTimeout = 100;
-  private call: ID;
-  private peer: ID;
-  private api: ArtichokeAPI;
-  private events: EventHandler;
-  private log: Logger;
   private rtcPeerConnection: RTCPeerConnection;
   private onICEDoneCallback: () => void;
   private onRemoteStreamCallback: Callback<MediaStream>;
-  private offerOptions?: RTCOfferOptions;
-  private answerOptions?: RTCAnswerOptions;
 
   // FIXME Required by the various hacks:
   private localRole?: string;
   private attachedStreams: { [trackId: string]: MediaStream };
   private renegotiationTimer: number;
 
-  constructor(call: ID, peer: ID, config: RTCConfig, log: Logger, events: EventHandler, api: ArtichokeAPI,
-              answerOptions?: RTCAnswerOptions, offerOptions?: RTCOfferOptions) {
-    log.info(`Connecting an RTC connection to ${peer} on ${call}`);
-    this.call = call;
-    this.peer = peer;
-    this.api = api;
-    this.events = events;
-    this.log = log;
-    this.answerOptions = answerOptions;
-    this.offerOptions = offerOptions;
+  constructor(private callId: ID, private peerId: ID, config: RTCConfig, private logger: Logger,
+              private eventHandler: EventHandler, private artichokeApi: ArtichokeAPI,
+              private answerOptions?: RTCAnswerOptions, private offerOptions?: RTCOfferOptions) {
+    logger.info(`Connecting an RTC connection to ${peerId} on ${callId}`);
     this.rtcPeerConnection = new RTCPeerConnection(config);
 
     this.localRole = undefined;
@@ -43,28 +28,28 @@ export class RTCConnection {
 
     this.onRemoteStreamCallback = (_stream): void => {
       // Do nothing.
-      this.log.warn('Empty onRemoteStreamCallback called');
+      this.logger.warn('Empty onRemoteStreamCallback called');
     };
 
     this.onICEDoneCallback = (): void => {
       // Do nothing.
-      this.log.warn('Empty onICEDoneCallback called');
+      this.logger.warn('Empty onICEDoneCallback called');
     };
 
     this.rtcPeerConnection.onicecandidate = (event): void => {
       if (event.candidate) {
-        this.log.debug(`Created ICE candidate: ${event.candidate.candidate}`);
-        this.api.sendCandidate(this.call, this.peer, event.candidate).catch((err) => {
-          this.events.notify(new errorEvents.Error(`Could not send an ICE candidate: ${err}`));
+        this.logger.debug(`Created ICE candidate: ${event.candidate.candidate}`);
+        this.artichokeApi.sendCandidate(this.callId, this.peerId, event.candidate).catch((err) => {
+          this.eventHandler.notify(new errorEvents.Error(`Could not send an ICE candidate: ${err}`));
         });
       } else {
-        this.log.debug('Done gathering ICE candidates.');
+        this.logger.debug('Done gathering ICE candidates.');
         this.onICEDoneCallback();
       }
     };
 
     this.rtcPeerConnection.ontrack = (event: RTCTrackEvent): void => {
-      this.log.info('Received a remote track.');
+      this.logger.info('Received a remote track.');
       event.streams.forEach(stream => {
         this.onRemoteStreamCallback(stream);
       });
@@ -76,9 +61,9 @@ export class RTCConnection {
       if (this.isEstablished()) {
         this.renegotiationTimer = TimeUtils.onceDelayed(
           this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
-          this.log.debug('Renegotiating an RTC connection.');
+          this.logger.debug('Renegotiating an RTC connection.');
           this.offer().catch((err) => {
-            this.events.notify(new errorEvents.Error(`Could not renegotiate the connection: ${err}`));
+            this.eventHandler.notify(new errorEvents.Error(`Could not renegotiate the connection: ${err}`));
           });
         });
       }
@@ -86,12 +71,12 @@ export class RTCConnection {
   }
 
   public disconnect(): void {
-    this.log.info('Disconnecting an RTC connection.');
+    this.logger.info('Disconnecting an RTC connection.');
     this.rtcPeerConnection.close();
   }
 
   public addTrack(track: MediaStreamTrack, stream?: MediaStream): void {
-    this.log.debug('Adding a stream track.');
+    this.logger.debug('Adding a stream track.');
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (RTCConnection.supportsTracks(this.rtcPeerConnection)) {
       if (stream) {
@@ -107,7 +92,7 @@ export class RTCConnection {
   }
 
   public removeTrack(track: MediaStreamTrack): void {
-    this.log.debug('Removing a stream track.');
+    this.logger.debug('Removing a stream track.');
     // FIXME Chrome's adapter.js shim still doesn't implement removeTrack().
     if (RTCConnection.supportsTracks(this.rtcPeerConnection)) {
       this.rtcPeerConnection.getSenders().filter(
@@ -118,18 +103,18 @@ export class RTCConnection {
   }
 
   public addCandidate(candidate: RTCIceCandidate): Promise<void> {
-    this.log.debug(`Received an RTC candidate: ${candidate.candidate}`);
+    this.logger.debug(`Received an RTC candidate: ${candidate.candidate}`);
 
     return this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit));
   }
 
   public offer(options?: RTCOfferOptions): Promise<RTCSessionDescriptionInit> {
-    this.log.debug('Creating an RTC offer.');
+    this.logger.debug('Creating an RTC offer.');
 
     return this.rtcPeerConnection.createOffer(options || this.offerOptions).then((offer) =>
       this.setLocalDescription(offer as RTCSessionDescriptionInit)).then((offer) =>
-      this.api.sendDescription(this.call, this.peer, offer).then(() => offer)).then((offer) => {
-      this.log.debug(`Sent an RTC offer: ${offer.sdp}`);
+      this.artichokeApi.sendDescription(this.callId, this.peerId, offer).then(() => offer)).then((offer) => {
+      this.logger.debug(`Sent an RTC offer: ${offer.sdp}`);
 
       return offer;
     });
@@ -137,27 +122,27 @@ export class RTCConnection {
 
   public addOffer(remoteDescription: RTCSessionDescriptionInit,
                   options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
-    this.log.debug('Received an RTC offer.');
+    this.logger.debug('Received an RTC offer.');
 
     return this.setRemoteDescription(remoteDescription).then((_descr) => this.answer(options));
   }
 
   public answer(options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
-    this.log.debug('Creating an RTC answer.');
+    this.logger.debug('Creating an RTC answer.');
 
     return this.rtcPeerConnection.createAnswer(options || this.answerOptions).then((answer) =>
       // FIXME Chrome does not support DTLS role changes.
       this.setLocalDescription(this.patchSDP(answer as RTCSessionDescriptionInit))
     ).then((answer) =>
-      this.api.sendDescription(this.call, this.peer, answer).then(() => answer)).then((answer) => {
-      this.log.debug(`Sent an RTC answer: ${answer.sdp}`);
+      this.artichokeApi.sendDescription(this.callId, this.peerId, answer).then(() => answer)).then((answer) => {
+      this.logger.debug(`Sent an RTC answer: ${answer.sdp}`);
 
       return answer;
     });
   }
 
   public addAnswer(remoteDescription: RTCSessionDescriptionInit): Promise<void> {
-    this.log.debug('Received an RTC answer.');
+    this.logger.debug('Received an RTC answer.');
 
     return this.setRemoteDescription(remoteDescription).then((descr) => {
       // FIXME Chrome does not support DTLS role changes.
@@ -176,7 +161,7 @@ export class RTCConnection {
 
   // FIXME This should be private.
   public setRemoteDescription(remoteDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
-    this.log.debug('Setting remote RTC description.');
+    this.logger.debug('Setting remote RTC description.');
 
     // FIXME
     // sdp is string | null or string | undefined - remove casting
@@ -207,14 +192,14 @@ export class RTCConnection {
     if (hackedDescr.sdp) {
       hackedDescr.sdp = hackedDescr.sdp.replace(/a=setup:[^\r\n]+/, `a=setup:${role}`);
     } else {
-      this.log.warn('Cannot update ROLE, there is not sdp in RTCSessionDescriptionInit');
+      this.logger.warn('Cannot update ROLE, there is not sdp in RTCSessionDescriptionInit');
     }
 
     return hackedDescr;
   }
 
   private setLocalDescription(localDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
-    this.log.debug('Setting local RTC description.');
+    this.logger.debug('Setting local RTC description.');
 
     // FIXME
     // sdp is string | null or string | undefined - remove casting

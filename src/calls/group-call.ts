@@ -12,13 +12,13 @@ export class GroupCall extends Call {
     }
 
     public invite(user: proto.ID): Promise<void> {
-        return this.api.inviteToCall(this.id, user);
+        return this.artichokeApi.inviteToCall(this.id, user);
     }
 
     public join(stream: MediaStream): Promise<void> {
         this.addStream(stream);
 
-        return this.api.joinCall(this.id);
+        return this.artichokeApi.joinCall(this.id);
     }
 
     public onInvited(callback: Callback<callEvents.Invited>): void {
