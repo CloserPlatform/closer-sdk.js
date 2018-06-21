@@ -1,9 +1,11 @@
 // tslint:disable:no-namespace
 import { DomainEvent } from './domain-event';
+import { Ref } from '../protocol';
 
 export namespace errorEvents {
   export class Error implements DomainEvent {
     public static readonly tag = 'error';
+    public readonly ref?: Ref;
     public readonly reason: string;
     public readonly tag: string;
     public readonly __discriminator__ = 'domainEvent';
@@ -12,7 +14,6 @@ export namespace errorEvents {
       this.reason = reason;
       this.tag = Error.tag;
     }
-
   }
 
   export const isError = (evt: DomainEvent): evt is errorEvents.Error =>

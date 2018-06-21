@@ -1,6 +1,5 @@
 export type UUID = string;
 
-// tslint:disable:no-unnecessary-class
 export class RandomUtils {
 
   public static randomUUID(): UUID {

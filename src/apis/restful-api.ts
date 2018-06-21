@@ -14,13 +14,13 @@ export class RESTfulAPI {
                            headers?: ReadonlyArray<HeaderValue>, body?: Body) => Promise<XMLHttpRequest> =
     this.httpRequestWithBody('DELETE');
 
-  constructor(protected log: Logger) {
+  constructor(protected logger: Logger) {
   }
 
   public getRaw(path: ReadonlyArray<string>, headers?: ReadonlyArray<HeaderValue>): Promise<XMLHttpRequest> {
     return new Promise<XMLHttpRequest>((resolve, reject): void => {
       const url = path.join('/');
-      this.log.debug(`GET ${url}`);
+      this.logger.debug(`GET ${url}`);
 
       const xhttp = new XMLHttpRequest();
       xhttp.onreadystatechange = this.responseCallback(xhttp, resolve, reject);
@@ -50,15 +50,15 @@ export class RESTfulAPI {
     return (): void => {
       if (xhttp.readyState === XMLHttpRequest.DONE &&
         (xhttp.status === HttpCodes.OK || xhttp.status === HttpCodes.NoContent)) {
-        this.log.debug(`OK response: ${xhttp.responseText}`);
+        this.logger.debug(`OK response: ${xhttp.responseText}`);
         resolve(xhttp);
       } else if (xhttp.readyState === XMLHttpRequest.DONE) {
-        this.log.debug(`Api - responseCallback: Error response: ${xhttp.responseText}`);
+        this.logger.debug(`Api - responseCallback: Error response: ${xhttp.responseText}`);
         try {
           const responseError = JSON.parse(xhttp.responseText);
           reject(responseError);
         } catch (err) {
-          this.log.debug(`Api - responseCallback: Cannot parse error response: ${err}
+          this.logger.debug(`Api - responseCallback: Cannot parse error response: ${err}
  Tried to parse: ${xhttp.responseText}`);
           // FIXME
           // tslint:disable-next-line:no-any
@@ -72,8 +72,9 @@ export class RESTfulAPI {
     };
   }
 
-  private httpRequestWithBody(method: 'POST' | 'DELETE'):
-  <Body>(path: ReadonlyArray<string>, headers?: ReadonlyArray<HeaderValue>, body?: Body) => Promise<XMLHttpRequest> {
+  private httpRequestWithBody(method: 'POST' | 'DELETE'): <Body>(path: ReadonlyArray<string>,
+                                                                 headers?: ReadonlyArray<HeaderValue>,
+                                                                 body?: Body) => Promise<XMLHttpRequest> {
     return <Body>(path: ReadonlyArray<string>, headers?: ReadonlyArray<HeaderValue>,
                   body?: Body): Promise<XMLHttpRequest> =>
       new Promise<XMLHttpRequest>((resolve, reject): void => {
@@ -86,11 +87,11 @@ export class RESTfulAPI {
 
         if (body) {
           const json = JSON.stringify(body);
-          this.log.debug(`${method + url}: ${json}`);
+          this.logger.debug(`${method + url}: ${json}`);
           xhttp.setRequestHeader('Content-Type', 'application/json');
           xhttp.send(json);
         } else {
-          this.log.debug(method + url);
+          this.logger.debug(method + url);
           xhttp.send();
         }
       });
@@ -105,7 +106,7 @@ export class RESTfulAPI {
     try {
       return JSON.parse(resp.responseText);
     } catch (err) {
-      this.log.debug(`Api - parseData: Cannot parse response: ${err}\nTried to parse: ${resp.responseText}`);
+      this.logger.debug(`Api - parseData: Cannot parse response: ${err}\nTried to parse: ${resp.responseText}`);
 
       // FIXME
       // tslint:disable-next-line:no-any

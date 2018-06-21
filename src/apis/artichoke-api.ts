@@ -20,8 +20,6 @@ import { Callback } from '../events/event-handler';
 import { APIWithWebsocket } from './api-with-websocket';
 
 export class ArtichokeAPI extends APIWithWebsocket {
-  public sessionId: proto.ID;
-
   protected url: string;
 
   private deviceId: proto.ID;
@@ -33,10 +31,9 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   private apiHeaders: ApiHeaders = new ApiHeaders();
 
-  constructor(sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, log: Logger) {
+  constructor(public sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, log: Logger) {
     super(log);
 
-    this.sessionId = sessionId;
     this.apiHeaders.apiKey = apiKey;
 
     const pathname = config.pathname ? config.pathname : '';
@@ -200,12 +197,12 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   // tslint:disable-next-line:ban-types
   public sendMessage(roomId: proto.ID, body: string, context?: any): Promise<chatEvents.Received> {
-    return this.ask<chatEvents.Received>(new roomCommand.SendMessage(roomId, body, context || {}));
+    return this.ask(new roomCommand.SendMessage(roomId, body, context || {}));
   }
 
   public sendCustom(roomId: proto.ID, body: string, subtag: string,
                     context: proto.Context): Promise<chatEvents.Received> {
-    return this.ask<chatEvents.Received>(new roomCommand.SendCustomMessage(roomId, body, subtag, context));
+    return this.ask(new roomCommand.SendCustomMessage(roomId, body, subtag, context));
   }
 
   public sendTyping(roomId: proto.ID): Promise<void> {
@@ -257,7 +254,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
             limit
           };
         } catch (err) {
-          this.log.debug(
+          this.logger.debug(
             `Api - getAuthPaginated: Cannot parse response: ${err}\n Tried to parse:  ${resp.responseText}`);
           throw new Error('Api - getAuthPaginated: Cannot parse response');
         }
