@@ -1,14 +1,5 @@
 // tslint:disable:max-file-line-count
-import {
-  apiKeyMock,
-  config,
-  getStream,
-  isWebRTCSupported,
-  log,
-  sessionIdMock,
-  sleep,
-  whenever
-} from '../test-utils';
+import { apiKeyMock, config, getStream, isWebRTCSupported, log, sessionIdMock, sleep, whenever } from '../test-utils';
 import { errorEvents } from '../protocol/events/error-events';
 import { rtcEvents } from '../protocol/events/rtc-events';
 import { ID } from '../protocol/protocol';
@@ -16,8 +7,6 @@ import { ArtichokeAPI } from '../apis/artichoke-api';
 import { RTCConnection } from './rtc-connection';
 import { RTCPool } from './rtc-pool';
 import { EventHandler } from '../events/event-handler';
-import { createRTCConnection } from './create-rtc-connection';
-import { createRTCPool } from './create-rtc-pool';
 
 // FIXME
 // tslint:disable:no-any
@@ -79,7 +68,7 @@ describe('RTCConnection', () => {
   beforeEach(() => {
     api = new APIMock();
     events = new EventHandler(log);
-    peerAtest = createRTCConnection(callIdMock, peerBId, config.chat.rtc, log, events, api);
+    peerAtest = new RTCConnection(callIdMock, peerBId, config.chat.rtc, log, events, api);
   });
 
   whenever(isWebRTCSupported())('should create valid SDP offers', (done) => {
@@ -96,7 +85,7 @@ describe('RTCConnection', () => {
   });
 
   whenever(isWebRTCSupported())('should create valid SDP answers', (done) => {
-    const peerB = createRTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
+    const peerB = new RTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
 
     getStream((streamA) => {
       addLocalStream(peerAtest, streamA);
@@ -220,7 +209,7 @@ describe('RTCConnection', () => {
   };
 
   whenever(isWebRTCSupported())('should renegotiate SDP on caller side', (done) => {
-    const peerB = createRTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
+    const peerB = new RTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
     testRenegotiation(peerAtest, peerB, () => {
       getStream((newStream) => {
         log.info('Got new stream. Triggering renegotiation...');
@@ -230,7 +219,7 @@ describe('RTCConnection', () => {
   });
 
   whenever(isWebRTCSupported())('should renegotiate SDP on calee side', (done) => {
-    const peerB = createRTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
+    const peerB = new RTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
     testRenegotiation(peerAtest, peerB, () => {
       getStream((newStream) => {
         log.info('Got new stream. Triggering renegotiation...');
@@ -240,7 +229,7 @@ describe('RTCConnection', () => {
   });
 
   whenever(isWebRTCSupported())('should renegotiate on addTrack', (done) => {
-    const peerB = createRTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
+    const peerB = new RTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
     testRenegotiation(peerAtest, peerB, () => {
       getStream((newStream) => {
         log.info('Got new stream. Adding a stream track...');
@@ -250,7 +239,7 @@ describe('RTCConnection', () => {
   });
 
   whenever(isWebRTCSupported())('should renegotiate on removeTrack', (done) => {
-    const peerB = createRTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
+    const peerB = new RTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
     testRenegotiation(peerAtest, peerB, () => {
       log.info('Removing a stream track...');
       // FIXME
@@ -268,7 +257,7 @@ describe('RTCPool', () => {
   beforeEach(() => {
     events = new EventHandler(log);
     api = new APIMock();
-    pool = createRTCPool(callIdMock, config.chat.rtc, log, events, api);
+    pool = new RTCPool(callIdMock, config.chat.rtc, log, events, api);
   });
 
   whenever(isWebRTCSupported())('should create an RTC connection', (done) => {
@@ -289,7 +278,7 @@ describe('RTCPool', () => {
   });
 
   whenever(isWebRTCSupported())('should spawn an RTC connection on session description', (done) => {
-    const peerTest = createRTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
+    const peerTest = new RTCConnection(callIdMock, peerAId, config.chat.rtc, log, events, api);
     getStream((streamPeer) => {
       getStream((streamPool) => {
         addLocalStream(peerTest, streamPeer);
@@ -344,7 +333,7 @@ describe('RTCPool', () => {
   });
 
   whenever(isWebRTCSupported())('should not send session description on peer answer', (done) => {
-    const peer = createRTCConnection(callIdMock, peerBId, config.chat.rtc, log, events, api);
+    const peer = new RTCConnection(callIdMock, peerBId, config.chat.rtc, log, events, api);
     getStream((streamPeer) => {
       getStream((streamPool) => {
         addLocalStream(peer, streamPeer);
