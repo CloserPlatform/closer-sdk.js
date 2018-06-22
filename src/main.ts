@@ -5,7 +5,6 @@ export * from './auth/auth';
 export { Artichoke as Chat } from './artichoke/artichoke';
 export { Config } from './config/config';
 export { Session } from './session';
-export { Callback, EventHandler } from './events/event-handler';
 export { JSONWebSocket } from './json-websocket/json-websocket';
 
 // Calls

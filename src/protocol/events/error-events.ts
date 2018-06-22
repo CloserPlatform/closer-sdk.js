@@ -14,8 +14,8 @@ export namespace errorEvents {
       this.reason = reason;
       this.tag = Error.tag;
     }
-  }
 
-  export const isError = (evt: DomainEvent): evt is errorEvents.Error =>
-    evt.tag === errorEvents.Error.tag;
+    public static isError = (evt: DomainEvent): evt is errorEvents.Error =>
+      evt.tag === errorEvents.Error.tag
+  }
 }

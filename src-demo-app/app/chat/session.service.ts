@@ -46,43 +46,43 @@ export class SessionService {
 
   private onRatelConnected = (session: RatelSDK.Session): RatelSDK.Session => {
 
-    session.chat.onHeartbeat((hb) => {
+    session.chat.heartbeat$.subscribe(hb => {
       Logger.log('Server time: ', hb.timestamp);
     });
 
-    session.chat.onError((error) => {
+    session.chat.error$.subscribe(error => {
       Logger.log('An error has occured: ', error);
     });
 
-    session.chat.onDisconnect((close) => {
+    session.chat.disconnect$.subscribe(close => {
       Page.setHeader(`Disconnected`);
       Logger.log('Session disconnected: ', close);
       alert('Diconnected from artichoke, click to reload demo app');
       // window.location.reload();
     });
 
-    session.chat.onServerUnreachable(() => {
+    session.chat.serverUnreachable$.subscribe(() => {
       Logger.log('Server unreachable');
     });
 
-    session.chat.onRoomCreated((m) => {
+    session.chat.roomCreated$.subscribe(m => {
       Logger.log('Room created: ', m);
     });
 
-    session.chat.onRoomInvitation((invitation) => {
+    session.chat.roomInvitation$.subscribe(invitation => {
       Logger.log('Received room invitation: ', invitation);
     });
 
-    session.chat.onCallCreated((call) => {
+    session.chat.callCreated$.subscribe(call => {
       Logger.log('Call created: ', call);
     });
 
-    session.chat.onConnect((hello) => {
+    session.chat.connect$.subscribe(hello => {
       Page.setHeader(`Connected as ${session.id} with deviceId: ${hello.deviceId}`);
       Logger.log('Connected to Artichoke!', hello);
     });
 
-    session.chat.onCallInvitation((callInvitation) => {
+    session.chat.callInvitation$.subscribe(callInvitation => {
       Logger.log('Received call invitation: ', callInvitation);
       this.handleCallInvitation(session, callInvitation);
     });
@@ -111,7 +111,7 @@ export class SessionService {
         );
       });
 
-      call.onEnd((e) => {
+      call.end$.subscribe(e => {
         Logger.log('Call ended: ', e.reason);
         closeModal();
       });

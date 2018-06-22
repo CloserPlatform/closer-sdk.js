@@ -1,12 +1,16 @@
 import { Artichoke } from './artichoke';
-import { EventHandler } from '../events/event-handler';
 import { apiKeyMock, config, deviceIdMock, log, sessionIdMock } from '../test-utils';
 import { callEvents } from '../protocol/events/call-events';
 import { errorEvents } from '../protocol/events/error-events';
-import { internalEvents } from '../protocol/events/internal-events';
 import { roomEvents } from '../protocol/events/room-events';
 import { serverEvents } from '../protocol/events/server-events';
 import { ArtichokeAPI } from '../apis/artichoke-api';
+import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
+
+/*  TODO:
+ *  Add tests:
+ *  - should call a callback on server disconnection
+ */
 
 // tslint:disable:no-any
 // tslint:disable:no-magic-numbers
@@ -36,30 +40,30 @@ class APIMock extends ArtichokeAPI {
 }
 
 describe('Artichoke', () => {
-  let events: EventHandler;
-  let api: any;
+  let api: APIMock;
   let chat: Artichoke;
+  let rtcPoolRepository: RTCPoolRepository;
 
   beforeEach(() => {
-    events = new EventHandler(log);
     api = new APIMock();
-    chat = new Artichoke(config.chat, log, events, api);
+    rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, log, api);
+    chat = new Artichoke(api, log, rtcPoolRepository);
   });
 
   it('should notify on a new event', (done) => {
-    events.onEvent(serverEvents.Hello.tag, (_msg: serverEvents.Hello) => done());
+    chat.connect$.subscribe(_ => done());
     chat.connect();
     api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), 200));
   });
 
   it('should call a callback on server connection', (done) => {
-    chat.onConnect((_msg) => done());
+    chat.connect$.subscribe(_ => done());
     chat.connect();
     api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), 200));
   });
 
   it('should call a callback on server heartbeat', (done) => {
-    chat.onHeartbeat((_hb) => done());
+    chat.heartbeat$.subscribe(_ => done());
     chat.connect();
     api.cb(new serverEvents.OutputHeartbeat(Date.now()));
   });
@@ -69,7 +73,7 @@ describe('Artichoke', () => {
 
     const heartbeatTimeout = 20;
 
-    chat.onServerUnreachable(done);
+    chat.serverUnreachable$.subscribe(done);
     chat.connect();
     api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), heartbeatTimeout));
 
@@ -81,7 +85,7 @@ describe('Artichoke', () => {
     jasmine.clock().install();
 
     const heartbeatTimeout = 20;
-    chat.onServerUnreachable(() => done.fail());
+    chat.serverUnreachable$.subscribe(() => done.fail());
     chat.connect();
 
     api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), heartbeatTimeout));
@@ -102,7 +106,7 @@ describe('Artichoke', () => {
 
     const heartbeatTimeout = 20;
 
-    chat.onServerUnreachable(() => done.fail());
+    chat.serverUnreachable$.subscribe(() => done.fail());
     chat.connect();
     api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), heartbeatTimeout));
 
@@ -113,37 +117,29 @@ describe('Artichoke', () => {
     jasmine.clock().uninstall();
   });
 
-  it('should call a callback on server disconnection', (done) => {
-    chat.onDisconnect((_msg) => done());
-    chat.connect();
-    api.cb(new internalEvents.WebsocketDisconnected(1023, 'Too much effort.'));
-  });
-
   it('should call a callback on server error', (done) => {
-    chat.onError((_error) => done());
+    chat.error$.subscribe((_msg) => done());
     chat.connect();
     api.cb(new errorEvents.Error('why not?'));
   });
 
   it('should run a callback when a room is created', (done) => {
-    events.onEvent(errorEvents.Error.tag, (_error) => done.fail());
-
-    chat.onRoomCreated((e) => {
+    chat.error$.subscribe(_ => done.fail());
+    chat.roomCreated$.subscribe((e) => {
       expect(e.roomId).toBe(roomId);
       done();
     });
 
-    events.notify(new roomEvents.Created(roomId, alice, Date.now()));
+    api.cb(new roomEvents.Created(roomId, alice, Date.now()));
   });
 
   it('should run a callback when a call is created', (done) => {
-    events.onEvent(errorEvents.Error.tag, (_error) => done.fail());
-
-    chat.onCallCreated((c) => {
+    chat.error$.subscribe(_ => done.fail());
+    chat.callCreated$.subscribe((c) => {
       expect(c.callId).toBe(callId);
       done();
     });
 
-    events.notify(new callEvents.Created(callId, alice, Date.now()));
+    api.cb(new callEvents.Created(callId, alice, Date.now()));
   });
 });

@@ -16,8 +16,9 @@ import { PushRegistration } from '../protocol/protocol';
 import { ApiHeaders } from './api-headers';
 import { callEvents } from '../protocol/events/call-events';
 import { roomCommand } from '../protocol/commands/room-commands';
-import { Callback } from '../events/event-handler';
 import { APIWithWebsocket } from './api-with-websocket';
+import { Observable, Subject } from 'rxjs';
+import { Callback } from '../utils/promise-utils';
 
 export class ArtichokeAPI extends APIWithWebsocket {
   protected url: string;
@@ -31,6 +32,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   private apiHeaders: ApiHeaders = new ApiHeaders();
 
+  private artichokeApiEvent = new Subject<DomainEvent>();
+
   constructor(public sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, log: Logger) {
     super(log);
 
@@ -42,18 +45,12 @@ export class ArtichokeAPI extends APIWithWebsocket {
     this.url = [config.protocol, '//', host, pathname, '/api'].join('');
     const wsProtocol = config.protocol === 'https:' ? 'wss:' : 'ws:';
     this.wsUrl = [wsProtocol, '//', host, pathname, '/ws/', apiKey].join('');
+
+    this.onEvent(ev => this.artichokeApiEvent.next(ev));
   }
 
-  public onEvent(callback: Callback<DomainEvent>): void {
-    super.onEvent((event: DomainEvent) => {
-      // FIXME Apply this bandaid elsewhere.
-      if (event.tag === serverEvents.Hello.tag) {
-        this.deviceId = (event as serverEvents.Hello).deviceId;
-        this.apiHeaders.deviceId = this.deviceId;
-      }
-
-      callback(event);
-    });
+  public get event$(): Observable<DomainEvent> {
+    return this.artichokeApiEvent;
   }
 
   public connect(): void {
@@ -226,6 +223,18 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   public unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
     return this.deleteAuth([this.url, this.pushNotifsPath, 'unregister', pushId]);
+  }
+
+  protected onEvent(callback: Callback<DomainEvent>): void {
+    super.onEvent((event: DomainEvent) => {
+      // FIXME Apply this bandaid elsewhere.
+      if (event.tag === serverEvents.Hello.tag) {
+        this.deviceId = (event as serverEvents.Hello).deviceId;
+        this.apiHeaders.deviceId = this.deviceId;
+      }
+
+      callback(event);
+    });
   }
 
   private postAuth<Body, Response>(path: ReadonlyArray<string>, body?: Body): Promise<Response> {

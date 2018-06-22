@@ -1,5 +1,6 @@
 import { errorEvents } from '../protocol/events/error-events';
-import { Callback } from '../events/event-handler';
+
+export type Callback<T> = (arg: T) => void;
 
 export interface PromiseResolve<T> extends Callback<T | PromiseLike<T>> {
 }

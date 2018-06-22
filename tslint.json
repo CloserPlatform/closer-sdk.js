@@ -30,8 +30,7 @@
     ],
     "deprecation": true,
     "import-blacklist": [
-      true,
-      "rxjs"
+      true
     ],
     "encoding": true,
     "eofline": true,
@@ -107,7 +106,7 @@
     "no-sparse-arrays": true,
     "no-string-literal": true,
     "no-string-throw": true,
-    "no-submodule-imports": true,
+    "no-submodule-imports": false,
     "no-switch-case-fall-through": true,
     "no-this-assignment": true,
     "no-unbound-method": true,

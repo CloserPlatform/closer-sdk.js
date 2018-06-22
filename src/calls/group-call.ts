@@ -1,8 +1,8 @@
 import * as proto from '../protocol/protocol';
 import { Call } from './call';
 import { callEvents } from '../protocol/events/call-events';
-import { Callback } from '../events/event-handler';
 import { CallType } from './call-type';
+import { Observable } from 'rxjs';
 
 export class GroupCall extends Call {
     public readonly callType: CallType = CallType.GROUP;
@@ -21,7 +21,7 @@ export class GroupCall extends Call {
         return this.artichokeApi.joinCall(this.id);
     }
 
-    public onInvited(callback: Callback<callEvents.Invited>): void {
-        this.onInvitedCallback = callback;
+    public get invited$(): Observable<callEvents.Invited> {
+        return this.getInvited$();
     }
 }
