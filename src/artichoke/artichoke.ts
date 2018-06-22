@@ -25,72 +25,67 @@ import { PromiseUtils } from '../utils/promise-utils';
 
 export class Artichoke {
   private static heartbeatTimeoutMultiplier = 2;
-  private api: ArtichokeAPI;
-  private config: ChatConfig;
-  private log: Logger;
-  private events: EventHandler;
   private heartbeatTimeout?: BumpableTimeout;
 
-  constructor(config: ChatConfig, log: Logger, events: EventHandler, api: ArtichokeAPI) {
-    this.api = api;
-    this.config = config;
-    this.log = log;
-    this.events = events;
+  constructor(private artichokeConfig: ChatConfig,
+              private logger: Logger,
+              private eventHandler: EventHandler,
+              private artichokeApi: ArtichokeAPI) {
 
-    events.onEvent(errorEvents.Error.tag, (e: errorEvents.Error) =>
-      this.log.warn(`Event error not handled: ${e}`));
-    events.onEvent(chatEvents.Received.tag, (e: chatEvents.Received) =>
-      this.log.warn(`Event received not handled: ${e}`));
-    events.onEvent(roomEvents.MessageDelivered.tag, (e: roomEvents.MessageDelivered) =>
-      this.log.warn(`Event message delivered not handled: ${e}`));
+    eventHandler.onEvent(errorEvents.Error.tag, (e: errorEvents.Error) =>
+      this.logger.warn(`Event error not handled: ${e}`));
+    eventHandler.onEvent(chatEvents.Received.tag, (e: chatEvents.Received) =>
+      this.logger.warn(`Event received not handled: ${e}`));
+    eventHandler.onEvent(roomEvents.MessageDelivered.tag, (e: roomEvents.MessageDelivered) =>
+      this.logger.warn(`Event message delivered not handled: ${e}`));
 
-    events.onEvent(serverEvents.Hello.tag, (hello: serverEvents.Hello) => {
+    eventHandler.onEvent(serverEvents.Hello.tag, (hello: serverEvents.Hello) => {
       this.clearHeartbeatTimeout();
 
       this.heartbeatTimeout = new BumpableTimeout(
         hello.heartbeatTimeout * Artichoke.heartbeatTimeoutMultiplier,
-        (): void => this.events.notify(new internalEvents.ServerBecameUnreachable())
+        (): void => this.eventHandler.notify(new internalEvents.ServerBecameUnreachable())
       );
     });
 
-    events.onEvent(serverEvents.OutputHeartbeat.tag, (hb: serverEvents.OutputHeartbeat) => {
-      this.api.send(new serverCommands.InputHeartbeat(hb.timestamp));
+    eventHandler.onEvent(serverEvents.OutputHeartbeat.tag, (hb: serverEvents.OutputHeartbeat) => {
+      this.artichokeApi.send(new serverCommands.InputHeartbeat(hb.timestamp));
       if (this.heartbeatTimeout) {
         this.heartbeatTimeout.bump();
       }
     });
 
-    events.onEvent(internalEvents.ServerBecameUnreachable.tag, this.clearHeartbeatTimeout);
+    eventHandler.onEvent(internalEvents.ServerBecameUnreachable.tag, this.clearHeartbeatTimeout);
   }
 
   // Callbacks:
   public onConnect(callback: Callback<serverEvents.Hello>): void {
-    this.events.onEvent(serverEvents.Hello.tag, callback);
+    this.eventHandler.onEvent(serverEvents.Hello.tag, callback);
   }
 
   public onHeartbeat(callback: Callback<serverEvents.OutputHeartbeat>): void {
-    this.events.onEvent(serverEvents.OutputHeartbeat.tag, callback);
+    this.eventHandler.onEvent(serverEvents.OutputHeartbeat.tag, callback);
   }
 
   public onServerUnreachable(callback: Callback<internalEvents.ServerBecameUnreachable>): void {
-    this.events.onEvent(internalEvents.ServerBecameUnreachable.tag, callback);
+    this.eventHandler.onEvent(internalEvents.ServerBecameUnreachable.tag, callback);
   }
 
   public onDisconnect(callback: Callback<internalEvents.WebsocketDisconnected>): void {
-    this.events.onEvent(internalEvents.WebsocketDisconnected.tag, callback);
+    this.eventHandler.onEvent(internalEvents.WebsocketDisconnected.tag, callback);
   }
 
   public onError(callback: Callback<errorEvents.Error>): void {
-    this.events.onEvent(errorEvents.Error.tag, callback);
+    this.eventHandler.onEvent(errorEvents.Error.tag, callback);
   }
 
   // API:
   public connect(): void {
-    this.api.onEvent((e: DomainEvent) => {
+    this.artichokeApi.onEvent((e: DomainEvent) => {
       this.notify(e);
     });
 
-    this.api.connect();
+    this.artichokeApi.connect();
   }
 
   public disconnect(): void {
@@ -98,80 +93,82 @@ export class Artichoke {
       this.heartbeatTimeout.clear();
       this.heartbeatTimeout = undefined;
     }
-    this.api.disconnect();
+    this.artichokeApi.disconnect();
   }
 
   // Call API:
   public onCallCreated(callback: Callback<callEvents.Created>): void {
-    this.events.onEvent(callEvents.Created.tag, callback);
+    this.eventHandler.onEvent(callEvents.Created.tag, callback);
   }
 
   public onCallInvitation(callback: Callback<callEvents.Invited>): void {
-    this.events.onEvent(callEvents.Invited.tag, callback);
+    this.eventHandler.onEvent(callEvents.Invited.tag, callback);
   }
 
   public createCall(stream: MediaStream, users: ReadonlyArray<proto.ID>): Promise<GroupCall> {
-    return this.wrapCall(this.api.createCall(users), stream) as Promise<GroupCall>; // Trust me.
+    return this.wrapCall(this.artichokeApi.createCall(users), stream) as Promise<GroupCall>; // Trust me.
   }
 
   public createDirectCall(stream: MediaStream, peer: proto.ID, timeout?: number): Promise<DirectCall> {
-    return this.wrapCall(this.api.createDirectCall(peer, timeout), stream);
+    return this.wrapCall(this.artichokeApi.createDirectCall(peer, timeout), stream);
   }
 
   public getCall(call: proto.ID): Promise<Call> {
-    return this.wrapCall(this.api.getCall(call));
+    return this.wrapCall(this.artichokeApi.getCall(call));
   }
 
   public getCalls(): Promise<ReadonlyArray<Call>> {
-    return PromiseUtils.wrapPromise(this.api.getCalls(),
-                       (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
+    return PromiseUtils.wrapPromise(this.artichokeApi.getCalls(),
+      (call) => createCall(call, this.artichokeConfig.rtc, this.logger, this.eventHandler, this.artichokeApi));
   }
 
   public getActiveCalls(): Promise<ReadonlyArray<Call>> {
-    return PromiseUtils.wrapPromise(this.api.getActiveCalls(),
-                      (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
+    return PromiseUtils.wrapPromise(this.artichokeApi.getActiveCalls(),
+      (call) => createCall(call, this.artichokeConfig.rtc, this.logger, this.eventHandler, this.artichokeApi));
   }
 
   public getCallsWithPendingInvitations(): Promise<ReadonlyArray<Call>> {
-    return PromiseUtils.wrapPromise(this.api.getCallsWithPendingInvitations(),
-      (call) => createCall(call, this.config.rtc, this.log, this.events, this.api));
+    return PromiseUtils.wrapPromise(this.artichokeApi.getCallsWithPendingInvitations(),
+      (call) => createCall(call, this.artichokeConfig.rtc, this.logger, this.eventHandler, this.artichokeApi));
   }
 
   // Chat room API:
   public onRoomCreated(callback: Callback<roomEvents.Created>): void {
-    this.events.onEvent(roomEvents.Created.tag, callback);
+    this.eventHandler.onEvent(roomEvents.Created.tag, callback);
   }
 
   public onRoomInvitation(callback: Callback<roomEvents.Invited>): void {
-    this.events.onEvent(roomEvents.Invited.tag, callback);
+    this.eventHandler.onEvent(roomEvents.Invited.tag, callback);
   }
 
   public createRoom(name: string): Promise<GroupRoom> {
-    return this.wrapRoom(this.api.createRoom(name)) as Promise<GroupRoom>; // Trust me.
+    return this.wrapRoom(this.artichokeApi.createRoom(name)) as Promise<GroupRoom>; // Trust me.
   }
 
   public createDirectRoom(peer: proto.ID, context?: proto.Context): Promise<DirectRoom> {
-    return this.wrapRoom(this.api.createDirectRoom(peer, context));
+    return this.wrapRoom(this.artichokeApi.createDirectRoom(peer, context));
   }
 
   public getRoom(room: proto.ID): Promise<Room> {
-    return this.wrapRoom(this.api.getRoom(room));
+    return this.wrapRoom(this.artichokeApi.getRoom(room));
   }
 
   public getRooms(): Promise<ReadonlyArray<Room>> {
-    return PromiseUtils.wrapPromise(this.api.getRooms(), (room) => createRoom(room, this.log, this.events, this.api));
+    return PromiseUtils.wrapPromise(this.artichokeApi.getRooms(),
+      (room) => createRoom(room, this.logger, this.eventHandler, this.artichokeApi));
   }
 
   public getRoster(): Promise<ReadonlyArray<Room>> {
-    return PromiseUtils.wrapPromise(this.api.getRoster(), (room) => createRoom(room, this.log, this.events, this.api));
+    return PromiseUtils.wrapPromise(this.artichokeApi.getRoster(),
+      (room) => createRoom(room, this.logger, this.eventHandler, this.artichokeApi));
   }
 
   public registerForPushNotifications(pushId: proto.ID): Promise<void> {
-    return this.api.registerForPushNotifications(pushId);
+    return this.artichokeApi.registerForPushNotifications(pushId);
   }
 
   public unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
-    return this.api.unregisterFromPushNotifications(pushId);
+    return this.artichokeApi.unregisterFromPushNotifications(pushId);
   }
 
   private clearHeartbeatTimeout = (): void => {
@@ -182,17 +179,18 @@ export class Artichoke {
   }
 
   private notify(event: DomainEvent): void {
-    this.events.notify(event, (e) =>
-      this.events.notify(new errorEvents.Error(`Unhandled event: ${e.tag}`))
+    this.eventHandler.notify(event, (e) =>
+      this.eventHandler.notify(new errorEvents.Error(`Unhandled event: ${e.tag}`))
     );
   }
 
   // Utils:
   private wrapCall(promise: Promise<wireEntities.Call>, stream?: MediaStream): Promise<Call> {
-    return promise.then((call) => createCall(call, this.config.rtc, this.log, this.events, this.api, stream));
+    return promise.then((call) =>
+      createCall(call, this.artichokeConfig.rtc, this.logger, this.eventHandler, this.artichokeApi, stream));
   }
 
   private wrapRoom(promise: Promise<wireEntities.Room>): Promise<Room> {
-    return promise.then((room) => createRoom(room, this.log, this.events, this.api));
+    return promise.then((room) => createRoom(room, this.logger, this.eventHandler, this.artichokeApi));
   }
 }

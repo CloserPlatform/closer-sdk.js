@@ -2,21 +2,27 @@ import { DomainCommand, encoder } from '../protocol/commands/domain-command';
 import { errorEvents } from '../protocol/events/error-events';
 import { JSONWebSocket } from '../json-websocket/json-websocket';
 import { decoder, DomainEvent } from '../protocol/events/domain-event';
-import * as proto from '../protocol/protocol';
 import { Logger } from '../logger';
 import { internalEvents } from '../protocol/events/internal-events';
 import { roomCommand } from '../protocol/commands/room-commands';
 import { Callback } from '../events/event-handler';
 import { RESTfulAPI } from './restful-api';
-import { PromiseFunctions } from '../utils/promise-utils';
+import { Ref } from '../protocol/protocol';
+import { chatEvents } from '../protocol/events/chat-events';
+import { RandomUtils } from '../utils/random-utils';
+
+interface AskPromise {
+  resolve(res: chatEvents.Received): void;
+  reject(err: errorEvents.Error): void;
+}
 
 export class APIWithWebsocket extends RESTfulAPI {
   private socket: JSONWebSocket;
-  private promises: { [ref: string]: PromiseFunctions<DomainEvent> } = {};
+  private askPromises: { [ref: string]: AskPromise } = {};
 
-  constructor(log: Logger) {
-    super(log);
-    this.socket = new JSONWebSocket(this.log, encoder, decoder);
+  constructor(logger: Logger) {
+    super(logger);
+    this.socket = new JSONWebSocket(logger, encoder, decoder);
   }
 
   public connect(url: string): void {
@@ -31,19 +37,15 @@ export class APIWithWebsocket extends RESTfulAPI {
     return this.socket.send(command);
   }
 
-  public ask<ResponseT extends DomainEvent>(cmd: roomCommand.SendMessage | roomCommand.SendCustomMessage):
-  Promise<ResponseT> {
-    return new Promise<ResponseT>((resolve, reject): void => {
-      const ref = `ref${Date.now()}`; // FIXME Use UUID instead.
-      this.promises[ref] = {
-        // tslint:disable-next-line:no-unnecessary-callback-wrapper
-        resolve: (ev: ResponseT): void => resolve(ev),
-        reject
-      };
-      cmd.ref = ref;
-      this.send(cmd).catch((e) => {
-        this.log.warn(`Ask failed with error: ${e}`);
-        this.reject(ref, new errorEvents.Error('Ask failed'));
+  public ask(roomCmd: roomCommand.SendMessage | roomCommand.SendCustomMessage):
+  Promise<chatEvents.Received> {
+    return new Promise<chatEvents.Received>((resolve, reject): void => {
+      const ref = RandomUtils.randomUUID();
+      roomCmd.ref = ref;
+      this.askPromises[ref] = { resolve, reject };
+      this.send(roomCmd).catch((e) => {
+        this.logger.warn(`Ask failed with error: ${e}`);
+        this.reject(new errorEvents.Error('Ask failed'), ref);
       });
     });
   }
@@ -53,37 +55,33 @@ export class APIWithWebsocket extends RESTfulAPI {
       callback(new internalEvents.WebsocketDisconnected(ev.code, ev.reason))
     );
 
-    this.socket.onError((ev) =>
+    this.socket.onError(ev =>
       callback(new errorEvents.Error(`Websocket connection error. ${ev}`))
     );
 
     this.socket.onEvent((event: DomainEvent) => {
-      if (errorEvents.isError(event)) {
-        // FIXME
-        // tslint:disable-next-line:no-any
-        this.reject((event as any).ref, event);
-      } else {
-        // FIXME
-        // tslint:disable-next-line:no-any
-        this.resolve((event as any).ref, event);
+      if (errorEvents.isError(event) && event.ref) {
+        this.reject(event, event.ref);
+      } else if (chatEvents.Received.isReceived(event) && event.ref) {
+        this.resolve(event, event.ref);
       }
       callback(event);
     });
   }
 
-  private resolve(ref: proto.Ref, event: DomainEvent): void {
-    if (ref && ref in this.promises) {
-      this.promises[ref].resolve(event);
-      const { [ref]: value, ...withoutRefPromise } = this.promises;
-      this.promises = withoutRefPromise;
+  private resolve(event: chatEvents.Received, ref: Ref): void {
+    if (ref in this.askPromises) {
+      this.askPromises[ref].resolve(event);
+      const { [ref]: value, ...withoutRefPromise } = this.askPromises;
+      this.askPromises = withoutRefPromise;
     }
   }
 
-  private reject(ref: proto.Ref, error: errorEvents.Error): void {
-    if (ref && ref in this.promises) {
-      this.promises[ref].reject(error);
-      const { [ref]: value, ...withoutRefPromise } = this.promises;
-      this.promises = withoutRefPromise;
+  private reject(error: errorEvents.Error, ref: Ref): void {
+    if (ref in this.askPromises) {
+      this.askPromises[ref].reject(error);
+      const { [ref]: value, ...withoutRefPromise } = this.askPromises;
+      this.askPromises = withoutRefPromise;
     }
   }
 }

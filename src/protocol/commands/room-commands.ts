@@ -1,58 +1,57 @@
 // tslint:disable:no-any
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
-// tslint:disable:ban-types
-// tslint:disable:member-ordering
-// tslint:disable:member-access
 import { DomainCommand } from './domain-command';
+import { Ref } from '../protocol';
 
 export namespace roomCommand {
 
   export abstract class RoomCommand implements DomainCommand {
+
+    public readonly roomId: string;
+    public readonly tag: string;
+    public readonly __discriminator__ = 'domainCommand';
+
     protected constructor(roomId: string, tag: string) {
       this.roomId = roomId;
       this.tag = tag;
     }
-
-    readonly roomId: string;
-    readonly tag: string;
-    readonly __discriminator__ = 'domainCommand';
   }
 
   export class SendMessage extends RoomCommand {
-    static readonly tag = 'room_send_message';
+    public static readonly tag = 'room_send_message';
 
-    constructor(roomId: string, body: string, context: any, ref?: string) {
+    public ref?: Ref;
+    public readonly body: string;
+    public readonly context: any;
+
+    constructor(roomId: string, body: string, context: any, ref?: Ref) {
       super(roomId, SendMessage.tag);
       this.body = body;
       this.context = context;
       this.ref = ref;
     }
-
-    readonly body: string;
-    readonly context: any;
-    ref: string | undefined;
   }
 
   export class SendCustomMessage extends RoomCommand {
-    static readonly tag = 'room_send_custom_message';
+    public static readonly tag = 'room_send_custom_message';
 
-    constructor(roomId: string, body: string, subtag: string, context: any, ref?: string) {
+    public ref?: Ref;
+    public readonly body: string;
+    public readonly context: any;
+    public readonly subtag: string;
+
+    constructor(roomId: string, body: string, subtag: string, context: any, ref?: Ref) {
       super(roomId, SendCustomMessage.tag);
       this.body = body;
       this.ref = ref;
       this.subtag = subtag;
       this.context = context;
     }
-
-    readonly body: string;
-    ref: string | undefined;
-    readonly context: any;
-    readonly subtag: string;
   }
 
   export class SendTyping extends RoomCommand {
-    static readonly tag = 'room_send_typing';
+    public static readonly tag = 'room_send_typing';
 
     constructor(roomId: string) {
       super(roomId, SendTyping.tag);
@@ -60,27 +59,27 @@ export namespace roomCommand {
   }
 
   export class SendMark extends RoomCommand {
-    static readonly tag = 'room_send_mark';
+    public static readonly tag = 'room_send_mark';
+
+    public readonly timestamp: number;
 
     constructor(roomId: string, timestamp: number) {
       super(roomId, SendMark.tag);
       this.timestamp = timestamp;
     }
-
-    readonly timestamp: number;
   }
 
   export class ConfirmMessageDelivery extends RoomCommand {
-    static readonly tag = 'room_confirm_message_delivery';
+    public static readonly tag = 'room_confirm_message_delivery';
+
+    public readonly eventId: string;
+    public readonly timestamp: number;
 
     constructor(roomId: string, eventId: string, timestamp: number) {
       super(roomId, ConfirmMessageDelivery.tag);
       this.eventId = eventId;
       this.timestamp = timestamp;
     }
-
-    readonly eventId: string;
-    readonly timestamp: number;
   }
 
 }

@@ -1,22 +1,19 @@
-// tslint:disable:no-any
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
 // tslint:disable:ban-types
-// tslint:disable:member-ordering
-// tslint:disable:member-access
 import { DomainEvent } from './domain-event';
 
 export namespace chatEvents {
 
   export abstract class ChatEvent implements DomainEvent {
+    public readonly eventId: string;
+    public readonly tag: string;
+    public readonly __discriminator__ = 'domainEvent';
+
     protected constructor(eventId: string, tag: string) {
       this.eventId = eventId;
       this.tag = tag;
     }
-
-    readonly eventId: string;
-    readonly tag: string;
-    readonly __discriminator__ = 'domainEvent';
   }
 
   export interface NormalizedEvent {
@@ -24,12 +21,16 @@ export namespace chatEvents {
     readonly authorId: string;
     readonly channelId: string;
     readonly tag: string;
+    // tslint:disable-next-line:no-any
     readonly data: any;
     readonly timestamp: number;
   }
 
   export class Received extends ChatEvent {
-    static readonly tag = 'chat_received';
+    public static readonly tag = 'chat_received';
+
+    public readonly message: NormalizedEvent;
+    public readonly ref?: string;
 
     constructor(eventId: string, message: NormalizedEvent, ref?: string) {
       super(eventId, Received.tag);
@@ -38,8 +39,8 @@ export namespace chatEvents {
       this.ref = ref;
     }
 
-    readonly message: NormalizedEvent;
-    readonly ref: string | undefined;
+    public static isReceived = (event: DomainEvent): event is Received =>
+      event.tag === Received.tag
   }
 
 }
