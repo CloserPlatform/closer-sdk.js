@@ -56,3 +56,15 @@ publish:
   stage: publish
   tags:
     - shell
+
+deploy_demoapp:
+  only:
+    - tags
+  script:
+    - npm install
+    - npm run build
+    - npm run build-demo-app
+    - cp -r dist-demo-app/* /var/www/ratel-sdk-js-demo.local/
+  stage: publish
+  tags:
+    - shell
