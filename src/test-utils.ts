@@ -41,6 +41,6 @@ export const getStream = (onStream: (stream: MediaStream) => void, onError: (err
     audio: true
   };
   cs.fake = true; // NOTE For FireFox.
-  log.info('Creating a stream with constraints: ' + JSON.stringify(cs));
+  log.info(`Creating a stream with constraints: ${JSON.stringify(cs)}`);
   navigator.mediaDevices.getUserMedia(cs).then(onStream).catch(onError);
 };

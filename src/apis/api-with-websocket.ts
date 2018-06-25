@@ -3,13 +3,13 @@ import { errorEvents } from '../protocol/events/error-events';
 import { JSONWebSocket } from '../json-websocket/json-websocket';
 import { decoder, DomainEvent } from '../protocol/events/domain-event';
 import { Logger } from '../logger';
-import { internalEvents } from '../protocol/events/internal-events';
 import { roomCommand } from '../protocol/commands/room-commands';
-import { Callback } from '../events/event-handler';
 import { RESTfulAPI } from './restful-api';
 import { Ref } from '../protocol/protocol';
 import { chatEvents } from '../protocol/events/chat-events';
 import { RandomUtils } from '../utils/random-utils';
+import { Observable, Subject } from 'rxjs';
+import { Callback } from '../utils/promise-utils';
 
 interface AskPromise {
   resolve(res: chatEvents.Received): void;
@@ -19,10 +19,12 @@ interface AskPromise {
 export class APIWithWebsocket extends RESTfulAPI {
   private socket: JSONWebSocket;
   private askPromises: { [ref: string]: AskPromise } = {};
+  private disconnectEvent = new Subject<CloseEvent>();
 
   constructor(logger: Logger) {
     super(logger);
     this.socket = new JSONWebSocket(logger, encoder, decoder);
+    this.socket.onDisconnect(ev => this.disconnectEvent.next(ev));
   }
 
   public connect(url: string): void {
@@ -50,17 +52,17 @@ export class APIWithWebsocket extends RESTfulAPI {
     });
   }
 
-  public onEvent(callback: Callback<DomainEvent>): void {
-    this.socket.onDisconnect((ev) =>
-      callback(new internalEvents.WebsocketDisconnected(ev.code, ev.reason))
-    );
+  public get disconnect$(): Observable<CloseEvent> {
+    return this.disconnectEvent;
+  }
 
+  protected onEvent(callback: Callback<DomainEvent>): void {
     this.socket.onError(ev =>
       callback(new errorEvents.Error(`Websocket connection error. ${ev}`))
     );
 
     this.socket.onEvent((event: DomainEvent) => {
-      if (errorEvents.isError(event) && event.ref) {
+      if (errorEvents.Error.isError(event) && event.ref) {
         this.reject(event, event.ref);
       } else if (chatEvents.Received.isReceived(event) && event.ref) {
         this.resolve(event, event.ref);

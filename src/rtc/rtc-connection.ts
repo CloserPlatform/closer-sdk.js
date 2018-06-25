@@ -1,16 +1,15 @@
-import { errorEvents } from '../protocol/events/error-events';
 import { Logger } from '../logger';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { ID } from '../protocol/protocol';
-import { Callback, EventHandler } from '../events/event-handler';
 import { RTCConfig } from './rtc-config';
 import { TimeUtils } from '../utils/time-utils';
+import { Observable, Subject } from 'rxjs';
 
 export class RTCConnection {
   public static readonly renegotiationTimeout = 100;
   private rtcPeerConnection: RTCPeerConnection;
   private onICEDoneCallback: () => void;
-  private onRemoteStreamCallback: Callback<MediaStream>;
+  private remoteStreamEvent = new Subject<MediaStream>();
 
   // FIXME Required by the various hacks:
   private localRole?: string;
@@ -18,18 +17,13 @@ export class RTCConnection {
   private renegotiationTimer: number;
 
   constructor(private callId: ID, private peerId: ID, config: RTCConfig, private logger: Logger,
-              private eventHandler: EventHandler, private artichokeApi: ArtichokeAPI,
+              private artichokeApi: ArtichokeAPI,
               private answerOptions?: RTCAnswerOptions, private offerOptions?: RTCOfferOptions) {
     logger.info(`Connecting an RTC connection to ${peerId} on ${callId}`);
     this.rtcPeerConnection = new RTCPeerConnection(config);
 
     this.localRole = undefined;
     this.attachedStreams = {};
-
-    this.onRemoteStreamCallback = (_stream): void => {
-      // Do nothing.
-      this.logger.warn('Empty onRemoteStreamCallback called');
-    };
 
     this.onICEDoneCallback = (): void => {
       // Do nothing.
@@ -39,9 +33,9 @@ export class RTCConnection {
     this.rtcPeerConnection.onicecandidate = (event): void => {
       if (event.candidate) {
         this.logger.debug(`Created ICE candidate: ${event.candidate.candidate}`);
-        this.artichokeApi.sendCandidate(this.callId, this.peerId, event.candidate).catch((err) => {
-          this.eventHandler.notify(new errorEvents.Error(`Could not send an ICE candidate: ${err}`));
-        });
+        this.artichokeApi.sendCandidate(this.callId, this.peerId, event.candidate)
+          .then(_ => this.logger.debug('Candidtae sent successfully'))
+          .catch(err => this.logger.error(`Could not send an ICE candidate: ${err}`));
       } else {
         this.logger.debug('Done gathering ICE candidates.');
         this.onICEDoneCallback();
@@ -50,9 +44,7 @@ export class RTCConnection {
 
     this.rtcPeerConnection.ontrack = (event: RTCTrackEvent): void => {
       this.logger.info('Received a remote track.');
-      event.streams.forEach(stream => {
-        this.onRemoteStreamCallback(stream);
-      });
+      event.streams.forEach(stream => this.remoteStreamEvent.next(stream));
     };
 
     this.rtcPeerConnection.onnegotiationneeded = (_event): void => {
@@ -62,9 +54,7 @@ export class RTCConnection {
         this.renegotiationTimer = TimeUtils.onceDelayed(
           this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
           this.logger.debug('Renegotiating an RTC connection.');
-          this.offer().catch((err) => {
-            this.eventHandler.notify(new errorEvents.Error(`Could not renegotiate the connection: ${err}`));
-          });
+          this.offer().catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
         });
       }
     };
@@ -150,8 +140,8 @@ export class RTCConnection {
     });
   }
 
-  public onRemoteStream(callback: Callback<MediaStream>): void {
-    this.onRemoteStreamCallback = callback;
+  public get remoteStream$(): Observable<MediaStream> {
+    return this.remoteStreamEvent;
   }
 
   // FIXME This is only used by tests...

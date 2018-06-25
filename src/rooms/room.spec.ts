@@ -1,8 +1,7 @@
 // tslint:disable:max-file-line-count
-import { EventHandler } from '../events/event-handler';
+// tslint:disable:no-let
 import { apiKeyMock, config, log, sessionIdMock } from '../test-utils';
 import { chatEvents } from '../protocol/events/chat-events';
-import { errorEvents } from '../protocol/events/error-events';
 import { roomEvents } from '../protocol/events/room-events';
 import * as wireEntities from '../protocol/wire-entities';
 import NormalizedEvent = chatEvents.NormalizedEvent;
@@ -12,13 +11,9 @@ import { RoomType } from './room-type';
 import { Room } from './room';
 import { DirectRoom } from './direct-room';
 import { GroupRoom } from './group-room';
-import { createRoom } from './create-room';
-import { Paginated } from '../protocol/protocol';
+import { HistoryFilter, Paginated } from '../protocol/protocol';
 import MessageSent = roomEvents.MessageSent;
-
-// FIXME
-// tslint:disable:no-any
-// tslint:disable:no-let
+import { RoomFactory } from './room-factory';
 
 const roomId = '123';
 const alice = '321';
@@ -37,30 +32,37 @@ class APIMock extends ArtichokeAPI {
   public joined = false;
   public left = false;
   public invited: string;
+  // tslint:disable-next-line:no-any
+  public cb: any;
 
   constructor() {
     super(sessionIdMock, apiKeyMock, config.chat, log);
   }
 
-  public joinRoom(_id: any): Promise<void> {
+  // tslint:disable-next-line:no-any
+  public onEvent(callback: any): void {
+    this.cb = callback;
+  }
+
+  public joinRoom(_id: string): Promise<void> {
     this.joined = true;
 
     return Promise.resolve();
   }
 
-  public leaveRoom(_id: any): Promise<void> {
+  public leaveRoom(_id: string): Promise<void> {
     this.left = true;
 
     return Promise.resolve();
   }
 
-  public inviteToRoom(_id: any, user: any): Promise<void> {
+  public inviteToRoom(_id: string, user: string): Promise<void> {
     this.invited = user;
 
     return Promise.resolve();
   }
 
-  public getRoomHistoryLast(_id: any, _count: any, _filter: any): Promise<Paginated<MessageSent>> {
+  public getRoomHistoryLast(_id: string, _count: number, _filter: HistoryFilter): Promise<Paginated<MessageSent>> {
     return Promise.resolve({
       offset: 0,
       limit: 2,
@@ -68,7 +70,8 @@ class APIMock extends ArtichokeAPI {
     });
   }
 
-  public getRoomHistoryPage(_id: any, _offset: any, _limit: any, _filter: any): Promise<Paginated<MessageSent>> {
+  public getRoomHistoryPage(_id: string, _offset: number, _limit: number,
+                            _filter: HistoryFilter): Promise<Paginated<MessageSent>> {
     return Promise.resolve({
       offset: 0,
       limit: 2,
@@ -76,17 +79,17 @@ class APIMock extends ArtichokeAPI {
     });
   }
 
-  public getRoomUsers(_id: any): Promise<ReadonlyArray<string>> {
+  public getRoomUsers(_id: string): Promise<ReadonlyArray<string>> {
     return Promise.resolve([bob]);
   }
 
-  public sendTyping(_id: any): Promise<void> {
+  public sendTyping(_id: string): Promise<void> {
     this.sentTyping = true;
 
     return Promise.resolve();
   }
 
-  public sendMessage(_id: any, body: any): Promise<chatEvents.Received> {
+  public sendMessage(_id: string, body: string): Promise<chatEvents.Received> {
     const m = msgFn(msg3, body);
     const n: NormalizedEvent = {
       id: m.messageId,
@@ -100,7 +103,7 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve(new chatEvents.Received(m.messageId, n));
   }
 
-  public setMark(_id: any, _timestamp: any): Promise<void> {
+  public setMark(_id: string, _timestamp: number): Promise<void> {
     this.marked = true;
 
     return Promise.resolve();
@@ -138,16 +141,16 @@ const makeRoom = (type: RoomType): wireEntities.Room => {
 
 ['DirectRoom', 'GroupRoom'].forEach((d) => {
   describe(d, () => {
-    let events: EventHandler;
     let api: APIMock;
     let room: Room;
-    let uid: any;
+    let uid: string;
+    let roomFactory: RoomFactory;
 
     beforeEach(() => {
-      events = new EventHandler(log);
       api = new APIMock();
+      roomFactory = new RoomFactory(log, api);
       const type = d === 'DirectRoom' ? RoomType.DIRECT : RoomType.GROUP;
-      room = createRoom(makeRoom(type), log, events, api);
+      room = roomFactory.create(makeRoom(type));
       uid = '123';
     });
 
@@ -168,38 +171,38 @@ const makeRoom = (type: RoomType): wireEntities.Room => {
     });
 
     it('should run a callback on typing indication', (done) => {
-      room.onTyping((msg) => {
+      room.typing$.subscribe((msg) => {
         expect(msg.authorId).toBe(chad);
         done();
       });
 
-      events.notify(new roomEvents.TypingSent(room.id, chad, Date.now()));
+      api.cb(new roomEvents.TypingSent(room.id, chad, Date.now()));
     });
 
     it('should run a callback on incoming message', (done) => {
-      room.onMessage((msg) => {
+      room.message$.subscribe((msg) => {
         expect(msg.authorId).toBe(chad);
         done();
       });
 
       const m = new roomEvents.MessageSent(roomId, chad, 'Hi!', msg1, {}, timestamp);
-      events.notify(m);
+      api.cb(m);
     });
 
     it('should run a callback on incoming custom message', (done) => {
-      room.onCustom('json', (msg) => {
+      room.getCustomMessageStream('json').subscribe((msg) => {
         expect(msg.authorId).toBe(chad);
         done();
       });
 
       const m = new roomEvents.CustomMessageSent(roomId, chad, 'Hi!', msg1, 'json', {}, timestamp);
-      events.notify(m);
+      api.cb(m);
     });
 
     it('should run a callback on incoming mark', (done) => {
       const t = Date.now();
 
-      room.onMarked((msg) => {
+      room.marked$.subscribe((msg) => {
         expect(msg.timestamp).toBe(t);
         room.getMark(uid).then((mark) => {
           expect(mark).toBe(t);
@@ -207,7 +210,7 @@ const makeRoom = (type: RoomType): wireEntities.Room => {
         });
       });
 
-      events.notify(new roomEvents.MarkSent(room.id, uid, t));
+      api.cb(new roomEvents.MarkSent(room.id, uid, t));
     });
 
     // FIXME These should be moved to integration tests:
@@ -237,18 +240,17 @@ const makeRoom = (type: RoomType): wireEntities.Room => {
 });
 
 describe('DirectRoom', () => {
-  let events: any;
-  let api: any;
-  let room: any;
+  let api: APIMock;
+  let room: Room;
 
   beforeEach(() => {
-    events = new EventHandler(log);
     api = new APIMock();
-    room = createRoom(makeRoom(RoomType.DIRECT), log, events, api) as DirectRoom;
+    const roomFactory = new RoomFactory(log, api);
+    room = roomFactory.create(makeRoom(RoomType.DIRECT)) as DirectRoom;
   });
 
   it('should retrieve users', (done) => {
-    room.getUsers().then((users: any) => {
+    room.getUsers().then(users => {
       expect(users).toContain(bob);
       done();
     });
@@ -256,27 +258,26 @@ describe('DirectRoom', () => {
 });
 
 describe('GroupRoom', () => {
-  let events: EventHandler;
   let api: APIMock;
   let room: GroupRoom;
 
   beforeEach(() => {
-    events = new EventHandler(log);
     api = new APIMock();
-    room = createRoom(makeRoom(RoomType.GROUP), log, events, api) as GroupRoom;
+    const roomFactory = new RoomFactory(log, api);
+    room = roomFactory.create(makeRoom(RoomType.GROUP)) as GroupRoom;
   });
 
   it('should maintain the user list', (done) => {
-    events.onEvent(errorEvents.Error.tag, (_error) => done.fail());
+    spyOn(log, 'error');
 
-    room.onJoined((joined) => {
+    room.joined$.subscribe((joined) => {
       expect(joined.authorId).toBe(bob);
 
       room.getUsers().then((users1) => {
         expect(users1).toContain(bob);
         expect(users1).toContain(alice);
 
-        room.onLeft((left) => {
+        room.left$.subscribe((left) => {
           expect(left.authorId).toBe(alice);
 
           room.getUsers().then((users2) => {
@@ -286,40 +287,41 @@ describe('GroupRoom', () => {
           });
         });
 
-        events.notify(new roomEvents.Left(room.id, alice, EndReason.Terminated, Date.now()));
+        api.cb(new roomEvents.Left(room.id, alice, EndReason.Terminated, Date.now()));
       });
     });
 
-    events.notify(new roomEvents.Joined(room.id, bob, Date.now()));
+    api.cb(new roomEvents.Joined(room.id, bob, Date.now()));
+    expect(log.error).not.toHaveBeenCalled();
   });
 
   it('should run callback on room joined', (done) => {
-    room.onJoined((msg) => {
+    room.joined$.subscribe((msg) => {
       expect(msg.authorId).toBe(alice);
       done();
     });
 
-    events.notify(new roomEvents.Joined(room.id, alice, Date.now()));
+    api.cb(new roomEvents.Joined(room.id, alice, Date.now()));
   });
 
   it('should run callback on room left', (done) => {
-    room.onLeft((msg) => {
+    room.left$.subscribe((msg) => {
       expect(msg.authorId).toBe(alice);
       expect(msg.endReason).toBe(EndReason.Terminated);
       done();
     });
 
-    events.notify(new roomEvents.Left(room.id, alice, EndReason.Terminated, Date.now()));
+    api.cb(new roomEvents.Left(room.id, alice, EndReason.Terminated, Date.now()));
   });
 
   it('should run callback on room invite', (done) => {
-    room.onInvited((msg) => {
+    room.invited$.subscribe((msg) => {
       expect(msg.authorId).toBe(alice);
       expect(msg.invitee).toBe(bob);
       done();
     });
 
-    events.notify(new roomEvents.Invited(room.id, alice, bob, Date.now()));
+    api.cb(new roomEvents.Invited(room.id, alice, bob, Date.now()));
   });
 
   // FIXME These should be moved to integration tests:
@@ -340,13 +342,13 @@ describe('GroupRoom', () => {
 });
 
 describe('GroupRoom, BusinessRoom, DirectRoom', () => {
-  const events = new EventHandler(log);
   const api = new APIMock();
+  const roomFactory = new RoomFactory(log, api);
 
   it('should have proper roomType field defined', (done) => {
-    const businessRoom: Room = createRoom(makeRoom(RoomType.BUSINESS), log, events, api);
-    const directRoom: Room = createRoom(makeRoom(RoomType.DIRECT), log, events, api);
-    const groupRoom: Room = createRoom(makeRoom(RoomType.GROUP), log, events, api);
+    const businessRoom: Room = roomFactory.create(makeRoom(RoomType.BUSINESS));
+    const directRoom: Room = roomFactory.create(makeRoom(RoomType.DIRECT));
+    const groupRoom: Room = roomFactory.create(makeRoom(RoomType.GROUP));
     expect(businessRoom.roomType).toEqual(RoomType.BUSINESS);
     expect(directRoom.roomType).toEqual(RoomType.DIRECT);
     expect(groupRoom.roomType).toEqual(RoomType.GROUP);

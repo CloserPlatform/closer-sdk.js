@@ -84,41 +84,41 @@ export class CallHandler {
   }
 
   private registerCallEvents = (): void => {
-    this.call.onRemoteStream((user: string, stream: MediaStream) => {
-      Logger.log(`Remote stream for user ${user} started!`);
+    this.call.remoteStream$.subscribe(({peerId, stream}) => {
+      Logger.log(`Remote stream for user ${peerId} started!`);
       this.remoteStream = stream;
       this.renderStreams();
     });
 
-    this.call.onLeft((m) => {
+    this.call.left$.subscribe((m) => {
       Logger.log('User left the call: ', m);
     });
 
-    this.call.onOffline((m) => {
+    this.call.offline$.subscribe((m) => {
       Logger.log('User become offline: ', m);
     });
 
-    this.call.onOnline((m) => {
+    this.call.online$.subscribe((m) => {
       Logger.log('User become online: ', m);
     });
 
-    this.call.onJoined(m => {
+    this.call.joined$.subscribe(m => {
       Logger.log('User joined the call: ', m);
     });
 
-    this.call.onAnswered((m) => {
+    this.call.answered$.subscribe((m) => {
       Logger.log('User answered the call: ', m);
     });
 
-    this.call.onRejected((m) => {
+    this.call.rejected$.subscribe((m) => {
       Logger.log('User rejected the call: ', m);
     });
 
-    this.call.onEnd((e) => {
+    this.call.end$.subscribe((e) => {
       Logger.log('Call ended: ', e.reason);
     });
 
-    this.call.onActiveDevice((e) => {
+    this.call.activeDevice$.subscribe((e) => {
       Logger.log('Call is in progress on another device: ', e);
       this.callbox.hide();
       this.stopLocalStream();

@@ -5,36 +5,25 @@ import * as wireEntities from '../protocol/wire-entities';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { CallReason } from '../apis/call-reason';
 import { CallType } from './call-type';
-import { Callback, EventHandler } from '../events/event-handler';
-import { RemoteStreamCallback, RTCPool } from '../rtc/rtc-pool';
-import { RTCConfig } from '../rtc/rtc-config';
-import { RandomUtils, UUID } from '../utils/random-utils';
+import { RemoteStream, RTCPool } from '../rtc/rtc-pool';
+import { Observable, Subject } from 'rxjs';
+import { filter } from 'rxjs/operators';
+import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
 
 export abstract class Call implements wireEntities.Call {
-  public id: proto.ID;
-  public created: proto.Timestamp;
+  public readonly id: proto.ID;
+  public readonly created: proto.Timestamp;
+  public readonly creator: proto.ID;
+  public readonly direct: boolean;
   public ended?: proto.Timestamp;
-  public creator: proto.ID;
   public users: ReadonlyArray<proto.ID>;
-  public direct: boolean;
   public orgId?: proto.ID;
   public abstract readonly callType: CallType;
-  protected onInvitedCallback: Callback<callEvents.Invited>;
   protected pool: RTCPool;
+  protected callEvent = new Subject<callEvents.CallEvent>();
 
-  private logger: Logger;
-  private onActiveDeviceCallback: Callback<callEvents.CallHandledOnDevice>;
-  private onLeftCallback: Callback<callEvents.Left>;
-  private onOfflineCallback: Callback<callEvents.DeviceOffline>;
-  private onOnlineCallback: Callback<callEvents.DeviceOnline>;
-  private onJoinedCallback: Callback<callEvents.Joined>;
-  private onAnsweredCallback: Callback<callEvents.Answered>;
-  private onRejectedCallback: Callback<callEvents.Rejected>;
-
-  private readonly uuid: UUID = RandomUtils.randomUUID();
-
-  constructor(call: wireEntities.Call, config: RTCConfig, logger: Logger, private eventHandler: EventHandler,
-              protected artichokeApi: ArtichokeAPI, stream?: MediaStream) {
+  constructor(call: wireEntities.Call, logger: Logger,
+              protected artichokeApi: ArtichokeAPI, rtcPoolRepository: RTCPoolRepository, stream?: MediaStream) {
     this.id = call.id;
     this.created = call.created;
     this.ended = call.ended;
@@ -43,36 +32,22 @@ export abstract class Call implements wireEntities.Call {
     this.direct = call.direct;
     this.orgId = call.orgId;
 
-    this.pool = new RTCPool(this.id, config, logger, eventHandler, artichokeApi);
+    this.pool = rtcPoolRepository.getRtcPoolInstance(call.id);
+
+    // FIXME - unsubscribe
+    this.artichokeApi.event$
+      .pipe(filter(callEvents.CallEvent.isCallEvent))
+      .pipe(filter(ev => ev.callId === this.id))
+      .subscribe(ev => this.callEvent.next(ev));
+
+    // FIXME - unsubscribe
+    this.end$.subscribe((e) => this.ended = e.timestamp);
+    // FIXME - unsubscribe
+    this.activeDevice$.subscribe(_ => this.pool.destroyAllConnections());
 
     if (stream) {
       this.addStream(stream);
     }
-
-    // By default do nothing:
-    this.onActiveDeviceCallback = (e: callEvents.CallHandledOnDevice): void =>
-      this.logger.warn(`Event active device not handled: ${e}`);
-
-    this.eventHandler.onConcreteEvent(callEvents.CallHandledOnDevice.tag, this.id, this.uuid,
-      (e: callEvents.CallHandledOnDevice) => {
-        this.pool.destroyAllConnections();
-        this.onActiveDeviceCallback(e);
-      });
-
-    this.onLeftCallback = (e: callEvents.Left): void =>
-      this.logger.warn(`Event LEFT not handled: ${e}`);
-    this.onOfflineCallback = (e: callEvents.DeviceOffline): void =>
-      this.logger.warn(`Event DEVICE OFFLINE not handled: ${e}`);
-    this.onOnlineCallback = (e: callEvents.DeviceOnline): void =>
-      this.logger.warn(`Event DEVICE ONLINE not handled: ${e}`);
-    this.onJoinedCallback = (e: callEvents.Joined): void =>
-      this.logger.warn(`Event JOIN not handled: ${e}`);
-    this.onInvitedCallback = (e: callEvents.Invited): void =>
-      this.logger.warn(`Event INVITED not handled: ${e}`);
-    this.onAnsweredCallback = (e: callEvents.Answered): void =>
-      this.logger.warn(`Event ANSWERED not handled: ${e}`);
-    this.onRejectedCallback = (e: callEvents.Rejected): void =>
-      this.logger.warn(`Event REJECTED not handled: ${e}`);
 
     if (this.creator === this.artichokeApi.sessionId) {
       this.users = [];
@@ -81,6 +56,8 @@ export abstract class Call implements wireEntities.Call {
     } else {
       this.setupListeners();
     }
+
+    logger.debug(`Created new call object with id: ${this.id}`);
   }
 
   public addStream(stream: MediaStream): void {
@@ -99,8 +76,8 @@ export abstract class Call implements wireEntities.Call {
     this.pool.removeTrack(track);
   }
 
-  public onRemoteStream(callback: RemoteStreamCallback): void {
-    this.pool.onRemoteStream(callback);
+  public get remoteStream$(): Observable<RemoteStream> {
+    return this.pool.remoteStream$;
   }
 
   public setAnswerOptions(options: RTCAnswerOptions): void {
@@ -141,75 +118,61 @@ export abstract class Call implements wireEntities.Call {
     return this.artichokeApi.leaveCall(this.id, reason);
   }
 
-  public onAnswered(callback: Callback<callEvents.Answered>): void {
-    this.onAnsweredCallback = callback;
+  public get answered$(): Observable<callEvents.Answered> {
+    return this.callEvent.pipe(filter(callEvents.Answered.isAnswered));
   }
 
-  public onRejected(callback: Callback<callEvents.Rejected>): void {
-    this.onRejectedCallback = callback;
+  public get rejected$(): Observable<callEvents.Rejected> {
+    return this.callEvent.pipe(filter(callEvents.Rejected.isRejected));
   }
 
-  public onLeft(callback: Callback<callEvents.Left>): void {
-    this.onLeftCallback = callback;
+  public get left$(): Observable<callEvents.Left> {
+    return this.callEvent.pipe(filter(callEvents.Left.isLeft));
   }
 
-  public onOffline(callback: Callback<callEvents.DeviceOffline>): void {
-    this.onOfflineCallback = callback;
+  public get offline$(): Observable<callEvents.DeviceOffline> {
+    return this.callEvent.pipe(filter(callEvents.DeviceOffline.isDeviceOffline));
   }
 
-  public onOnline(callback: Callback<callEvents.DeviceOnline>): void {
-    this.onOnlineCallback = callback;
+  public get online$(): Observable<callEvents.DeviceOnline> {
+    return this.callEvent.pipe(filter(callEvents.DeviceOnline.isDeviceOnline));
   }
 
-  public onJoined(callback: Callback<callEvents.Joined>): void {
-    this.onJoinedCallback = callback;
+  public get joined$(): Observable<callEvents.Joined> {
+    return this.callEvent.pipe(filter(callEvents.Joined.isJoined));
   }
 
-  public onActiveDevice(callback: Callback<callEvents.CallHandledOnDevice>): void {
-    this.onActiveDeviceCallback = callback;
+  public get activeDevice$(): Observable<callEvents.CallHandledOnDevice> {
+    return this.callEvent.pipe(filter(callEvents.CallHandledOnDevice.isCallHandledOnDevice));
   }
 
-  public onEnd(callback: Callback<callEvents.Ended>): void {
-    this.eventHandler.onConcreteEvent(callEvents.Ended.tag, this.id, this.uuid, (e: callEvents.Ended) => {
-      this.ended = e.timestamp;
-      callback(e);
-    });
+  public get end$(): Observable<callEvents.Ended> {
+    return this.callEvent.pipe(filter(callEvents.Ended.isEnded));
+  }
+
+  protected getInvited$(): Observable<callEvents.Invited> {
+    return this.callEvent.pipe(filter(callEvents.Invited.isInvited));
   }
 
   private establishRTCWithOldUsers(): void {
-    this.artichokeApi.getCallUsers(this.id).then((users) => {
-      const oldUsers = users.filter((u) => u !== this.artichokeApi.sessionId && !this.users.includes(u));
-      oldUsers.forEach((u) => this.pool.create(u));
+    this.artichokeApi.getCallUsers(this.id).then(users => {
+      const oldUsers = users.filter(u => u !== this.artichokeApi.sessionId && !this.users.includes(u));
+      oldUsers.forEach(u => this.pool.create(u));
       this.users = this.users.concat(oldUsers);
     });
   }
 
   private setupListeners(): void {
-    this.eventHandler.onConcreteEvent(callEvents.Joined.tag, this.id, this.uuid, (e: callEvents.Joined) => {
-      this.users = [...this.users, e.authorId];
-      this.pool.create(e.authorId);
-      this.onJoinedCallback(e);
+    // FIXME - unsubscribe
+    this.joined$.subscribe(joined => {
+      this.users = [...this.users, joined.authorId];
+      this.pool.create(joined.authorId);
     });
-    this.eventHandler.onConcreteEvent(callEvents.Left.tag, this.id, this.uuid, (e: callEvents.Left) => {
-      this.users = this.users.filter((u) => u !== e.authorId);
-      this.pool.destroyConnection(e.authorId);
-      this.onLeftCallback(e);
-    });
-    this.eventHandler.onConcreteEvent(callEvents.Invited.tag, this.id, this.uuid, (e: callEvents.Invited) => {
-      this.onInvitedCallback(e);
-    });
-    this.eventHandler.onConcreteEvent(callEvents.Answered.tag, this.id, this.uuid, (e: callEvents.Answered) => {
-      this.onAnsweredCallback(e);
-    });
-    this.eventHandler.onConcreteEvent(callEvents.Rejected.tag, this.id, this.uuid, (e: callEvents.Rejected) => {
-      this.onRejectedCallback(e);
-    });
-    this.eventHandler.onConcreteEvent(callEvents.DeviceOffline.tag, this.id, this.uuid,
-      (e: callEvents.DeviceOffline) => {
-      this.onOfflineCallback(e);
-    });
-    this.eventHandler.onConcreteEvent(callEvents.DeviceOnline.tag, this.id, this.uuid, (e: callEvents.DeviceOnline) => {
-      this.onOnlineCallback(e);
+
+    // FIXME - unsubscribe
+    this.left$.subscribe(left => {
+      this.users = this.users.filter(u => u !== left.authorId);
+      this.pool.destroyConnection(left.authorId);
     });
   }
 }

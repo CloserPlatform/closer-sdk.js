@@ -1,27 +1,24 @@
 // tslint:disable:max-file-line-count
+// tslint:disable:no-let
 import { Call } from './call';
-import { EventHandler } from '../events/event-handler';
 import {
   apiKeyMock, config, deviceIdMock, getStream, isWebRTCSupported, log, sessionIdMock, whenever
 } from '../test-utils';
 import { callEvents } from '../protocol/events/call-events';
-import { errorEvents } from '../protocol/events/error-events';
 import { ID } from '../protocol/protocol';
 import { Call as ProtoCall } from '../protocol/wire-entities';
 import EndReason = callEvents.EndReason;
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { CallReason } from '../apis/call-reason';
 import { CallType } from './call-type';
-import { createCall } from './create-call';
 import { GroupCall } from './group-call';
 import { RTCPool } from '../rtc/rtc-pool';
 import CallEvent = callEvents.CallEvent;
-// FIXME
-// tslint:disable:no-any
-// tslint:disable:no-let
+import { CallFactory } from './call-factory';
+import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
 
 const callId = '123';
-const alice = '321';
+const aliceSessionId = '321';
 const bob = '456';
 const chad = '987';
 const david = '654';
@@ -29,7 +26,7 @@ const msg1Mock = 2323;
 const msg2Mock = 1313;
 
 const msgFn = (ts: number): callEvents.Joined =>
-  new callEvents.Joined(callId, alice, ts);
+  new callEvents.Joined(callId, aliceSessionId, ts);
 
 class APIMock extends ArtichokeAPI {
   public joined = false;
@@ -37,9 +34,16 @@ class APIMock extends ArtichokeAPI {
   public answered = false;
   public rejected: string;
   public invited: string;
+  // tslint:disable-next-line:no-any
+  public cb: any;
 
   constructor(sessionId: string) {
     super(sessionId, apiKeyMock, config.chat, log);
+  }
+
+  // tslint:disable-next-line:no-any
+  public onEvent(callback: any): void {
+    this.cb = callback;
   }
 
   public getCallHistory(_id: string): Promise<ReadonlyArray<CallEvent>> {
@@ -47,7 +51,7 @@ class APIMock extends ArtichokeAPI {
   }
 
   public getCallUsers(_id: string): Promise<ReadonlyArray<string>> {
-    return Promise.resolve([alice, bob, chad]);
+    return Promise.resolve([aliceSessionId, bob, chad]);
   }
 
   public answerCall(_id: string): Promise<void> {
@@ -78,17 +82,17 @@ class APIMock extends ArtichokeAPI {
     return Promise.resolve(undefined);
   }
 
-  public inviteToCall(_id: string, peer: any): Promise<void> {
+  public inviteToCall(_id: string, peer: string): Promise<void> {
     this.invited = peer;
 
     return Promise.resolve(undefined);
   }
 
-  public sendDescription(_id: string, _peer: any, _sdp: any): Promise<void> {
+  public sendDescription(_id: string, _peer: string, _sdp: RTCSessionDescriptionInit): Promise<void> {
     return Promise.resolve();
   }
 
-  public sendCandidate(_id: string, _peer: any, _candidate: any): Promise<void> {
+  public sendCandidate(_id: string, _peer: string, _candidate: RTCIceCandidate): Promise<void> {
     return Promise.resolve();
   }
 }
@@ -97,8 +101,8 @@ const makeCall = (callType: CallType): ProtoCall => {
   const call: ProtoCall = {
     id: callId,
     created: 123,
-    creator: alice,
-    users: [alice],
+    creator: aliceSessionId,
+    users: [aliceSessionId],
     direct: false
   };
 
@@ -129,25 +133,29 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
 
 ['DirectCall', 'GroupCall'].forEach((d) => {
   describe(d, () => {
-    let events: any;
-    let api: any;
+    let api: APIMock;
     let call: Call;
+    let callFactory: CallFactory;
 
     beforeEach(() => {
-      events = new EventHandler(log);
       api = new APIMock(sessionIdMock);
+      const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, log, api);
+      callFactory = new CallFactory(log, api, rtcPoolRepository);
       const callType = d === 'DirectCall' ? CallType.DIRECT : CallType.GROUP;
-      call = createCall(makeCall(callType), config.chat.rtc, log, events, api);
+      call = callFactory.create(makeCall(callType));
     });
 
     it('for creator should create RTC connection with old users in call', (done) => {
-      const apiMock = new APIMock(alice);
-      spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([alice, bob, chad, david]));
+      const apiMock = new APIMock(aliceSessionId);
+      const rtcPoolRepo = new RTCPoolRepository(config.chat.rtc, log, apiMock);
+      const callFactory2 = new CallFactory(log, apiMock, rtcPoolRepo);
+      spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([aliceSessionId, bob, chad, david]));
 
       const usersToOffer = new Set([bob, chad, david]);
-      const usersNotToOffer = new Set([alice]);
+      const usersNotToOffer = new Set([aliceSessionId]);
 
-      spyOn(RTCPool.prototype, 'create').and.callFake((u: any) => {
+      spyOn(RTCPool.prototype, 'create').and.callFake((u: string) => {
+        done();
         if (usersNotToOffer.has(u)) {
           done.fail();
         } else {
@@ -159,16 +167,18 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
       });
 
       // tslint:disable-next-line
-      createCall(makeGroupCall(alice, [alice, david]), config.chat.rtc, log, events, apiMock) as GroupCall;
+      callFactory2.create(makeGroupCall(aliceSessionId, [aliceSessionId, david])) as GroupCall;
     });
 
     it('for not creator should not create RTC connection with old users in call', (done) => {
       const apiMock = new APIMock(bob);
-      spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([alice, bob, chad, david]));
-      spyOn(RTCPool.prototype, 'create').and.callFake((_u: any) => done.fail());
+      const rtcPoolRepo = new RTCPoolRepository(config.chat.rtc, log, apiMock);
+      const callFactory2 = new CallFactory(log, apiMock, rtcPoolRepo);
+      spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([aliceSessionId, bob, chad, david]));
+      spyOn(RTCPool.prototype, 'create').and.callFake((_u: string) => done.fail());
 
       // tslint:disable-next-line
-      createCall(makeGroupCall(alice, [alice, david]), config.chat.rtc, log, events, apiMock) as GroupCall;
+      callFactory2.create(makeGroupCall(aliceSessionId, [aliceSessionId, david])) as GroupCall;
       done();
     });
 
@@ -182,231 +192,242 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
     });
 
     it('should allow rejecting', (done) => {
-      events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
+      spyOn(log, 'error');
 
       call.reject(CallReason.CallRejected).then(() => {
         expect(api.rejected).toBe(CallReason.CallRejected);
         done();
       });
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     whenever(isWebRTCSupported())('should run a callback on join', (done) => {
+      spyOn(log, 'error');
       getStream((stream) => {
         call.addStream(stream);
 
-        events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
-
-        call.onJoined((msg) => {
+        call.joined$.subscribe((msg) => {
           expect(msg.authorId).toBe(chad);
           done();
         });
 
-        events.notify(new callEvents.Joined(call.id, chad, Date.now()));
+        api.cb(new callEvents.Joined(call.id, chad, Date.now()));
       }, (_error) => done.fail());
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     it('should run a callback on leave', (done) => {
-      events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
+      spyOn(log, 'error');
 
-      call.onLeft((msg) => {
-        expect(msg.authorId).toBe(alice);
+      call.left$.subscribe((msg) => {
+        expect(msg.authorId).toBe(aliceSessionId);
         done();
       });
 
-      events.notify(new callEvents.Left(call.id, alice, EndReason.CallRejected, Date.now()));
+      api.cb(new callEvents.Left(call.id, aliceSessionId, EndReason.CallRejected, Date.now()));
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     it('should run a callback on offline call action', (done) => {
-      events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
+      spyOn(log, 'error');
 
-      call.onOffline((msg) => {
-        expect(msg.userId).toBe(alice);
+      call.offline$.subscribe((msg) => {
+        expect(msg.userId).toBe(aliceSessionId);
         done();
       });
 
-      events.notify(new callEvents.DeviceOffline(call.id, alice, deviceIdMock, Date.now()));
+      api.cb(new callEvents.DeviceOffline(call.id, aliceSessionId, deviceIdMock, Date.now()));
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     it('should run a callback on online call action', (done) => {
-      events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
+      spyOn(log, 'error');
 
-      call.onOnline((msg) => {
-        expect(msg.userId).toBe(alice);
+      call.online$.subscribe((msg) => {
+        expect(msg.userId).toBe(aliceSessionId);
         done();
       });
 
-      events.notify(new callEvents.DeviceOnline(call.id, alice, deviceIdMock, Date.now()));
+      api.cb(new callEvents.DeviceOnline(call.id, aliceSessionId, deviceIdMock, Date.now()));
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     it('should run a callback on answer', (done) => {
-      events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
+      spyOn(log, 'error');
 
-      call.onAnswered((msg) => {
-        expect(msg.authorId).toBe(alice);
+      call.answered$.subscribe((msg) => {
+        expect(msg.authorId).toBe(aliceSessionId);
         done();
       });
 
-      events.notify(new callEvents.Answered(call.id, alice, Date.now()));
+      api.cb(new callEvents.Answered(call.id, aliceSessionId, Date.now()));
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     whenever(isWebRTCSupported())('should run a callback on active device', (done) => {
+      spyOn(log, 'error');
       getStream((stream) => {
         call.pull(stream);
 
-        events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
-
-        call.onActiveDevice((msg) => {
+        call.activeDevice$.subscribe((msg) => {
           expect(msg.authorId).toBe(chad);
           done();
         });
 
-        events.notify(new callEvents.CallHandledOnDevice(call.id, chad, deviceIdMock, Date.now()));
+        api.cb(new callEvents.CallHandledOnDevice(call.id, chad, deviceIdMock, Date.now()));
       }, (_error) => done.fail());
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     it('should run a callback on reject', (done) => {
-      events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
+      spyOn(log, 'error');
 
-      call.onRejected((msg) => {
-        expect(msg.authorId).toBe(alice);
+      call.rejected$.subscribe((msg) => {
+        expect(msg.authorId).toBe(aliceSessionId);
         done();
       });
 
-      events.notify(new callEvents.Rejected(call.id, alice, EndReason.Disconnected, Date.now()));
+      api.cb(new callEvents.Rejected(call.id, aliceSessionId, EndReason.Disconnected, Date.now()));
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     it('should run a callback on end', (done) => {
-      events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
+      spyOn(log, 'error');
 
-      call.onEnd((msg) => {
+      call.end$.subscribe((msg) => {
         expect(msg.reason).toBe(EndReason.Disconnected);
         done();
       });
 
-      events.notify(new callEvents.Ended(call.id, EndReason.Disconnected, Date.now()));
+      api.cb(new callEvents.Ended(call.id, EndReason.Disconnected, Date.now()));
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     it('should run a callback on ActiveDevice', (done) => {
-      events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
       const deviceId = 'aliceDevice';
+      spyOn(log, 'error');
 
-      call.onActiveDevice((msg) => {
+      call.activeDevice$.subscribe((msg) => {
         expect(msg.callId).toBe(call.id);
         expect(msg.device).toBe(deviceId);
         done();
       });
 
-      events.notify(new callEvents.CallHandledOnDevice(call.id, alice, deviceId, Date.now()));
+      api.cb(new callEvents.CallHandledOnDevice(call.id, aliceSessionId, deviceId, Date.now()));
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     whenever(isWebRTCSupported())('should maintain the user list', (done) => {
+      spyOn(log, 'error');
       getStream((stream) => {
         call.addStream(stream);
 
-        events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
-
-        call.onJoined((msg1) => {
+        call.joined$.subscribe((msg1) => {
           expect(msg1.authorId).toBe(bob);
 
           call.getUsers().then((users1) => {
             expect(users1).toContain(bob);
-            expect(users1).toContain(alice);
+            expect(users1).toContain(aliceSessionId);
 
-            call.onLeft((msg2) => {
-              expect(msg2.authorId).toBe(alice);
+            call.left$.subscribe((msg2) => {
+              expect(msg2.authorId).toBe(aliceSessionId);
 
               call.getUsers().then((users2) => {
                 expect(users2).toContain(bob);
-                expect(users2).not.toContain(alice);
+                expect(users2).not.toContain(aliceSessionId);
                 done();
               });
             });
 
-            events.notify(new callEvents.Left(call.id, alice, EndReason.Disconnected, Date.now()));
+            api.cb(new callEvents.Left(call.id, aliceSessionId, EndReason.Disconnected, Date.now()));
           });
         });
 
-        events.notify(new callEvents.Joined(call.id, bob, Date.now()));
+        api.cb(new callEvents.Joined(call.id, bob, Date.now()));
       }, (_error) => done.fail());
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     // FIXME These should be moved to integration tests:
     whenever(isWebRTCSupported())('should allow answering', (done) => {
+      spyOn(log, 'error');
       getStream((stream) => {
-        events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
 
         call.answer(stream).then(() => {
           expect(api.answered).toBe(true);
           done();
         });
       }, (_error) => done.fail());
+      expect(log.error).not.toHaveBeenCalled();
     });
 
     it('should allow leaving', (done) => {
-      events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
-
+      spyOn(log, 'error');
       call.leave(CallReason.CallRejected).then(() => {
         expect(api.left).toBe(CallReason.CallRejected);
         done();
       });
+      expect(log.error).not.toHaveBeenCalled();
     });
   });
 });
 
 describe('GroupCall', () => {
-  let events: any;
-  let api: any;
+  let api: APIMock;
   let call: GroupCall;
 
   beforeEach(() => {
-    events = new EventHandler(log);
     api = new APIMock(sessionIdMock);
-    call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api) as GroupCall;
+    const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, log, api);
+    const callFactory = new CallFactory(log, api, rtcPoolRepository);
+    call = callFactory.create(makeCall(CallType.GROUP)) as GroupCall;
   });
 
   it('should run a callback on invitation', (done) => {
-    events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
-
+    spyOn(log, 'error');
     const ctx = {exampleField: 'exampleField'};
-    call.onInvited((msg) => {
-      expect(msg.authorId).toBe(alice);
+    call.invited$.subscribe((msg) => {
+      expect(msg.authorId).toBe(aliceSessionId);
       expect(msg.invitee).toBe(chad);
       expect(msg.context).toBe(ctx);
       done();
     });
 
-    events.notify(new callEvents.Invited(call.id, alice, chad, ctx, Date.now()));
+    api.cb(new callEvents.Invited(call.id, aliceSessionId, chad, ctx, Date.now()));
+    expect(log.error).not.toHaveBeenCalled();
   });
 
   // FIXME These should be moved to integration tests:
   whenever(isWebRTCSupported())('should allow joining', (done) => {
+    spyOn(log, 'error');
     getStream((stream) => {
-      events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
 
       call.join(stream).then(() => {
         expect(api.joined).toBe(true);
         done();
       });
     }, (_error) => done.fail());
+    expect(log.error).not.toHaveBeenCalled();
   });
 
   it('should allow inviting users', (done) => {
-    events.onEvent(errorEvents.Error.tag, (_error: any) => done.fail());
-
+    spyOn(log, 'error');
     call.invite(bob).then(() => {
       expect(api.invited).toBe(bob);
       done();
     });
+    expect(log.error).not.toHaveBeenCalled();
   });
 });
 
 describe('DirectCall, GroupCall', () => {
-  const events = new EventHandler(log);
   const api = new APIMock(sessionIdMock);
+  const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, log, api);
+  const callFactory = new CallFactory(log, api, rtcPoolRepository);
 
   it('should have proper callType field defined', () => {
-    const directCall: Call = createCall(makeCall(CallType.DIRECT), config.chat.rtc, log, events, api);
-    const groupCall: Call = createCall(makeCall(CallType.GROUP), config.chat.rtc, log, events, api);
+    const directCall: Call = callFactory.create(makeCall(CallType.DIRECT));
+    const groupCall: Call = callFactory.create(makeCall(CallType.GROUP));
     expect(directCall.callType).toEqual(CallType.DIRECT);
     expect(groupCall.callType).toEqual(CallType.GROUP);
   });

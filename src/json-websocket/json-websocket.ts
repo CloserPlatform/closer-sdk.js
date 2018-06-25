@@ -2,7 +2,7 @@ import { Decoder, Encoder } from '../codec';
 import { Logger } from '../logger';
 import { DomainCommand } from '../protocol/commands/domain-command';
 import { DomainEvent } from '../protocol/events/domain-event';
-import { Callback } from '../events/event-handler';
+import { Callback } from '../utils/promise-utils';
 
 export class JSONWebSocket {
   private socket?: WebSocket;
