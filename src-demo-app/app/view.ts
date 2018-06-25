@@ -1,9 +1,11 @@
 // tslint:disable:no-any
+// tslint:disable:max-file-line-count
 // tslint:disable:no-implicit-dependencies
 // tslint:disable:no-import-side-effect
 // tslint:disable:no-submodule-imports
 import * as $ from 'jquery';
 import 'jquery-ui-bundle';
+import { Logger } from './logger';
 
 export interface LoginFormData {
   artichokeServer: string;
@@ -121,6 +123,28 @@ export const makeButton = (className: string, contents: JQuery | string, onClick
 export const makeButtonGroup = (): JQuery =>
   $('<div>').addClass('btn-group buttons');
 
+const makeAudio = (id: string, stream: MediaStream, muted: boolean): JQuery => {
+  try {
+    return $('<audio>')
+      .prop({
+        id,
+        class: 'audio-stream',
+        autoplay: true,
+        muted,
+        srcObject: stream
+      });
+  } catch (error) {
+    return $('<audio>')
+      .prop({
+        id,
+        class: 'audio-stream',
+        autoplay: true,
+        muted,
+        src: URL.createObjectURL(stream)
+      });
+  }
+};
+
 const makeVideo = (id: string, stream: MediaStream, muted: boolean): JQuery => {
   try {
     return $('<video>')
@@ -143,55 +167,56 @@ const makeVideo = (id: string, stream: MediaStream, muted: boolean): JQuery => {
   }
 };
 
-const makeStreamStatus = (stream: MediaStream): JQuery => {
-  const audioTracks = stream.getAudioTracks();
-  const mutedAudioTracks = audioTracks.filter(t => t.muted);
-  const enabledAudioTracks = audioTracks.filter(t => t.enabled);
+const makeAudioTrackStatus = (track: MediaStreamTrack): JQuery => {
+  const div = makeDiv();
+  div.text(`Audio track`);
 
-  const videoTracks = stream.getVideoTracks();
-  const mutedVideoTracks = videoTracks.filter(t => t.muted);
-  const enabledVideoTracks = videoTracks.filter(t => t.enabled);
+  track.onended = (): void => {
+    div.text(`Audio track - ENDED`);
+  };
 
-  const audioStatus = `Audio tracks: ${audioTracks.length}, muted: ${mutedAudioTracks.length},
-    enabled: ${enabledAudioTracks.length}`;
-  const videoStatus = `Video tracks: ${videoTracks.length}, muted: ${mutedVideoTracks.length},
-    enabled: ${enabledVideoTracks.length}`;
-
-  const audioStatusDiv = makeDiv().text(audioStatus);
-  const videoStatusDiv = makeDiv().text(videoStatus);
-
-  return $('<div>').append([audioStatusDiv, videoStatusDiv]);
+  return div;
 };
 
-export const makeStreamBox = (id: string, name: string, stream: MediaStream, muted: boolean): JQuery => {
-  const video = makeVideo(id, stream, muted);
+const makeVideoTrackStatus = (track: MediaStreamTrack): JQuery => {
+  const div = makeDiv();
+  div.text(`Video track`);
 
+  track.onended = (): void => {
+    Logger.log('VIDEO end');
+    div.text(`Video track - ENDED`);
+  };
+
+  return div;
+};
+
+export const makeRemoteTrack = (id: string,
+                                name: string,
+                              track: MediaStreamTrack): JQuery => {
   const label = makeLabel(id, '', name);
-
   const panel = $('<div>')
-    .addClass('panel panel-default stream-wrapper')
-    .append([label, video, makeStreamStatus(stream)]);
+    .addClass('panel panel-default stream-wrapper');
+  const stream = new MediaStream([track]);
 
-  return $('<div>').append(panel);
-};
-
-export const makeSplitGrid = (contents: ReadonlyArray<JQuery>): JQuery => {
-  const size = Math.ceil(Math.sqrt(contents.length)); // FIXME Should be 1 for contents.length == 2.
-  // tslint:disable-next-line
-  const rows: any[] = [];
-  // tslint:disable-next-line
-  for (let i = 0; i < size; i++) {
-    rows.push($('<div>').addClass('grid-row'));
-  }
-  // tslint:disable-next-line
-  for (let i = 0; i < contents.length; i++) {
-    // FIXME Size it properly.
-    // tslint:disable-next-line
-    rows[Math.floor(i / size)].css('height', (1 / size * 100) + '%').append(contents[i].addClass('grid-item'));
+  if (track.kind === 'video') {
+    const video = makeVideo(id, stream, false);
+    panel.append([label, video, makeVideoTrackStatus(track)]);
+  } else {
+    const audio = makeAudio(id, stream, false);
+    panel.append([label, audio, makeAudioTrackStatus(track)]);
   }
 
-  return $('<div>').addClass('grid').append(rows);
+  return makeDiv().append(panel);
 };
+
+export const makeSplitGridItem = (elem: JQuery): JQuery =>
+  elem.addClass('grid-item');
+
+export const makeSplitGridRow = (): JQuery =>
+  $('<div>').addClass('grid-row');
+
+export const makeSplitGrid = (): JQuery =>
+  $('<div>').addClass('grid');
 
 export const makeDiv = (): JQuery =>
   $('<div>');

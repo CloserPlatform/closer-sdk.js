@@ -5,7 +5,7 @@ import * as wireEntities from '../protocol/wire-entities';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { CallReason } from '../apis/call-reason';
 import { CallType } from './call-type';
-import { RemoteStream, RTCPool } from '../rtc/rtc-pool';
+import { RemoteTrack, RTCPool } from '../rtc/rtc-pool';
 import { Observable, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
@@ -23,7 +23,8 @@ export abstract class Call implements wireEntities.Call {
   protected callEvent = new Subject<callEvents.CallEvent>();
 
   constructor(call: wireEntities.Call, logger: Logger,
-              protected artichokeApi: ArtichokeAPI, rtcPoolRepository: RTCPoolRepository, stream?: MediaStream) {
+              protected artichokeApi: ArtichokeAPI, rtcPoolRepository: RTCPoolRepository,
+              tracks?: ReadonlyArray<MediaStreamTrack>) {
     this.id = call.id;
     this.created = call.created;
     this.ended = call.ended;
@@ -45,8 +46,8 @@ export abstract class Call implements wireEntities.Call {
     // FIXME - unsubscribe
     this.activeDevice$.subscribe(_ => this.pool.destroyAllConnections());
 
-    if (stream) {
-      this.addStream(stream);
+    if (tracks) {
+      this.addTracks(tracks);
     }
 
     if (this.creator === this.artichokeApi.sessionId) {
@@ -60,24 +61,20 @@ export abstract class Call implements wireEntities.Call {
     logger.debug(`Created new call object with id: ${this.id}`);
   }
 
-  public addStream(stream: MediaStream): void {
-    stream.getTracks().forEach((track) => this.addTrack(track, stream));
+  public addTracks(tracks: ReadonlyArray<MediaStreamTrack>): void {
+    tracks.forEach((track) => this.addTrack(track));
   }
 
-  public removeStream(stream: MediaStream): void {
-    stream.getTracks().forEach((track) => this.removeTrack(track));
-  }
-
-  public addTrack(track: MediaStreamTrack, stream?: MediaStream): void {
-    this.pool.addTrack(track, stream);
+  public addTrack(track: MediaStreamTrack): void {
+    this.pool.addTrack(track);
   }
 
   public removeTrack(track: MediaStreamTrack): void {
     this.pool.removeTrack(track);
   }
 
-  public get remoteStream$(): Observable<RemoteStream> {
-    return this.pool.remoteStream$;
+  public get remoteTrack$(): Observable<RemoteTrack> {
+    return this.pool.remoteTrack$;
   }
 
   public setAnswerOptions(options: RTCAnswerOptions): void {
@@ -96,8 +93,8 @@ export abstract class Call implements wireEntities.Call {
     return this.artichokeApi.getCallHistory(this.id);
   }
 
-  public answer(stream: MediaStream): Promise<void> {
-    this.addStream(stream);
+  public answer(tracks: ReadonlyArray<MediaStreamTrack>): Promise<void> {
+    this.addTracks(tracks);
 
     return this.artichokeApi.answerCall(this.id);
   }
@@ -106,8 +103,8 @@ export abstract class Call implements wireEntities.Call {
     return this.artichokeApi.rejectCall(this.id, reason);
   }
 
-  public pull(stream: MediaStream): Promise<void> {
-    this.addStream(stream);
+  public pull(tracks: ReadonlyArray<MediaStreamTrack>): Promise<void> {
+    this.addTracks(tracks);
 
     return this.artichokeApi.pullCall(this.id);
   }

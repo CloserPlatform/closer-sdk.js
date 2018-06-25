@@ -7,14 +7,9 @@ import { RTCConnection } from './rtc-connection';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 
-interface MediaStreamAndTrack {
-  track: MediaStreamTrack;
-  stream?: MediaStream;
-}
-
-export interface RemoteStream {
+export interface RemoteTrack {
   peerId: ID;
-  stream: MediaStream;
+  track: MediaStreamTrack;
 }
 
 export class RTCPool {
@@ -22,8 +17,8 @@ export class RTCPool {
   private answerOptions?: RTCAnswerOptions;
 
   private peerConnections: { [peerId: string]: RTCConnection } = {};
-  private tracks: ReadonlyArray<MediaStreamAndTrack> = [];
-  private remoteStreamEvent = new Subject<RemoteStream>();
+  private tracks: ReadonlyArray<MediaStreamTrack> = [];
+  private remoteTrackEvent = new Subject<RemoteTrack>();
   private rtcCallEvent = new Subject<rtcEvents.RTCSignallingEvent>();
 
   constructor(private callId: ID,
@@ -44,23 +39,19 @@ export class RTCPool {
     this.listenForCandidateSent();
   }
 
-  public get remoteStream$(): Observable<RemoteStream> {
-    return this.remoteStreamEvent;
+  public get remoteTrack$(): Observable<RemoteTrack> {
+    return this.remoteTrackEvent;
   }
 
-  public addTrack(track: MediaStreamTrack, stream?: MediaStream): void {
-    const newTrackObj = {
-      track,
-      stream
-    };
-    this.tracks = [...this.tracks, newTrackObj];
+  public addTrack(track: MediaStreamTrack): void {
+    this.tracks = [...this.tracks, track];
     Object.keys(this.peerConnections).forEach(peerId => {
-      this.peerConnections[peerId].addTrack(track, stream);
+      this.peerConnections[peerId].addTrack(track);
     });
   }
 
   public removeTrack(track: MediaStreamTrack): void {
-    this.tracks = this.tracks.filter((t) => t.track !== track);
+    this.tracks = this.tracks.filter((t) => t !== track);
     Object.keys(this.peerConnections).forEach(peerId => {
       this.peerConnections[peerId].removeTrack(track);
     });
@@ -151,10 +142,10 @@ export class RTCPool {
       this.artichokeApi, this.answerOptions, this.offerOptions);
 
     // FIXME - unsubscribe
-    rtcConnection.remoteStream$.subscribe(stream => this.remoteStreamEvent.next({peerId, stream}));
+    rtcConnection.remoteTrack$.subscribe(track => this.remoteTrackEvent.next({peerId, track}));
 
     this.peerConnections[peerId] = rtcConnection;
-    this.tracks.forEach((t) => rtcConnection.addTrack(t.track, t.stream));
+    this.tracks.forEach((t) => rtcConnection.addTrack(t));
 
     return rtcConnection;
   }

@@ -27,8 +27,9 @@ export class ChatModule {
 
   private callToUser = (calleeId: string, session: RatelSdk.Session): void => {
     createStream(stream => {
-      session.chat.createDirectCall(stream, calleeId)
-        .then(directCall => new CallHandler(directCall as RatelSdk.BusinessCall, stream, session))
+      const tracks = stream.getTracks();
+      session.chat.createDirectCall(tracks, calleeId)
+        .then(directCall => new CallHandler(directCall, tracks, session))
         .catch(err => Logger.error(err));
     });
   }

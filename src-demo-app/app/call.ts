@@ -1,23 +1,22 @@
 import { Logger } from './logger';
-import * as $ from 'jquery';
 import * as RatelSdk from '../../';
-import { createStream } from './stream';
 import {
-  makeButton, makeButtonGroup, makeCallbox, makeCheckbox, makeControls, makeDiv, makeSplitGrid,
-  makeStreamBox
+  makeButton, makeButtonGroup, makeCallbox, makeCheckbox, makeControls, makeDiv, makeRemoteTrack,
+  makeSplitGrid,
+  makeSplitGridRow
 } from './view';
 import { Page } from './page';
+import { createStream } from './stream';
 
 export class CallHandler {
 
   private callHandler: JQuery;
   private controls: JQuery;
   private callbox: JQuery;
+  private callboxGridRow: JQuery;
 
-  private remoteStream?: MediaStream;
-
-  constructor(private call: RatelSdk.BusinessCall,
-              private localStream: MediaStream,
+  constructor(private call: RatelSdk.DirectCall,
+              private localTracks: ReadonlyArray<MediaStreamTrack>,
               session: RatelSdk.Session) {
     Logger.log('Building a call object for: ', call);
 
@@ -29,18 +28,27 @@ export class CallHandler {
 
     const disconnectButton = makeButton('btn-warning', 'Disconnect from Artichoke', () => session.chat.disconnect());
 
-    const videoCheckbox = makeCheckbox(`${call.id}-video`, ' Video', true, isChecked => {
-      createStream(this.replaceLocalStream, {
-        video: isChecked,
-        audio: $(`#${call.id}-audio`).is(':checked')
-      });
+    const videoCheckbox = makeCheckbox(`${call.id}-video`, ' Video', false, isChecked => {
+      if (isChecked) {
+        createStream(stream => {
+          const videoTrack = stream.getVideoTracks()[0];
+          this.localTracks = [...this.localTracks, videoTrack];
+          this.call.addTrack(videoTrack);
+          this.renderTrack('me', 'Me', videoTrack);
+        }, {video: true});
+      } else {
+        const videoTracks = this.localTracks.filter(t => t.kind === 'video');
+        const videoTrack = videoTracks[0];
+        if (videoTrack) {
+          this.call.removeTrack(videoTrack);
+          this.localTracks = this.localTracks.filter(t => t !== videoTrack);
+          videoTrack.stop();
+        }
+      }
     });
 
     const audioCheckbox = makeCheckbox(`${call.id}-audio`, ' Audio', true, isChecked => {
-      createStream(this.replaceLocalStream, {
-        video: $(`#${call.id}-video`).is(':checked'),
-        audio: isChecked
-      });
+      localTracks.filter(track => track.kind === 'audio').forEach(t => t.enabled = isChecked);
     });
 
     const hangupButton = makeButton('btn-danger', 'Hangup!', () => this.end(RatelSdk.CallReason.Hangup));
@@ -48,17 +56,19 @@ export class CallHandler {
     const buttons = makeButtonGroup().append([
       hangupButton, connectButton, disconnectButton, videoCheckbox, audioCheckbox]);
     this.controls = makeControls(call.id, [buttons]).addClass('text-center');
-    this.renderStreams();
     this.callHandler = makeDiv().append([this.controls, this.callbox]);
+    this.callboxGridRow = makeSplitGridRow();
+    this.callbox.append(makeSplitGrid().append(this.callboxGridRow));
     Page.contents.append(this.callHandler);
     Page.getCalleeBox().hide();
+    localTracks.forEach(track => this.renderTrack('me', 'Me', track));
   }
 
   public stopLocalStream = (): void =>
-    this.localStream.getTracks().forEach(t => t.stop())
+    this.localTracks.forEach(t => t.stop())
 
   public answer = (): Promise<void> =>
-    this.call.answer(this.localStream)
+    this.call.answer(this.localTracks)
 
   public end = (reason: RatelSdk.CallReason): void => {
     this.call.leave(reason);
@@ -67,27 +77,14 @@ export class CallHandler {
     Page.getCalleeBox().show();
   }
 
-  private replaceLocalStream = (stream: MediaStream): void => {
-    this.call.removeStream(this.localStream);
-    this.stopLocalStream();
-    this.call.addStream(stream);
-    this.localStream = stream;
-    this.renderStreams();
-  }
-
-  private renderStreams = (): void => {
-    this.callbox.empty();
-    this.callbox.append(makeSplitGrid([
-      makeStreamBox('me', 'Me', this.localStream, true),
-      this.remoteStream ? makeStreamBox('participant', 'Participant', this.remoteStream, false) : makeDiv(),
-    ]));
-  }
+  private renderTrack = (id: string, name: string, track: MediaStreamTrack): JQuery =>
+    this.callboxGridRow.append(makeRemoteTrack(`${id}:${track.id}`, name, track))
 
   private registerCallEvents = (): void => {
-    this.call.remoteStream$.subscribe(({peerId, stream}) => {
+    this.call.remoteTrack$.subscribe(({peerId, track}) => {
       Logger.log(`Remote stream for user ${peerId} started!`);
-      this.remoteStream = stream;
-      this.renderStreams();
+      Logger.log('Remote track:', track);
+      this.renderTrack(peerId, `Remote: ${peerId}`, track);
     });
 
     this.call.left$.subscribe((m) => {
