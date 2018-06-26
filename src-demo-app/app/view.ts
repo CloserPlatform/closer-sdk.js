@@ -151,22 +151,20 @@ const makeVideo = (id: string, stream: MediaStream, muted: boolean): JQuery => {
         id,
         class: 'video-stream',
         autoplay: true,
-        playsinline: true,
         volume: !muted,
         muted,
         srcObject: stream
-      });
+      }).attr('playsinline', '');
   } catch (error) {
     return $('<video>')
       .prop({
         id,
         class: 'video-stream',
         autoplay: true,
-        playsinline: true,
         volume: !muted,
         muted,
         src: URL.createObjectURL(stream)
-      });
+      }).attr('playsinline', '');
   }
 };
 
