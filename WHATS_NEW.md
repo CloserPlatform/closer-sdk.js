@@ -1,3 +1,0 @@
-### Fixed
-
-* Mobile safari video
