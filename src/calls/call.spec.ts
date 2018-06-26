@@ -204,7 +204,7 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
     whenever(isWebRTCSupported())('should run a callback on join', (done) => {
       spyOn(log, 'error');
       getStream((stream) => {
-        call.addStream(stream);
+        call.addTracks(stream.getTracks());
 
         call.joined$.subscribe((msg) => {
           expect(msg.authorId).toBe(chad);
@@ -267,7 +267,7 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
     whenever(isWebRTCSupported())('should run a callback on active device', (done) => {
       spyOn(log, 'error');
       getStream((stream) => {
-        call.pull(stream);
+        call.pull(stream.getTracks());
 
         call.activeDevice$.subscribe((msg) => {
           expect(msg.authorId).toBe(chad);
@@ -320,7 +320,7 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
     whenever(isWebRTCSupported())('should maintain the user list', (done) => {
       spyOn(log, 'error');
       getStream((stream) => {
-        call.addStream(stream);
+        call.addTracks(stream.getTracks());
 
         call.joined$.subscribe((msg1) => {
           expect(msg1.authorId).toBe(bob);
@@ -353,7 +353,7 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
       spyOn(log, 'error');
       getStream((stream) => {
 
-        call.answer(stream).then(() => {
+        call.answer(stream.getTracks()).then(() => {
           expect(api.answered).toBe(true);
           done();
         });
@@ -402,7 +402,7 @@ describe('GroupCall', () => {
     spyOn(log, 'error');
     getStream((stream) => {
 
-      call.join(stream).then(() => {
+      call.join(stream.getTracks()).then(() => {
         expect(api.joined).toBe(true);
         done();
       });

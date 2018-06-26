@@ -44,3 +44,13 @@ export const getStream = (onStream: (stream: MediaStream) => void, onError: (err
   log.info(`Creating a stream with constraints: ${JSON.stringify(cs)}`);
   navigator.mediaDevices.getUserMedia(cs).then(onStream).catch(onError);
 };
+
+// tslint:disable-next-line:no-any
+export const logError = (done: DoneFn): (err: any) => void =>
+  (error): void => {
+    log.error(`Got an error: ${error} (${JSON.stringify(error)})`);
+    if (typeof error.cause !== 'undefined') {
+      log.error(`Cause: ${error.cause}`);
+    }
+    done.fail();
+  };

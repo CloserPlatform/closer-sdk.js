@@ -15,8 +15,8 @@ export class GroupCall extends Call {
         return this.artichokeApi.inviteToCall(this.id, user);
     }
 
-    public join(stream: MediaStream): Promise<void> {
-        this.addStream(stream);
+    public join(tracks: ReadonlyArray<MediaStreamTrack>): Promise<void> {
+        this.addTracks(tracks);
 
         return this.artichokeApi.joinCall(this.id);
     }

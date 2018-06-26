@@ -82,12 +82,13 @@ export class Artichoke {
     return this.artichokeApi.event$.pipe(filter(callEvents.Invited.isInvited));
   }
 
-  public createCall(stream: MediaStream, users: ReadonlyArray<proto.ID>): Promise<GroupCall> {
-    return this.wrapCall(this.artichokeApi.createCall(users), stream) as Promise<GroupCall>; // Trust me.
+  public createCall(tracks: ReadonlyArray<MediaStreamTrack>, users: ReadonlyArray<proto.ID>): Promise<GroupCall> {
+    return this.wrapCall(this.artichokeApi.createCall(users), tracks) as Promise<GroupCall>; // Trust me.
   }
 
-  public createDirectCall(stream: MediaStream, peer: proto.ID, timeout?: number): Promise<DirectCall> {
-    return this.wrapCall(this.artichokeApi.createDirectCall(peer, timeout), stream);
+  public createDirectCall(tracks:  ReadonlyArray<MediaStreamTrack>,
+                          peer: proto.ID, timeout?: number): Promise<DirectCall> {
+    return this.wrapCall(this.artichokeApi.createDirectCall(peer, timeout), tracks);
   }
 
   public getCall(call: proto.ID): Promise<Call> {
@@ -175,8 +176,8 @@ export class Artichoke {
   }
 
   // Utils:
-  private wrapCall(promise: Promise<wireEntities.Call>, stream?: MediaStream): Promise<Call> {
-    return promise.then(call => this.callFactory.create(call, stream));
+  private wrapCall(promise: Promise<wireEntities.Call>, tracks?: ReadonlyArray<MediaStreamTrack>): Promise<Call> {
+    return promise.then(call => this.callFactory.create(call, tracks));
   }
 
   private wrapRoom(promise: Promise<wireEntities.Room>): Promise<Room> {
