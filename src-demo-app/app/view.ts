@@ -129,18 +129,20 @@ const makeAudio = (id: string, stream: MediaStream, muted: boolean): JQuery => {
         id,
         class: 'audio-stream',
         autoplay: true,
+        volume: !muted,
         muted,
         srcObject: stream
-      });
+      }).attr('playsinline', '');
   } catch (error) {
     return $('<audio>')
       .prop({
         id,
         class: 'audio-stream',
         autoplay: true,
+        volume: !muted,
         muted,
         src: URL.createObjectURL(stream)
-      });
+      }).attr('playsinline', '');
   }
 };
 
