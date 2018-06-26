@@ -14,8 +14,7 @@ export interface LoginFormData {
   userPassword: string;
 }
 
-export const makeLoginForm = (id: string, onClick: (formData: LoginFormData) => void
-): JQuery => {
+export const makeLoginForm = (id: string, onClick: (formData: LoginFormData) => void): JQuery => {
   const form = $('<form id="login_form">')
     .append([
       makeInput('server-artichoke', 'ArtichokeServer:', 'ArtichokeServer', 'https://artichoke.stage.closerapp.com'),
@@ -55,10 +54,10 @@ export const makeLabel = (id: string, className: string, name: string | JQuery):
 
 export const makeSelect = (id: string, name: string, options: ReadonlyArray<string>): JQuery => {
   const select = $('<select>')
-      .prop({
-        id, name
-      })
-      .append(options.map(value => $('<option>').prop({value}).text(value)));
+    .prop({
+      id, name
+    })
+    .append(options.map(value => $('<option>').prop({value}).text(value)));
 
   return $('<div>').append([makeLabel(id, '', name), select]);
 };
@@ -152,6 +151,8 @@ const makeVideo = (id: string, stream: MediaStream, muted: boolean): JQuery => {
         id,
         class: 'video-stream',
         autoplay: true,
+        playsinline: true,
+        volume: !muted,
         muted,
         srcObject: stream
       });
@@ -161,6 +162,8 @@ const makeVideo = (id: string, stream: MediaStream, muted: boolean): JQuery => {
         id,
         class: 'video-stream',
         autoplay: true,
+        playsinline: true,
+        volume: !muted,
         muted,
         src: URL.createObjectURL(stream)
       });
@@ -192,17 +195,18 @@ const makeVideoTrackStatus = (track: MediaStreamTrack): JQuery => {
 
 export const makeRemoteTrack = (id: string,
                                 name: string,
-                              track: MediaStreamTrack): JQuery => {
+                                track: MediaStreamTrack,
+                                muted: boolean): JQuery => {
   const label = makeLabel(id, '', name);
   const panel = $('<div>')
     .addClass('panel panel-default stream-wrapper');
   const stream = new MediaStream([track]);
 
   if (track.kind === 'video') {
-    const video = makeVideo(id, stream, false);
+    const video = makeVideo(id, stream, muted);
     panel.append([label, video, makeVideoTrackStatus(track)]);
   } else {
-    const audio = makeAudio(id, stream, false);
+    const audio = makeAudio(id, stream, muted);
     panel.append([label, audio, makeAudioTrackStatus(track)]);
   }
 

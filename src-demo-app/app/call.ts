@@ -34,7 +34,7 @@ export class CallHandler {
           const videoTrack = stream.getVideoTracks()[0];
           this.localTracks = [...this.localTracks, videoTrack];
           this.call.addTrack(videoTrack);
-          this.renderTrack('me', 'Me', videoTrack);
+          this.renderTrack('me', 'Me', videoTrack, true);
         }, {video: true});
       } else {
         const videoTracks = this.localTracks.filter(t => t.kind === 'video');
@@ -61,7 +61,7 @@ export class CallHandler {
     this.callbox.append(makeSplitGrid().append(this.callboxGridRow));
     Page.contents.append(this.callHandler);
     Page.getCalleeBox().hide();
-    localTracks.forEach(track => this.renderTrack('me', 'Me', track));
+    localTracks.forEach(track => this.renderTrack('me', 'Me', track, true));
   }
 
   public stopLocalStream = (): void =>
@@ -77,14 +77,14 @@ export class CallHandler {
     Page.getCalleeBox().show();
   }
 
-  private renderTrack = (id: string, name: string, track: MediaStreamTrack): JQuery =>
-    this.callboxGridRow.append(makeRemoteTrack(`${id}:${track.id}`, name, track))
+  private renderTrack = (id: string, name: string, track: MediaStreamTrack, muted: boolean): JQuery =>
+    this.callboxGridRow.append(makeRemoteTrack(`${id}:${track.id}`, name, track, muted))
 
   private registerCallEvents = (): void => {
     this.call.remoteTrack$.subscribe(({peerId, track}) => {
       Logger.log(`Remote stream for user ${peerId} started!`);
       Logger.log('Remote track:', track);
-      this.renderTrack(peerId, `Remote: ${peerId}`, track);
+      this.renderTrack(peerId, `Remote: ${peerId}`, track, false);
     });
 
     this.call.left$.subscribe((m) => {
