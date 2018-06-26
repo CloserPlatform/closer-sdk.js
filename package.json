@@ -33,6 +33,10 @@
     "jquery": "^3.3.1",
     "jquery-ui": "^1.12.1",
     "jquery-ui-bundle": "^1.12.1-migrate",
+    "webrtc-adapter": "^6.2.1",
+    "rxjs": "^6.2.1"
+  },
+  "peerDependencies": {
     "rxjs": "^6.2.1",
     "webrtc-adapter": "^6.2.1"
   },
