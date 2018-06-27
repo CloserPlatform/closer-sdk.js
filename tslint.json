@@ -30,7 +30,8 @@
     ],
     "deprecation": true,
     "import-blacklist": [
-      true
+      true,
+      "lodash", "rxjs/Observable", "rxjs/ReplaySubject", "rxjs/Subscription"
     ],
     "encoding": true,
     "eofline": true,
