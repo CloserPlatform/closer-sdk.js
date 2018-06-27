@@ -29,13 +29,7 @@
     "test:watch:chrome": "karma start --singleRun false --browsers ChromeWithFakeUserMedia",
     "test:grep": "karma run -- --grep"
   },
-  "dependencies": {
-    "jquery": "^3.3.1",
-    "jquery-ui": "^1.12.1",
-    "jquery-ui-bundle": "^1.12.1-migrate",
-    "webrtc-adapter": "^6.2.1",
-    "rxjs": "^6.2.1"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "rxjs": "^6.2.1",
     "webrtc-adapter": "^6.2.1"
@@ -54,6 +48,9 @@
     "istanbul": "^0.4.5",
     "istanbul-instrumenter-loader": "^2.0.0",
     "jasmine-core": "^2.6.4",
+    "jquery": "^3.3.1",
+    "jquery-ui": "^1.12.1",
+    "jquery-ui-bundle": "^1.12.1-migrate",
     "json-loader": "^0.5.4",
     "karma": "^1.7.0",
     "karma-chrome-launcher": "^2.2.0",
@@ -67,6 +64,7 @@
     "karma-webpack": "^2.0.4",
     "object-assign": "^4.1.1",
     "rimraf": "^2.6.1",
+    "rxjs": "^6.2.1",
     "source-map-support": "^0.4.15",
     "ts-helpers": "^1.1.2",
     "ts-loader": "^3.0.5",
@@ -76,7 +74,8 @@
     "typedoc": "^0.7.1",
     "typescript": "^2.9.2",
     "watchify": "^3.9.0",
-    "webpack": "^3.8.1"
+    "webpack": "^3.8.1",
+    "webrtc-adapter": "^6.2.1"
   },
   "publishConfig": {
     "registry": "https://nexus.contactis.pl/repository/npm-internal"
