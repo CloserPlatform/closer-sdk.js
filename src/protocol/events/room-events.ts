@@ -120,7 +120,7 @@ export namespace roomEvents {
       this.context = context;
     }
 
-    public static isCustomMessageSent = (e: DomainEvent): e is CustomMessageSent =>
+    public static isCustomMessageSent = (e: DomainEvent | RoomEvent): e is CustomMessageSent =>
       e.tag === CustomMessageSent.tag
   }
 
