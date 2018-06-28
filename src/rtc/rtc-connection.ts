@@ -36,9 +36,10 @@ export class RTCConnection {
     };
 
     this.rtcPeerConnection.onnegotiationneeded = (_event): void => {
-      this.logger.warn('RTC Connection: On Negotiation needed');
+      this.logger.debug('RTCConnection: On Negotiation needed');
       // FIXME Chrome triggers renegotiation on... Initial offer creation...
       // FIXME Firefox triggers renegotiation when remote offer is received.
+      this.logger.debug(`Current connection state: ${this.rtcPeerConnection.connectionState}`);
       if (this.isEstablished()) {
         this.renegotiationTimer = TimeUtils.onceDelayed(
           this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
@@ -46,7 +47,7 @@ export class RTCConnection {
             this.offer().catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
           });
       } else {
-        this.logger.error('RTC Connection: Negotiation is needed but connection is not established');
+        this.logger.debug('RTCConnection:o nnegotiationneeded - connection not established - doing nothing');
       }
     };
   }

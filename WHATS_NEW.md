@@ -1,0 +1,2 @@
+### Fix
+* Logging in RTConnection
