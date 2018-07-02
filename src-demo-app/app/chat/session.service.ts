@@ -34,8 +34,11 @@ export class SessionService {
             rtcpMuxPolicy: 'negotiate',
             bundlePolicy: 'balanced',
             iceServers: [{
-              // FIXME ?transport=upd is required by Edge.
-              urls: ['stun:turn.ratel.im:443?transport=udp', 'turn:turn.ratel.im:443?transport=udp'],
+              urls: [
+                'turn:turn.ratel.im:443?transport=udp',
+                'turn:turn.ratel.im:443?transport=tcp',
+                'stun:turn.ratel.im:443'
+              ],
               username: 'test123',
               credential: 'test456'
             }]
