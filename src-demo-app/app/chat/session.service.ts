@@ -101,8 +101,7 @@ export class SessionService {
       const line = `${callInvitation.authorId} calls you`;
       const closeModal = View.confirmModal('Call invitation', line, 'Answer', () => {
         createStream(stream => {
-          const tracks = stream.getTracks();
-          const callHandler = new CallHandler(call, tracks, session);
+          const callHandler = new CallHandler(call, stream.getTracks(), session);
           callHandler.answer()
             .then(() => Logger.log('Call answered'))
             .catch(err => Logger.error('Call answer failed', err));

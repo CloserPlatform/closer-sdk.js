@@ -14,8 +14,8 @@ export class RTCConnection {
   private renegotiationTimer: number;
 
   constructor(private callId: ID, private peerId: ID, config: RTCConfig, private logger: Logger,
-              private artichokeApi: ArtichokeAPI,
-              private answerOptions?: RTCAnswerOptions, private offerOptions?: RTCOfferOptions) {
+              private artichokeApi: ArtichokeAPI, private answerOptions?: RTCAnswerOptions,
+              private offerOptions?: RTCOfferOptions) {
     logger.info(`Connecting an RTC connection to ${peerId} on ${callId}`);
     this.rtcPeerConnection = new RTCPeerConnection(config);
 
@@ -31,7 +31,8 @@ export class RTCConnection {
     };
 
     this.rtcPeerConnection.ontrack = (event: RTCTrackEvent): void => {
-      this.logger.info('Received a remote track.');
+      const track = event.track;
+      this.logger.info(`Received a remote track ${track.id}`);
       this.remoteTrackEvent.next(event.track);
     };
 
@@ -39,12 +40,12 @@ export class RTCConnection {
       this.logger.debug('RTCConnection: On Negotiation needed');
       // FIXME Chrome triggers renegotiation on... Initial offer creation...
       // FIXME Firefox triggers renegotiation when remote offer is received.
-      this.logger.debug(`Current connection state: ${this.rtcPeerConnection.connectionState}`);
       if (this.isEstablished()) {
         this.renegotiationTimer = TimeUtils.onceDelayed(
           this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
             this.logger.debug('Renegotiating an RTC connection.');
-            this.offer().catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
+            this.offer()
+              .catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
           });
       } else {
         this.logger.debug('RTCConnection:o nnegotiationneeded - connection not established - doing nothing');
@@ -67,9 +68,9 @@ export class RTCConnection {
   public removeTrack(track: MediaStreamTrack): void {
     this.logger.debug('Removing a stream track.');
 
-    return this.rtcPeerConnection.getSenders()
+    this.rtcPeerConnection.getSenders()
       .filter(sender => sender.track === track)
-      .forEach(t => this.rtcPeerConnection.removeTrack(t));
+      .forEach(sender => this.rtcPeerConnection.removeTrack(sender));
   }
 
   public addCandidate(candidate: RTCIceCandidate): Promise<void> {
@@ -81,13 +82,14 @@ export class RTCConnection {
   public offer(options?: RTCOfferOptions): Promise<RTCSessionDescriptionInit> {
     this.logger.debug('Creating an RTC offer.');
 
-    return this.rtcPeerConnection.createOffer(options || this.offerOptions).then((offer) =>
-      this.setLocalDescription(offer as RTCSessionDescriptionInit)).then((offer) =>
-      this.artichokeApi.sendDescription(this.callId, this.peerId, offer).then(() => offer)).then((offer) => {
-      this.logger.debug(`Sent an RTC offer: ${offer.sdp}`);
+    return this.rtcPeerConnection.createOffer(options || this.offerOptions)
+      .then(offer => this.setLocalDescription(offer as RTCSessionDescriptionInit))
+      .then(offer => this.artichokeApi.sendDescription(this.callId, this.peerId, offer).then(_ => offer))
+      .then(offer => {
+        this.logger.debug(`Sent an RTC offer: ${offer.sdp}`);
 
-      return offer;
-    });
+        return offer;
+      });
   }
 
   public addOffer(remoteDescription: RTCSessionDescriptionInit,
@@ -101,9 +103,13 @@ export class RTCConnection {
     this.logger.debug('Creating an RTC answer.');
 
     return this.rtcPeerConnection.createAnswer(options || this.answerOptions)
-      .then(this.setLocalDescription)
-      .then(answer => this.artichokeApi.sendDescription(this.callId, this.peerId, answer).then(() => answer))
-      .then((answer) => {
+      .then(answer => {
+        this.logger.debug('Created an RTC answer');
+
+        return this.setLocalDescription(answer);
+      })
+      .then(answer => this.artichokeApi.sendDescription(this.callId, this.peerId, answer).then(_ => answer))
+      .then(answer => {
         this.logger.debug(`Sent an RTC answer: ${answer.sdp}`);
 
         return answer;
@@ -133,6 +139,10 @@ export class RTCConnection {
   }
 
   private isEstablished(): boolean {
+    this.logger.debug(`Connection state: ${this.rtcPeerConnection.connectionState}`);
+    this.logger.debug(`Signaling state: ${this.rtcPeerConnection.signalingState}`);
+    this.logger.debug(`ICE Connection state: ${this.rtcPeerConnection.iceConnectionState}`);
+    this.logger.debug(`ICE Gathering state: ${this.rtcPeerConnection.iceGatheringState}`);
     // NOTE 'stable' means no exchange is going on, which encompases 'fresh'
     // NOTE RTC connections as well as established ones.
     if (typeof this.rtcPeerConnection.connectionState !== 'undefined') {

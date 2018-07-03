@@ -15,11 +15,20 @@ export interface LoginFormData {
 }
 
 export const makeLoginForm = (id: string, onClick: (formData: LoginFormData) => void): JQuery => {
+  const defaultEmails: ReadonlyArray<string> = [
+    'charlie@ratel.io',
+    'jimmy@ratel.io',
+    'alice@anymind.com',
+    'bob@anymind.com',
+    'chaki@anymind.com',
+    'duli@anymind.com',
+    'none'
+  ];
   const form = $('<form id="login_form">')
     .append([
       makeInput('server-artichoke', 'ArtichokeServer:', 'ArtichokeServer', 'https://artichoke.stage.closerapp.com'),
       makeInput('server-auth', 'AuthServer:', 'AuthServer', 'https://spinner.stage.closerapp.com'),
-      makeSelect('user-email-select', 'Email:', ['charlie@ratel.io', 'jimmy@ratel.io', 'none']),
+      makeSelect('user-email-select', 'Email:', defaultEmails),
       makeDiv().html(
         '<a href="https://git.contactis.pl/closer/runny-sea-men/blob/master/data/agents.csv" ' +
         'target="_blank">Agents data<a/>'),
@@ -178,6 +187,16 @@ const makeAudioTrackStatus = (track: MediaStreamTrack): JQuery => {
     div.text(`Audio track - ENDED`);
   };
 
+  track.onmute = (): void => {
+    Logger.log('Audio mute');
+    div.text(`Audio track - MUTED`);
+  };
+
+  track.onunmute = (): void => {
+    Logger.log('Audio unmute');
+    div.text(`Audio track - UNMUTED`);
+  };
+
   return div;
 };
 
@@ -188,6 +207,16 @@ const makeVideoTrackStatus = (track: MediaStreamTrack): JQuery => {
   track.onended = (): void => {
     Logger.log('VIDEO end');
     div.text(`Video track - ENDED`);
+  };
+
+  track.onmute = (): void => {
+    Logger.log('VIDEO mute');
+    div.text(`Video track - MUTED`);
+  };
+
+  track.onunmute = (): void => {
+    Logger.log('VIDEO unmute');
+    div.text(`Video track - UNMUTED`);
   };
 
   return div;

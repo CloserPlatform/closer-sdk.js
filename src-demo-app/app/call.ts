@@ -6,7 +6,6 @@ import {
   makeSplitGridRow
 } from './view';
 import { Page } from './page';
-import { createStream } from './stream';
 
 export class CallHandler {
 
@@ -28,23 +27,11 @@ export class CallHandler {
 
     const disconnectButton = makeButton('btn-warning', 'Disconnect from Artichoke', () => session.chat.disconnect());
 
+    // Disable video by default
+    this.localTracks.filter(track => track.kind === 'video').forEach(track => track.enabled = false);
+
     const videoCheckbox = makeCheckbox(`${call.id}-video`, ' Video', false, isChecked => {
-      if (isChecked) {
-        createStream(stream => {
-          const videoTrack = stream.getVideoTracks()[0];
-          this.localTracks = [...this.localTracks, videoTrack];
-          this.call.addTrack(videoTrack);
-          this.renderTrack('me', 'Me', videoTrack, true);
-        }, {video: true});
-      } else {
-        const videoTracks = this.localTracks.filter(t => t.kind === 'video');
-        const videoTrack = videoTracks[0];
-        if (videoTrack) {
-          this.call.removeTrack(videoTrack);
-          this.localTracks = this.localTracks.filter(t => t !== videoTrack);
-          videoTrack.stop();
-        }
-      }
+      this.localTracks.filter(track => track.kind === 'video').forEach(track => track.enabled = isChecked);
     });
 
     const audioCheckbox = makeCheckbox(`${call.id}-audio`, ' Audio', true, isChecked => {
