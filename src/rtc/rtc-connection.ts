@@ -18,39 +18,7 @@ export class RTCConnection {
               private offerOptions?: RTCOfferOptions) {
     logger.info(`Connecting an RTC connection to ${peerId} on ${callId}`);
     this.rtcPeerConnection = new RTCPeerConnection(config);
-
-    this.rtcPeerConnection.onicecandidate = (event): void => {
-      if (event.candidate) {
-        this.logger.debug(`Created ICE candidate: ${event.candidate.candidate}`);
-        this.artichokeApi.sendCandidate(this.callId, this.peerId, event.candidate)
-          .then(_ => this.logger.debug('Candidtae sent successfully'))
-          .catch(err => this.logger.error(`Could not send an ICE candidate: ${err}`));
-      } else {
-        this.logger.debug('Done gathering ICE candidates.');
-      }
-    };
-
-    this.rtcPeerConnection.ontrack = (event: RTCTrackEvent): void => {
-      const track = event.track;
-      this.logger.info(`Received a remote track ${track.id}`);
-      this.remoteTrackEvent.next(event.track);
-    };
-
-    this.rtcPeerConnection.onnegotiationneeded = (_event): void => {
-      this.logger.debug('RTCConnection: On Negotiation needed');
-      // FIXME Chrome triggers renegotiation on... Initial offer creation...
-      // FIXME Firefox triggers renegotiation when remote offer is received.
-      if (this.isEstablished()) {
-        this.renegotiationTimer = TimeUtils.onceDelayed(
-          this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
-            this.logger.debug('Renegotiating an RTC connection.');
-            this.offer()
-              .catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
-          });
-      } else {
-        this.logger.debug('RTCConnection:o nnegotiationneeded - connection not established - doing nothing');
-      }
-    };
+    this.registerRtcEvents();
   }
 
   public disconnect(): void {
@@ -153,5 +121,60 @@ export class RTCConnection {
         (this.rtcPeerConnection.iceConnectionState === 'connected' ||
           this.rtcPeerConnection.iceConnectionState === 'completed');
     }
+  }
+
+  private registerRtcEvents = (): void => {
+    this.rtcPeerConnection.onicecandidate = (event): void => {
+      if (event.candidate) {
+        this.logger.debug(`Created ICE candidate: ${event.candidate.candidate}`);
+        this.artichokeApi.sendCandidate(this.callId, this.peerId, event.candidate)
+          .then(_ => this.logger.debug('Candidtae sent successfully'))
+          .catch(err => this.logger.error(`Could not send an ICE candidate: ${err}`));
+      } else {
+        this.logger.debug('Done gathering ICE candidates.');
+      }
+    };
+
+    this.rtcPeerConnection.ontrack = (event: RTCTrackEvent): void => {
+      const track = event.track;
+      this.logger.info(`Received a remote track ${track.id}`);
+      this.remoteTrackEvent.next(event.track);
+    };
+
+    this.rtcPeerConnection.onnegotiationneeded = (_event): void => {
+      this.logger.debug('RTCConnection: On Negotiation needed');
+      // FIXME Chrome triggers renegotiation on... Initial offer creation...
+      // FIXME Firefox triggers renegotiation when remote offer is received.
+      if (this.isEstablished()) {
+        this.renegotiationTimer = TimeUtils.onceDelayed(
+          this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
+            this.logger.debug('Renegotiating an RTC connection.');
+            this.offer()
+              .catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
+          });
+      } else {
+        this.logger.debug('RTCConnection:o nnegotiationneeded - connection not established - doing nothing');
+      }
+    };
+
+    this.rtcPeerConnection.onicecandidateerror = (ev): void => {
+      this.logger.error('RTCConnection: on ice candidate error');
+      this.logger.error(ev);
+    };
+    this.rtcPeerConnection.onconnectionstatechange = (): void => {
+      this.logger.debug(`RTCConnection: on connection state change ${this.rtcPeerConnection.iceConnectionState}`);
+    };
+    this.rtcPeerConnection.oniceconnectionstatechange = (ev): void => {
+      this.logger.debug('RTCConnection: on ICE connection state change');
+      this.logger.debug(ev);
+    };
+    this.rtcPeerConnection.onicegatheringstatechange = (ev): void => {
+      this.logger.debug('RTCConnection: on ICE gathering state change');
+      this.logger.debug(ev);
+    };
+    this.rtcPeerConnection.onsignalingstatechange = (ev): void => {
+      this.logger.debug('RTCConnection: on siganling state change');
+      this.logger.debug(ev);
+    };
   }
 }
