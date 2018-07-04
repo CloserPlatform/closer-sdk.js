@@ -4,7 +4,7 @@ export const createStream = (callback: (stream: MediaStream) => void,
                              optionalConstraints?: MediaStreamConstraints): void => {
   const constraints = optionalConstraints || {
     audio: true,
-    video: false
+    video: true
   };
   navigator.mediaDevices.getUserMedia(constraints).then(stream => {
     Logger.log('Local stream started!');

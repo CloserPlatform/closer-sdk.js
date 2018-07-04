@@ -87,7 +87,7 @@ export class RTCPool {
   private listenForDescriptionSent = (): Subscription =>
     // FIXME - unsubscribe
     this.descriptionSent$.subscribe(msg => {
-      this.logger.debug(`Received an RTC description: ${msg.sdp.sdp}`);
+      this.logger.debug(`Received an RTC description: ${msg.sdp.type} ${msg.sdp.sdp}`);
 
       if (msg.sdp.type === 'offer') {
         this.logger.debug('Received SDP offer');
