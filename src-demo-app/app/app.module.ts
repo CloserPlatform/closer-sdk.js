@@ -1,9 +1,9 @@
-import * as RatelSDK from '../../';
 import { LoginModule } from './login/login.module';
 import { ChatModule } from './chat/chat.module';
 import { SessionService } from './chat/session.service';
 import { LoginService } from './login/login.service';
 import { Logger } from './logger';
+import * as RatelSdk from '../../';
 
 export class AppModule {
 
@@ -11,11 +11,14 @@ export class AppModule {
   private chatModule?: ChatModule;
 
   public init = (): void => {
-    if (!RatelSDK.BrowserUtils.isBrowserSupported()) {
+    const browserInfo = `${RatelSdk.BrowserUtils.getBrowserName()} ${RatelSdk.BrowserUtils.getBrowserVersion()}`;
+    Logger.log(`Detected browser: ${browserInfo}`);
+
+    if (!RatelSdk.BrowserUtils.isBrowserSupported()) {
       alert('This browser is not supported by RatelSDK');
-      throw new Error('Unsupported browser.');
+      throw new Error('Unsupported browser');
     } else {
-      Logger.log('Browser is supported, initing the app');
+      Logger.log('Browser is supported, initiating the app');
     }
 
     const sessionService = new SessionService();

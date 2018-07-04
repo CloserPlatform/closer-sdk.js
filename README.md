@@ -33,6 +33,7 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 ## Tested on:
 - Chrome 67*
 - Safari 11.1.1
+- Mobile Safari iOS 11.4 (*webview is not supported)
 - Firefox 61*
 - Opera 54 (chrome67)
 
