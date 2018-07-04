@@ -1,0 +1,2 @@
+### Improve
+* demo app logging

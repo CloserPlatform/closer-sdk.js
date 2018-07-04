@@ -10,6 +10,7 @@ export const createStream = (callback: (stream: MediaStream) => void,
     Logger.log('Local stream started!');
     callback(stream);
   }).catch((error) => {
-    Logger.error('Could not start stream: ', error);
+    Logger.error('Could not start the stream: ', error);
+    alert(`Could not start the stream: ${error}`);
   });
 };
