@@ -15,7 +15,7 @@ export class AppModule {
     Logger.log(`Detected browser: ${browserInfo}`);
 
     if (!RatelSdk.BrowserUtils.isBrowserSupported()) {
-      alert('This browser is not supported by RatelSDK');
+      alert(`Your browser (${browserInfo}) is not supported by RatelSDK`);
       throw new Error('Unsupported browser');
     } else {
       Logger.log('Browser is supported, initiating the app');
