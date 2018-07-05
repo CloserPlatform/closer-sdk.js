@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.7.12 - 2018-07-05
+
+### Add
+* Front/back camera switcher
+* optional rtc configuration `negotiationNeededDisabled `
+* Readme -> how to support edge
+* replaceTrackByKind which does not require renegotiation if the track specs are similar 
+
 ## 0.7.11 - 2018-07-04
 
 ### Improve
