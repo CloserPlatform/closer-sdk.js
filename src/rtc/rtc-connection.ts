@@ -13,7 +13,7 @@ export class RTCConnection {
   // FIXME Required by the various hacks:
   private renegotiationTimer: number;
 
-  constructor(private callId: ID, private peerId: ID, config: RTCConfig, private logger: Logger,
+  constructor(private callId: ID, private peerId: ID, private config: RTCConfig, private logger: Logger,
               private artichokeApi: ArtichokeAPI, private answerOptions?: RTCAnswerOptions,
               private offerOptions?: RTCOfferOptions) {
     logger.info(`Connecting an RTC connection to ${peerId} on ${callId}`);
@@ -67,6 +67,16 @@ export class RTCConnection {
     return this.setRemoteDescription(remoteDescription).then((_descr) => this.answer(options));
   }
 
+  public replaceTrackByKind = (track: MediaStreamTrack): Promise<void> => {
+    const maybeSender = this.rtcPeerConnection.getSenders()
+      .filter(sender => sender.track.kind === track.kind)[0];
+    if (maybeSender) {
+      return maybeSender.replaceTrack(track);
+    } else {
+      return Promise.reject('ERROR Can not replace track, sender not found for old track');
+    }
+  }
+
   public answer(options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
     this.logger.debug('Creating an RTC answer.');
 
@@ -107,10 +117,6 @@ export class RTCConnection {
   }
 
   private isEstablished(): boolean {
-    this.logger.debug(`Connection state: ${this.rtcPeerConnection.connectionState}`);
-    this.logger.debug(`Signaling state: ${this.rtcPeerConnection.signalingState}`);
-    this.logger.debug(`ICE Connection state: ${this.rtcPeerConnection.iceConnectionState}`);
-    this.logger.debug(`ICE Gathering state: ${this.rtcPeerConnection.iceGatheringState}`);
     // NOTE 'stable' means no exchange is going on, which encompases 'fresh'
     // NOTE RTC connections as well as established ones.
     if (typeof this.rtcPeerConnection.connectionState !== 'undefined') {
@@ -143,17 +149,25 @@ export class RTCConnection {
 
     this.rtcPeerConnection.onnegotiationneeded = (_event): void => {
       this.logger.debug('RTCConnection: On Negotiation needed');
+      this.logger.debug(`Connection state: ${this.rtcPeerConnection.connectionState}`);
+      this.logger.debug(`Signaling state: ${this.rtcPeerConnection.signalingState}`);
+      this.logger.debug(`ICE Connection state: ${this.rtcPeerConnection.iceConnectionState}`);
+      this.logger.debug(`ICE Gathering state: ${this.rtcPeerConnection.iceGatheringState}`);
       // FIXME Chrome triggers renegotiation on... Initial offer creation...
       // FIXME Firefox triggers renegotiation when remote offer is received.
-      if (this.isEstablished()) {
-        this.renegotiationTimer = TimeUtils.onceDelayed(
-          this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
-            this.logger.debug('Renegotiating an RTC connection.');
-            this.offer()
-              .catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
-          });
+      if (!this.config.negotiationNeededDisabled) {
+        if (this.isEstablished()) {
+          this.renegotiationTimer = TimeUtils.onceDelayed(
+            this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
+              this.logger.debug('Renegotiating an RTC connection.');
+              this.offer()
+                .catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
+            });
+        } else {
+          this.logger.debug('RTCConnection: onnegotiationneeded - connection not established - doing nothing');
+        }
       } else {
-        this.logger.debug('RTCConnection:o nnegotiationneeded - connection not established - doing nothing');
+        this.logger.info('RTCConnection: negotitationneeded was called but it is disabled');
       }
     };
 

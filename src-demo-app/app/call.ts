@@ -1,11 +1,12 @@
 import { Logger } from './logger';
 import * as RatelSdk from '../../';
 import {
-  makeButton, makeButtonGroup, makeCallbox, makeCheckbox, makeControls, makeDiv, makeRemoteTrack,
+  makeButton, makeButtonGroup, makeCallbox, makeCheckbox, makeControls, makeDiv, makeRemoteTrack, makeSelect,
   makeSplitGrid,
   makeSplitGridRow
 } from './view';
 import { Page } from './page';
+import { createStream } from './stream';
 
 export class CallHandler {
 
@@ -42,6 +43,9 @@ export class CallHandler {
 
     const buttons = makeButtonGroup().append([
       hangupButton, connectButton, disconnectButton, videoCheckbox, audioCheckbox]);
+
+    this.handleMultipleVideoInputs(buttons);
+
     this.controls = makeControls(call.id, [buttons]).addClass('text-center');
     this.callHandler = makeDiv().append([this.controls, this.callbox]);
     this.callboxGridRow = makeSplitGridRow();
@@ -107,5 +111,35 @@ export class CallHandler {
       this.callbox.hide();
       this.stopLocalStream();
     });
+  }
+
+  private handleMultipleVideoInputs = (elem: JQuery): void => {
+    window.navigator.mediaDevices.enumerateDevices().then(devices => {
+      Logger.log('Detected video devices', devices);
+      if (devices.length > 1) {
+        const videoSwitchCheckbox = makeSelect(`${this.call.id}-video-switch`, ' Camera',
+          ['user', 'environment'], selectedFacingMode => {
+            Logger.log(`Selected facing mode: ${selectedFacingMode}`);
+            // We need to stop the current video track to access second camera on mobile
+            this.removeVideoTracks();
+            createStream(stream => {
+              const newVideoTrack = stream.getVideoTracks()[0];
+              this.localTracks = [...this.localTracks, newVideoTrack];
+              this.renderTrack('me', 'Me', newVideoTrack, true);
+              this.call.replaceTrackByKind(newVideoTrack);
+            }, {
+              video: {
+                facingMode: selectedFacingMode
+              }
+            });
+          });
+        elem.append(videoSwitchCheckbox);
+      }
+    });
+  }
+
+  private removeVideoTracks = (): void => {
+    this.localTracks.filter(track => track.kind === 'video').forEach(track => track.stop());
+    this.localTracks = this.localTracks.filter(track => track.kind !== 'video');
   }
 }

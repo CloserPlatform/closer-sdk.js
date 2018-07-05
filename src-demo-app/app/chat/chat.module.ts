@@ -30,7 +30,10 @@ export class ChatModule {
       const tracks = stream.getTracks();
       session.chat.createDirectCall(tracks, calleeId)
         .then(directCall => new CallHandler(directCall, tracks, session))
-        .catch(err => Logger.error(err));
+        .catch(err => {
+          Logger.error(err);
+          alert(`Failed to create call ${err}`);
+        });
     });
   }
 
