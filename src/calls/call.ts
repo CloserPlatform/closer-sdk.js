@@ -81,6 +81,10 @@ export abstract class Call implements wireEntities.Call {
     this.pool.setAnswerOptions(options);
   }
 
+  public replaceTrackByKind(track: MediaStreamTrack): Promise<void> {
+    return this.pool.replaceTrackByKind(track);
+  }
+
   public setOfferOptions(options: RTCOfferOptions): void {
     this.pool.setOfferOptions(options);
   }

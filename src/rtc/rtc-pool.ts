@@ -84,6 +84,15 @@ export class RTCPool {
     this.offerOptions = options;
   }
 
+  public replaceTrackByKind(track: MediaStreamTrack): Promise<void> {
+    return Promise.all(
+      Object.keys(this.peerConnections)
+        .map(key => this.peerConnections[key])
+        .map(peerConnection => peerConnection.replaceTrackByKind(track))
+    )
+      .then(_ => undefined);
+  }
+
   private listenForDescriptionSent = (): Subscription =>
     // FIXME - unsubscribe
     this.descriptionSent$.subscribe(msg => {

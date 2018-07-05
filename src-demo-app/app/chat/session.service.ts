@@ -30,9 +30,10 @@ export class SessionService {
           hostname: chatUrl.hostname,
           port: chatUrl.port,
           rtc: {
+            negotiationNeededDisabled: true,
             iceTransportPolicy: 'all',
-            rtcpMuxPolicy: 'negotiate',
-            bundlePolicy: 'balanced',
+            bundlePolicy: 'max-bundle',
+            rtcpMuxPolicy: 'require',
             iceServers: [{
               urls: [
                 'turn:turn.ratel.im:443?transport=udp',
@@ -104,7 +105,10 @@ export class SessionService {
           const callHandler = new CallHandler(call, stream.getTracks(), session);
           callHandler.answer()
             .then(() => Logger.log('Call answered'))
-            .catch(err => Logger.error('Call answer failed', err));
+            .catch(err => {
+              Logger.error('Call answer failed', err);
+              alert(`Answer failed ${err}`);
+            });
         });
       }, 'Reject', () => {
         Logger.log('Rejecting call...');

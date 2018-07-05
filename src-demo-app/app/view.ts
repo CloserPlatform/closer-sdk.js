@@ -61,12 +61,17 @@ export const makeLabel = (id: string, className: string, name: string | JQuery):
   })
     .append(name);
 
-export const makeSelect = (id: string, name: string, options: ReadonlyArray<string>): JQuery => {
+export const makeSelect = (id: string, name: string, options: ReadonlyArray<string>,
+                           cb?: (val: string) =>  void): JQuery => {
   const select = $('<select>')
     .prop({
       id, name
     })
     .append(options.map(value => $('<option>').prop({value}).text(value)));
+
+  if (cb) {
+    select.change(() => cb(String(select.val())));
+  }
 
   return $('<div>').append([makeLabel(id, '', name), select]);
 };

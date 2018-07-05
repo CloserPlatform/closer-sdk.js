@@ -42,3 +42,5 @@ Chrome still implements PlanB and firefox use Unified plan:
 https://bugs.chromium.org/p/chromium/issues/detail?id=465349
 This should be solved in M-69
 For now, the solution is to add both tracks (audio&video) before the first sdp offer&answer is being sent and disable them if needed.
+* rtcpMuxPolicy `negotiate` is not supported by Edge - use `require` instead 
+* negotiationNeededDisabled turn on to disable in call renegotiation (which does't work between Chrome&Safari)
