@@ -3,8 +3,16 @@ const adapter = require('webrtc-adapter');
 
 export class BrowserUtils {
 
+  public static readonly supportedBrowsers: {[browserName: string]: number} = {
+    chrome: 67, // opera is also chrome
+    firefox: 61,
+    edge: 17134,
+    safari: 605
+  };
+
   public static isBrowserSupported(): boolean {
     return adapter.browserDetails.version !== null
+      && BrowserUtils.getBrowserIntVersion() >= BrowserUtils.supportedBrowsers[BrowserUtils.getBrowserName()]
       && !!window.RTCPeerConnection
       && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   }
@@ -15,6 +23,10 @@ export class BrowserUtils {
 
   public static getBrowserVersion(): string {
     return adapter.browserDetails.version;
+  }
+
+  public static getBrowserIntVersion(): number {
+    return parseInt(BrowserUtils.getBrowserVersion(), 10);
   }
 
   public static isChrome(): boolean {

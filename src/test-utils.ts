@@ -3,7 +3,6 @@ import {} from 'jasmine';
 
 import { Config, load } from './config/config';
 import * as logger from '../src/logger';
-import { BrowserUtils } from './utils/browser-utils';
 import { LogLevel } from './logger';
 
 export const log = new logger.ConsoleLogger(logger.LogLevel.WARN);
@@ -32,7 +31,7 @@ export const whenever = (condition: boolean):
   condition ? it : xit;
 
 export const isWebRTCSupported = (): boolean =>
-  BrowserUtils.isBrowserSupported();
+  !!window.RTCPeerConnection
 
 export const getStream = (onStream: (stream: MediaStream) => void, onError: (err: Error) => void,
                           constraints?: MediaStreamConstraints): void => {
