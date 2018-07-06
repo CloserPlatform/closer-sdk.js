@@ -6,6 +6,7 @@
 import * as $ from 'jquery';
 import 'jquery-ui-bundle';
 import { Logger } from './logger';
+import { Observable } from 'rxjs/internal/Observable';
 
 export interface LoginFormData {
   artichokeServer: string;
@@ -205,24 +206,33 @@ const makeAudioTrackStatus = (track: MediaStreamTrack): JQuery => {
   return div;
 };
 
-const makeVideoTrackStatus = (track: MediaStreamTrack): JQuery => {
+const makeVideoTrackStatus = (track: MediaStreamTrack, enabled$: Observable<boolean>): JQuery => {
   const div = makeDiv();
-  div.text(`Video track`);
+  const firstTextDiv = makeDiv();
+  const secondTextDiv = makeDiv();
+  firstTextDiv.text(`Video track`);
+  secondTextDiv.text('Status wrapper: DISABLED');
 
   track.onended = (): void => {
     Logger.log('VIDEO end');
-    div.text(`Video track - ENDED`);
+    firstTextDiv.text(`Video track - ENDED`);
   };
 
   track.onmute = (): void => {
     Logger.log('VIDEO mute');
-    div.text(`Video track - MUTED`);
+    firstTextDiv.text(`Video track - MUTED`);
   };
 
   track.onunmute = (): void => {
     Logger.log('VIDEO unmute');
-    div.text(`Video track - UNMUTED`);
+    firstTextDiv.text(`Video track - UNMUTED`);
   };
+
+  enabled$.subscribe(enabled => {
+    secondTextDiv.text(enabled ? 'Status wrapper: ENABLED' : 'Status wrapper: DISABLED');
+  });
+
+  div.append([firstTextDiv, secondTextDiv]);
 
   return div;
 };
@@ -230,7 +240,7 @@ const makeVideoTrackStatus = (track: MediaStreamTrack): JQuery => {
 export const makeRemoteTrack = (id: string,
                                 name: string,
                                 track: MediaStreamTrack,
-                                muted: boolean): JQuery => {
+                                muted: boolean, videoEnabled$: Observable<boolean>): JQuery => {
   const label = makeLabel(id, '', name);
   const panel = $('<div>')
     .addClass('panel panel-default stream-wrapper');
@@ -238,7 +248,7 @@ export const makeRemoteTrack = (id: string,
 
   if (track.kind === 'video') {
     const video = makeVideo(id, stream, muted);
-    panel.append([label, video, makeVideoTrackStatus(track)]);
+    panel.append([label, video, makeVideoTrackStatus(track, videoEnabled$)]);
   } else {
     const audio = makeAudio(id, stream, muted);
     panel.append([label, audio, makeAudioTrackStatus(track)]);

@@ -5,10 +5,11 @@ import * as wireEntities from '../protocol/wire-entities';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { CallReason } from '../apis/call-reason';
 import { CallType } from './call-type';
-import { RemoteTrack, RTCPool } from '../rtc/rtc-pool';
+import { PeerDataChannelMessage, RemoteTrack, RTCPool } from '../rtc/rtc-pool';
 import { Observable, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
+import { DataChannelMessage } from '../rtc/data-channel';
 
 export abstract class Call implements wireEntities.Call {
   public readonly id: proto.ID;
@@ -87,6 +88,14 @@ export abstract class Call implements wireEntities.Call {
 
   public setOfferOptions(options: RTCOfferOptions): void {
     this.pool.setOfferOptions(options);
+  }
+
+  public broadcast(message: DataChannelMessage): void {
+    return this.pool.broadcast(message);
+  }
+
+  public get message$(): Observable<PeerDataChannelMessage> {
+    return this.pool.message$;
   }
 
   public getUsers(): Promise<ReadonlyArray<proto.ID>> {

@@ -4,11 +4,14 @@ import { ID } from '../protocol/protocol';
 import { RTCConfig } from './rtc-config';
 import { TimeUtils } from '../utils/time-utils';
 import { Observable, Subject } from 'rxjs';
+import { DataChannel, DataChannelMessage } from './data-channel';
 
 export class RTCConnection {
   public static readonly renegotiationTimeout = 100;
   private rtcPeerConnection: RTCPeerConnection;
   private remoteTrackEvent = new Subject<MediaStreamTrack>();
+
+  private dataChannel: DataChannel;
 
   // FIXME Required by the various hacks:
   private renegotiationTimer: number;
@@ -18,7 +21,12 @@ export class RTCConnection {
               private offerOptions?: RTCOfferOptions) {
     logger.info(`Connecting an RTC connection to ${peerId} on ${callId}`);
     this.rtcPeerConnection = new RTCPeerConnection(config);
+    this.dataChannel = new DataChannel(callId, this.rtcPeerConnection, logger);
     this.registerRtcEvents();
+  }
+
+  public get message$(): Observable<DataChannelMessage> {
+    return this.dataChannel.message$;
   }
 
   public disconnect(): void {
@@ -47,8 +55,14 @@ export class RTCConnection {
     return this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit));
   }
 
+  public send(msg: DataChannelMessage): void {
+    return this.dataChannel.send(msg);
+  }
+
   public offer(options?: RTCOfferOptions): Promise<RTCSessionDescriptionInit> {
     this.logger.debug('Creating an RTC offer.');
+
+    this.dataChannel.createConnection();
 
     return this.rtcPeerConnection.createOffer(options || this.offerOptions)
       .then(offer => this.setLocalDescription(offer as RTCSessionDescriptionInit))
@@ -79,6 +93,8 @@ export class RTCConnection {
 
   public answer(options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
     this.logger.debug('Creating an RTC answer.');
+
+    this.dataChannel.createConnection();
 
     return this.rtcPeerConnection.createAnswer(options || this.answerOptions)
       .then(answer => {
@@ -171,6 +187,9 @@ export class RTCConnection {
       }
     };
 
+    this.rtcPeerConnection.ondatachannel = (): void => {
+      this.logger.debug('On DataChannel');
+    };
     this.rtcPeerConnection.onicecandidateerror = (ev): void => {
       this.logger.error('RTCConnection: on ice candidate error');
       this.logger.error(ev);
