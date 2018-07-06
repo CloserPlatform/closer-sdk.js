@@ -1,6 +1,5 @@
 import { PromiseUtils } from './promise-utils';
 import { ObjectUtils } from './object-utils';
-import { BrowserUtils } from './browser-utils';
 import { TimeUtils } from './time-utils';
 import { BumpableTimeout } from './bumpable-timeout';
 const testVal = 23;
@@ -41,14 +40,6 @@ describe('Utils', () => {
 
     obj.bar.baz = testVal3;
     expect(cpy.bar.baz).toEqual(testVal2);
-  });
-
-  it('isBrowserSupported should check if browser is supported', () => {
-    if (BrowserUtils.isChrome()) {
-      expect(BrowserUtils.isBrowserSupported()).toEqual(true);
-    } else if (BrowserUtils.isFirefox()) {
-      expect(BrowserUtils.isBrowserSupported()).toEqual(true);
-    }
   });
 
   it('onceDelayed should only execute once', (done) => {
