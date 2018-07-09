@@ -7,6 +7,9 @@ import {
 } from './view';
 import { Page } from './page';
 import { createStream } from './stream';
+import { map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { Subject } from 'rxjs/internal/Subject';
 
 export class CallHandler {
 
@@ -14,6 +17,7 @@ export class CallHandler {
   private controls: JQuery;
   private callbox: JQuery;
   private callboxGridRow: JQuery;
+  private localVideoStatusWrapperEvent = new Subject<boolean>();
 
   constructor(private call: RatelSdk.DirectCall,
               private localTracks: ReadonlyArray<MediaStreamTrack>,
@@ -32,6 +36,8 @@ export class CallHandler {
     this.localTracks.filter(track => track.kind === 'video').forEach(track => track.enabled = false);
 
     const videoCheckbox = makeCheckbox(`${call.id}-video`, ' Video', false, isChecked => {
+      this.notifyVideoChange(isChecked);
+      this.localVideoStatusWrapperEvent.next(isChecked);
       this.localTracks.filter(track => track.kind === 'video').forEach(track => track.enabled = isChecked);
     });
 
@@ -52,7 +58,7 @@ export class CallHandler {
     this.callbox.append(makeSplitGrid().append(this.callboxGridRow));
     Page.contents.append(this.callHandler);
     Page.getCalleeBox().hide();
-    localTracks.forEach(track => this.renderTrack('me', 'Me', track, true));
+    localTracks.forEach(track => this.renderTrack('me', 'Me', track, true, this.localVideoStatusWrapperEvent));
   }
 
   public stopLocalStream = (): void =>
@@ -68,14 +74,15 @@ export class CallHandler {
     Page.getCalleeBox().show();
   }
 
-  private renderTrack = (id: string, name: string, track: MediaStreamTrack, muted: boolean): JQuery =>
-    this.callboxGridRow.append(makeRemoteTrack(`${id}:${track.id}`, name, track, muted))
+  private renderTrack = (id: string, name: string, track: MediaStreamTrack, muted: boolean,
+                         videoEnabled$: Observable<boolean>): JQuery =>
+    this.callboxGridRow.append(makeRemoteTrack(`${id}:${track.id}`, name, track, muted, videoEnabled$))
 
   private registerCallEvents = (): void => {
     this.call.remoteTrack$.subscribe(({peerId, track}) => {
       Logger.log(`Remote stream for user ${peerId} started!`);
       Logger.log('Remote track:', track);
-      this.renderTrack(peerId, `Remote: ${peerId}`, track, false);
+      this.renderTrack(peerId, `Remote: ${peerId}`, track, false, this.getVideoEnabledStatusWrapper());
     });
 
     this.call.left$.subscribe((m) => {
@@ -116,7 +123,7 @@ export class CallHandler {
   private handleMultipleVideoInputs = (elem: JQuery): void => {
     window.navigator.mediaDevices.enumerateDevices().then(devices => {
       Logger.log('Detected video devices', devices);
-      if (devices.length > 1) {
+      if (devices.filter(device => device.kind === 'videoinput').length > 1) {
         const videoSwitchCheckbox = makeSelect(`${this.call.id}-video-switch`, ' Camera',
           ['user', 'environment'], selectedFacingMode => {
             Logger.log(`Selected facing mode: ${selectedFacingMode}`);
@@ -125,7 +132,7 @@ export class CallHandler {
             createStream(stream => {
               const newVideoTrack = stream.getVideoTracks()[0];
               this.localTracks = [...this.localTracks, newVideoTrack];
-              this.renderTrack('me', 'Me', newVideoTrack, true);
+              this.renderTrack('me', 'Me', newVideoTrack, true, this.localVideoStatusWrapperEvent);
               this.call.replaceTrackByKind(newVideoTrack);
             }, {
               video: {
@@ -136,6 +143,13 @@ export class CallHandler {
         elem.append(videoSwitchCheckbox);
       }
     });
+  }
+
+  private getVideoEnabledStatusWrapper = (): Observable<boolean> =>
+    this.call.message$.pipe(map(msg => JSON.parse(msg.message).video as boolean))
+
+  private notifyVideoChange = (enabled: boolean): void => {
+    this.call.broadcast(JSON.stringify({video: enabled}));
   }
 
   private removeVideoTracks = (): void => {

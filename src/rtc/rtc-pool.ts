@@ -6,10 +6,16 @@ import { RTCConfig } from './rtc-config';
 import { RTCConnection } from './rtc-connection';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { DataChannelMessage } from './data-channel';
 
 export interface RemoteTrack {
   peerId: ID;
   track: MediaStreamTrack;
+}
+
+export interface PeerDataChannelMessage {
+  peerId: ID;
+  message: DataChannelMessage;
 }
 
 export class RTCPool {
@@ -20,6 +26,7 @@ export class RTCPool {
   private tracks: ReadonlyArray<MediaStreamTrack> = [];
   private remoteTrackEvent = new Subject<RemoteTrack>();
   private rtcCallEvent = new Subject<rtcEvents.RTCSignallingEvent>();
+  private messageEvent = new Subject<PeerDataChannelMessage>();
 
   constructor(private callId: ID,
               private rtcConfig: RTCConfig,
@@ -41,6 +48,15 @@ export class RTCPool {
 
   public get remoteTrack$(): Observable<RemoteTrack> {
     return this.remoteTrackEvent;
+  }
+
+  public broadcast = (msg: DataChannelMessage): void =>
+    Object.keys(this.peerConnections)
+      .map(key => this.peerConnections[key])
+      .forEach(peerConnection => peerConnection.send(msg))
+
+  public get message$(): Observable<PeerDataChannelMessage> {
+    return this.messageEvent;
   }
 
   public addTrack(track: MediaStreamTrack): void {
@@ -149,6 +165,9 @@ export class RTCPool {
 
     const rtcConnection = new RTCConnection(this.callId, peerId, this.rtcConfig, this.logger,
       this.artichokeApi, this.answerOptions, this.offerOptions);
+
+    // FIXME - unsubscribe
+    rtcConnection.message$.subscribe(message => this.messageEvent.next({peerId, message}));
 
     // FIXME - unsubscribe
     rtcConnection.remoteTrack$.subscribe(track => this.remoteTrackEvent.next({peerId, track}));
