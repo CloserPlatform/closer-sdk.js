@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.7.14 - 2018-07-09
+
+### Feature
+* Call `broadcast` and `message$` which allows to send messages over peer connection (Not supported by Edge)
+The motivation of this feature was to provide an event channel to notify peers about video track status (enabled/disabled)
+ 
+
 ## 0.7.13 - 2018-07-06
 
 ### Improve
