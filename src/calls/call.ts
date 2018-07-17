@@ -23,7 +23,7 @@ export abstract class Call implements wireEntities.Call {
   protected pool: RTCPool;
   protected callEvent = new Subject<callEvents.CallEvent>();
 
-  constructor(call: wireEntities.Call, logger: Logger,
+  constructor(call: wireEntities.Call, private logger: Logger,
               protected artichokeApi: ArtichokeAPI, rtcPoolRepository: RTCPoolRepository,
               tracks?: ReadonlyArray<MediaStreamTrack>) {
     this.id = call.id;
@@ -165,16 +165,20 @@ export abstract class Call implements wireEntities.Call {
   }
 
   private establishRTCWithOldUsers(): void {
+    this.logger.debug('Establishing rtc with existing call old users');
     this.artichokeApi.getCallUsers(this.id).then(users => {
       const oldUsers = users.filter(u => u !== this.artichokeApi.sessionId && !this.users.includes(u));
       oldUsers.forEach(u => this.pool.create(u));
+      this.logger.debug(`Old call users count: ${oldUsers.length}`);
       this.users = this.users.concat(oldUsers);
-    });
+    })
+      .catch(err => this.logger.error(`Get call old users failed: ${err}`));
   }
 
   private setupListeners(): void {
     // FIXME - unsubscribe
     this.joined$.subscribe(joined => {
+      this.logger.debug(`Call ${this.id} received joined author ${joined.authorId} creating rtc connection..`);
       this.users = [...this.users, joined.authorId];
       this.pool.create(joined.authorId);
     });

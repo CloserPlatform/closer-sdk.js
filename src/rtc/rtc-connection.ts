@@ -3,13 +3,11 @@ import { ArtichokeAPI } from '../apis/artichoke-api';
 import { ID } from '../protocol/protocol';
 import { RTCConfig } from './rtc-config';
 import { TimeUtils } from '../utils/time-utils';
-import { Observable, Subject } from 'rxjs';
 import { DataChannel, DataChannelMessage } from './data-channel';
 
 export class RTCConnection {
   public static readonly renegotiationTimeout = 100;
   private rtcPeerConnection: RTCPeerConnection;
-  private remoteTrackEvent = new Subject<MediaStreamTrack>();
 
   private dataChannel: DataChannel;
 
@@ -17,16 +15,26 @@ export class RTCConnection {
   private renegotiationTimer: number;
 
   constructor(private callId: ID, private peerId: ID, private config: RTCConfig, private logger: Logger,
-              private artichokeApi: ArtichokeAPI, private answerOptions?: RTCAnswerOptions,
+              private artichokeApi: ArtichokeAPI,
+              private onRemoteTrack: (track: MediaStreamTrack) => void,
+              onDataChannelMessage: (msg: DataChannelMessage) => void,
+              mediaTracks: ReadonlyArray<MediaStreamTrack>,
+              private answerOptions?: RTCAnswerOptions,
               private offerOptions?: RTCOfferOptions) {
-    logger.info(`Connecting an RTC connection to ${peerId} on ${callId}`);
+    logger.info(`Connecting an RTC connection to peer ${peerId} on call ${callId}`);
     this.rtcPeerConnection = new RTCPeerConnection(config);
-    this.dataChannel = new DataChannel(callId, this.rtcPeerConnection, logger);
+    logger.debug(`Created RTCPeerConnection`);
+    // Because sometimes camera might fail when adding video track
+    // This `try` will still create the correct connection just with audio
+    try {
+      mediaTracks.forEach(track => this.addTrack(track));
+    } catch (e) {
+      logger.error(`Adding media tracks failed with: ${e}`);
+    }
+    logger.debug(`Added all media tracks`);
+    this.dataChannel = new DataChannel(callId, this.rtcPeerConnection, logger, onDataChannelMessage);
+    logger.debug(`DataChannel created`);
     this.registerRtcEvents();
-  }
-
-  public get message$(): Observable<DataChannelMessage> {
-    return this.dataChannel.message$;
   }
 
   public disconnect(): void {
@@ -35,7 +43,7 @@ export class RTCConnection {
   }
 
   public addTrack(track: MediaStreamTrack): RTCRtpSender {
-    this.logger.debug('Adding a stream track.');
+    this.logger.debug(`Adding a ${track.kind} media track`);
 
     // We need to put all tracks in one stream if we want to synchronize them, for now - no.
     return this.rtcPeerConnection.addTrack(track, new MediaStream());
@@ -59,7 +67,7 @@ export class RTCConnection {
     return this.dataChannel.send(msg);
   }
 
-  public offer(options?: RTCOfferOptions): Promise<RTCSessionDescriptionInit> {
+  public startOffer(options?: RTCOfferOptions): Promise<RTCSessionDescriptionInit> {
     this.logger.debug('Creating an RTC offer.');
 
     this.dataChannel.createConnection();
@@ -74,11 +82,18 @@ export class RTCConnection {
       });
   }
 
-  public addOffer(remoteDescription: RTCSessionDescriptionInit,
-                  options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
-    this.logger.debug('Received an RTC offer.');
+  public handleOffer = (remoteDescription: RTCSessionDescriptionInit,
+                     options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> => {
+    this.logger.debug('Received an RTC offer - calling setRemoteDescription');
 
-    return this.setRemoteDescription(remoteDescription).then((_descr) => this.answer(options));
+    return this.setRemoteDescription(remoteDescription).then((_descr) => {
+      this.logger.debug('RTC offer was successfully set');
+
+      return this.answer(options);
+    }).catch(err => {
+      this.logger.error('Failed to set remote SDP');
+      throw err;
+    });
   }
 
   public replaceTrackByKind = (track: MediaStreamTrack): Promise<void> => {
@@ -116,11 +131,7 @@ export class RTCConnection {
     return this.setRemoteDescription(remoteDescription);
   }
 
-  public get remoteTrack$(): Observable<MediaStreamTrack> {
-    return this.remoteTrackEvent;
-  }
-
-  private setRemoteDescription(remoteDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
+  private setRemoteDescription = (remoteDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> => {
     this.logger.debug('Setting remote RTC description.');
 
     return this.rtcPeerConnection.setRemoteDescription(remoteDescription).then(() => remoteDescription);
@@ -146,6 +157,7 @@ export class RTCConnection {
   }
 
   private registerRtcEvents = (): void => {
+    this.logger.debug('RTCConnection: registering rtc events');
     this.rtcPeerConnection.onicecandidate = (event): void => {
       if (event.candidate) {
         this.logger.debug(`Created ICE candidate: ${event.candidate.candidate}`);
@@ -160,7 +172,7 @@ export class RTCConnection {
     this.rtcPeerConnection.ontrack = (event: RTCTrackEvent): void => {
       const track = event.track;
       this.logger.info(`Received a remote track ${track.id}`);
-      this.remoteTrackEvent.next(event.track);
+      this.onRemoteTrack(event.track);
     };
 
     this.rtcPeerConnection.onnegotiationneeded = (_event): void => {
@@ -176,7 +188,7 @@ export class RTCConnection {
           this.renegotiationTimer = TimeUtils.onceDelayed(
             this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
               this.logger.debug('Renegotiating an RTC connection.');
-              this.offer()
+              this.startOffer()
                 .catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
             });
         } else {
@@ -209,5 +221,6 @@ export class RTCConnection {
       this.logger.debug('RTCConnection: on siganling state change');
       this.logger.debug(ev);
     };
+    this.logger.debug('RTCConnection: registered all rtc events');
   }
 }
