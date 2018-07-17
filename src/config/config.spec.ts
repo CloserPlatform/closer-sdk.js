@@ -52,7 +52,7 @@ describe('Config', () => {
     const cfg: any = {
       chat: {
         rtc: {
-          rtcpMuxPolicy: 'require',
+          rtcpMuxPolicy: 'negotiate',
           defaultOfferOptions: {
             offerToReceiveAudio: false,
             offerToReceiveVideo: false
