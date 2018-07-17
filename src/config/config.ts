@@ -40,8 +40,9 @@ export const defaultConfig: Config = {
     hostname: 'artichoke.ratel.io',
     port: '',
     rtc: {
-      rtcpMuxPolicy: 'negotiate',
-      bundlePolicy: 'balanced',
+      iceTransportPolicy: 'all',
+      bundlePolicy: 'max-bundle',
+      rtcpMuxPolicy: 'require',
       iceServers: [{
         urls: ['stun:turn.ratel.im:3478', 'turn:turn.ratel.im:3478'],
         username: 'test123',
