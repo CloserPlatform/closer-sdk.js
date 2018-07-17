@@ -18,8 +18,8 @@
     "lint": "tslint -c tslint.json src/**/*.ts",
     "pretest": "npm run lint",
     "pretest:ci": "npm run lint",
-    "posttest": "istanbul check-coverage --statement 72 --branch 48 --function 57 --line 75",
-    "posttest:ci": "istanbul check-coverage --statement 72 --branch 48 --function 57 --line 75",
+    "posttest": "istanbul check-coverage --statement 72 --branch 48 --function 57 --line 74",
+    "posttest:ci": "istanbul check-coverage --statement 72 --branch 48 --function 57 --line 74",
     "start": "node node_modules/http-server/bin/http-server ./dist-demo-app -p 8080",
     "test": "karma start --singleRun true",
     "test:ci": "karma start --singleRun true --browsers HeadlessChrome #,HeadlessFirefox",
@@ -34,7 +34,7 @@
     "jquery": "^3.3.1",
     "jquery-ui": "^1.12.1",
     "jquery-ui-bundle": "^1.12.1-migrate",
-    "webrtc-adapter": "^6.2.1"
+    "webrtc-adapter": "^6.3.0"
   },
   "peerDependencies": {
     "rxjs": "^6.2.1",

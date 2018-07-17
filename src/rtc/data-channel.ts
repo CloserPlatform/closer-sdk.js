@@ -1,6 +1,4 @@
 import { Logger } from '../logger';
-import { Subject } from 'rxjs/internal/Subject';
-import { Observable } from 'rxjs/internal/Observable';
 
 export type DataChannelMessage = string;
 
@@ -8,9 +6,9 @@ export class DataChannel {
 
   private rtcDataChannel?: RTCDataChannel;
   private messageQueue: ReadonlyArray<DataChannelMessage> = [];
-  private messageEvent = new Subject<DataChannelMessage>();
 
-  constructor (private label: string, private rtcPeerConnection: RTCPeerConnection, private logger: Logger) {}
+  constructor(private label: string, private rtcPeerConnection: RTCPeerConnection, private logger: Logger,
+              private onChannelMessage: (msg: DataChannelMessage) => void) {}
 
   // Edge do not support rtc data channels ATM - 06.07.2018
   public static isSupported = (): boolean =>
@@ -29,10 +27,6 @@ export class DataChannel {
     } else {
       this.logger.warn('DataChannel is not supported, your peers will not receive any p2p messages');
     }
-  }
-
-  public get message$(): Observable<DataChannelMessage> {
-    return this.messageEvent;
   }
 
   public send = (msg: DataChannelMessage): void => {
@@ -75,7 +69,7 @@ export class DataChannel {
       this.messageQueue = [];
     };
     channel.onmessage = (ev): void => {
-      this.messageEvent.next(ev.data);
+      this.onChannelMessage(ev.data);
     };
     channel.onclose = (): void => {
       this.logger.debug('DataChannel closed');
