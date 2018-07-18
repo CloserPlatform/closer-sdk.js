@@ -3,7 +3,7 @@ import { rtcEvents } from '../protocol/events/rtc-events';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { ID } from '../protocol/protocol';
 import { RTCConfig } from './rtc-config';
-import { RTCConnection } from './rtc-connection';
+import { RTCPeerConnectionFacade } from './rtc-peer-connection-facade';
 import { Observable, Subject, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { DataChannelMessage } from './data-channel';
@@ -23,10 +23,9 @@ export class RTCPool {
   private offerOptions?: RTCOfferOptions;
   private answerOptions?: RTCAnswerOptions;
 
-  private peerConnections: { [peerId: string]: RTCConnection } = {};
+  private peerConnections: { [peerId: string]: RTCPeerConnectionFacade } = {};
   private tracks: ReadonlyArray<MediaStreamTrack> = [];
   private remoteTrackEvent = new Subject<RemoteTrack>();
-  private rtcCallEvent = new Subject<rtcEvents.RTCSignallingEvent>();
   private messageEvent = new Subject<PeerDataChannelMessage>();
 
   private candidateQueue: CandidateQueue;
@@ -39,12 +38,6 @@ export class RTCPool {
     this.offerOptions = rtcConfig.defaultOfferOptions;
     this.answerOptions = rtcConfig.defaultAnswerOptions;
     this.candidateQueue = new CandidateQueue(logger);
-
-    // FIXME - unsubscribe
-    this.artichokeApi.event$
-      .pipe(filter(rtcEvents.RTCSignallingEvent.is))
-      .pipe(filter(e => e.callId === this.callId))
-      .subscribe(ev => this.rtcCallEvent.next(ev));
 
     this.listenForDescriptionSent();
     this.listenForCandidateSent();
@@ -77,25 +70,27 @@ export class RTCPool {
     });
   }
 
-  public create(peerId: ID): RTCConnection {
-    const rtcConnection = this.createRTCConnection(peerId);
+  public connect(peerId: ID): void {
+    const rtcConnection = this.createRTCConnectionFacade(peerId);
     this.addRTCPeerConnection(peerId, rtcConnection);
 
-    rtcConnection.startOffer(this.offerOptions)
+    rtcConnection.offer(this.offerOptions)
       .catch(err => this.logger.error(`Could not create an RTC offer: ${err}`));
-
-    return rtcConnection;
   }
 
   public destroyConnection(peerId: ID): void {
     if (peerId in this.peerConnections) {
+      this.logger.debug(`Destroying connection for peerId ${peerId}`);
       this.peerConnections[peerId].disconnect();
       const {[peerId]: value, ...withoutPeerConnection} = this.peerConnections;
       this.peerConnections = withoutPeerConnection;
+    } else {
+      this.logger.warn(`Cannot destroy connection for peerId ${peerId} - it does not exist`);
     }
   }
 
-  public destroyAllConnections(): void {
+  public destroyAllConnections = (): void => {
+    this.logger.debug(`Destroying all connections for call ${this.callId}`);
     Object.keys(this.peerConnections).forEach(peerId => this.destroyConnection(peerId));
   }
 
@@ -116,38 +111,46 @@ export class RTCPool {
       .then(_ => undefined);
   }
 
+  private handleRemoteSDPOffer = (msg: rtcEvents.DescriptionSent): void => {
+    this.logger.debug('Received SDP offer');
+    if (msg.sender in this.peerConnections) {
+      this.peerConnections[msg.sender].handleRemoteOffer(msg.sdp)
+        .then(_ => this.logger.debug('Successfully added SDP offer to existing RTCConnection'))
+        .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
+    } else {
+      const rtcConnection = this.createRTCConnectionFacade(msg.sender);
+      rtcConnection.handleRemoteOffer(msg.sdp)
+        .then(_ => {
+          this.addRTCPeerConnection(msg.sender, rtcConnection);
+          this.candidateQueue.drainCandidates(msg.sender)
+            .forEach(candidate => rtcConnection.addCandidate(candidate));
+          this.logger.debug('Successfully added SDP offer to new RTCConeection');
+        })
+        .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
+    }
+  }
+
+  private handleRemoteSDPAnswer = (msg: rtcEvents.DescriptionSent): void => {
+    if (msg.sender in this.peerConnections) {
+      this.peerConnections[msg.sender].addRemoteAnswer(msg.sdp)
+        .then(_ => this.logger.debug('Successfully added SDP answer'))
+        .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
+    } else {
+      this.logger.error(`Received an invalid RTC answer from ${msg.sender}`);
+    }
+  }
+
   private listenForDescriptionSent = (): Subscription =>
     // FIXME - unsubscribe
     this.descriptionSent$.subscribe(msg => {
       this.logger.debug(`Received an RTC description: ${msg.sdp.type} ${msg.sdp.sdp}`);
-
-      if (msg.sdp.type === 'offer') {
-        this.logger.debug('Received SDP offer');
-        if (msg.sender in this.peerConnections) {
-          this.peerConnections[msg.sender].handleOffer(msg.sdp)
-            .then(_ => this.logger.debug('Successfully added SDP offer to existing RTCConnection'))
-            .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
-        } else {
-          const rtcConnection = this.createRTCConnection(msg.sender);
-          rtcConnection.handleOffer(msg.sdp)
-            .then(_ => {
-              this.addRTCPeerConnection(msg.sender, rtcConnection);
-              this.candidateQueue.drainCandidates(msg.sender)
-                .forEach(candidate => rtcConnection.addCandidate(candidate));
-              this.logger.debug('Successfully added SDP offer to new RTCConeection');
-            })
-            .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
-        }
-      } else if (msg.sdp.type === 'answer') {
-        if (msg.sender in this.peerConnections) {
-          this.peerConnections[msg.sender].addAnswer(msg.sdp)
-            .then(_ => this.logger.debug('Successfully added SDP answer'))
-            .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
-        } else {
-          this.logger.error(`Received an invalid RTC answer from ${msg.sender}`);
-        }
-      } else {
-        this.logger.error(`Received an invalid RTC description type ${msg.sdp.type}`);
+      switch (msg.sdp.type) {
+        case 'offer':
+          return this.handleRemoteSDPOffer(msg);
+        case 'answer':
+          return this.handleRemoteSDPAnswer(msg);
+        default:
+          return this.logger.error(`Received an invalid RTC description type ${msg.sdp.type}`);
       }
     })
 
@@ -167,14 +170,19 @@ export class RTCPool {
     })
 
   private get descriptionSent$(): Observable<rtcEvents.DescriptionSent> {
-    return this.rtcCallEvent.pipe(filter(rtcEvents.DescriptionSent.is));
+    return this.getRtcPoolEvent().pipe(filter(rtcEvents.DescriptionSent.is));
   }
 
   private get candidateSent$(): Observable<rtcEvents.CandidateSent> {
-    return this.rtcCallEvent.pipe(filter(rtcEvents.CandidateSent.is));
+    return this.getRtcPoolEvent().pipe(filter(rtcEvents.CandidateSent.is));
   }
 
-  private addRTCPeerConnection = (peerId: ID, rtcConnection: RTCConnection): void => {
+  private getRtcPoolEvent = (): Observable<rtcEvents.RTCSignallingEvent> =>
+    this.artichokeApi.event$
+      .pipe(filter(rtcEvents.RTCSignallingEvent.is))
+      .pipe(filter(e => e.callId === this.callId))
+
+  private addRTCPeerConnection = (peerId: ID, rtcConnection: RTCPeerConnectionFacade): void => {
     if (peerId in this.peerConnections) {
       this.logger.error(`Cannot add peer connection for peerId ${peerId}, connection already exists for given peer`);
     } else {
@@ -188,10 +196,10 @@ export class RTCPool {
   private getDataChannelEventHandler = (peerId: ID): (message: DataChannelMessage) => void =>
     (message: DataChannelMessage): void => this.messageEvent.next({peerId, message})
 
-  private createRTCConnection(peerId: ID): RTCConnection {
+  private createRTCConnectionFacade(peerId: ID): RTCPeerConnectionFacade {
     this.logger.debug(`Creating new RTCConnection for peerId: ${peerId}`);
 
-    return new RTCConnection(this.callId, peerId, this.rtcConfig, this.logger,
+    return new RTCPeerConnectionFacade(this.callId, peerId, this.rtcConfig, this.logger,
       this.artichokeApi,
       this.getTrackEventHandler(peerId),
       this.getDataChannelEventHandler(peerId),
