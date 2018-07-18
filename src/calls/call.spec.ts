@@ -154,7 +154,7 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
       const usersToOffer = new Set([bob, chad, david]);
       const usersNotToOffer = new Set([aliceSessionId]);
 
-      spyOn(RTCPool.prototype, 'create').and.callFake((u: string) => {
+      spyOn(RTCPool.prototype, 'connect').and.callFake((u: string) => {
         done();
         if (usersNotToOffer.has(u)) {
           done.fail();
@@ -175,7 +175,7 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
       const rtcPoolRepo = new RTCPoolRepository(config.chat.rtc, log, apiMock);
       const callFactory2 = new CallFactory(log, apiMock, rtcPoolRepo);
       spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([aliceSessionId, bob, chad, david]));
-      spyOn(RTCPool.prototype, 'create').and.callFake((_u: string) => done.fail());
+      spyOn(RTCPool.prototype, 'connect').and.callFake((_u: string) => done.fail());
 
       // tslint:disable-next-line
       callFactory2.create(makeGroupCall(aliceSessionId, [aliceSessionId, david])) as GroupCall;

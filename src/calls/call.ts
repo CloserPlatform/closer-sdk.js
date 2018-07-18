@@ -6,8 +6,8 @@ import { ArtichokeAPI } from '../apis/artichoke-api';
 import { CallReason } from '../apis/call-reason';
 import { CallType } from './call-type';
 import { PeerDataChannelMessage, RemoteTrack, RTCPool } from '../rtc/rtc-pool';
-import { Observable, Subject } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { filter, first, takeUntil } from 'rxjs/operators';
 import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
 import { DataChannelMessage } from '../rtc/data-channel';
 
@@ -21,7 +21,6 @@ export abstract class Call implements wireEntities.Call {
   public orgId?: proto.ID;
   public abstract readonly callType: CallType;
   protected pool: RTCPool;
-  protected callEvent = new Subject<callEvents.CallEvent>();
 
   constructor(call: wireEntities.Call, private logger: Logger,
               protected artichokeApi: ArtichokeAPI, rtcPoolRepository: RTCPoolRepository,
@@ -36,16 +35,12 @@ export abstract class Call implements wireEntities.Call {
 
     this.pool = rtcPoolRepository.getRtcPoolInstance(call.id);
 
-    // FIXME - unsubscribe
-    this.artichokeApi.event$
-      .pipe(filter(callEvents.CallEvent.isCallEvent))
-      .pipe(filter(ev => ev.callId === this.id))
-      .subscribe(ev => this.callEvent.next(ev));
+    this.end$.pipe(first()).subscribe(endEvent => {
+      this.ended = endEvent.timestamp;
+      this.pool.destroyAllConnections();
+    });
 
-    // FIXME - unsubscribe
-    this.end$.subscribe((e) => this.ended = e.timestamp);
-    // FIXME - unsubscribe
-    this.activeDevice$.subscribe(_ => this.pool.destroyAllConnections());
+    this.activeDevice$.pipe(takeUntil(this.end$)).subscribe(this.pool.destroyAllConnections);
 
     if (tracks) {
       this.addTracks(tracks);
@@ -129,46 +124,51 @@ export abstract class Call implements wireEntities.Call {
   }
 
   public get answered$(): Observable<callEvents.Answered> {
-    return this.callEvent.pipe(filter(callEvents.Answered.isAnswered));
+    return this.getCallEvent().pipe(filter(callEvents.Answered.isAnswered));
   }
 
   public get rejected$(): Observable<callEvents.Rejected> {
-    return this.callEvent.pipe(filter(callEvents.Rejected.isRejected));
+    return this.getCallEvent().pipe(filter(callEvents.Rejected.isRejected));
   }
 
   public get left$(): Observable<callEvents.Left> {
-    return this.callEvent.pipe(filter(callEvents.Left.isLeft));
+    return this.getCallEvent().pipe(filter(callEvents.Left.isLeft));
   }
 
   public get offline$(): Observable<callEvents.DeviceOffline> {
-    return this.callEvent.pipe(filter(callEvents.DeviceOffline.isDeviceOffline));
+    return this.getCallEvent().pipe(filter(callEvents.DeviceOffline.isDeviceOffline));
   }
 
   public get online$(): Observable<callEvents.DeviceOnline> {
-    return this.callEvent.pipe(filter(callEvents.DeviceOnline.isDeviceOnline));
+    return this.getCallEvent().pipe(filter(callEvents.DeviceOnline.isDeviceOnline));
   }
 
   public get joined$(): Observable<callEvents.Joined> {
-    return this.callEvent.pipe(filter(callEvents.Joined.isJoined));
+    return this.getCallEvent().pipe(filter(callEvents.Joined.isJoined));
   }
 
   public get activeDevice$(): Observable<callEvents.CallHandledOnDevice> {
-    return this.callEvent.pipe(filter(callEvents.CallHandledOnDevice.isCallHandledOnDevice));
+    return this.getCallEvent().pipe(filter(callEvents.CallHandledOnDevice.isCallHandledOnDevice));
   }
 
   public get end$(): Observable<callEvents.Ended> {
-    return this.callEvent.pipe(filter(callEvents.Ended.isEnded));
+    return this.getCallEvent().pipe(filter(callEvents.Ended.isEnded));
   }
 
   protected getInvited$(): Observable<callEvents.Invited> {
-    return this.callEvent.pipe(filter(callEvents.Invited.isInvited));
+    return this.getCallEvent().pipe(filter(callEvents.Invited.isInvited));
   }
+
+  private getCallEvent = (): Observable<callEvents.CallEvent> =>
+    this.artichokeApi.event$
+      .pipe(filter(callEvents.CallEvent.isCallEvent))
+      .pipe(filter(ev => ev.callId === this.id))
 
   private establishRTCWithOldUsers(): void {
     this.logger.debug('Establishing rtc with existing call old users');
     this.artichokeApi.getCallUsers(this.id).then(users => {
       const oldUsers = users.filter(u => u !== this.artichokeApi.sessionId && !this.users.includes(u));
-      oldUsers.forEach(u => this.pool.create(u));
+      oldUsers.forEach(user => this.pool.connect(user));
       this.logger.debug(`Old call users count: ${oldUsers.length}`);
       this.users = this.users.concat(oldUsers);
     })
@@ -176,15 +176,14 @@ export abstract class Call implements wireEntities.Call {
   }
 
   private setupListeners(): void {
-    // FIXME - unsubscribe
-    this.joined$.subscribe(joined => {
-      this.logger.debug(`Call ${this.id} received joined author ${joined.authorId} creating rtc connection..`);
+    this.joined$.pipe(takeUntil(this.end$)).subscribe(joined => {
+      this.logger.debug(`User ${joined.authorId} joined, creating rtc connection`);
       this.users = [...this.users, joined.authorId];
-      this.pool.create(joined.authorId);
+      this.pool.connect(joined.authorId);
     });
 
-    // FIXME - unsubscribe
-    this.left$.subscribe(left => {
+    this.left$.pipe(takeUntil(this.end$)).subscribe(left => {
+      this.logger.debug(`User ${left.authorId} left, removing and destroying connection`);
       this.users = this.users.filter(u => u !== left.authorId);
       this.pool.destroyConnection(left.authorId);
     });

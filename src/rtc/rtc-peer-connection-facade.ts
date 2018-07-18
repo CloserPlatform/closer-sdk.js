@@ -5,10 +5,10 @@ import { RTCConfig } from './rtc-config';
 import { TimeUtils } from '../utils/time-utils';
 import { DataChannel, DataChannelMessage } from './data-channel';
 
-export class RTCConnection {
+export class RTCPeerConnectionFacade {
   public static readonly renegotiationTimeout = 100;
-  private rtcPeerConnection: RTCPeerConnection;
 
+  private rtcPeerConnection: RTCPeerConnection;
   private dataChannel: DataChannel;
 
   // FIXME Required by the various hacks:
@@ -18,41 +18,37 @@ export class RTCConnection {
               private artichokeApi: ArtichokeAPI,
               private onRemoteTrack: (track: MediaStreamTrack) => void,
               onDataChannelMessage: (msg: DataChannelMessage) => void,
-              mediaTracks: ReadonlyArray<MediaStreamTrack>,
+              initialMediaTracks: ReadonlyArray<MediaStreamTrack>,
               private answerOptions?: RTCAnswerOptions,
               private offerOptions?: RTCOfferOptions) {
-    logger.info(`Connecting an RTC connection to peer ${peerId} on call ${callId}`);
+    logger.info(`Creating an RTCPeerConnection to peer ${peerId} on call ${callId}`);
     this.rtcPeerConnection = new RTCPeerConnection(config);
-    logger.debug(`Created RTCPeerConnection`);
-    // Because sometimes camera might fail when adding video track
-    // This `try` will still create the correct connection just with audio
-    try {
-      mediaTracks.forEach(track => this.addTrack(track));
-    } catch (e) {
-      logger.error(`Adding media tracks failed with: ${e}`);
-    }
-    logger.debug(`Added all media tracks`);
+    initialMediaTracks.forEach(track => this.addTrack(track));
     this.dataChannel = new DataChannel(callId, this.rtcPeerConnection, logger, onDataChannelMessage);
-    logger.debug(`DataChannel created`);
     this.registerRtcEvents();
   }
 
   public disconnect(): void {
     this.logger.info('Disconnecting an RTC connection.');
-    this.rtcPeerConnection.close();
+
+    return this.rtcPeerConnection.close();
   }
 
-  public addTrack(track: MediaStreamTrack): RTCRtpSender {
+  public addTrack(track: MediaStreamTrack): void {
     this.logger.debug(`Adding a ${track.kind} media track`);
-
-    // We need to put all tracks in one stream if we want to synchronize them, for now - no.
-    return this.rtcPeerConnection.addTrack(track, new MediaStream());
+    // Because sometimes camera might fail when adding video track
+    // This `try` will still create the correct connection just with audio
+    try {
+       this.rtcPeerConnection.addTrack(track, new MediaStream());
+    } catch (err) {
+      this.logger.error(`Adding media tracks failed with: ${err}`);
+    }
   }
 
   public removeTrack(track: MediaStreamTrack): void {
-    this.logger.debug('Removing a stream track.');
+    this.logger.debug(`Removing a ${track.kind} media track with id ${track.id}`);
 
-    this.rtcPeerConnection.getSenders()
+    return this.rtcPeerConnection.getSenders()
       .filter(sender => sender.track === track)
       .forEach(sender => this.rtcPeerConnection.removeTrack(sender));
   }
@@ -67,13 +63,13 @@ export class RTCConnection {
     return this.dataChannel.send(msg);
   }
 
-  public startOffer(options?: RTCOfferOptions): Promise<RTCSessionDescriptionInit> {
+  public offer(options?: RTCOfferOptions): Promise<RTCSessionDescriptionInit> {
     this.logger.debug('Creating an RTC offer.');
 
     this.dataChannel.createConnection();
 
     return this.rtcPeerConnection.createOffer(options || this.offerOptions)
-      .then(offer => this.setLocalDescription(offer as RTCSessionDescriptionInit))
+      .then(offer => this.setLocalDescription(offer))
       .then(offer => this.artichokeApi.sendDescription(this.callId, this.peerId, offer).then(_ => offer))
       .then(offer => {
         this.logger.debug(`Sent an RTC offer: ${offer.sdp}`);
@@ -82,8 +78,8 @@ export class RTCConnection {
       });
   }
 
-  public handleOffer = (remoteDescription: RTCSessionDescriptionInit,
-                     options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> => {
+  public handleRemoteOffer = (remoteDescription: RTCSessionDescriptionInit,
+                              options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> => {
     this.logger.debug('Received an RTC offer - calling setRemoteDescription');
 
     return this.setRemoteDescription(remoteDescription).then((_descr) => {
@@ -100,6 +96,8 @@ export class RTCConnection {
     const maybeSender = this.rtcPeerConnection.getSenders()
       .filter(sender => sender.track.kind === track.kind)[0];
     if (maybeSender) {
+      this.logger.debug(`Sender found, replacing track with ${track.id}`);
+
       return maybeSender.replaceTrack(track);
     } else {
       return Promise.reject('ERROR Can not replace track, sender not found for old track');
@@ -125,8 +123,8 @@ export class RTCConnection {
       });
   }
 
-  public addAnswer(remoteDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
-    this.logger.debug('Received an RTC answer.');
+  public addRemoteAnswer(remoteDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
+    this.logger.debug('Adding remote answer');
 
     return this.setRemoteDescription(remoteDescription);
   }
@@ -172,23 +170,21 @@ export class RTCConnection {
     this.rtcPeerConnection.ontrack = (event: RTCTrackEvent): void => {
       const track = event.track;
       this.logger.info(`Received a remote track ${track.id}`);
-      this.onRemoteTrack(event.track);
+
+      return this.onRemoteTrack(event.track);
     };
 
     this.rtcPeerConnection.onnegotiationneeded = (_event): void => {
       this.logger.debug('RTCConnection: On Negotiation needed');
-      this.logger.debug(`Connection state: ${this.rtcPeerConnection.connectionState}`);
-      this.logger.debug(`Signaling state: ${this.rtcPeerConnection.signalingState}`);
-      this.logger.debug(`ICE Connection state: ${this.rtcPeerConnection.iceConnectionState}`);
-      this.logger.debug(`ICE Gathering state: ${this.rtcPeerConnection.iceGatheringState}`);
+      this.printRtcStates();
       // FIXME Chrome triggers renegotiation on... Initial offer creation...
       // FIXME Firefox triggers renegotiation when remote offer is received.
       if (!this.config.negotiationNeededDisabled) {
         if (this.isEstablished()) {
           this.renegotiationTimer = TimeUtils.onceDelayed(
-            this.renegotiationTimer, RTCConnection.renegotiationTimeout, () => {
+            this.renegotiationTimer, RTCPeerConnectionFacade.renegotiationTimeout, () => {
               this.logger.debug('Renegotiating an RTC connection.');
-              this.startOffer()
+              this.offer()
                 .catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
             });
         } else {
@@ -203,24 +199,31 @@ export class RTCConnection {
       this.logger.debug('On DataChannel');
     };
     this.rtcPeerConnection.onicecandidateerror = (ev): void => {
-      this.logger.error('RTCConnection: on ice candidate error');
+      this.logger.error('RTCConnection: on ice candidate ERROR');
       this.logger.error(ev);
     };
     this.rtcPeerConnection.onconnectionstatechange = (): void => {
-      this.logger.debug(`RTCConnection: on connection state change ${this.rtcPeerConnection.iceConnectionState}`);
+      this.logger.debug(`RTCConnection: on connection state change ${this.rtcPeerConnection.connectionState}`);
     };
     this.rtcPeerConnection.oniceconnectionstatechange = (ev): void => {
-      this.logger.debug('RTCConnection: on ICE connection state change');
+      this.logger.debug(`RTCConnection: on ICE connection state change ${this.rtcPeerConnection.iceConnectionState}`);
       this.logger.debug(ev);
     };
     this.rtcPeerConnection.onicegatheringstatechange = (ev): void => {
-      this.logger.debug('RTCConnection: on ICE gathering state change');
+      this.logger.debug(`RTCConnection: on ICE gathering state change ${this.rtcPeerConnection.iceGatheringState}`);
       this.logger.debug(ev);
     };
     this.rtcPeerConnection.onsignalingstatechange = (ev): void => {
-      this.logger.debug('RTCConnection: on siganling state change');
+      this.logger.debug(`RTCConnection: on siganling state change ${this.rtcPeerConnection.signalingState}`);
       this.logger.debug(ev);
     };
     this.logger.debug('RTCConnection: registered all rtc events');
+  }
+
+  private printRtcStates = (): void => {
+    this.logger.debug(`Connection state: ${this.rtcPeerConnection.connectionState}`);
+    this.logger.debug(`Signaling state: ${this.rtcPeerConnection.signalingState}`);
+    this.logger.debug(`ICE Connection state: ${this.rtcPeerConnection.iceConnectionState}`);
+    this.logger.debug(`ICE Gathering state: ${this.rtcPeerConnection.iceGatheringState}`);
   }
 }

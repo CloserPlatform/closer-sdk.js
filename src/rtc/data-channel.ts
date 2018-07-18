@@ -8,7 +8,9 @@ export class DataChannel {
   private messageQueue: ReadonlyArray<DataChannelMessage> = [];
 
   constructor(private label: string, private rtcPeerConnection: RTCPeerConnection, private logger: Logger,
-              private onChannelMessage: (msg: DataChannelMessage) => void) {}
+              private onChannelMessage: (msg: DataChannelMessage) => void) {
+    logger.debug(`Creating DataChannel for label ${label}`);
+  }
 
   // Edge do not support rtc data channels ATM - 06.07.2018
   public static isSupported = (): boolean =>
