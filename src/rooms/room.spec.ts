@@ -1,6 +1,6 @@
 // tslint:disable:max-file-line-count
 // tslint:disable:no-let
-import { apiKeyMock, config, log, sessionIdMock } from '../test-utils';
+import { apiKeyMock, config, log, loggerFactory, sessionIdMock } from '../test-utils';
 import { chatEvents } from '../protocol/events/chat-events';
 import { roomEvents } from '../protocol/events/room-events';
 import * as wireEntities from '../protocol/wire-entities';
@@ -36,7 +36,7 @@ class APIMock extends ArtichokeAPI {
   public cb: any;
 
   constructor() {
-    super(sessionIdMock, apiKeyMock, config.chat, log);
+    super(sessionIdMock, apiKeyMock, config.chat, loggerFactory);
   }
 
   // tslint:disable-next-line:no-any
@@ -148,7 +148,7 @@ const makeRoom = (type: RoomType): wireEntities.Room => {
 
     beforeEach(() => {
       api = new APIMock();
-      roomFactory = new RoomFactory(log, api);
+      roomFactory = new RoomFactory(loggerFactory, api);
       const type = d === 'DirectRoom' ? RoomType.DIRECT : RoomType.GROUP;
       room = roomFactory.create(makeRoom(type));
       uid = '123';
@@ -245,7 +245,7 @@ describe('DirectRoom', () => {
 
   beforeEach(() => {
     api = new APIMock();
-    const roomFactory = new RoomFactory(log, api);
+    const roomFactory = new RoomFactory(loggerFactory, api);
     room = roomFactory.create(makeRoom(RoomType.DIRECT)) as DirectRoom;
   });
 
@@ -263,7 +263,7 @@ describe('GroupRoom', () => {
 
   beforeEach(() => {
     api = new APIMock();
-    const roomFactory = new RoomFactory(log, api);
+    const roomFactory = new RoomFactory(loggerFactory, api);
     room = roomFactory.create(makeRoom(RoomType.GROUP)) as GroupRoom;
   });
 
@@ -343,7 +343,7 @@ describe('GroupRoom', () => {
 
 describe('GroupRoom, BusinessRoom, DirectRoom', () => {
   const api = new APIMock();
-  const roomFactory = new RoomFactory(log, api);
+  const roomFactory = new RoomFactory(loggerFactory, api);
 
   it('should have proper roomType field defined', (done) => {
     const businessRoom: Room = roomFactory.create(makeRoom(RoomType.BUSINESS));

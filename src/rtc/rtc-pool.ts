@@ -1,4 +1,3 @@
-import { Logger } from '../logger';
 import { rtcEvents } from '../protocol/events/rtc-events';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { ID } from '../protocol/protocol';
@@ -8,6 +7,8 @@ import { Observable, Subject, Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { DataChannelMessage } from './data-channel';
 import { CandidateQueue } from './candidate-queue';
+import { LoggerFactory } from '../logger/logger-factory';
+import { LoggerService } from '../logger/logger-service';
 
 export interface RemoteTrack {
   peerId: ID;
@@ -30,14 +31,18 @@ export class RTCPool {
 
   private candidateQueue: CandidateQueue;
 
+  private logger: LoggerService;
+
   constructor(private callId: ID,
               private rtcConfig: RTCConfig,
-              private logger: Logger,
+              private loggerFactory: LoggerFactory,
               private artichokeApi: ArtichokeAPI) {
+
+    this.logger = loggerFactory.create(`RTCPool(${callId})`);
 
     this.offerOptions = rtcConfig.defaultOfferOptions;
     this.answerOptions = rtcConfig.defaultAnswerOptions;
-    this.candidateQueue = new CandidateQueue(logger);
+    this.candidateQueue = new CandidateQueue(callId, loggerFactory);
 
     this.listenForDescriptionSent();
     this.listenForCandidateSent();
@@ -119,11 +124,15 @@ export class RTCPool {
         .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
     } else {
       const rtcConnection = this.createRTCConnectionFacade(msg.sender);
-      rtcConnection.handleRemoteOffer(msg.sdp)
+      rtcConnection.handleRemoteOffer(msg.sdp, this.answerOptions, () => {
+        this.addRTCPeerConnection(msg.sender, rtcConnection);
+        this.candidateQueue.drainCandidates(msg.sender)
+          .forEach(candidate => rtcConnection.addCandidate(candidate).catch(err => {
+            this.logger.error('Could not add candidate: ');
+            this.logger.error(err);
+          }));
+      })
         .then(_ => {
-          this.addRTCPeerConnection(msg.sender, rtcConnection);
-          this.candidateQueue.drainCandidates(msg.sender)
-            .forEach(candidate => rtcConnection.addCandidate(candidate));
           this.logger.debug('Successfully added SDP offer to new RTCConeection');
         })
         .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
@@ -199,7 +208,7 @@ export class RTCPool {
   private createRTCConnectionFacade(peerId: ID): RTCPeerConnectionFacade {
     this.logger.debug(`Creating new RTCConnection for peerId: ${peerId}`);
 
-    return new RTCPeerConnectionFacade(this.callId, peerId, this.rtcConfig, this.logger,
+    return new RTCPeerConnectionFacade(this.callId, peerId, this.rtcConfig, this.loggerFactory,
       this.artichokeApi,
       this.getTrackEventHandler(peerId),
       this.getDataChannelEventHandler(peerId),

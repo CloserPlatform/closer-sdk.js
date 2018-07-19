@@ -1,14 +1,14 @@
 import { AgentContext, SessionData } from '../auth/auth';
 import { RatelConfig } from '../config/config';
-import { Logger } from '../logger';
 import { RESTfulAPI } from './restful-api';
+import { LoggerFactory } from '../logger/logger-factory';
 
 export class RatelAPI extends RESTfulAPI {
   private verifyPath = 'session/verifySig';
   private url: string;
 
-  constructor(config: RatelConfig, log: Logger) {
-    super(log);
+  constructor(config: RatelConfig, loggerFactory: LoggerFactory) {
+    super(loggerFactory.create('RatelAPI'));
 
     const pathname = config.pathname ? config.pathname : '';
 

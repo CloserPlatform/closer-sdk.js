@@ -1,4 +1,3 @@
-import { Logger } from '../logger';
 import { serverCommands } from '../protocol/commands/server-command';
 import { callEvents } from '../protocol/events/call-events';
 import { errorEvents } from '../protocol/events/error-events';
@@ -20,6 +19,7 @@ import { filter } from 'rxjs/operators';
 import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
 import { CallFactory } from '../calls/call-factory';
 import { RoomFactory } from '../rooms/room-factory';
+import { LoggerFactory } from '../logger/logger-factory';
 
 export class Artichoke {
   private static heartbeatTimeoutMultiplier = 2;
@@ -31,10 +31,10 @@ export class Artichoke {
   private roomFactory: RoomFactory;
 
   constructor(private artichokeApi: ArtichokeAPI,
-              logger: Logger,
+              loggerFactory: LoggerFactory,
               rtcPoolRepository: RTCPoolRepository) {
-    this.callFactory = new CallFactory(logger, artichokeApi, rtcPoolRepository);
-    this.roomFactory = new RoomFactory(logger, artichokeApi);
+    this.callFactory = new CallFactory(loggerFactory, artichokeApi, rtcPoolRepository);
+    this.roomFactory = new RoomFactory(loggerFactory, artichokeApi);
     this.setupHeartbeats();
   }
 

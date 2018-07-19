@@ -3,24 +3,24 @@ import { ApiKey } from './auth/auth';
 import { Config } from './config/config';
 import { ID } from './protocol/protocol';
 import { ArtichokeAPI } from './apis/artichoke-api';
-import { ConsoleLogger, LogLevel } from './logger';
 import { RTCPoolRepository } from './rtc/rtc-pool-repository';
+import { LogLevel } from './logger/log-level';
+import { LoggerFactory } from './logger/logger-factory';
 
 export class Session {
-  public id: ID;
-  public chat: Artichoke;
+  public readonly chat: Artichoke;
 
-  constructor(id: ID, apiKey: ApiKey, config: Config) {
-    this.id = id;
+  constructor(public readonly id: ID, apiKey: ApiKey, config: Config) {
 
     const logLevel = config.logLevel !== undefined ? config.logLevel : LogLevel.NONE;
-    const logger = new ConsoleLogger(logLevel);
+    const loggerFactory = new LoggerFactory(logLevel);
+    const logger = loggerFactory.create(`Session(${id})`);
 
     logger.info(`Configuration: ${JSON.stringify(config)}`);
 
-    const artichokeAPI = new ArtichokeAPI(id, apiKey, config.chat, logger);
-    const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, logger, artichokeAPI);
+    const artichokeAPI = new ArtichokeAPI(id, apiKey, config.chat, loggerFactory);
+    const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, artichokeAPI);
 
-    this.chat = new Artichoke(artichokeAPI, logger, rtcPoolRepository);
+    this.chat = new Artichoke(artichokeAPI, loggerFactory, rtcPoolRepository);
   }
 }

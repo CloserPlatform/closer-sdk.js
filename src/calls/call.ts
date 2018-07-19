@@ -1,4 +1,3 @@
-import { Logger } from '../logger';
 import { callEvents } from '../protocol/events/call-events';
 import * as proto from '../protocol/protocol';
 import * as wireEntities from '../protocol/wire-entities';
@@ -10,6 +9,7 @@ import { Observable } from 'rxjs';
 import { filter, first, takeUntil } from 'rxjs/operators';
 import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
 import { DataChannelMessage } from '../rtc/data-channel';
+import { LoggerService } from '../logger/logger-service';
 
 export abstract class Call implements wireEntities.Call {
   public readonly id: proto.ID;
@@ -22,7 +22,7 @@ export abstract class Call implements wireEntities.Call {
   public abstract readonly callType: CallType;
   protected pool: RTCPool;
 
-  constructor(call: wireEntities.Call, private logger: Logger,
+  constructor(call: wireEntities.Call, private logger: LoggerService,
               protected artichokeApi: ArtichokeAPI, rtcPoolRepository: RTCPoolRepository,
               tracks?: ReadonlyArray<MediaStreamTrack>) {
     this.id = call.id;
@@ -54,7 +54,7 @@ export abstract class Call implements wireEntities.Call {
       this.setupListeners();
     }
 
-    logger.debug(`Created new call object with id: ${this.id}`);
+    logger.debug(`Created`);
   }
 
   public addTracks(tracks: ReadonlyArray<MediaStreamTrack>): void {

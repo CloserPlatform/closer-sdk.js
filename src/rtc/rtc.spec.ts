@@ -1,7 +1,7 @@
 // tslint:disable:max-file-line-count
 // tslint:disable:no-let
 import {
-  apiKeyMock, config, getStream, isWebRTCSupported, log, logError, sessionIdMock,
+  apiKeyMock, config, getStream, isWebRTCSupported, log, logError, loggerFactory, sessionIdMock,
   whenever
 } from '../test-utils';
 import { ID } from '../protocol/protocol';
@@ -36,7 +36,7 @@ class APIMock extends ArtichokeAPI {
   public onCandidate: (callId: ID, peer: ID, candidate: RTCIceCandidate) => void;
 
   constructor() {
-    super(sessionIdMock, apiKeyMock, config.chat, log);
+    super(sessionIdMock, apiKeyMock, config.chat, loggerFactory);
   }
 
   public sendDescription(callId: ID, sessionId: ID, description: RTCSessionDescriptionInit): Promise<void> {
@@ -63,7 +63,7 @@ describe('RTCConnection', () => {
 
   beforeEach(() => {
     api = new APIMock();
-    peerAtest = new RTCPeerConnectionFacade(callIdMock, peerBId, config.chat.rtc, log, api,
+    peerAtest = new RTCPeerConnectionFacade(callIdMock, peerBId, config.chat.rtc, loggerFactory, api,
       (): void => undefined, (): void => undefined, []);
   });
 
@@ -104,7 +104,7 @@ describe('RTCPool', () => {
 
   beforeEach(() => {
     api = new APIMock();
-    pool = new RTCPool(callIdMock, config.chat.rtc, log, api);
+    pool = new RTCPool(callIdMock, config.chat.rtc, loggerFactory, api);
   });
 
   whenever(isWebRTCSupported())('should create an RTC connection', (done) => {
@@ -126,7 +126,7 @@ describe('RTCPool', () => {
   });
 
   whenever(isWebRTCSupported())('should spawn an RTC connection on session description', (done) => {
-    const peerTest = new RTCPeerConnectionFacade(callIdMock, peerAId, config.chat.rtc, log, api,
+    const peerTest = new RTCPeerConnectionFacade(callIdMock, peerAId, config.chat.rtc, loggerFactory, api,
       (): void => undefined, (): void => undefined, []);
     getStream((streamPeer) => {
       getStream((streamPool) => {

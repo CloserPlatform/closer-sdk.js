@@ -1,6 +1,6 @@
-import * as logger from '../logger';
 import { RTCConfig } from '../rtc/rtc-config';
 import { ObjectUtils } from '../utils/object-utils';
+import { LogLevel } from '../logger/log-level';
 
 export interface URLConfig {
   protocol?: string;
@@ -21,20 +21,19 @@ export interface ChatConfig extends URLConfig {
 export interface RatelConfig extends URLConfig {}
 
 export interface UserConfig {
-  logLevel?: logger.LogLevel;
+  logLevel?: LogLevel;
   chat?: UserChatConfig;
   ratel?: RatelConfig;
 }
 
 export interface Config {
-  logLevel: logger.LogLevel;
+  logLevel: LogLevel;
   chat: ChatConfig;
   ratel: RatelConfig;
 }
 
 export const defaultConfig: Config = {
-  logLevel: logger.LogLevel.WARN,
-
+  logLevel: LogLevel.WARN,
   chat: {
     protocol: 'https:',
     hostname: 'artichoke.ratel.io',
@@ -50,7 +49,6 @@ export const defaultConfig: Config = {
       }]
     }
   },
-
   ratel: {
     protocol: 'https:',
     hostname: 'api.dev.ratel.io',

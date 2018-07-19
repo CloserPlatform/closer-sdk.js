@@ -2,10 +2,12 @@
 import {} from 'jasmine';
 
 import { Config, load } from './config/config';
-import * as logger from '../src/logger';
-import { LogLevel } from './logger';
+import { LoggerService } from './logger/logger-service';
+import { LogLevel } from './logger/log-level';
+import { LoggerFactory } from './logger/logger-factory';
 
-export const log = new logger.ConsoleLogger(logger.LogLevel.WARN);
+export const log = new LoggerService(LogLevel.WARN);
+export const loggerFactory = new LoggerFactory(LogLevel.WARN);
 
 // tslint:disable-next-line:no-object-literal-type-assertion
 export const config: Config = load({
