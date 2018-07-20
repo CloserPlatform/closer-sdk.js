@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.7.18 - 2018-07-20
+
+### Improve
+* isBrowserSupported has an optional paramater of callBroadcastRequired which set to `true` will disable edge support (edge do not support rtcdatachannel)
+* Simplify logger to use browser console depending on LogLevel
+
 ## 0.7.17 - 2018-07-18
 
 ### Improve
