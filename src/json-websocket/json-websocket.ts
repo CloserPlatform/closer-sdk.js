@@ -1,8 +1,8 @@
 import { Decoder, Encoder } from '../codec';
-import { Logger } from '../logger';
 import { DomainCommand } from '../protocol/commands/domain-command';
 import { DomainEvent } from '../protocol/events/domain-event';
 import { Callback } from '../utils/promise-utils';
+import { LoggerService } from '../logger/logger-service';
 
 export class JSONWebSocket {
   private socket?: WebSocket;
@@ -11,7 +11,7 @@ export class JSONWebSocket {
   private onErrorCallback: Callback<Event>;
   private onMessageCallback: Callback<MessageEvent>;
 
-  constructor(private log: Logger,
+  constructor(private log: LoggerService,
               private encoder: Encoder<DomainCommand>,
               private decoder: Decoder<DomainEvent>) {
   }

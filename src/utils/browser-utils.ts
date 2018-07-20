@@ -1,3 +1,4 @@
+import { DataChannel } from '../rtc/data-channel';
 // tslint:disable-next-line
 const adapter = require('webrtc-adapter');
 
@@ -10,11 +11,17 @@ export class BrowserUtils {
     safari: 605
   };
 
-  public static isBrowserSupported(): boolean {
+  /*
+   * SDK supports Call.broadcast over DataChannel which is not supported by EDGE
+   * Pass true if your logic is based on boradcast
+   * WARNING: This will disable SDK on EDGE browser
+   */
+  public static isBrowserSupported(callBroadcastRequired = false): boolean {
     return adapter.browserDetails.version !== null
-      && BrowserUtils.getBrowserIntVersion() >= BrowserUtils.supportedBrowsers[BrowserUtils.getBrowserName()]
-      && !!window.RTCPeerConnection
-      && !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
+      && (callBroadcastRequired ? DataChannel.isSupported() : true)
+      && BrowserUtils.isBrowserVersionSupported()
+      && BrowserUtils.isWebRtcAvailable()
+      && BrowserUtils.isUserMediaAvailable();
   }
 
   public static getBrowserName(): string {
@@ -43,5 +50,17 @@ export class BrowserUtils {
 
   public static isSafari(): boolean {
     return adapter.browserDetails.browser === 'safari';
+  }
+
+  private static isBrowserVersionSupported(): boolean {
+    return BrowserUtils.getBrowserIntVersion() >= BrowserUtils.supportedBrowsers[BrowserUtils.getBrowserName()];
+  }
+
+  private static isWebRtcAvailable(): boolean {
+    return !!window.RTCPeerConnection;
+  }
+
+  private static isUserMediaAvailable(): boolean {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia);
   }
 }

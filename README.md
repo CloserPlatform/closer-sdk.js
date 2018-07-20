@@ -36,7 +36,7 @@ When run locally, SDK will connect with ratel & artichoke via `http` protocol.
 - Mobile Safari iOS 11.4 (*webview is not supported)
 - Firefox 61*
 - Opera 54 (chrome67)
-- Edge 42
+- Edge 42 (without Call.broadcast)
 
 * Renegotiation doesn't work between chrome 67 & firefox 61 because of SDP incompatibilities.
 Chrome still implements PlanB and firefox use Unified plan:
@@ -45,4 +45,4 @@ This should be solved in M-69
 For now, the solution is to add both tracks (audio&video) before the first sdp offer&answer is being sent and disable them if needed.
 * rtcpMuxPolicy `negotiate` is not supported by Edge - use `require` instead 
 * negotiationNeededDisabled turn on to disable in call renegotiation (which does't work between Chrome&Safari)
-* Call broadcast & message event is based on RtcDataChannel which is not supported by Edge
+* Call broadcast & message event is based on RtcDataChannel which is not supported by Edge - check BrowserUtils.isBrowserSupported docs

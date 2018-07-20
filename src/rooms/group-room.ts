@@ -1,17 +1,17 @@
 import * as wireEntities from '../protocol/wire-entities';
 import { roomEvents } from '../protocol/events/room-events';
 import * as proto from '../protocol/protocol';
-import { Logger } from '../logger';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { Room } from './room';
 import { RoomType } from './room-type';
 import { Observable } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { LoggerService } from '../logger/logger-service';
 
 export class GroupRoom extends Room {
   public readonly roomType: RoomType = RoomType.GROUP;
 
-  constructor(room: wireEntities.Room, log: Logger, api: ArtichokeAPI) {
+  constructor(room: wireEntities.Room, log: LoggerService, api: ArtichokeAPI) {
     super(room, log, api);
 
     // FIXME - unsubscribe

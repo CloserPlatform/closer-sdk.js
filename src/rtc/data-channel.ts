@@ -1,4 +1,5 @@
-import { Logger } from '../logger';
+import { LoggerFactory } from '../logger/logger-factory';
+import { LoggerService } from '../logger/logger-service';
 
 export type DataChannelMessage = string;
 
@@ -7,9 +8,14 @@ export class DataChannel {
   private rtcDataChannel?: RTCDataChannel;
   private messageQueue: ReadonlyArray<DataChannelMessage> = [];
 
-  constructor(private label: string, private rtcPeerConnection: RTCPeerConnection, private logger: Logger,
-              private onChannelMessage: (msg: DataChannelMessage) => void) {
-    logger.debug(`Creating DataChannel for label ${label}`);
+  private logger: LoggerService;
+
+  constructor(private label: string,
+              private rtcPeerConnection: RTCPeerConnection,
+              private onChannelMessage: (msg: DataChannelMessage) => void,
+              loggerFactory: LoggerFactory) {
+    this.logger = loggerFactory.create(`DataChannel label(${label})`);
+    this.logger.debug('Creating');
   }
 
   // Edge do not support rtc data channels ATM - 06.07.2018
@@ -24,10 +30,10 @@ export class DataChannel {
         this.rtcDataChannel = this.rtcPeerConnection.createDataChannel(this.label, {negotiated: true, id: 1});
         this.registerChannelEvents(this.rtcDataChannel);
       } else {
-        this.logger.warn('Cannot create data channel: data channel already exists');
+        this.logger.warn('Cannot create channel - channel already exists');
       }
     } else {
-      this.logger.warn('DataChannel is not supported, your peers will not receive any p2p messages');
+      this.logger.warn('channel is not supported, your peers will not receive any p2p messages');
     }
   }
 
@@ -66,7 +72,7 @@ export class DataChannel {
 
   private registerChannelEvents = (channel: RTCDataChannel): void => {
     channel.onopen = (): void => {
-      this.logger.debug('DataChannel opened');
+      this.logger.debug('Opened');
       this.messageQueue.forEach(msg => this.sendMessageViaChannel(channel, msg));
       this.messageQueue = [];
     };
@@ -74,10 +80,10 @@ export class DataChannel {
       this.onChannelMessage(ev.data);
     };
     channel.onclose = (): void => {
-      this.logger.debug('DataChannel closed');
+      this.logger.debug('Closed');
     };
     channel.onerror = (er): void => {
-      this.logger.error(er);
+      this.logger.error('On channel error:', er);
     };
   }
 }

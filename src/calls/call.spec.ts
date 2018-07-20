@@ -2,7 +2,7 @@
 // tslint:disable:no-let
 import { Call } from './call';
 import {
-  apiKeyMock, config, deviceIdMock, getStream, isWebRTCSupported, log, sessionIdMock, whenever
+  apiKeyMock, config, deviceIdMock, getStream, isWebRTCSupported, log, loggerFactory, sessionIdMock, whenever
 } from '../test-utils';
 import { callEvents } from '../protocol/events/call-events';
 import { ID } from '../protocol/protocol';
@@ -38,7 +38,7 @@ class APIMock extends ArtichokeAPI {
   public cb: any;
 
   constructor(sessionId: string) {
-    super(sessionId, apiKeyMock, config.chat, log);
+    super(sessionId, apiKeyMock, config.chat, loggerFactory);
   }
 
   // tslint:disable-next-line:no-any
@@ -139,16 +139,16 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
 
     beforeEach(() => {
       api = new APIMock(sessionIdMock);
-      const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, log, api);
-      callFactory = new CallFactory(log, api, rtcPoolRepository);
+      const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, api);
+      callFactory = new CallFactory(loggerFactory, api, rtcPoolRepository);
       const callType = d === 'DirectCall' ? CallType.DIRECT : CallType.GROUP;
       call = callFactory.create(makeCall(callType));
     });
 
     it('for creator should create RTC connection with old users in call', (done) => {
       const apiMock = new APIMock(aliceSessionId);
-      const rtcPoolRepo = new RTCPoolRepository(config.chat.rtc, log, apiMock);
-      const callFactory2 = new CallFactory(log, apiMock, rtcPoolRepo);
+      const rtcPoolRepo = new RTCPoolRepository(config.chat.rtc, loggerFactory, apiMock);
+      const callFactory2 = new CallFactory(loggerFactory, apiMock, rtcPoolRepo);
       spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([aliceSessionId, bob, chad, david]));
 
       const usersToOffer = new Set([bob, chad, david]);
@@ -172,8 +172,8 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
 
     it('for not creator should not create RTC connection with old users in call', (done) => {
       const apiMock = new APIMock(bob);
-      const rtcPoolRepo = new RTCPoolRepository(config.chat.rtc, log, apiMock);
-      const callFactory2 = new CallFactory(log, apiMock, rtcPoolRepo);
+      const rtcPoolRepo = new RTCPoolRepository(config.chat.rtc, loggerFactory, apiMock);
+      const callFactory2 = new CallFactory(loggerFactory, apiMock, rtcPoolRepo);
       spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([aliceSessionId, bob, chad, david]));
       spyOn(RTCPool.prototype, 'connect').and.callFake((_u: string) => done.fail());
 
@@ -378,8 +378,8 @@ describe('GroupCall', () => {
 
   beforeEach(() => {
     api = new APIMock(sessionIdMock);
-    const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, log, api);
-    const callFactory = new CallFactory(log, api, rtcPoolRepository);
+    const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, api);
+    const callFactory = new CallFactory(loggerFactory, api, rtcPoolRepository);
     call = callFactory.create(makeCall(CallType.GROUP)) as GroupCall;
   });
 
@@ -422,8 +422,8 @@ describe('GroupCall', () => {
 
 describe('DirectCall, GroupCall', () => {
   const api = new APIMock(sessionIdMock);
-  const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, log, api);
-  const callFactory = new CallFactory(log, api, rtcPoolRepository);
+  const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, api);
+  const callFactory = new CallFactory(loggerFactory, api, rtcPoolRepository);
 
   it('should have proper callType field defined', () => {
     const directCall: Call = callFactory.create(makeCall(CallType.DIRECT));

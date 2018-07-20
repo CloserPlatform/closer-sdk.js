@@ -1,8 +1,9 @@
 import { Config, load, UserConfig } from '../config/config';
-import * as logger from '../logger';
 import { ID, Timestamp } from '../protocol/protocol';
 import { Session } from '../session';
 import { RatelAPI } from '../apis/ratel-api';
+import { LogLevel } from '../logger/log-level';
+import { LoggerFactory } from '../logger/logger-factory';
 
 export type ApiKey = string;
 export type Signature = string;
@@ -29,9 +30,10 @@ export const withApiKey = (sessionId: ID, apiKey: ApiKey, config: UserConfig): P
 
 export const withSignedAuth = (sessionData: SessionData, config: Config): Promise<Session> => {
   const cfg = load(config);
-  // FIXME Logger should be the common logger.
-  const logLevel = config.logLevel !== undefined ? config.logLevel : logger.LogLevel.NONE;
-  const api = new RatelAPI(cfg.ratel, new logger.ConsoleLogger(logLevel));
+
+  const logLevel = config.logLevel !== undefined ? config.logLevel : LogLevel.NONE;
+  const loggerFactory = new LoggerFactory(logLevel);
+  const api = new RatelAPI(cfg.ratel, loggerFactory);
 
   return api.verifySignature(sessionData).then((context: AgentContext) =>
     withApiKey(context.id, context.apiKey, cfg));

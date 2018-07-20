@@ -2,7 +2,6 @@ import { DomainCommand, encoder } from '../protocol/commands/domain-command';
 import { errorEvents } from '../protocol/events/error-events';
 import { JSONWebSocket } from '../json-websocket/json-websocket';
 import { decoder, DomainEvent } from '../protocol/events/domain-event';
-import { Logger } from '../logger';
 import { roomCommand } from '../protocol/commands/room-commands';
 import { RESTfulAPI } from './restful-api';
 import { Ref } from '../protocol/protocol';
@@ -10,6 +9,7 @@ import { chatEvents } from '../protocol/events/chat-events';
 import { RandomUtils } from '../utils/random-utils';
 import { Observable, Subject } from 'rxjs';
 import { Callback } from '../utils/promise-utils';
+import { LoggerService } from '../logger/logger-service';
 
 interface AskPromise {
   resolve(res: chatEvents.Received): void;
@@ -21,7 +21,7 @@ export class APIWithWebsocket extends RESTfulAPI {
   private askPromises: { [ref: string]: AskPromise } = {};
   private disconnectEvent = new Subject<CloseEvent>();
 
-  constructor(logger: Logger) {
+  constructor(logger: LoggerService) {
     super(logger);
     this.socket = new JSONWebSocket(logger, encoder, decoder);
     this.socket.onDisconnect(ev => this.disconnectEvent.next(ev));

@@ -1,4 +1,3 @@
-import { Logger } from '../logger';
 import { chatEvents } from '../protocol/events/chat-events';
 import { roomEvents } from '../protocol/events/room-events';
 import * as proto from '../protocol/protocol';
@@ -7,6 +6,7 @@ import { ArtichokeAPI } from '../apis/artichoke-api';
 import { RoomType } from './room-type';
 import { Observable, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { LoggerService } from '../logger/logger-service';
 
 export abstract class Room implements wireEntities.Room {
     private static defaultRoomCount = 100;
@@ -21,7 +21,7 @@ export abstract class Room implements wireEntities.Room {
 
     protected roomEvent = new Subject<roomEvents.RoomEvent>();
 
-    constructor(room: wireEntities.Room, logger: Logger, protected artichokeAPI: ArtichokeAPI) {
+    constructor(room: wireEntities.Room, logger: LoggerService, protected artichokeAPI: ArtichokeAPI) {
         this.id = room.id;
         this.name = room.name;
         this.created = room.created;

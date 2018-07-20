@@ -3,7 +3,6 @@
 import * as wireEntities from '../protocol/wire-entities';
 import { rtcCommands } from '../protocol/commands/rtc-commands';
 import * as proto from '../protocol/protocol';
-import { Logger } from '../logger';
 import { ApiKey } from '../auth/auth';
 import { ChatConfig } from '../config/config';
 import { DomainEvent } from '../protocol/events/domain-event';
@@ -19,6 +18,7 @@ import { roomCommand } from '../protocol/commands/room-commands';
 import { APIWithWebsocket } from './api-with-websocket';
 import { Observable, Subject } from 'rxjs';
 import { Callback } from '../utils/promise-utils';
+import { LoggerFactory } from '../logger/logger-factory';
 
 export class ArtichokeAPI extends APIWithWebsocket {
   protected url: string;
@@ -34,8 +34,8 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   private artichokeApiEvent = new Subject<DomainEvent>();
 
-  constructor(public sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, log: Logger) {
-    super(log);
+  constructor(public sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, loggerFactory: LoggerFactory) {
+    super(loggerFactory.create(`ArtichokeApi Session(${sessionId})`));
 
     this.apiHeaders.apiKey = apiKey;
 

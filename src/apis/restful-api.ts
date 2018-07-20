@@ -1,8 +1,8 @@
 import { errorEvents } from '../protocol/events/error-events';
-import { Logger } from '../logger';
 import { HeaderValue } from './header-value';
 import { PromiseReject, PromiseResolve } from '../utils/promise-utils';
 import { HttpCodes } from '../utils/http-codes';
+import { LoggerService } from '../logger/logger-service';
 
 export class RESTfulAPI {
 
@@ -14,7 +14,7 @@ export class RESTfulAPI {
                            headers?: ReadonlyArray<HeaderValue>, body?: Body) => Promise<XMLHttpRequest> =
     this.httpRequestWithBody('DELETE');
 
-  constructor(protected logger: Logger) {
+  constructor(protected logger: LoggerService) {
   }
 
   public getRaw(path: ReadonlyArray<string>, headers?: ReadonlyArray<HeaderValue>): Promise<XMLHttpRequest> {

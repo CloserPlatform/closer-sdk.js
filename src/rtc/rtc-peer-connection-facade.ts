@@ -1,9 +1,10 @@
-import { Logger } from '../logger';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { ID } from '../protocol/protocol';
 import { RTCConfig } from './rtc-config';
 import { TimeUtils } from '../utils/time-utils';
 import { DataChannel, DataChannelMessage } from './data-channel';
+import { LoggerFactory } from '../logger/logger-factory';
+import { LoggerService } from '../logger/logger-service';
 
 export class RTCPeerConnectionFacade {
   public static readonly renegotiationTimeout = 100;
@@ -14,22 +15,26 @@ export class RTCPeerConnectionFacade {
   // FIXME Required by the various hacks:
   private renegotiationTimer: number;
 
-  constructor(private callId: ID, private peerId: ID, private config: RTCConfig, private logger: Logger,
+  private logger: LoggerService;
+
+  constructor(private callId: ID, private peerId: ID, private config: RTCConfig,
+              loggerFactory: LoggerFactory,
               private artichokeApi: ArtichokeAPI,
               private onRemoteTrack: (track: MediaStreamTrack) => void,
               onDataChannelMessage: (msg: DataChannelMessage) => void,
               initialMediaTracks: ReadonlyArray<MediaStreamTrack>,
               private answerOptions?: RTCAnswerOptions,
               private offerOptions?: RTCOfferOptions) {
-    logger.info(`Creating an RTCPeerConnection to peer ${peerId} on call ${callId}`);
+    this.logger = loggerFactory.create(`RTCPeerConnectionFacade Call(${callId}) Peer(${peerId})`);
+    this.logger.info('Creating the connection');
     this.rtcPeerConnection = new RTCPeerConnection(config);
     initialMediaTracks.forEach(track => this.addTrack(track));
-    this.dataChannel = new DataChannel(callId, this.rtcPeerConnection, logger, onDataChannelMessage);
+    this.dataChannel = new DataChannel(callId, this.rtcPeerConnection, onDataChannelMessage, loggerFactory);
     this.registerRtcEvents();
   }
 
   public disconnect(): void {
-    this.logger.info('Disconnecting an RTC connection.');
+    this.logger.info('Disconnecting');
 
     return this.rtcPeerConnection.close();
   }
@@ -79,11 +84,15 @@ export class RTCPeerConnectionFacade {
   }
 
   public handleRemoteOffer = (remoteDescription: RTCSessionDescriptionInit,
-                              options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> => {
+                              options?: RTCAnswerOptions,
+                              descriptionSetCb?: () => void): Promise<RTCSessionDescriptionInit> => {
     this.logger.debug('Received an RTC offer - calling setRemoteDescription');
 
     return this.setRemoteDescription(remoteDescription).then((_descr) => {
       this.logger.debug('RTC offer was successfully set');
+      if (descriptionSetCb) {
+        descriptionSetCb();
+      }
 
       return this.answer(options);
     }).catch(err => {
@@ -155,12 +164,12 @@ export class RTCPeerConnectionFacade {
   }
 
   private registerRtcEvents = (): void => {
-    this.logger.debug('RTCConnection: registering rtc events');
+    this.logger.debug('registering rtc events');
     this.rtcPeerConnection.onicecandidate = (event): void => {
       if (event.candidate) {
         this.logger.debug(`Created ICE candidate: ${event.candidate.candidate}`);
         this.artichokeApi.sendCandidate(this.callId, this.peerId, event.candidate)
-          .then(_ => this.logger.debug('Candidtae sent successfully'))
+          .then(_ => this.logger.debug('Candidate sent successfully'))
           .catch(err => this.logger.error(`Could not send an ICE candidate: ${err}`));
       } else {
         this.logger.debug('Done gathering ICE candidates.');
@@ -175,7 +184,7 @@ export class RTCPeerConnectionFacade {
     };
 
     this.rtcPeerConnection.onnegotiationneeded = (_event): void => {
-      this.logger.debug('RTCConnection: On Negotiation needed');
+      this.logger.debug('Negotiation needed');
       this.printRtcStates();
       // FIXME Chrome triggers renegotiation on... Initial offer creation...
       // FIXME Firefox triggers renegotiation when remote offer is received.
@@ -183,15 +192,15 @@ export class RTCPeerConnectionFacade {
         if (this.isEstablished()) {
           this.renegotiationTimer = TimeUtils.onceDelayed(
             this.renegotiationTimer, RTCPeerConnectionFacade.renegotiationTimeout, () => {
-              this.logger.debug('Renegotiating an RTC connection.');
+              this.logger.debug('Renegotiating');
               this.offer()
                 .catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
             });
         } else {
-          this.logger.debug('RTCConnection: onnegotiationneeded - connection not established - doing nothing');
+          this.logger.debug('onnegotiationneeded - connection not established - doing nothing');
         }
       } else {
-        this.logger.info('RTCConnection: negotitationneeded was called but it is disabled');
+        this.logger.info('negotitationneeded was called but it is disabled');
       }
     };
 
@@ -199,25 +208,21 @@ export class RTCPeerConnectionFacade {
       this.logger.debug('On DataChannel');
     };
     this.rtcPeerConnection.onicecandidateerror = (ev): void => {
-      this.logger.error('RTCConnection: on ice candidate ERROR');
-      this.logger.error(ev);
+      this.logger.error('ICE candidate ERROR', ev);
     };
     this.rtcPeerConnection.onconnectionstatechange = (): void => {
-      this.logger.debug(`RTCConnection: on connection state change ${this.rtcPeerConnection.connectionState}`);
+      this.logger.debug(`Connection state change ${this.rtcPeerConnection.connectionState}`);
     };
     this.rtcPeerConnection.oniceconnectionstatechange = (ev): void => {
-      this.logger.debug(`RTCConnection: on ICE connection state change ${this.rtcPeerConnection.iceConnectionState}`);
-      this.logger.debug(ev);
+      this.logger.debug(`ICE connection state change ${this.rtcPeerConnection.iceConnectionState}`, ev);
     };
     this.rtcPeerConnection.onicegatheringstatechange = (ev): void => {
-      this.logger.debug(`RTCConnection: on ICE gathering state change ${this.rtcPeerConnection.iceGatheringState}`);
-      this.logger.debug(ev);
+      this.logger.debug(`ICE gathering state change ${this.rtcPeerConnection.iceGatheringState}`, ev);
     };
     this.rtcPeerConnection.onsignalingstatechange = (ev): void => {
-      this.logger.debug(`RTCConnection: on siganling state change ${this.rtcPeerConnection.signalingState}`);
-      this.logger.debug(ev);
+      this.logger.debug(`Siganling state change ${this.rtcPeerConnection.signalingState}`, ev);
     };
-    this.logger.debug('RTCConnection: registered all rtc events');
+    this.logger.debug('Registered all rtc events');
   }
 
   private printRtcStates = (): void => {

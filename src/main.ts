@@ -32,8 +32,11 @@ export { RESTfulAPI } from './apis/restful-api';
 
 // Other
 export { BrowserUtils } from './utils/browser-utils';
-import * as logger from './logger';
 
+// Logging
+export { LogLevel } from './logger/log-level';
+
+// Protocol
 import { callEvents } from './protocol/events/call-events';
 import { chatEvents } from './protocol/events/chat-events';
 import { errorEvents } from './protocol/events/error-events';
@@ -43,4 +46,4 @@ import { serverEvents } from './protocol/events/server-events';
 import * as protocol from './protocol/protocol';
 
 export { callEvents, chatEvents, errorEvents, roomEvents, rtcEvents,
-  serverEvents, logger, protocol };
+  serverEvents, protocol };

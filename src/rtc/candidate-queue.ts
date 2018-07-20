@@ -1,11 +1,16 @@
 import { ID } from '../protocol/protocol';
-import { Logger } from '../logger';
+import { LoggerFactory } from '../logger/logger-factory';
+import { LoggerService } from '../logger/logger-service';
 
 export class CandidateQueue {
 
   private peerCandidatesQueue: { [peerId: string]: ReadonlyArray<RTCIceCandidate> | undefined} = {};
 
-  constructor(private logger: Logger) {}
+  private logger: LoggerService;
+
+  constructor(callId: ID, loggerFactory: LoggerFactory) {
+    this.logger = loggerFactory.create(`CandidateQueue Call(${callId})`);
+  }
 
   public addCandidate = (peerId: ID, candidate: RTCIceCandidate): void => {
     this.logger.debug(`Saving candidate for peer ${peerId}`);

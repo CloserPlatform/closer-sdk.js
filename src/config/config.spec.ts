@@ -1,6 +1,6 @@
 import { defaultConfig, load, UserConfig } from './config';
-import { LogLevel } from '../logger';
 import { ObjectUtils } from '../utils/object-utils';
+import { LogLevel } from '../logger/log-level';
 
 describe('Config', () => {
   it('should load with defaults', () => {
