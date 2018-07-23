@@ -64,7 +64,8 @@ describe('RTCConnection', () => {
   beforeEach(() => {
     api = new APIMock();
     peerAtest = new RTCPeerConnectionFacade(callIdMock, peerBId, config.chat.rtc, loggerFactory, api,
-      (): void => undefined, (): void => undefined, []);
+      (): void => undefined, (): void => undefined,
+      (): void => undefined, []);
   });
 
   whenever(isWebRTCSupported())('should create valid SDP offers', (done) => {
@@ -127,7 +128,8 @@ describe('RTCPool', () => {
 
   whenever(isWebRTCSupported())('should spawn an RTC connection on session description', (done) => {
     const peerTest = new RTCPeerConnectionFacade(callIdMock, peerAId, config.chat.rtc, loggerFactory, api,
-      (): void => undefined, (): void => undefined, []);
+      (): void => undefined, (): void => undefined,
+      (): void => undefined, []);
     getStream((streamPeer) => {
       getStream((streamPool) => {
         addLocalStream(peerTest, streamPeer);

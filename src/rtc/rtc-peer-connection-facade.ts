@@ -1,3 +1,4 @@
+// tslint:disable:max-file-line-count
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { ID } from '../protocol/protocol';
 import { RTCConfig } from './rtc-config';
@@ -5,6 +6,12 @@ import { TimeUtils } from '../utils/time-utils';
 import { DataChannel, DataChannelMessage } from './data-channel';
 import { LoggerFactory } from '../logger/logger-factory';
 import { LoggerService } from '../logger/logger-service';
+
+export enum ConnectionStatus {
+  Failed,
+  Connected,
+  Disconnected
+}
 
 export class RTCPeerConnectionFacade {
   public static readonly renegotiationTimeout = 100;
@@ -21,6 +28,7 @@ export class RTCPeerConnectionFacade {
               loggerFactory: LoggerFactory,
               private artichokeApi: ArtichokeAPI,
               private onRemoteTrack: (track: MediaStreamTrack) => void,
+              private onStatusChange: (status: ConnectionStatus) => void,
               onDataChannelMessage: (msg: DataChannelMessage) => void,
               initialMediaTracks: ReadonlyArray<MediaStreamTrack>,
               private answerOptions?: RTCAnswerOptions,
@@ -154,7 +162,7 @@ export class RTCPeerConnectionFacade {
     // NOTE 'stable' means no exchange is going on, which encompases 'fresh'
     // NOTE RTC connections as well as established ones.
     if (typeof this.rtcPeerConnection.connectionState !== 'undefined') {
-      return this.rtcPeerConnection.connectionState === 'connected';
+      return this.rtcPeerConnection.connectionState === 'connected'; // Supported only by Safari
     } else {
       // FIXME Firefox does not support connectionState: https://bugzilla.mozilla.org/show_bug.cgi?id=1265827
       return this.rtcPeerConnection.signalingState === 'stable' &&
@@ -211,16 +219,18 @@ export class RTCPeerConnectionFacade {
       this.logger.error('ICE candidate ERROR', ev);
     };
     this.rtcPeerConnection.onconnectionstatechange = (): void => {
-      this.logger.debug(`Connection state change ${this.rtcPeerConnection.connectionState}`);
+      // connectionState is supported only by Safari atm - 23.07.18
+      this.logger.debug(`Connection state change: ${this.rtcPeerConnection.connectionState}`);
     };
     this.rtcPeerConnection.oniceconnectionstatechange = (ev): void => {
-      this.logger.debug(`ICE connection state change ${this.rtcPeerConnection.iceConnectionState}`, ev);
+      this.logger.debug(`ICE connection state change: ${this.rtcPeerConnection.iceConnectionState}`, ev);
+      this.notifyStatusChange(this.rtcPeerConnection.iceConnectionState);
     };
     this.rtcPeerConnection.onicegatheringstatechange = (ev): void => {
-      this.logger.debug(`ICE gathering state change ${this.rtcPeerConnection.iceGatheringState}`, ev);
+      this.logger.debug(`ICE gathering state change: ${this.rtcPeerConnection.iceGatheringState}`, ev);
     };
     this.rtcPeerConnection.onsignalingstatechange = (ev): void => {
-      this.logger.debug(`Siganling state change ${this.rtcPeerConnection.signalingState}`, ev);
+      this.logger.debug(`Siganling state change: ${this.rtcPeerConnection.signalingState}`, ev);
     };
     this.logger.debug('Registered all rtc events');
   }
@@ -230,5 +240,19 @@ export class RTCPeerConnectionFacade {
     this.logger.debug(`Signaling state: ${this.rtcPeerConnection.signalingState}`);
     this.logger.debug(`ICE Connection state: ${this.rtcPeerConnection.iceConnectionState}`);
     this.logger.debug(`ICE Gathering state: ${this.rtcPeerConnection.iceGatheringState}`);
+  }
+
+  private notifyStatusChange = (iceConnectionState: RTCIceConnectionState): void => {
+    switch (iceConnectionState) {
+      case 'failed':
+        return this.onStatusChange(ConnectionStatus.Failed);
+      case 'connected':
+        return this.onStatusChange(ConnectionStatus.Connected);
+      case 'closed': // it is end - can not reconnect
+        return this.onStatusChange(ConnectionStatus.Disconnected);
+      case 'disconnected': // but can reconnect
+        return this.onStatusChange(ConnectionStatus.Disconnected);
+      default:
+    }
   }
 }
