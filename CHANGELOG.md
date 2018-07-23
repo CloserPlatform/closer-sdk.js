@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.7.19 - 2018-07-23
+
+### Added
+* `Call.peerStatus$` which notify with `Connected`/`Failed`/`Disconnected` - status of a media connection
+
 ## 0.7.18 - 2018-07-20
 
 ### Improve
