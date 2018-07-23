@@ -10,6 +10,7 @@ import { createStream } from './stream';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { Subject } from 'rxjs/internal/Subject';
+import { ConnectionStatus } from '../../src/rtc/rtc-peer-connection-facade';
 
 export class CallHandler {
 
@@ -53,6 +54,9 @@ export class CallHandler {
     this.handleMultipleVideoInputs(buttons);
 
     this.controls = makeControls(call.id, [buttons]).addClass('text-center');
+
+    this.registerConnectionStatus(this.controls);
+
     this.callHandler = makeDiv().append([this.controls, this.callbox]);
     this.callboxGridRow = makeSplitGridRow();
     this.callbox.append(makeSplitGrid().append(this.callboxGridRow));
@@ -143,6 +147,26 @@ export class CallHandler {
         elem.append(videoSwitchCheckbox);
       }
     });
+  }
+
+  private registerConnectionStatus = (elem: JQuery): void => {
+    const connectionStatusContainer = makeDiv();
+    connectionStatusContainer.text(`Connection status: Connecting`);
+    this.call.peerStatus$.subscribe(peerStatus => {
+      switch (peerStatus.status) {
+        case ConnectionStatus.Connected:
+          connectionStatusContainer.text(`Connection status: Connected`);
+          break;
+        case ConnectionStatus.Disconnected:
+          connectionStatusContainer.text(`Connection status: Disconnected`);
+          break;
+        case ConnectionStatus.Failed:
+          connectionStatusContainer.text(`Connection status: Failes`);
+          break;
+        default:
+      }
+    });
+    elem.append(connectionStatusContainer);
   }
 
   private getVideoEnabledStatusWrapper = (): Observable<boolean> =>

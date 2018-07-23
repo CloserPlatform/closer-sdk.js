@@ -4,7 +4,7 @@ import * as wireEntities from '../protocol/wire-entities';
 import { ArtichokeAPI } from '../apis/artichoke-api';
 import { CallReason } from '../apis/call-reason';
 import { CallType } from './call-type';
-import { PeerDataChannelMessage, RemoteTrack, RTCPool } from '../rtc/rtc-pool';
+import { PeerConnectionStatus, PeerDataChannelMessage, RemoteTrack, RTCPool } from '../rtc/rtc-pool';
 import { Observable } from 'rxjs';
 import { filter, first, takeUntil } from 'rxjs/operators';
 import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
@@ -91,6 +91,10 @@ export abstract class Call implements wireEntities.Call {
 
   public get message$(): Observable<PeerDataChannelMessage> {
     return this.pool.message$;
+  }
+
+  public get peerStatus$(): Observable<PeerConnectionStatus> {
+    return this.pool.peerStatus$;
   }
 
   public getUsers(): Promise<ReadonlyArray<proto.ID>> {
