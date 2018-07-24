@@ -32,6 +32,8 @@ export { RESTfulAPI } from './apis/restful-api';
 
 // Other
 export { BrowserUtils } from './utils/browser-utils';
+export { ConnectionStatus } from './rtc/rtc-peer-connection-facade';
+export { PeerConnectionStatus } from './rtc/rtc-pool';
 
 // Logging
 export { LogLevel } from './logger/log-level';
