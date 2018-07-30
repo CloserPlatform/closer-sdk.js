@@ -6,6 +6,7 @@ import * as RatelSdk from '../../../';
 import { CallHandler } from '../call';
 import { createStream } from '../stream';
 import { Page } from '../page';
+import { BrowserUtils } from '../../../src/main';
 
 export class ChatModule {
 
@@ -28,7 +29,7 @@ export class ChatModule {
   private callToUser = (calleeId: string, session: RatelSdk.Session): void => {
     createStream(stream => {
       const tracks = stream.getTracks();
-      session.chat.createDirectCall(tracks, calleeId)
+      session.chat.createDirectCall(tracks, calleeId, undefined, {browser: BrowserUtils.getBrowserName()})
         .then(directCall => new CallHandler(directCall, tracks, session))
         .catch(err => {
           Logger.error(err);
@@ -43,5 +44,5 @@ export class ChatModule {
   }
 
   private renderChat = (callingCallback: (calleeId: string) => void): JQuery =>
-    makeCallingInput(Page.calleeBoxId, callingCallback, 'id', '4e37e1a8-0d0b-4dea-9a13-3a37533af8b4')
+    makeCallingInput(Page.calleeBoxId, callingCallback, 'id', '14578a95-c167-41cd-9dcc-b490ccc1748d')
 }

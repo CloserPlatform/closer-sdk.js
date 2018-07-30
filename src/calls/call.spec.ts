@@ -385,15 +385,15 @@ describe('GroupCall', () => {
 
   it('should run a callback on invitation', (done) => {
     spyOn(log, 'error');
-    const ctx = {exampleField: 'exampleField'};
+    const metadata = {exampleField: 'exampleField'};
     call.invited$.subscribe((msg) => {
       expect(msg.authorId).toBe(aliceSessionId);
       expect(msg.invitee).toBe(chad);
-      expect(msg.context).toBe(ctx);
+      expect(msg.metadata).toBe(metadata);
       done();
     });
 
-    api.cb(new callEvents.Invited(call.id, aliceSessionId, chad, ctx, Date.now()));
+    api.cb(new callEvents.Invited(call.id, aliceSessionId, chad, Date.now(), metadata));
     expect(log.error).not.toHaveBeenCalled();
   });
 

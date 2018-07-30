@@ -82,13 +82,16 @@ export class Artichoke {
     return this.artichokeApi.event$.pipe(filter(callEvents.Invited.isInvited));
   }
 
-  public createCall(tracks: ReadonlyArray<MediaStreamTrack>, users: ReadonlyArray<proto.ID>): Promise<GroupCall> {
-    return this.wrapCall(this.artichokeApi.createCall(users), tracks) as Promise<GroupCall>; // Trust me.
+  // tslint:disable-next-line:no-any
+  public createCall(tracks: ReadonlyArray<MediaStreamTrack>, users: ReadonlyArray<proto.ID>, metadata?: any):
+    Promise<GroupCall> {
+    return this.wrapCall(this.artichokeApi.createCall(users, metadata), tracks) as Promise<GroupCall>; // Trust me.
   }
 
-  public createDirectCall(tracks:  ReadonlyArray<MediaStreamTrack>,
-                          peer: proto.ID, timeout?: number): Promise<DirectCall> {
-    return this.wrapCall(this.artichokeApi.createDirectCall(peer, timeout), tracks);
+  // tslint:disable-next-line:no-any
+  public createDirectCall(tracks:  ReadonlyArray<MediaStreamTrack>, peer: proto.ID, timeout?: number, metadata?: any):
+    Promise<DirectCall> {
+    return this.wrapCall(this.artichokeApi.createDirectCall(peer, timeout, metadata), tracks);
   }
 
   public getCall(call: proto.ID): Promise<Call> {
