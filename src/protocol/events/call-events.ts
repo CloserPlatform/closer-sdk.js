@@ -50,13 +50,13 @@ export namespace callEvents {
     public static readonly tag = 'call_invited';
     public readonly authorId: string;
     public readonly invitee: string;
-    public readonly context: any;
+    public readonly metadata?: any;
 
-    constructor(callId: string, authorId: string, invitee: string, context: any, timestamp: number) {
+    constructor(callId: string, authorId: string, invitee: string, timestamp: number, metadata?: any) {
       super(callId, timestamp, Invited.tag);
 
       this.invitee = invitee;
-      this.context = context;
+      this.metadata = metadata;
       this.authorId = authorId;
     }
 

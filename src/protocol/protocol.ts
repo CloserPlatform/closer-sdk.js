@@ -12,14 +12,18 @@ export type Context = any;
 // // REST API:
 export interface CreateCall {
   users: ReadonlyArray<ID>;
-}
-
-export interface CreateDirectCall extends CreateDirectEntity {
-  timeout?: number;
+  // tslint:disable-next-line:no-any
+  metadata?: any;
 }
 
 export interface CreateDirectEntity {
   user: ID;
+}
+
+export interface CreateDirectCall extends CreateDirectEntity {
+  timeout?: number;
+  // tslint:disable-next-line:no-any
+  metadata?: any;
 }
 
 export interface CreateDirectRoom extends CreateDirectEntity {
@@ -42,15 +46,19 @@ export interface PushRegistration {
   pushId: ID;
 }
 
-export const createCall = (users: ReadonlyArray<ID>): CreateCall =>
+// tslint:disable-next-line:no-any
+export const createCall = (users: ReadonlyArray<ID>, metadata?: any): CreateCall =>
   ({
-    users
+    users,
+    metadata
   });
 
-export const createDirectCall = (user: ID, timeout?: number): CreateDirectCall =>
+// tslint:disable-next-line:no-any
+export const createDirectCall = (user: ID, timeout?: number, metadata?: any): CreateDirectCall =>
   ({
     user,
-    timeout
+    timeout,
+    metadata
   });
 
 export const leaveReason = (reason: string): LeaveReason =>

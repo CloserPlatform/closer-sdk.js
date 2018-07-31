@@ -67,14 +67,14 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.send(new rtcCommands.SendCandidate(callId, sessionId, candidate));
   }
 
-  public createCall(sessionIds: ReadonlyArray<proto.ID>): Promise<wireEntities.Call> {
+  public createCall(sessionIds: ReadonlyArray<proto.ID>, metadata?: any): Promise<wireEntities.Call> {
     return this.postAuth<proto.CreateCall, wireEntities.Call>(
-      [this.url, this.callPath], proto.createCall(sessionIds));
+      [this.url, this.callPath], proto.createCall(sessionIds, metadata));
   }
 
-  public createDirectCall(sessionId: proto.ID, timeout?: number): Promise<wireEntities.Call> {
+  public createDirectCall(sessionId: proto.ID, timeout?: number, metadata?: any): Promise<wireEntities.Call> {
     return this.postAuth<proto.CreateDirectCall, wireEntities.Call>([this.url, this.callPath],
-      proto.createDirectCall(sessionId, timeout));
+      proto.createDirectCall(sessionId, timeout, metadata));
   }
 
   public getCall(callId: proto.ID): Promise<wireEntities.Call> {

@@ -99,6 +99,7 @@ export class SessionService {
 
   private handleCallInvitation = (session: RatelSDK.Session, callInvitation: RatelSDK.callEvents.Invited): void =>  {
     session.chat.getCall(callInvitation.callId).then((call: RatelSDK.BusinessCall) => {
+      Logger.log('Call invitation metadata: ', callInvitation.metadata);
       const line = `${callInvitation.authorId} calls you`;
       const closeModal = View.confirmModal('Call invitation', line, 'Answer', () => {
         createStream(stream => {
