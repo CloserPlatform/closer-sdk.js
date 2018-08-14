@@ -13,17 +13,6 @@ test:
   tags:
     - shell
 
-up_to_date:
-  except:
-    - master
-  only:
-    - branches
-  script:
-    - up-to-date
-  stage: test
-  tags:
-    - docker
-
 whats_new:
   except:
     - master
@@ -35,7 +24,6 @@ whats_new:
   tags:
     - docker
 
-
 bump_version:
   only:
     - master
@@ -44,7 +32,6 @@ bump_version:
   stage: bump
   tags:
     - docker
-
 
 publish:
   only:
