@@ -75,8 +75,8 @@ export abstract class Room implements wireEntities.Room {
         return this.artichokeAPI.setDelivered(this.id, messageId, Date.now());
     }
 
-    public send(message: string): Promise<chatEvents.Received> {
-        return this.artichokeAPI.sendMessage(this.id, message);
+    public send(message: string, context?: proto.Context): Promise<chatEvents.Received> {
+        return this.artichokeAPI.sendMessage(this.id, message, context);
     }
 
     public sendCustom(message: string, subtag: string, context: proto.Context): Promise<chatEvents.Received> {
