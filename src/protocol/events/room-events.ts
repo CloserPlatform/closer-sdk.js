@@ -99,7 +99,7 @@ export namespace roomEvents {
       this.context = context;
     }
 
-    public static isMessageSent = (e: DomainEvent): e is MessageSent =>
+    public static isMessageSent = (e: DomainEvent | RoomEvent): e is MessageSent =>
       e.tag === MessageSent.tag
   }
 
