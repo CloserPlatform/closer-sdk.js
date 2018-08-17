@@ -161,7 +161,7 @@ export class CallHandler {
           connectionStatusContainer.text(`Connection status: Disconnected`);
           break;
         case ConnectionStatus.Failed:
-          connectionStatusContainer.text(`Connection status: Failes`);
+          connectionStatusContainer.text(`Connection status: Failed`);
           break;
         default:
       }
