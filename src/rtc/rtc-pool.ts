@@ -3,10 +3,9 @@ import { ArtichokeAPI } from '../apis/artichoke-api';
 import { ID } from '../protocol/protocol';
 import { RTCConfig } from './rtc-config';
 import { ConnectionStatus, RTCPeerConnectionFacade } from './rtc-peer-connection-facade';
-import { Observable, Subject, Subscription } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { DataChannelMessage } from './data-channel';
-import { CandidateQueue } from './candidate-queue';
 import { LoggerFactory } from '../logger/logger-factory';
 import { LoggerService } from '../logger/logger-service';
 
@@ -29,13 +28,11 @@ export class RTCPool {
   private offerOptions?: RTCOfferOptions;
   private answerOptions?: RTCAnswerOptions;
 
-  private peerConnections: { [peerId: string]: RTCPeerConnectionFacade } = {};
+  private peerConnections: Map<ID, RTCPeerConnectionFacade> = new Map();
   private tracks: ReadonlyArray<MediaStreamTrack> = [];
   private remoteTrackEvent = new Subject<RemoteTrack>();
   private messageEvent = new Subject<PeerDataChannelMessage>();
   private connectionStatusEvent = new Subject<PeerConnectionStatus>();
-
-  private candidateQueue: CandidateQueue;
 
   private logger: LoggerService;
 
@@ -48,20 +45,12 @@ export class RTCPool {
 
     this.offerOptions = rtcConfig.defaultOfferOptions;
     this.answerOptions = rtcConfig.defaultAnswerOptions;
-    this.candidateQueue = new CandidateQueue(callId, loggerFactory);
 
-    this.listenForDescriptionSent();
-    this.listenForCandidateSent();
+    // FIXME - unsubscribe
+    this.descriptionSent$.subscribe(this.listenForDescriptionSent);
+    // FIXME - unsubscribe
+    this.candidateSent$.subscribe(this.listenForCandidateSent);
   }
-
-  public get remoteTrack$(): Observable<RemoteTrack> {
-    return this.remoteTrackEvent;
-  }
-
-  public broadcast = (msg: DataChannelMessage): void =>
-    Object.keys(this.peerConnections)
-      .map(key => this.peerConnections[key])
-      .forEach(peerConnection => peerConnection.send(msg))
 
   public get message$(): Observable<PeerDataChannelMessage> {
     return this.messageEvent;
@@ -71,42 +60,43 @@ export class RTCPool {
     return this.connectionStatusEvent;
   }
 
+  public get remoteTrack$(): Observable<RemoteTrack> {
+    return this.remoteTrackEvent;
+  }
+
+  public broadcast = (msg: DataChannelMessage): void =>
+    this.peerConnections.forEach(peerConnection => peerConnection.send(msg))
+
   public addTrack(track: MediaStreamTrack): void {
     this.tracks = [...this.tracks, track];
-    Object.keys(this.peerConnections).forEach(peerId => {
-      this.peerConnections[peerId].addTrack(track);
-    });
+    this.peerConnections.forEach(peerConnection => peerConnection.addTrack(track));
   }
 
   public removeTrack(track: MediaStreamTrack): void {
     this.tracks = this.tracks.filter((t) => t !== track);
-    Object.keys(this.peerConnections).forEach(peerId => {
-      this.peerConnections[peerId].removeTrack(track);
-    });
+    this.peerConnections.forEach(peerConnection => peerConnection.removeTrack(track));
   }
 
   public connect(peerId: ID): void {
-    const rtcConnection = this.createRTCConnectionFacade(peerId);
-    this.addRTCPeerConnection(peerId, rtcConnection);
-
-    rtcConnection.offer(this.offerOptions)
+    this.getRTCPeerConnectionInstance(peerId)
+      .offer(this.offerOptions)
       .catch(err => this.logger.error(`Could not create an RTC offer: ${err}`));
   }
 
   public destroyConnection(peerId: ID): void {
-    if (peerId in this.peerConnections) {
+    const maybePeerConnection = this.peerConnections.get(peerId);
+    if (maybePeerConnection) {
       this.logger.debug(`Destroying connection for peerId ${peerId}`);
-      this.peerConnections[peerId].disconnect();
-      const {[peerId]: value, ...withoutPeerConnection} = this.peerConnections;
-      this.peerConnections = withoutPeerConnection;
+      maybePeerConnection.disconnect();
+      this.peerConnections.delete(peerId);
     } else {
       this.logger.warn(`Cannot destroy connection for peerId ${peerId} - it does not exist`);
     }
   }
 
   public destroyAllConnections = (): void => {
-    this.logger.debug(`Destroying all connections for call ${this.callId}`);
-    Object.keys(this.peerConnections).forEach(peerId => this.destroyConnection(peerId));
+    this.logger.debug(`Destroying all connections`);
+    this.peerConnections.forEach((_, peerId) => this.destroyConnection(peerId));
   }
 
   public setAnswerOptions(options: RTCAnswerOptions): void {
@@ -119,8 +109,8 @@ export class RTCPool {
 
   public replaceTrackByKind(track: MediaStreamTrack): Promise<void> {
     return Promise.all(
-      Object.keys(this.peerConnections)
-        .map(key => this.peerConnections[key])
+      Array.from(this.peerConnections)
+        .map(peerIdPeerConnectionPair => peerIdPeerConnectionPair[1])
         .map(peerConnection => peerConnection.replaceTrackByKind(track))
     )
       .then(_ => undefined);
@@ -128,65 +118,33 @@ export class RTCPool {
 
   private handleRemoteSDPOffer = (msg: rtcEvents.DescriptionSent): void => {
     this.logger.debug('Received SDP offer');
-    if (msg.sender in this.peerConnections) {
-      this.peerConnections[msg.sender].handleRemoteOffer(msg.sdp)
-        .then(_ => this.logger.debug('Successfully added SDP offer to existing RTCConnection'))
-        .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
-    } else {
-      const rtcConnection = this.createRTCConnectionFacade(msg.sender);
-      rtcConnection.handleRemoteOffer(msg.sdp, this.answerOptions, () => {
-        this.addRTCPeerConnection(msg.sender, rtcConnection);
-        this.candidateQueue.drainCandidates(msg.sender)
-          .forEach(candidate => rtcConnection.addCandidate(candidate).catch(err => {
-            this.logger.error('Could not add candidate: ');
-            this.logger.error(err);
-          }));
-      })
-        .then(_ => {
-          this.logger.debug('Successfully added SDP offer to new RTCConeection');
-        })
-        .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
-    }
+    this.getRTCPeerConnectionInstance(msg.sender).handleRemoteOffer(msg.sdp, this.answerOptions)
+      .then(_ => this.logger.debug('Successfully added SDP offer to RTCConnection'))
+      .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
   }
 
   private handleRemoteSDPAnswer = (msg: rtcEvents.DescriptionSent): void => {
-    if (msg.sender in this.peerConnections) {
-      this.peerConnections[msg.sender].addRemoteAnswer(msg.sdp)
-        .then(_ => this.logger.debug('Successfully added SDP answer'))
-        .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
-    } else {
-      this.logger.error(`Received an invalid RTC answer from ${msg.sender}`);
+    this.getRTCPeerConnectionInstance(msg.sender).addRemoteAnswer(msg.sdp)
+      .then(_ => this.logger.debug('Successfully added SDP answer'))
+      .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
+  }
+
+  private listenForDescriptionSent = (msg: rtcEvents.DescriptionSent): void => {
+    this.logger.debug(`Received an RTC description: ${msg.sdp.type} ${msg.sdp.sdp}`);
+    switch (msg.sdp.type) {
+      case 'offer':
+        return this.handleRemoteSDPOffer(msg);
+      case 'answer':
+        return this.handleRemoteSDPAnswer(msg);
+      default:
+        return this.logger.error(`Received an invalid RTC description type ${msg.sdp.type}`);
     }
   }
 
-  private listenForDescriptionSent = (): Subscription =>
-    // FIXME - unsubscribe
-    this.descriptionSent$.subscribe(msg => {
-      this.logger.debug(`Received an RTC description: ${msg.sdp.type} ${msg.sdp.sdp}`);
-      switch (msg.sdp.type) {
-        case 'offer':
-          return this.handleRemoteSDPOffer(msg);
-        case 'answer':
-          return this.handleRemoteSDPAnswer(msg);
-        default:
-          return this.logger.error(`Received an invalid RTC description type ${msg.sdp.type}`);
-      }
-    })
-
-  private listenForCandidateSent = (): Subscription =>
-    // FIXME - unsubscribe
-    this.candidateSent$.subscribe(msg => {
-      this.logger.debug(`Received an RTC candidate: ${msg.candidate}`);
-      if (msg.sender in this.peerConnections) {
-        this.peerConnections[msg.sender].addCandidate(msg.candidate)
-          .then(_ => this.logger.debug('Candidate successfully added'))
-          .catch((err) => this.logger.error(`Could not process the RTC candidate: ${err}`));
-      } else {
-        this.logger.warn(`Received an invalid RTC candidate.
-        Sender ${msg.sender} is not currently in this pool. Adding to queue`);
-        this.candidateQueue.addCandidate(msg.sender, msg.candidate);
-      }
-    })
+  private listenForCandidateSent = (msg: rtcEvents.CandidateSent): void => {
+    this.logger.debug(`Received an RTC candidate: ${msg.candidate}`);
+    this.getRTCPeerConnectionInstance(msg.sender).addCandidate(msg.candidate);
+  }
 
   private get descriptionSent$(): Observable<rtcEvents.DescriptionSent> {
     return this.getRtcPoolEvent().pipe(filter(rtcEvents.DescriptionSent.is));
@@ -201,11 +159,18 @@ export class RTCPool {
       .pipe(filter(rtcEvents.RTCSignallingEvent.is))
       .pipe(filter(e => e.callId === this.callId))
 
-  private addRTCPeerConnection = (peerId: ID, rtcConnection: RTCPeerConnectionFacade): void => {
-    if (peerId in this.peerConnections) {
-      this.logger.error(`Cannot add peer connection for peerId ${peerId}, connection already exists for given peer`);
+  private getRTCPeerConnectionInstance = (peerId: ID): RTCPeerConnectionFacade => {
+    const maybeRTCPeerConnection = this.peerConnections.get(peerId);
+    if (maybeRTCPeerConnection) {
+      this.logger.debug(`RTCPeerConnectionFacade exists for peer ${peerId} - returning `);
+
+      return maybeRTCPeerConnection;
     } else {
-      this.peerConnections[peerId] = rtcConnection;
+      this.logger.debug(`RTCPeerConnectionFacade not exists for peer ${peerId} - creating new`);
+      const rtcConnection = this.createRTCConnectionFacade(peerId);
+      this.peerConnections.set(peerId, rtcConnection);
+
+      return rtcConnection;
     }
   }
 

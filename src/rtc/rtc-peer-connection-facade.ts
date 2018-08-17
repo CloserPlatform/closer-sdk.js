@@ -6,6 +6,7 @@ import { TimeUtils } from '../utils/time-utils';
 import { DataChannel, DataChannelMessage } from './data-channel';
 import { LoggerFactory } from '../logger/logger-factory';
 import { LoggerService } from '../logger/logger-service';
+import { PeerCandidateQueue } from './peer-candidate-queue';
 
 export enum ConnectionStatus {
   Failed,
@@ -21,8 +22,11 @@ export class RTCPeerConnectionFacade {
 
   // FIXME Required by the various hacks:
   private renegotiationTimer: number;
+  private isRemoteSDPset = false;
 
   private logger: LoggerService;
+
+  private candidateQueue: PeerCandidateQueue;
 
   constructor(private callId: ID, private peerId: ID, private config: RTCConfig,
               loggerFactory: LoggerFactory,
@@ -38,6 +42,7 @@ export class RTCPeerConnectionFacade {
     this.rtcPeerConnection = new RTCPeerConnection(config);
     initialMediaTracks.forEach(track => this.addTrack(track));
     this.dataChannel = new DataChannel(callId, this.rtcPeerConnection, onDataChannelMessage, loggerFactory);
+    this.candidateQueue = new PeerCandidateQueue(callId, loggerFactory);
     this.registerRtcEvents();
   }
 
@@ -52,7 +57,7 @@ export class RTCPeerConnectionFacade {
     // Because sometimes camera might fail when adding video track
     // This `try` will still create the correct connection just with audio
     try {
-       this.rtcPeerConnection.addTrack(track, new MediaStream());
+      this.rtcPeerConnection.addTrack(track, new MediaStream());
     } catch (err) {
       this.logger.error(`Adding media tracks failed with: ${err}`);
     }
@@ -66,10 +71,16 @@ export class RTCPeerConnectionFacade {
       .forEach(sender => this.rtcPeerConnection.removeTrack(sender));
   }
 
-  public addCandidate(candidate: RTCIceCandidate): Promise<void> {
+  public addCandidate(candidate: RTCIceCandidate): void {
     this.logger.debug(`Received an RTC candidate: ${candidate.candidate}`);
 
-    return this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit));
+    if (this.isRemoteSDPset) {
+      this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit))
+        .then(_ => this.logger.debug('Candidate successfully added'))
+        .catch(err => this.logger.error('Could not add candidate: ', err));
+    } else {
+      this.candidateQueue.addCandidate(candidate);
+    }
   }
 
   public send(msg: DataChannelMessage): void {
@@ -92,15 +103,11 @@ export class RTCPeerConnectionFacade {
   }
 
   public handleRemoteOffer = (remoteDescription: RTCSessionDescriptionInit,
-                              options?: RTCAnswerOptions,
-                              descriptionSetCb?: () => void): Promise<RTCSessionDescriptionInit> => {
+                              options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> => {
     this.logger.debug('Received an RTC offer - calling setRemoteDescription');
 
     return this.setRemoteDescription(remoteDescription).then((_descr) => {
       this.logger.debug('RTC offer was successfully set');
-      if (descriptionSetCb) {
-        descriptionSetCb();
-      }
 
       return this.answer(options);
     }).catch(err => {
@@ -149,7 +156,12 @@ export class RTCPeerConnectionFacade {
   private setRemoteDescription = (remoteDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> => {
     this.logger.debug('Setting remote RTC description.');
 
-    return this.rtcPeerConnection.setRemoteDescription(remoteDescription).then(() => remoteDescription);
+    return this.rtcPeerConnection.setRemoteDescription(remoteDescription).then(_ => {
+      this.isRemoteSDPset = true;
+      this.candidateQueue.drainCandidates().forEach(candidate =>
+        this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit))
+          .catch(err => this.logger.error('Could not add candidate: ', err)));
+    }).then(_ => remoteDescription);
   }
 
   private setLocalDescription = (localDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> => {
