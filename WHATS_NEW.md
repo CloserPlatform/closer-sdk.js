@@ -1,0 +1,2 @@
+### Removed
+ * Manual heartbeats handling
