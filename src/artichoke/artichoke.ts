@@ -1,4 +1,3 @@
-import { serverCommands } from '../protocol/commands/server-command';
 import { callEvents } from '../protocol/events/call-events';
 import { errorEvents } from '../protocol/events/error-events';
 import { roomEvents } from '../protocol/events/room-events';
@@ -12,7 +11,6 @@ import { Room } from '../rooms/room';
 import { GroupCall } from '../calls/group-call';
 import { DirectCall } from '../calls/direct-call';
 import { Call } from '../calls/call';
-import { BumpableTimeout } from '../utils/bumpable-timeout';
 import { PromiseUtils } from '../utils/promise-utils';
 import { Observable, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -22,8 +20,6 @@ import { RoomFactory } from '../rooms/room-factory';
 import { LoggerFactory } from '../logger/logger-factory';
 
 export class Artichoke {
-  private static heartbeatTimeoutMultiplier = 2;
-  private heartbeatTimeout?: BumpableTimeout;
 
   private serverUnreachableEvent = new Subject<void>();
 
@@ -35,16 +31,11 @@ export class Artichoke {
               rtcPoolRepository: RTCPoolRepository) {
     this.callFactory = new CallFactory(loggerFactory, artichokeApi, rtcPoolRepository);
     this.roomFactory = new RoomFactory(loggerFactory, artichokeApi);
-    this.setupHeartbeats();
   }
 
   // Callbacks:
   public get connect$(): Observable<serverEvents.Hello> {
     return this.artichokeApi.event$.pipe(filter(serverEvents.Hello.is));
-  }
-
-  public get heartbeat$(): Observable<serverEvents.OutputHeartbeat> {
-    return this.artichokeApi.event$.pipe(filter(serverEvents.OutputHeartbeat.is));
   }
 
   public get serverUnreachable$(): Observable<void> {
@@ -65,11 +56,6 @@ export class Artichoke {
   }
 
   public disconnect(): void {
-    if (this.heartbeatTimeout) {
-      this.heartbeatTimeout.clear();
-      this.heartbeatTimeout = undefined;
-    }
-
     return this.artichokeApi.disconnect();
   }
 
@@ -146,36 +132,6 @@ export class Artichoke {
 
   public unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
     return this.artichokeApi.unregisterFromPushNotifications(pushId);
-  }
-
-  private setupHeartbeats = (): void => {
-    // FIXME - unsubscribe
-    this.artichokeApi.event$.pipe(filter(serverEvents.Hello.is)).subscribe(hello => {
-      this.clearHeartbeatTimeout();
-
-      this.heartbeatTimeout = new BumpableTimeout(
-        hello.heartbeatTimeout * Artichoke.heartbeatTimeoutMultiplier,
-        (): void => this.serverUnreachableEvent.next()
-      );
-    });
-
-    // FIXME - unsubscribe
-    this.artichokeApi.event$.pipe(filter(serverEvents.OutputHeartbeat.is)).subscribe(hb => {
-      this.artichokeApi.send(new serverCommands.InputHeartbeat(hb.timestamp));
-      if (this.heartbeatTimeout) {
-        this.heartbeatTimeout.bump();
-      }
-    });
-
-    // FIXME - unsubscribe
-    this.serverUnreachableEvent.subscribe(this.clearHeartbeatTimeout);
-  }
-
-  private clearHeartbeatTimeout = (): void => {
-    if (this.heartbeatTimeout) {
-      this.heartbeatTimeout.clear();
-      this.heartbeatTimeout = undefined;
-    }
   }
 
   // Utils:
