@@ -151,17 +151,18 @@ export class CallHandler {
 
   private registerConnectionStatus = (elem: JQuery): void => {
     const connectionStatusContainer = makeDiv();
-    connectionStatusContainer.text(`Connection status: Connecting`);
+    connectionStatusContainer.text(`${new Date().toUTCString()} - Connection status: Connecting`);
     this.call.peerStatus$.subscribe(peerStatus => {
+      const date = new Date().toUTCString();
       switch (peerStatus.status) {
         case ConnectionStatus.Connected:
-          connectionStatusContainer.text(`Connection status: Connected`);
+          connectionStatusContainer.append(makeDiv().text(`${date} - Connection status: Connected`));
           break;
         case ConnectionStatus.Disconnected:
-          connectionStatusContainer.text(`Connection status: Disconnected`);
+          connectionStatusContainer.append(makeDiv().text(`${date} - Connection status: Disconnected`));
           break;
         case ConnectionStatus.Failed:
-          connectionStatusContainer.text(`Connection status: Failed`);
+          connectionStatusContainer.append(makeDiv().text(`${date} - Connection status: Failed`));
           break;
         default:
       }

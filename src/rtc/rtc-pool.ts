@@ -78,9 +78,7 @@ export class RTCPool {
   }
 
   public connect(peerId: ID): void {
-    this.getRTCPeerConnectionInstance(peerId)
-      .offer(this.offerOptions)
-      .catch(err => this.logger.error(`Could not create an RTC offer: ${err}`));
+    return this.getRTCPeerConnectionInstance(peerId).connect(this.offerOptions);
   }
 
   public destroyConnection(peerId: ID): void {
@@ -116,26 +114,13 @@ export class RTCPool {
       .then(_ => undefined);
   }
 
-  private handleRemoteSDPOffer = (msg: rtcEvents.DescriptionSent): void => {
-    this.logger.debug('Received SDP offer');
-    this.getRTCPeerConnectionInstance(msg.sender).handleRemoteOffer(msg.sdp, this.answerOptions)
-      .then(_ => this.logger.debug('Successfully added SDP offer to RTCConnection'))
-      .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
-  }
-
-  private handleRemoteSDPAnswer = (msg: rtcEvents.DescriptionSent): void => {
-    this.getRTCPeerConnectionInstance(msg.sender).addRemoteAnswer(msg.sdp)
-      .then(_ => this.logger.debug('Successfully added SDP answer'))
-      .catch(err => this.logger.error(`Could not process the RTC description: ${err}`));
-  }
-
   private listenForDescriptionSent = (msg: rtcEvents.DescriptionSent): void => {
     this.logger.debug(`Received an RTC description: ${msg.sdp.type} ${msg.sdp.sdp}`);
     switch (msg.sdp.type) {
       case 'offer':
-        return this.handleRemoteSDPOffer(msg);
+        return this.getRTCPeerConnectionInstance(msg.sender).handleRemoteOffer(msg.sdp, this.answerOptions);
       case 'answer':
-        return this.handleRemoteSDPAnswer(msg);
+        return this.getRTCPeerConnectionInstance(msg.sender).handleRemoteAnswer(msg.sdp);
       default:
         return this.logger.error(`Received an invalid RTC description type ${msg.sdp.type}`);
     }

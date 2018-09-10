@@ -44,5 +44,5 @@ export class ChatModule {
   }
 
   private renderChat = (callingCallback: (calleeId: string) => void): JQuery =>
-    makeCallingInput(Page.calleeBoxId, callingCallback, 'id', '14578a95-c167-41cd-9dcc-b490ccc1748d')
+    makeCallingInput(Page.calleeBoxId, callingCallback, 'id', 'f823bdcf-a411-4cd2-885d-cbbe72674062')
 }
