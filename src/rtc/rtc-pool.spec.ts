@@ -9,11 +9,8 @@ import { ArtichokeAPI } from '../apis/artichoke-api';
 import { RTCPeerConnectionFacade } from './rtc-peer-connection-facade';
 import { RTCPool } from './rtc-pool';
 
-const invalidSDP = 'this is not a valid SDP';
-
 const callIdMock = '123';
 const peerAId = '321';
-const peerBId = '333';
 
 /*  TODO:
 *   Add tests:
@@ -25,6 +22,9 @@ const peerBId = '333';
 *   - should renegotiate SDP on callee side
 *   - should renegotiate on addTrack
 *   - should renegotiate on removeTrack
+*   - should fail to create SDP answers for invalid offers
+*   - should create valid SDP offers
+*   - should spawn an RTC connection on session description
 */
 
 const addLocalStream = (pool: RTCPool | RTCPeerConnectionFacade, stream: MediaStream): void =>
@@ -57,48 +57,6 @@ class APIMock extends ArtichokeAPI {
   }
 }
 
-describe('RTCConnection', () => {
-  let api: APIMock;
-  let peerAtest: RTCPeerConnectionFacade;
-
-  beforeEach(() => {
-    api = new APIMock();
-    peerAtest = new RTCPeerConnectionFacade(callIdMock, peerBId, config.chat.rtc, loggerFactory, api,
-      (): void => undefined, (): void => undefined,
-      (): void => undefined, []);
-  });
-
-  whenever(isWebRTCSupported())('should create valid SDP offers', (done) => {
-    getStream((stream) => {
-      addLocalStream(peerAtest, stream);
-
-      expect(api.descriptionSent).toBe(false);
-
-      peerAtest.offer().then((_offer: RTCSessionDescriptionInit) => {
-        expect(api.descriptionSent).toBe(true);
-        done();
-      }).catch(logError(done));
-    }, logError(done));
-  });
-
-  whenever(isWebRTCSupported())('should fail to create SDP answers for invalid offers', (done) => {
-    getStream((stream) => {
-      const sdp: RTCSessionDescriptionInit = {
-        type: 'offer',
-        sdp: invalidSDP
-      };
-      addLocalStream(peerAtest, stream);
-
-      expect(api.descriptionSent).toBe(false);
-
-      peerAtest.handleRemoteOffer(sdp).then(_answer => done.fail()).catch(_error => {
-        expect(api.descriptionSent).toBe(false);
-        done();
-      });
-    }, logError(done));
-  });
-});
-
 describe('RTCPool', () => {
   let api: APIMock;
   let pool: RTCPool;
@@ -123,38 +81,6 @@ describe('RTCPool', () => {
 
       addLocalStream(pool, stream);
       pool.connect(peerAId);
-    }, logError(done));
-  });
-
-  whenever(isWebRTCSupported())('should spawn an RTC connection on session description', (done) => {
-    const peerTest = new RTCPeerConnectionFacade(callIdMock, peerAId, config.chat.rtc, loggerFactory, api,
-      (): void => undefined, (): void => undefined,
-      (): void => undefined, []);
-    getStream((streamPeer) => {
-      getStream((streamPool) => {
-        addLocalStream(peerTest, streamPeer);
-
-        peerTest.offer().then((offer) => {
-
-          api.onDescription = (id: string, peer: string, sdp: RTCSessionDescriptionInit): void => {
-            expect(api.descriptionSent).toBe(true);
-            expect(id).toBe(callIdMock);
-            expect(peer).toBe(peerAId);
-            expect(sdp.type).toBe('offer');
-            done();
-          };
-
-          spyOn(log, 'error').and.callThrough();
-          expect(log.error).not.toHaveBeenCalled();
-
-          addLocalStream(pool, streamPool);
-          pool.remoteTrack$.subscribe(({peerId}) => {
-            expect(peerId).toBe(peerAId);
-          });
-
-          api.sendDescription(callIdMock, peerAId, offer);
-        });
-      }, logError(done));
     }, logError(done));
   });
 });

@@ -46,6 +46,9 @@ export class RTCPeerConnectionFacade {
     this.registerRtcEvents();
   }
 
+  public connect = (offerOptons?: RTCOfferOptions): void =>
+    this.offer(offerOptons)
+
   public disconnect(): void {
     this.logger.info('Disconnecting');
 
@@ -87,35 +90,6 @@ export class RTCPeerConnectionFacade {
     return this.dataChannel.send(msg);
   }
 
-  public offer(options?: RTCOfferOptions): Promise<RTCSessionDescriptionInit> {
-    this.logger.debug('Creating an RTC offer.');
-
-    this.dataChannel.createConnection();
-
-    return this.rtcPeerConnection.createOffer(options || this.offerOptions)
-      .then(offer => this.setLocalDescription(offer))
-      .then(offer => this.artichokeApi.sendDescription(this.callId, this.peerId, offer).then(_ => offer))
-      .then(offer => {
-        this.logger.debug(`Sent an RTC offer: ${offer.sdp}`);
-
-        return offer;
-      });
-  }
-
-  public handleRemoteOffer = (remoteDescription: RTCSessionDescriptionInit,
-                              options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> => {
-    this.logger.debug('Received an RTC offer - calling setRemoteDescription');
-
-    return this.setRemoteDescription(remoteDescription).then((_descr) => {
-      this.logger.debug('RTC offer was successfully set');
-
-      return this.answer(options);
-    }).catch(err => {
-      this.logger.error('Failed to set remote SDP');
-      throw err;
-    });
-  }
-
   public replaceTrackByKind = (track: MediaStreamTrack): Promise<void> => {
     const maybeSender = this.rtcPeerConnection.getSenders()
       .filter(sender => sender.track.kind === track.kind)[0];
@@ -128,7 +102,54 @@ export class RTCPeerConnectionFacade {
     }
   }
 
-  public answer(options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
+  public handleRemoteOffer = (remoteDescription: RTCSessionDescriptionInit,
+                              options?: RTCAnswerOptions): void => {
+    this.logger.debug('Received an RTC offer - calling setRemoteDescription');
+
+    this.setRemoteDescription(remoteDescription)
+      .then(_descr => {
+        this.logger.debug('RTC offer was successfully set');
+
+        return this.answer(options);
+      })
+      .then(_ => this.logger.debug('Successfully added SDP offer to RTCConnection'))
+      .catch(err => {
+        this.logger.error(`Could not process the RTC description: ${err}`);
+        this.handleFailedConnection();
+      });
+  }
+
+  public handleRemoteAnswer(remoteDescription: RTCSessionDescriptionInit): void {
+    this.logger.debug('Adding remote answer');
+
+    this.setRemoteDescription(remoteDescription)
+      .then(_ => this.logger.debug('Successfully added SDP answer'))
+      .catch(err => {
+        this.logger.error(`Could not process the RTC description: ${err}`);
+        this.handleFailedConnection();
+      });
+  }
+
+  private offer(options?: RTCOfferOptions): void {
+    this.logger.debug('Creating an RTC offer.');
+
+    this.dataChannel.createConnection();
+
+    this.rtcPeerConnection.createOffer(options || this.offerOptions)
+      .then(offer => this.setLocalDescription(offer))
+      .then(offer => this.artichokeApi.sendDescription(this.callId, this.peerId, offer).then(_ => offer))
+      .then(offer => {
+        this.logger.debug(`Sent an RTC offer: ${offer.sdp}`);
+
+        return offer;
+      })
+      .catch(err => {
+        this.logger.error(`Could not create an RTC offer: ${err}`);
+        this.handleFailedConnection();
+      });
+  }
+
+  private answer(options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
     this.logger.debug('Creating an RTC answer.');
 
     this.dataChannel.createConnection();
@@ -147,21 +168,18 @@ export class RTCPeerConnectionFacade {
       });
   }
 
-  public addRemoteAnswer(remoteDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
-    this.logger.debug('Adding remote answer');
-
-    return this.setRemoteDescription(remoteDescription);
-  }
-
-  private setRemoteDescription = (remoteDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> => {
+  private setRemoteDescription = (remoteDescription: RTCSessionDescriptionInit): Promise<void> => {
     this.logger.debug('Setting remote RTC description.');
 
-    return this.rtcPeerConnection.setRemoteDescription(remoteDescription).then(_ => {
-      this.isRemoteSDPset = true;
-      this.candidateQueue.drainCandidates().forEach(candidate =>
-        this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit))
-          .catch(err => this.logger.error('Could not add candidate: ', err)));
-    }).then(_ => remoteDescription);
+    return this.rtcPeerConnection.setRemoteDescription(remoteDescription)
+      .then(this.drainCandidatesAfterSettingRemoteSDP);
+  }
+
+  private drainCandidatesAfterSettingRemoteSDP = (): void => {
+    this.isRemoteSDPset = true;
+    this.candidateQueue.drainCandidates().forEach(candidate =>
+      this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit))
+        .catch(err => this.logger.error('Could not add candidate: ', err)));
   }
 
   private setLocalDescription = (localDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> => {
@@ -213,8 +231,7 @@ export class RTCPeerConnectionFacade {
           this.renegotiationTimer = TimeUtils.onceDelayed(
             this.renegotiationTimer, RTCPeerConnectionFacade.renegotiationTimeout, () => {
               this.logger.debug('Renegotiating');
-              this.offer()
-                .catch(err => this.logger.error(`Could not renegotiate the connection: ${err}`));
+              this.offer();
             });
         } else {
           this.logger.debug('onnegotiationneeded - connection not established - doing nothing');
@@ -266,5 +283,10 @@ export class RTCPeerConnectionFacade {
         return this.onStatusChange(ConnectionStatus.Disconnected);
       default:
     }
+  }
+
+  private handleFailedConnection = (): void => {
+    this.logger.warn('Connection failed, emitting failed & closing connection');
+    this.onStatusChange(ConnectionStatus.Failed);
   }
 }
