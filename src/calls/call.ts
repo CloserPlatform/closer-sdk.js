@@ -5,13 +5,12 @@ import { ArtichokeAPI } from '../apis/artichoke-api';
 import { CallReason } from '../apis/call-reason';
 import { CallType } from './call-type';
 import { PeerConnectionStatus, PeerDataChannelMessage, RemoteTrack, RTCPool } from '../rtc/rtc-pool';
-import { Observable, Subject } from 'rxjs';
+import { Observable } from 'rxjs';
 import { filter, first, takeUntil } from 'rxjs/operators';
 import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
 import { DataChannelMessage } from '../rtc/data-channel';
 import { LoggerService } from '../logger/logger-service';
 import { ConnectionStatus } from '../rtc/rtc-peer-connection-facade';
-import EndReason = callEvents.EndReason;
 
 export abstract class Call implements wireEntities.Call {
   public readonly id: proto.ID;
@@ -23,8 +22,6 @@ export abstract class Call implements wireEntities.Call {
   public orgId?: proto.ID;
   public abstract readonly callType: CallType;
   protected pool: RTCPool;
-
-  private endEvent = new Subject<callEvents.Ended>();
 
   constructor(call: wireEntities.Call, private logger: LoggerService,
               protected artichokeApi: ArtichokeAPI, rtcPoolRepository: RTCPoolRepository,
@@ -39,11 +36,6 @@ export abstract class Call implements wireEntities.Call {
 
     this.pool = rtcPoolRepository.getRtcPoolInstance(call.id);
 
-    this.getCallEvent()
-      .pipe(filter(callEvents.Ended.isEnded))
-      .pipe(first())
-      .subscribe(end => this.endEvent.next(end));
-
     this.end$.pipe(first()).subscribe(endEvent => {
       this.ended = endEvent.timestamp;
       this.pool.destroyAllConnections();
@@ -51,12 +43,11 @@ export abstract class Call implements wireEntities.Call {
 
     this.activeDevice$.pipe(takeUntil(this.end$)).subscribe(this.pool.destroyAllConnections);
 
-    /* If peerConnection failed, leave the call and broadcast call end connection dropped event */
+    /* If peerConnection failed, leave the call with ConnectionDropped event */
     this.peerStatus$
       .pipe(takeUntil(this.end$))
       .pipe(filter(peerStatus => peerStatus.status === ConnectionStatus.Failed))
-      .subscribe(() => this.leave(CallReason.ConnectionDropped).then(() =>
-        this.endEvent.next(new callEvents.Ended(this.id, EndReason.ConnectionDropped, Date.now()))));
+      .subscribe(() => this.leave(CallReason.ConnectionDropped));
 
     if (tracks) {
       this.addTracks(tracks);
@@ -172,7 +163,7 @@ export abstract class Call implements wireEntities.Call {
   }
 
   public get end$(): Observable<callEvents.Ended> {
-    return this.endEvent;
+    return this.getCallEvent().pipe(filter(callEvents.Ended.isEnded));
   }
 
   protected getInvited$(): Observable<callEvents.Invited> {
