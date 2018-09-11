@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.8.4 - 2018-09-11
+
+### Fixed
+* Do not broadcast mocked leave event internally after calling leave
+
 ## 0.8.3 - 2018-09-10
 
 ### Feature
