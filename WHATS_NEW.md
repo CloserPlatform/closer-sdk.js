@@ -1,2 +1,0 @@
-### Fix
-* export UserConfig type
