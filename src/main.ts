@@ -3,7 +3,7 @@ export * from './auth/auth';
 
 // Some useful types:
 export { Artichoke as Chat } from './artichoke/artichoke';
-export { Config } from './config/config';
+export { Config, UserConfig } from './config/config';
 export { Session } from './session';
 export { JSONWebSocket } from './json-websocket/json-websocket';
 
