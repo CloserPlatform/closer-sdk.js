@@ -53,68 +53,13 @@ describe('Artichoke', () => {
   it('should notify on a new event', (done) => {
     chat.connect$.subscribe(_ => done());
     chat.connect();
-    api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), 200));
+    api.cb(new serverEvents.Hello(deviceIdMock, Date.now()));
   });
 
   it('should call a callback on server connection', (done) => {
     chat.connect$.subscribe(_ => done());
     chat.connect();
-    api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), 200));
-  });
-
-  it('should call a callback on server heartbeat', (done) => {
-    chat.heartbeat$.subscribe(_ => done());
-    chat.connect();
-    api.cb(new serverEvents.OutputHeartbeat(Date.now()));
-  });
-
-  it('should invoke \'onServerUnreachable\' if no heartbeat received within double time given in hello', (done) => {
-    jasmine.clock().install();
-
-    const heartbeatTimeout = 20;
-
-    chat.serverUnreachable$.subscribe(done);
-    chat.connect();
-    api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), heartbeatTimeout));
-
-    jasmine.clock().tick(heartbeatTimeout * 2 + 1);
-    jasmine.clock().uninstall();
-  });
-
-  it('should not invoke \'onServerUnreachable\' if heartbeat is received within time given in hello ', (done) => {
-    jasmine.clock().install();
-
-    const heartbeatTimeout = 20;
-    chat.serverUnreachable$.subscribe(() => done.fail());
-    chat.connect();
-
-    api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), heartbeatTimeout));
-
-    const interval = setInterval(() => {
-      api.cb(new serverEvents.OutputHeartbeat(Date.now()));
-    }, heartbeatTimeout);
-
-    jasmine.clock().tick(heartbeatTimeout * 10);
-    clearInterval(interval);
-    done();
-
-    jasmine.clock().uninstall();
-  });
-
-  it('should not invoke \'onServerUnreachable\' if \'disconnect()\' was called', (done) => {
-    jasmine.clock().install();
-
-    const heartbeatTimeout = 20;
-
-    chat.serverUnreachable$.subscribe(() => done.fail());
-    chat.connect();
-    api.cb(new serverEvents.Hello(deviceIdMock, Date.now(), heartbeatTimeout));
-
-    chat.disconnect();
-    jasmine.clock().tick(heartbeatTimeout * 2 + 1);
-    done();
-
-    jasmine.clock().uninstall();
+    api.cb(new serverEvents.Hello(deviceIdMock, Date.now()));
   });
 
   it('should call a callback on server error', (done) => {
