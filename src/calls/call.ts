@@ -10,7 +10,6 @@ import { filter, first, takeUntil } from 'rxjs/operators';
 import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
 import { DataChannelMessage } from '../rtc/data-channel';
 import { LoggerService } from '../logger/logger-service';
-import { ConnectionStatus } from '../rtc/rtc-peer-connection-facade';
 
 export abstract class Call implements wireEntities.Call {
   public readonly id: proto.ID;
@@ -42,12 +41,6 @@ export abstract class Call implements wireEntities.Call {
     });
 
     this.activeDevice$.pipe(takeUntil(this.end$)).subscribe(this.pool.destroyAllConnections);
-
-    /* If peerConnection failed, leave the call with ConnectionDropped event */
-    this.peerStatus$
-      .pipe(takeUntil(this.end$))
-      .pipe(filter(peerStatus => peerStatus.status === ConnectionStatus.Failed))
-      .subscribe(() => this.leave(CallReason.ConnectionDropped));
 
     if (tracks) {
       this.addTracks(tracks);
