@@ -1,0 +1,2 @@
+### Changed
+ * Reverted akka heartbeats
