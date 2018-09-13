@@ -50,6 +50,10 @@ export class SessionService {
 
   private onRatelConnected = (session: RatelSDK.Session): RatelSDK.Session => {
 
+    session.chat.heartbeat$.subscribe(hb => {
+      Logger.log('Server time: ', hb.timestamp);
+    });
+
     session.chat.error$.subscribe(error => {
       Logger.log('An error has occured: ', error);
     });
