@@ -38,7 +38,7 @@ class APIMock extends ArtichokeAPI {
   public cb: any;
 
   constructor(sessionId: string) {
-    super(sessionId, apiKeyMock, config.chat, loggerFactory);
+    super(sessionId, config.chat, apiKeyMock, loggerFactory);
   }
 
   // tslint:disable-next-line:no-any

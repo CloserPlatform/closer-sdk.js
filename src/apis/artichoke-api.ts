@@ -34,7 +34,7 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   private artichokeApiEvent = new Subject<DomainEvent>();
 
-  constructor(public sessionId: proto.ID, apiKey: ApiKey, config: ChatConfig, loggerFactory: LoggerFactory) {
+  constructor(public sessionId: proto.ID, private config: ChatConfig, apiKey: ApiKey, loggerFactory: LoggerFactory) {
     super(loggerFactory.create(`ArtichokeApi Session(${sessionId})`));
 
     this.apiHeaders.apiKey = apiKey;
@@ -54,7 +54,11 @@ export class ArtichokeAPI extends APIWithWebsocket {
   }
 
   public connect(): void {
-    const url = this.deviceId ? [this.wsUrl, '/reconnect/', this.deviceId].join('') : this.wsUrl;
+    const useReconnect = this.deviceId && !this.config.reconnectionDisabled;
+    const url = useReconnect ? `${this.wsUrl}/reconnect/${this.deviceId}` : this.wsUrl;
+    if (useReconnect) {
+      this.logger.debug(`Connecting using reconnect and deviceId ${this.deviceId}`);
+    }
     super.connect(url);
   }
 

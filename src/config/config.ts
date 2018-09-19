@@ -15,6 +15,7 @@ export interface UserChatConfig extends URLConfig {
 
 export interface ChatConfig extends URLConfig {
   rtc: RTCConfig;
+  reconnectionDisabled: boolean;
 }
 
 // tslint:disable-next-line:no-empty-interface
@@ -35,6 +36,7 @@ export interface Config {
 export const defaultConfig: Config = {
   logLevel: LogLevel.WARN,
   chat: {
+    reconnectionDisabled: false,
     protocol: 'https:',
     hostname: 'artichoke.ratel.io',
     port: '',

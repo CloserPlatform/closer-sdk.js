@@ -23,7 +23,7 @@ class APIMock extends ArtichokeAPI {
   public cb: any;
 
   constructor() {
-    super(sessionIdMock, apiKeyMock, config.chat, loggerFactory);
+    super(sessionIdMock, config.chat, apiKeyMock, loggerFactory);
   }
 
   public onEvent(callback: any): void {

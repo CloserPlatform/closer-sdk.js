@@ -18,7 +18,7 @@ export class Session {
 
     logger.info(`Configuration: ${JSON.stringify(config)}`);
 
-    const artichokeAPI = new ArtichokeAPI(id, apiKey, config.chat, loggerFactory);
+    const artichokeAPI = new ArtichokeAPI(id, config.chat, apiKey, loggerFactory);
     const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, artichokeAPI);
 
     this.chat = new Artichoke(artichokeAPI, loggerFactory, rtcPoolRepository);
