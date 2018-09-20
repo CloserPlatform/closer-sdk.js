@@ -11,6 +11,7 @@ export interface URLConfig {
 
 export interface UserChatConfig extends URLConfig {
   rtc?: RTCConfig;
+  reconnectionDisabled?: boolean;
 }
 
 export interface ChatConfig extends URLConfig {
