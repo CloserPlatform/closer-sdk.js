@@ -36,7 +36,7 @@ class APIMock extends ArtichokeAPI {
   public onCandidate: (callId: ID, peer: ID, candidate: RTCIceCandidate) => void;
 
   constructor() {
-    super(sessionIdMock, apiKeyMock, config.chat, loggerFactory);
+    super(sessionIdMock, config.chat, apiKeyMock, loggerFactory);
   }
 
   public sendDescription(callId: ID, sessionId: ID, description: RTCSessionDescriptionInit): Promise<void> {

@@ -6,8 +6,30 @@ import { AuthSession } from '../login/login.service';
 import { UrlService } from '../url.service';
 import { CallHandler } from '../call';
 import { Page } from '../page';
+import { CommunicatorReconnectionService } from './reconnection.service';
+import { ReplaySubject } from 'rxjs/internal/ReplaySubject';
+import { Subject } from 'rxjs/internal/Subject';
 
 export class SessionService {
+
+  // Connection Events
+  private readonly connectionEstablishedEvent = new ReplaySubject<void>(1);
+  private readonly connectionLostEvent = new Subject<void>();
+
+  // Internal events
+  private readonly connectionErrorEvent = new Subject<void>();
+
+  private readonly communicatorReconnectionService: CommunicatorReconnectionService;
+
+  constructor() {
+    const reconnectionTimeout = 1000;
+    this.communicatorReconnectionService = new CommunicatorReconnectionService(
+      reconnectionTimeout,
+      this.connectionEstablishedEvent,
+      this.connectionLostEvent,
+      this.connectionErrorEvent
+    );
+  }
 
   public connect = (session: AuthSession, artichokeServer: string, authServer: string): Promise<RatelSDK.Session> => {
     const chatUrl = UrlService.getURL(artichokeServer);
@@ -56,17 +78,17 @@ export class SessionService {
 
     session.chat.error$.subscribe(error => {
       Logger.log('An error has occured: ', error);
+      this.connectionErrorEvent.next();
     });
 
     session.chat.disconnect$.subscribe(close => {
       Page.setHeader(`Disconnected`);
       Logger.log('Session disconnected: ', close);
-      alert('Diconnected from artichoke, click to reload demo app');
-      // window.location.reload();
     });
 
     session.chat.serverUnreachable$.subscribe(() => {
       Logger.log('Server unreachable');
+      this.connectionLostEvent.next();
     });
 
     session.chat.roomCreated$.subscribe(m => {
@@ -83,6 +105,7 @@ export class SessionService {
 
     session.chat.connect$.subscribe(hello => {
       Page.setHeader(`Connected as ${session.id} with deviceId: ${hello.deviceId}`);
+      this.connectionEstablishedEvent.next();
       Logger.log('Connected to Artichoke!', hello);
     });
 
@@ -92,6 +115,8 @@ export class SessionService {
     });
 
     session.chat.connect();
+    const chat = session.chat;
+    this.communicatorReconnectionService.enableReconnection(chat.connect.bind(chat));
     Page.setHeader(`Connecting..`);
 
     return session;
