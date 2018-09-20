@@ -1,6 +1,6 @@
 {
   "name": "ratel-sdk-js",
-  "version": "0.8.8",
+  "version": "0.8.9",
   "repository": "https://git.contactis.pl/ratel/ratel-sdk-js",
   "description": "Ratel JavaScript SDK",
   "main": "dist/ratel-sdk.js",
