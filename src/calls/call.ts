@@ -127,6 +127,14 @@ export abstract class Call implements wireEntities.Call {
     return this.artichokeApi.leaveCall(this.id, reason);
   }
 
+  public setAudioToggle(enabled: boolean, timestamp: proto.Timestamp): Promise<void> {
+    return this.artichokeApi.setAudioToggle(this.id, enabled, timestamp);
+  }
+
+  public setVideoToggle(enabled: boolean, timestamp: proto.Timestamp): Promise<void> {
+    return this.artichokeApi.setVideoToggle(this.id, enabled, timestamp);
+  }
+
   public get answered$(): Observable<callEvents.Answered> {
     return this.getCallEvent().pipe(filter(callEvents.Answered.isAnswered));
   }
@@ -161,6 +169,14 @@ export abstract class Call implements wireEntities.Call {
 
   protected getInvited$(): Observable<callEvents.Invited> {
     return this.getCallEvent().pipe(filter(callEvents.Invited.isInvited));
+  }
+
+  public get audioToggle$(): Observable<callEvents.AudioStreamToggled> {
+    return this.getCallEvent().pipe(filter(callEvents.AudioStreamToggled.isAudioStreamToggled));
+  }
+
+  public get videoToggle$(): Observable<callEvents.VideoStreamToggled> {
+    return this.getCallEvent().pipe(filter(callEvents.VideoStreamToggled.isVideoStreamToggled));
   }
 
   private getCallEvent = (): Observable<callEvents.CallEvent> =>
