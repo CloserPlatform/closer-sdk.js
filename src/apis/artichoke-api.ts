@@ -19,6 +19,7 @@ import { APIWithWebsocket } from './api-with-websocket';
 import { Observable, Subject } from 'rxjs';
 import { Callback } from '../utils/promise-utils';
 import { LoggerFactory } from '../logger/logger-factory';
+import { callCommand } from '../protocol/commands/call-commands';
 
 export class ArtichokeAPI extends APIWithWebsocket {
   protected url: string;
@@ -212,6 +213,14 @@ export class ArtichokeAPI extends APIWithWebsocket {
 
   public setMark(roomId: proto.ID, timestamp: proto.Timestamp): Promise<void> {
     return this.send(new roomCommand.SendMark(roomId, timestamp));
+  }
+
+  public setAudioToggle(callId: proto.ID, enabled: boolean, timestamp: proto.Timestamp): Promise<void> {
+    return this.send(new callCommand.AudioStreamToggle(callId, enabled, timestamp));
+  }
+
+  public setVideoToggle(callId: proto.ID, enabled: boolean, timestamp: proto.Timestamp): Promise<void> {
+    return this.send(new callCommand.VideoStreamToggle(callId, enabled, timestamp));
   }
 
   // Archive API:

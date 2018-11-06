@@ -183,4 +183,39 @@ export namespace callEvents {
     public static isDeviceOnline = (e: DomainEvent): e is DeviceOnline =>
       e.tag === DeviceOnline.tag
   }
+
+  export class AudioStreamToggled extends CallEvent {
+    public static readonly tag = 'audio_stream_toggled';
+
+    public readonly userId: string;
+    public readonly enabled: boolean;
+
+    constructor(callId: string, userId: string, enabled: boolean, timestamp: number) {
+      super(callId, timestamp, AudioStreamToggled.tag);
+
+      this.userId = userId;
+      this.enabled = enabled;
+    }
+
+    public static isAudioStreamToggled = (e: DomainEvent): e is AudioStreamToggled =>
+      e.tag === AudioStreamToggled.tag
+  }
+
+  export class VideoStreamToggled extends CallEvent {
+    public static readonly tag = 'video_stream_toggled';
+
+    public readonly userId: string;
+    public readonly enabled: boolean;
+
+    constructor(callId: string, userId: string, enabled: boolean, timestamp: number) {
+      super(callId, timestamp, VideoStreamToggled.tag);
+
+      this.userId = userId;
+      this.enabled = enabled;
+    }
+
+    public static isVideoStreamToggled = (e: DomainEvent): e is VideoStreamToggled =>
+      e.tag === VideoStreamToggled.tag
+  }
+
 }
