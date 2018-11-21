@@ -20,6 +20,7 @@ import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
 import { CallFactory } from '../calls/call-factory';
 import { RoomFactory } from '../rooms/room-factory';
 import { LoggerFactory } from '../logger/logger-factory';
+import { externalEvents } from '../protocol/events/external-events';
 
 export class Artichoke {
   private static heartbeatTimeoutMultiplier = 2;
@@ -80,6 +81,36 @@ export class Artichoke {
 
   public get callInvitation$(): Observable<callEvents.Invited> {
     return this.artichokeApi.event$.pipe(filter(callEvents.Invited.isInvited));
+  }
+
+  // External events API:
+  public get guestProfileUpdated$(): Observable<externalEvents.GuestProfileUpdated> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.GuestProfileUpdated.isGuestProfileUpdated));
+  }
+
+  public get lastMessageUpdated$(): Observable<externalEvents.LastMessageUpdated> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.LastMessageUpdated.isLastMessageUpdated));
+  }
+
+  public get notificationUpcomingMeeting$(): Observable<externalEvents.NotificationUpcomingMeeting> {
+    return this.artichokeApi.event$.pipe(
+      filter(externalEvents.NotificationUpcomingMeeting.isNotificationUpcomingMeeting));
+  }
+
+  public get presenceUpdated$(): Observable<externalEvents.PresenceUpdated> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.PresenceUpdated.isPresenceUpdated));
+  }
+
+  public get typingSent$(): Observable<externalEvents.TypingSent> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.TypingSent.isTypingSent));
+  }
+
+  public get unreadCountUpdated$(): Observable<externalEvents.UnreadCountUpdated> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.UnreadCountUpdated.isUnreadCountUpdated));
+  }
+
+  public get unreadTotalUpdated$(): Observable<externalEvents.UnreadTotalUpdated> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.UnreadTotalUpdated.isUnreadTotalUpdated));
   }
 
   // tslint:disable-next-line:no-any
