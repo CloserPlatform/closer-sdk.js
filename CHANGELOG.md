@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 0.8.12 - 2018-11-21
+
+### Added
+
+ * External events routed from `spinner`:
+   * `GuestProfileUpdated`
+   * `LastMessageUpdated`
+   * `NotificationUpcomingMeeting`
+   * `PresenceUpdated`
+   * `TypingSent`
+   * `UnreadCountUpdated`
+   * `UnreadTotalUpdated`
+
 ## 0.8.11 - 2018-11-06
 
 ### Added
