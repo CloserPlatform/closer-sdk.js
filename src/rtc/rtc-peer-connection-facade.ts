@@ -92,7 +92,7 @@ export class RTCPeerConnectionFacade {
 
   public replaceTrackByKind = (track: MediaStreamTrack): Promise<void> => {
     const maybeSender = this.rtcPeerConnection.getSenders()
-      .filter(sender => sender.track.kind === track.kind)[0];
+      .filter(sender => sender.track && sender.track.kind === track.kind)[0];
     if (maybeSender) {
       this.logger.debug(`Sender found, replacing track with ${track.id}`);
 
