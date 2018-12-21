@@ -1,5 +1,6 @@
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
+// tslint:disable:max-file-line-count
 import { DomainEvent } from './domain-event';
 
 export namespace externalEvents {
@@ -12,6 +13,110 @@ export namespace externalEvents {
     protected constructor(tag: string) {
       this.tag = tag;
     }
+  }
+
+  export class AllFollowersRemoved extends ExternalEvent {
+    public static readonly tag = 'all_followers_removed';
+
+    public readonly roomId: string;
+
+    constructor(roomId: string) {
+      super(AllFollowersRemoved.tag);
+      this.roomId = roomId;
+    }
+
+    public static isAllFollowersRemoved = (e: DomainEvent): e is AllFollowersRemoved =>
+    e.tag === AllFollowersRemoved.tag
+  }
+
+  export class AssigneeChanged extends ExternalEvent {
+    public static readonly tag = 'assignee_changed';
+
+    public readonly adviserId: string;
+    public readonly roomId: string;
+
+    constructor(adviserId: string, roomId: string) {
+      super(AssigneeChanged.tag);
+      this.adviserId = adviserId;
+      this.roomId = roomId;
+    }
+
+    public static isAssigneeChanged = (e: DomainEvent): e is AssigneeChanged =>
+    e.tag === AssigneeChanged.tag
+  }
+
+  export class AssigneeRemoved extends ExternalEvent {
+    public static readonly tag = 'assignee_removed';
+
+    public readonly adviserId: string;
+    public readonly roomId: string;
+
+    constructor(adviserId: string, roomId: string) {
+      super(AssigneeRemoved.tag);
+      this.adviserId = adviserId;
+      this.roomId = roomId;
+    }
+
+    public static isAssigneeRemoved = (e: DomainEvent): e is AssigneeRemoved =>
+    e.tag === AssigneeRemoved.tag
+  }
+
+  export enum ConversationStatus {
+    Waiting = 'waiting',
+    InProgress = 'inProgress',
+    Solved = 'solved',
+    Unsolved = 'unsolved'
+  }
+
+  export class ConversationStatusChanged extends ExternalEvent {
+    public static readonly tag = 'conversation_status_changed';
+
+    public readonly roomId: string;
+    public readonly status: ConversationStatus;
+
+    public readonly adviserId?: string;
+
+    constructor(roomId: string, status: ConversationStatus, adviserId?: string) {
+      super(ConversationStatusChanged.tag);
+      this.roomId = roomId;
+      this.status = status;
+      this.adviserId = adviserId;
+    }
+
+    public static isConversationStatusChanged = (e: DomainEvent): e is ConversationStatusChanged =>
+    e.tag === ConversationStatusChanged.tag
+  }
+
+  export class FollowerAdded extends ExternalEvent {
+    public static readonly tag = 'follower_added';
+
+    public readonly adviserId: string;
+    public readonly roomId: string;
+
+    constructor(adviserId: string, roomId: string) {
+      super(FollowerAdded.tag);
+      this.adviserId = adviserId;
+      this.roomId = roomId;
+    }
+
+    public static isFollowerAdded = (e: DomainEvent): e is FollowerAdded =>
+    e.tag === FollowerAdded.tag
+  }
+
+  export class FollowerRemoved extends ExternalEvent {
+    public static readonly tag = 'follower_removed';
+
+    public readonly adviserId: string;
+    public readonly roomId: string;
+
+    constructor(adviserId: string, roomId: string) {
+      super(FollowerRemoved.tag);
+      this.adviserId = adviserId;
+      this.roomId = roomId;
+    }
+
+    public static isFollowerRemoved = (e: DomainEvent): e is FollowerRemoved =>
+    e.tag === FollowerRemoved.tag
   }
 
   export class BackOfficeField {
@@ -86,6 +191,72 @@ export namespace externalEvents {
 
     public static isLastMessageUpdated = (e: DomainEvent): e is LastMessageUpdated =>
       e.tag === LastMessageUpdated.tag
+  }
+
+  export class MeetingCancelled extends ExternalEvent {
+    public static readonly tag = 'meeting_cancelled';
+
+    public readonly adviserId: string;
+    public readonly duration: number;
+    public readonly meetingId: string;
+    public readonly roomId: string;
+    public readonly start: number;
+
+    constructor(adviserId: string, duration: number, meetingId: string, roomId: string, start: number) {
+      super(MeetingCancelled.tag);
+      this.adviserId = adviserId;
+      this.duration = duration;
+      this.meetingId = meetingId;
+      this.roomId = roomId;
+      this.start = start;
+    }
+
+    public static isMeetingCancelled = (e: DomainEvent): e is MeetingCancelled =>
+    e.tag === MeetingCancelled.tag
+  }
+
+  export class MeetingRescheduled extends ExternalEvent {
+    public static readonly tag = 'meeting_rescheduled';
+
+    public readonly adviserId: string;
+    public readonly duration: number;
+    public readonly meetingId: string;
+    public readonly roomId: string;
+    public readonly start: number;
+
+    constructor(adviserId: string, duration: number, meetingId: string, roomId: string, start: number) {
+      super(MeetingRescheduled.tag);
+      this.adviserId = adviserId;
+      this.duration = duration;
+      this.meetingId = meetingId;
+      this.roomId = roomId;
+      this.start = start;
+    }
+
+    public static isMeetingRescheduled = (e: DomainEvent): e is MeetingRescheduled =>
+    e.tag === MeetingRescheduled.tag
+  }
+
+  export class MeetingScheduled extends ExternalEvent {
+    public static readonly tag = 'meeting_scheduled';
+
+    public readonly adviserId: string;
+    public readonly duration: number;
+    public readonly meetingId: string;
+    public readonly roomId: string;
+    public readonly start: number;
+
+    constructor(adviserId: string, duration: number, meetingId: string, roomId: string, start: number) {
+      super(MeetingScheduled.tag);
+      this.adviserId = adviserId;
+      this.duration = duration;
+      this.meetingId = meetingId;
+      this.roomId = roomId;
+      this.start = start;
+    }
+
+    public static isMeetingScheduled = (e: DomainEvent): e is MeetingScheduled =>
+    e.tag === MeetingScheduled.tag
   }
 
   export class UpcomingMeeting {

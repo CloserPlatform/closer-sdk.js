@@ -1,3 +1,4 @@
+// tslint:disable:max-file-line-count
 import { serverCommands } from '../protocol/commands/server-command';
 import { callEvents } from '../protocol/events/call-events';
 import { errorEvents } from '../protocol/events/error-events';
@@ -84,12 +85,48 @@ export class Artichoke {
   }
 
   // External events API:
+  public get allFollowersRemoved$(): Observable<externalEvents.AllFollowersRemoved> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.AllFollowersRemoved.isAllFollowersRemoved));
+  }
+
+  public get assigneeChanged$(): Observable<externalEvents.AssigneeChanged> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.AssigneeChanged.isAssigneeChanged));
+  }
+
+  public get assigneeRemoved$(): Observable<externalEvents.AssigneeRemoved> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.AssigneeRemoved.isAssigneeRemoved));
+  }
+
+  public get conversationStatusChanged$(): Observable<externalEvents.ConversationStatusChanged> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.ConversationStatusChanged.isConversationStatusChanged));
+  }
+
+  public get followerAdded$(): Observable<externalEvents.FollowerAdded> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.FollowerAdded.isFollowerAdded));
+  }
+
+  public get followerRemoved$(): Observable<externalEvents.FollowerRemoved> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.FollowerRemoved.isFollowerRemoved));
+  }
+
   public get guestProfileUpdated$(): Observable<externalEvents.GuestProfileUpdated> {
     return this.artichokeApi.event$.pipe(filter(externalEvents.GuestProfileUpdated.isGuestProfileUpdated));
   }
 
   public get lastMessageUpdated$(): Observable<externalEvents.LastMessageUpdated> {
     return this.artichokeApi.event$.pipe(filter(externalEvents.LastMessageUpdated.isLastMessageUpdated));
+  }
+
+  public get meetingCancelled$(): Observable<externalEvents.MeetingCancelled> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.MeetingCancelled.isMeetingCancelled));
+  }
+
+  public get meetingRescheduled$(): Observable<externalEvents.MeetingRescheduled> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.MeetingRescheduled.isMeetingRescheduled));
+  }
+
+  public get meetingScheduled$(): Observable<externalEvents.MeetingScheduled> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.MeetingScheduled.isMeetingScheduled));
   }
 
   public get notificationUpcomingMeeting$(): Observable<externalEvents.NotificationUpcomingMeeting> {
