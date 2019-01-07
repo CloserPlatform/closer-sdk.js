@@ -1,0 +1,3 @@
+### Fixed
+
+ * LastMessageUpdated field names.

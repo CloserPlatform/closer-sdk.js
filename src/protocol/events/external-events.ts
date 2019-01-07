@@ -176,17 +176,17 @@ export namespace externalEvents {
   export class LastMessageUpdated extends ExternalEvent {
     public static readonly tag = 'last_message_updated';
 
-    public readonly message: string;
+    public readonly body: string;
     public readonly roomId: string;
-    public readonly senderId: string;
+    public readonly userId: string;
     public readonly timestamp: number;
 
-    constructor(message: string, roomId: string, senderId: string, timestamp: number) {
+    constructor(body: string, roomId: string, timestamp: number, userId: string) {
       super(LastMessageUpdated.tag);
-      this.message = message;
+      this.body = body;
       this.roomId = roomId;
-      this.senderId = senderId;
       this.timestamp = timestamp;
+      this.userId = userId;
     }
 
     public static isLastMessageUpdated = (e: DomainEvent): e is LastMessageUpdated =>
