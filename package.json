@@ -80,6 +80,6 @@
     "webpack": "^3.8.1"
   },
   "publishConfig": {
-    "registry": "https://nexus.contactis.pl/repository/npm-internal"
+    "registry": "https://nexus.ratel.io/repository/npm-internal/"
   }
 }
