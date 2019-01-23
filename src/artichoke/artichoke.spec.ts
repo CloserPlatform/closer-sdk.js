@@ -1,5 +1,5 @@
 import { Artichoke } from './artichoke';
-import { apiKeyMock, config, deviceIdMock, loggerFactory, sessionIdMock } from '../test-utils';
+import { apiKeyMock, config, deviceIdMock, loggerFactory, sessionIdMock, WebRTCStatsMock } from '../test-utils';
 import { callEvents } from '../protocol/events/call-events';
 import { errorEvents } from '../protocol/events/error-events';
 import { roomEvents } from '../protocol/events/room-events';
@@ -41,12 +41,14 @@ class APIMock extends ArtichokeAPI {
 
 describe('Artichoke', () => {
   let api: APIMock;
+  let webrtcStats: WebRTCStatsMock;
   let chat: Artichoke;
   let rtcPoolRepository: RTCPoolRepository;
 
   beforeEach(() => {
     api = new APIMock();
-    rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, api);
+    webrtcStats = new WebRTCStatsMock();
+    rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, api, webrtcStats);
     chat = new Artichoke(api, loggerFactory, rtcPoolRepository);
   });
 
