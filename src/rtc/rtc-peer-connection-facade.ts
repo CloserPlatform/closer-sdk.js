@@ -7,6 +7,9 @@ import { DataChannel, DataChannelMessage } from './data-channel';
 import { LoggerFactory } from '../logger/logger-factory';
 import { LoggerService } from '../logger/logger-service';
 import { PeerCandidateQueue } from './peer-candidate-queue';
+import { WebRTCStats } from './stats/webrtc-stats';
+import { WebRTCStatsCollector } from './stats/webrtc-stats-collector';
+import { NoopCollector } from './stats/noop-collector';
 
 export enum ConnectionStatus {
   Failed,
@@ -19,6 +22,8 @@ export class RTCPeerConnectionFacade {
 
   private rtcPeerConnection: RTCPeerConnection;
   private dataChannel: DataChannel;
+
+  private statsCollector: WebRTCStatsCollector = new NoopCollector();
 
   // FIXME Required by the various hacks:
   private renegotiationTimer: number;
@@ -35,11 +40,13 @@ export class RTCPeerConnectionFacade {
               private onStatusChange: (status: ConnectionStatus) => void,
               onDataChannelMessage: (msg: DataChannelMessage) => void,
               initialMediaTracks: ReadonlyArray<MediaStreamTrack>,
+              webrtcStats: WebRTCStats,
               private answerOptions?: RTCAnswerOptions,
               private offerOptions?: RTCOfferOptions) {
     this.logger = loggerFactory.create(`RTCPeerConnectionFacade Call(${callId}) Peer(${peerId})`);
     this.logger.info('Creating the connection');
     this.rtcPeerConnection = new RTCPeerConnection(config);
+    this.statsCollector = webrtcStats.createCollector(this.rtcPeerConnection, callId, peerId);
     initialMediaTracks.forEach(track => this.addTrack(track));
     this.dataChannel = new DataChannel(callId, this.rtcPeerConnection, onDataChannelMessage, loggerFactory);
     this.candidateQueue = new PeerCandidateQueue(callId, loggerFactory);
@@ -80,7 +87,10 @@ export class RTCPeerConnectionFacade {
     if (this.isRemoteSDPset) {
       this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit))
         .then(_ => this.logger.debug('Candidate successfully added'))
-        .catch(err => this.logger.error('Could not add candidate: ', err));
+        .catch(err => {
+          this.logger.error('Could not add candidate: ', err);
+          this.statsCollector.reportError('addIceCandidate', err);
+        });
     } else {
       this.candidateQueue.addCandidate(candidate);
     }
@@ -107,6 +117,10 @@ export class RTCPeerConnectionFacade {
     this.logger.debug('Received an RTC offer - calling setRemoteDescription');
 
     this.setRemoteDescription(remoteDescription)
+      .catch(err => {
+        this.statsCollector.reportError('setRemoteDescription', err);
+        throw err;
+      })
       .then(_descr => {
         this.logger.debug('RTC offer was successfully set');
 
@@ -136,6 +150,10 @@ export class RTCPeerConnectionFacade {
     this.dataChannel.createConnection();
 
     this.rtcPeerConnection.createOffer(options || this.offerOptions)
+      .catch(err => {
+        this.statsCollector.reportError('createOffer', err);
+        throw err;
+      })
       .then(offer => this.setLocalDescription(offer))
       .then(offer => this.artichokeApi.sendDescription(this.callId, this.peerId, offer).then(_ => offer))
       .then(offer => {
@@ -155,6 +173,10 @@ export class RTCPeerConnectionFacade {
     this.dataChannel.createConnection();
 
     return this.rtcPeerConnection.createAnswer(options || this.answerOptions)
+      .catch(err => {
+        this.statsCollector.reportError('createAnswer', err);
+        throw err;
+      })
       .then(answer => {
         this.logger.debug('Created an RTC answer');
 
@@ -179,13 +201,21 @@ export class RTCPeerConnectionFacade {
     this.isRemoteSDPset = true;
     this.candidateQueue.drainCandidates().forEach(candidate =>
       this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit))
-        .catch(err => this.logger.error('Could not add candidate: ', err)));
+        .catch(err => {
+          this.logger.error('Could not add candidate: ', err);
+          this.statsCollector.reportError('addIceCandidate', err);
+        }));
   }
 
   private setLocalDescription = (localDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> => {
     this.logger.debug('Setting local RTC description.');
 
-    return this.rtcPeerConnection.setLocalDescription(localDescription).then(() => localDescription);
+    return this.rtcPeerConnection.setLocalDescription(localDescription)
+      .then(() => localDescription)
+      .catch((err) => {
+        this.statsCollector.reportError('setLocalDescription', err);
+        throw err;
+      });
   }
 
   private isEstablished(): boolean {
@@ -274,6 +304,8 @@ export class RTCPeerConnectionFacade {
   private notifyStatusChange = (iceConnectionState: RTCIceConnectionState): void => {
     switch (iceConnectionState) {
       case 'failed':
+        this.statsCollector.reportError('iceConnectionFailure');
+
         return this.onStatusChange(ConnectionStatus.Failed);
       case 'connected':
         return this.onStatusChange(ConnectionStatus.Connected);

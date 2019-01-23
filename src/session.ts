@@ -6,6 +6,7 @@ import { ArtichokeAPI } from './apis/artichoke-api';
 import { RTCPoolRepository } from './rtc/rtc-pool-repository';
 import { LogLevel } from './logger/log-level';
 import { LoggerFactory } from './logger/logger-factory';
+import { WebRTCStats } from './rtc/stats/webrtc-stats';
 
 export class Session {
   public readonly chat: Artichoke;
@@ -19,7 +20,8 @@ export class Session {
     logger.info(`Configuration: ${JSON.stringify(config)}`);
 
     const artichokeAPI = new ArtichokeAPI(id, config.chat, apiKey, loggerFactory);
-    const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, artichokeAPI);
+    const webrtcStats = new WebRTCStats(config.chat.callstats, id, loggerFactory.create('WebRTCStats'), loggerFactory);
+    const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, artichokeAPI, webrtcStats);
 
     this.chat = new Artichoke(artichokeAPI, loggerFactory, rtcPoolRepository);
   }
