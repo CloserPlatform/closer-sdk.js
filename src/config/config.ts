@@ -9,14 +9,21 @@ export interface URLConfig {
   port?: string;
 }
 
+export interface CallstatsConfig {
+  appId: string;
+  appSecret: string;
+}
+
 export interface UserChatConfig extends URLConfig {
   rtc?: RTCConfig;
   reconnectionDisabled?: boolean;
+  callstats?: CallstatsConfig;
 }
 
 export interface ChatConfig extends URLConfig {
   rtc: RTCConfig;
   reconnectionDisabled: boolean;
+  callstats?: CallstatsConfig;
 }
 
 // tslint:disable-next-line:no-empty-interface

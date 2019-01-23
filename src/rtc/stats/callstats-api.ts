@@ -39,7 +39,7 @@ export interface FabricAttributes {
   ;
 }
 
-type CSError =
+export type CSError =
   'httpError' | // HTTP error, the csErrMsg string is reported by the browser.
   'authError' | // Authentication failed, AppID or AppSecret is incorrect.
   'wsChannelFailure' | // Connection failed, could not connect to callstats.io over WebSockets.
