@@ -46,3 +46,16 @@ For now, the solution is to add both tracks (audio&video) before the first sdp o
 * rtcpMuxPolicy `negotiate` is not supported by Edge - use `require` instead 
 * negotiationNeededDisabled turn on to disable in call renegotiation (which does't work between Chrome&Safari)
 * Call broadcast & message event is based on RtcDataChannel which is not supported by Edge - check BrowserUtils.isBrowserSupported docs
+
+## Callstats
+To enable Callstats:
+* pass proper configuration
+```
+callstats: {
+  appId: 'your-app-id',
+  appSecret: 'your-app-secret'
+}
+```
+* ensure that Callstats library is properly loaded
+  * web: https://docs.callstats.io/javascript/#step-1-include-callstats-js
+  * React Native: https://www.npmjs.com/package/react-native-callstats

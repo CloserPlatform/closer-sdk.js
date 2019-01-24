@@ -56,7 +56,7 @@ export interface CallstatsApi {
   initialize(
     // application ID is obtained from callstats.io
     appId: string,
-    // application ID is obtained from callstats.io
+    // application secret is obtained from callstats.io
     appSecret: string,
     // it is provided by the developer and MUST NOT be null or empty
     localUserId: string | {
