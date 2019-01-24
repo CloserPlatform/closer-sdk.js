@@ -5,6 +5,9 @@ import { Config, load } from './config/config';
 import { LoggerService } from './logger/logger-service';
 import { LogLevel } from './logger/log-level';
 import { LoggerFactory } from './logger/logger-factory';
+import { NoopCollector } from './rtc/stats/noop-collector';
+import { WebRTCStats } from './rtc/stats/webrtc-stats';
+import { WebRTCStatsCollector } from './rtc/stats/webrtc-stats-collector';
 
 export const log = new LoggerService(LogLevel.WARN);
 export const loggerFactory = new LoggerFactory(LogLevel.WARN);
@@ -55,3 +58,13 @@ export const logError = (done: DoneFn): (err: any) => void =>
     }
     done.fail();
   };
+
+export class WebRTCStatsMock extends WebRTCStats {
+  constructor() {
+    super(undefined, sessionIdMock, log, loggerFactory);
+  }
+
+  public createCollector(): WebRTCStatsCollector {
+    return new NoopCollector();
+  }
+}

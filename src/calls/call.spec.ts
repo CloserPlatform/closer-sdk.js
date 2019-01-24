@@ -2,7 +2,16 @@
 // tslint:disable:no-let
 import { Call } from './call';
 import {
-  apiKeyMock, config, deviceIdMock, getStream, isWebRTCSupported, log, loggerFactory, sessionIdMock, whenever
+  apiKeyMock,
+  config,
+  deviceIdMock,
+  getStream,
+  isWebRTCSupported,
+  log,
+  loggerFactory,
+  sessionIdMock,
+  WebRTCStatsMock,
+  whenever
 } from '../test-utils';
 import { callEvents } from '../protocol/events/call-events';
 import { ID } from '../protocol/protocol';
@@ -134,12 +143,14 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
 ['DirectCall', 'GroupCall'].forEach((d) => {
   describe(d, () => {
     let api: APIMock;
+    let webrtcStats: WebRTCStatsMock;
     let call: Call;
     let callFactory: CallFactory;
 
     beforeEach(() => {
       api = new APIMock(sessionIdMock);
-      const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, api);
+      webrtcStats = new WebRTCStatsMock();
+      const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, api, webrtcStats);
       callFactory = new CallFactory(loggerFactory, api, rtcPoolRepository);
       const callType = d === 'DirectCall' ? CallType.DIRECT : CallType.GROUP;
       call = callFactory.create(makeCall(callType));
@@ -147,7 +158,8 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
 
     it('for creator should create RTC connection with old users in call', (done) => {
       const apiMock = new APIMock(aliceSessionId);
-      const rtcPoolRepo = new RTCPoolRepository(config.chat.rtc, loggerFactory, apiMock);
+      const webrtcStatsMock = new WebRTCStatsMock();
+      const rtcPoolRepo = new RTCPoolRepository(config.chat.rtc, loggerFactory, apiMock, webrtcStatsMock);
       const callFactory2 = new CallFactory(loggerFactory, apiMock, rtcPoolRepo);
       spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([aliceSessionId, bob, chad, david]));
 
@@ -172,7 +184,8 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
 
     it('for not creator should not create RTC connection with old users in call', (done) => {
       const apiMock = new APIMock(bob);
-      const rtcPoolRepo = new RTCPoolRepository(config.chat.rtc, loggerFactory, apiMock);
+      const webrtcStatsMock = new WebRTCStatsMock();
+      const rtcPoolRepo = new RTCPoolRepository(config.chat.rtc, loggerFactory, apiMock, webrtcStatsMock);
       const callFactory2 = new CallFactory(loggerFactory, apiMock, rtcPoolRepo);
       spyOn(apiMock, 'getCallUsers').and.returnValue(Promise.resolve([aliceSessionId, bob, chad, david]));
       spyOn(RTCPool.prototype, 'connect').and.callFake((_u: string) => done.fail());
@@ -374,11 +387,13 @@ const makeGroupCall = (creator: ID, users: ReadonlyArray<ID>): ProtoCall =>
 
 describe('GroupCall', () => {
   let api: APIMock;
+  let webrtcStats: WebRTCStatsMock;
   let call: GroupCall;
 
   beforeEach(() => {
     api = new APIMock(sessionIdMock);
-    const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, api);
+    webrtcStats = new WebRTCStatsMock();
+    const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, api, webrtcStats);
     const callFactory = new CallFactory(loggerFactory, api, rtcPoolRepository);
     call = callFactory.create(makeCall(CallType.GROUP)) as GroupCall;
   });
@@ -422,7 +437,8 @@ describe('GroupCall', () => {
 
 describe('DirectCall, GroupCall', () => {
   const api = new APIMock(sessionIdMock);
-  const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, api);
+  const webrtcStats = new WebRTCStatsMock();
+  const rtcPoolRepository = new RTCPoolRepository(config.chat.rtc, loggerFactory, api, webrtcStats);
   const callFactory = new CallFactory(loggerFactory, api, rtcPoolRepository);
 
   it('should have proper callType field defined', () => {

@@ -1,7 +1,7 @@
 // tslint:disable:max-file-line-count
 // tslint:disable:no-let
 import {
-  apiKeyMock, config, getStream, isWebRTCSupported, log, logError, loggerFactory, sessionIdMock,
+  apiKeyMock, config, getStream, isWebRTCSupported, log, logError, loggerFactory, sessionIdMock, WebRTCStatsMock,
   whenever
 } from '../test-utils';
 import { ID } from '../protocol/protocol';
@@ -60,10 +60,12 @@ class APIMock extends ArtichokeAPI {
 describe('RTCPool', () => {
   let api: APIMock;
   let pool: RTCPool;
+  let webrtcStats: WebRTCStatsMock;
 
   beforeEach(() => {
     api = new APIMock();
-    pool = new RTCPool(callIdMock, config.chat.rtc, loggerFactory, api);
+    webrtcStats = new WebRTCStatsMock();
+    pool = new RTCPool(callIdMock, config.chat.rtc, loggerFactory, api, webrtcStats);
   });
 
   whenever(isWebRTCSupported())('should create an RTC connection', (done) => {

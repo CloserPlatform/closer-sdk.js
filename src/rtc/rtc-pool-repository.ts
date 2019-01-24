@@ -4,6 +4,7 @@ import { RTCPool } from './rtc-pool';
 import * as proto from '../protocol/protocol';
 import { LoggerFactory } from '../logger/logger-factory';
 import { LoggerService } from '../logger/logger-service';
+import { WebRTCStats } from './stats/webrtc-stats';
 
 export class RTCPoolRepository {
 
@@ -13,7 +14,8 @@ export class RTCPoolRepository {
 
   constructor(private rtcConfig: RTCConfig,
               private loggerFactory: LoggerFactory,
-              private artichokeApi: ArtichokeAPI) {
+              private artichokeApi: ArtichokeAPI,
+              private webrtcStats: WebRTCStats) {
     this.logger = loggerFactory.create('RTCPoolRepository');
   }
 
@@ -22,7 +24,13 @@ export class RTCPoolRepository {
 
     if (!rtcPool) {
       this.logger.debug(`creating RTCPool for call ${callId}`);
-      this.rtcPools[callId] = new RTCPool(callId, this.rtcConfig, this.loggerFactory, this.artichokeApi);
+      this.rtcPools[callId] = new RTCPool(
+        callId,
+        this.rtcConfig,
+        this.loggerFactory,
+        this.artichokeApi,
+        this.webrtcStats
+      );
     }
 
     return this.rtcPools[callId];

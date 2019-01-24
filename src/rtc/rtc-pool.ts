@@ -8,6 +8,7 @@ import { filter } from 'rxjs/operators';
 import { DataChannelMessage } from './data-channel';
 import { LoggerFactory } from '../logger/logger-factory';
 import { LoggerService } from '../logger/logger-service';
+import { WebRTCStats } from './stats/webrtc-stats';
 
 export interface RemoteTrack {
   peerId: ID;
@@ -39,7 +40,8 @@ export class RTCPool {
   constructor(private callId: ID,
               private rtcConfig: RTCConfig,
               private loggerFactory: LoggerFactory,
-              private artichokeApi: ArtichokeAPI) {
+              private artichokeApi: ArtichokeAPI,
+              private webrtcStats: WebRTCStats) {
 
     this.logger = loggerFactory.create(`RTCPool(${callId})`);
 
@@ -177,6 +179,7 @@ export class RTCPool {
       this.getConnectionStatusEventHandler(peerId),
       this.getDataChannelEventHandler(peerId),
       this.tracks,
+      this.webrtcStats,
       this.answerOptions, this.offerOptions);
   }
 }
