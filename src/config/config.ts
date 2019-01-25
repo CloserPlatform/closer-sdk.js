@@ -12,6 +12,7 @@ export interface URLConfig {
 export interface CallstatsConfig {
   appId: string;
   appSecret: string;
+  appVersion?: string;
 }
 
 export interface UserChatConfig extends URLConfig {

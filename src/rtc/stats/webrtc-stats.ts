@@ -37,6 +37,8 @@ export class WebRTCStats {
       this.sessionId,
       (csError: CSError, csErrMsg: string) =>
         this.logger.info(`Callstats initialization finished with ${csError} (${csErrMsg})`),
+      undefined,
+      { applicationVersion: callstatsConfig.appVersion || undefined },
     );
     this.callstats = callstats;
   }
