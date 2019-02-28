@@ -46,7 +46,8 @@ import { roomEvents } from './protocol/events/room-events';
 import { rtcEvents } from './protocol/events/rtc-events';
 import { serverEvents } from './protocol/events/server-events';
 import { externalEvents } from './protocol/events/external-events';
+import { customEvents } from './protocol/events/custom-events';
 import * as protocol from './protocol/protocol';
 
-export { callEvents, chatEvents, errorEvents, roomEvents, rtcEvents,
+export { callEvents, chatEvents, errorEvents, roomEvents, rtcEvents, customEvents,
   serverEvents, externalEvents, protocol };
