@@ -103,14 +103,14 @@ export namespace roomEvents {
       e.tag === MessageSent.tag
   }
 
-  export class CustomMessageSent extends RoomEvent {
+  export class CustomMessageSent<C = any> extends RoomEvent {
     public static readonly tag = 'room_custom_message_sent';
     public readonly subtag: string;
     public readonly message: string;
     public readonly messageId: string;
-    public readonly context: any;
+    public readonly context: C;
 
-    constructor(roomId: string, authorId: string, message: string, messageId: string, subtag: string, context: any,
+    constructor(roomId: string, authorId: string, message: string, messageId: string, subtag: string, context: C,
                 timestamp: number) {
       super(roomId, authorId, timestamp, CustomMessageSent.tag);
 

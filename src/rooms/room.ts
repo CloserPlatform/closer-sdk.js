@@ -7,6 +7,7 @@ import { RoomType } from './room-type';
 import { Observable, Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { LoggerService } from '../logger/logger-service';
+import { customEvents } from '../protocol/events/custom-events';
 
 export abstract class Room implements wireEntities.Room {
     private static defaultRoomCount = 100;
@@ -107,8 +108,9 @@ export abstract class Room implements wireEntities.Room {
         return this.roomEvent.pipe(filter(roomEvents.TypingSent.isTypingSent));
     }
 
-    public getCustomMessageStream(subtag: string): Observable<roomEvents.CustomMessageSent> {
-      return this.customMessage$.pipe(filter(ev => ev.subtag === subtag));
+    // tslint:disable-next-line:no-any max-line-length
+    public getCustomMessageStream<T extends string>(subtag: T): Observable<roomEvents.CustomMessageSent<T extends customEvents.Subtag ? customEvents.Context[T] : any>> {
+        return this.customMessage$.pipe(filter(ev => ev.subtag === subtag));
     }
 
     private doGetHistory(p: Promise<proto.Paginated<roomEvents.RoomEvent>>):
