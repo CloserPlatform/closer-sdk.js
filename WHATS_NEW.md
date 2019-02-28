@@ -1,2 +1,0 @@
-### Fixed
-- export customEvents namespace
