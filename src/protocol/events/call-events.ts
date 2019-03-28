@@ -3,6 +3,7 @@
 // tslint:disable:max-classes-per-file
 // tslint:disable:ban-types
 
+import { VideoContentType } from '../protocol';
 import { DomainEvent } from './domain-event';
 
 export namespace callEvents {
@@ -206,12 +207,14 @@ export namespace callEvents {
 
     public readonly userId: string;
     public readonly enabled: boolean;
+    public readonly content?: VideoContentType;
 
-    constructor(callId: string, userId: string, enabled: boolean, timestamp: number) {
+    constructor(callId: string, userId: string, enabled: boolean, timestamp: number, contentType?: VideoContentType) {
       super(callId, timestamp, VideoStreamToggled.tag);
 
       this.userId = userId;
       this.enabled = enabled;
+      this.content = contentType;
     }
 
     public static isVideoStreamToggled = (e: DomainEvent): e is VideoStreamToggled =>

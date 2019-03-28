@@ -1,6 +1,7 @@
 // tslint:disable:no-any
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
+import { VideoContentType } from '../protocol';
 import { DomainCommand } from './domain-command';
 
 export namespace callCommand {
@@ -35,11 +36,13 @@ export namespace callCommand {
 
     public readonly enabled: boolean;
     public readonly timestamp: number;
+    public readonly content?: VideoContentType;
 
-    constructor(callId: string, enabled: boolean, timestamp: number) {
+    constructor(callId: string, enabled: boolean, timestamp: number, contentType?: VideoContentType) {
       super(callId, VideoStreamToggle.tag);
       this.enabled = enabled;
       this.timestamp = timestamp;
+      this.content = contentType;
     }
   }
 
