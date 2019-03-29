@@ -11,7 +11,7 @@ import { serverEvents } from '../protocol/events/server-events';
 import { CallReason } from './call-reason';
 import { chatEvents } from '../protocol/events/chat-events';
 // tslint:disable-next-line:no-duplicate-imports
-import { PushRegistration } from '../protocol/protocol';
+import { PushRegistration, VideoContentType } from '../protocol/protocol';
 import { ApiHeaders } from './api-headers';
 import { callEvents } from '../protocol/events/call-events';
 import { roomCommand } from '../protocol/commands/room-commands';
@@ -219,8 +219,11 @@ export class ArtichokeAPI extends APIWithWebsocket {
     return this.send(new callCommand.AudioStreamToggle(callId, enabled, timestamp));
   }
 
-  public setVideoToggle(callId: proto.ID, enabled: boolean, timestamp: proto.Timestamp): Promise<void> {
-    return this.send(new callCommand.VideoStreamToggle(callId, enabled, timestamp));
+  public setVideoToggle(callId: proto.ID,
+                        enabled: boolean,
+                        timestamp: proto.Timestamp,
+                        content?: VideoContentType): Promise<void> {
+    return this.send(new callCommand.VideoStreamToggle(callId, enabled, timestamp, content));
   }
 
   // Archive API:

@@ -131,8 +131,8 @@ export abstract class Call implements wireEntities.Call {
     return this.artichokeApi.setAudioToggle(this.id, enabled, timestamp);
   }
 
-  public setVideoToggle(enabled: boolean, timestamp: proto.Timestamp): Promise<void> {
-    return this.artichokeApi.setVideoToggle(this.id, enabled, timestamp);
+  public setVideoToggle(enabled: boolean, timestamp: proto.Timestamp, content?: proto.VideoContentType): Promise<void> {
+    return this.artichokeApi.setVideoToggle(this.id, enabled, timestamp, content);
   }
 
   public get answered$(): Observable<callEvents.Answered> {

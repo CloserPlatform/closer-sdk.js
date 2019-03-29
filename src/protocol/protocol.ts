@@ -97,3 +97,5 @@ export interface Paginated<T> {
   offset: number;
   limit: number;
 }
+
+export type VideoContentType = 'camera' | 'presentation';
