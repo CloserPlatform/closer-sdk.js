@@ -9,6 +9,8 @@ export type Timestamp = number;
 // tslint:disable-next-line:no-any
 export type Context = any;
 
+export type VideoContentType = 'camera' | 'screen';
+
 // // REST API:
 export interface CreateCall {
   users: ReadonlyArray<ID>;
@@ -97,5 +99,3 @@ export interface Paginated<T> {
   offset: number;
   limit: number;
 }
-
-export type VideoContentType = 'camera' | 'presentation';
