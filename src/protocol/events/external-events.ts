@@ -173,6 +173,8 @@ export namespace externalEvents {
       e.tag === GuestProfileUpdated.tag
   }
 
+  export type InboxEntryType = 'MESSAGE' | 'NOTE' | 'FILES';
+
   export class LastMessageUpdated extends ExternalEvent {
     public static readonly tag = 'last_message_updated';
 
@@ -180,13 +182,15 @@ export namespace externalEvents {
     public readonly roomId: string;
     public readonly userId: string;
     public readonly timestamp: number;
+    public readonly type: InboxEntryType;
 
-    constructor(body: string, roomId: string, timestamp: number, userId: string) {
+    constructor(body: string, roomId: string, timestamp: number, userId: string, type: InboxEntryType) {
       super(LastMessageUpdated.tag);
       this.body = body;
       this.roomId = roomId;
       this.timestamp = timestamp;
       this.userId = userId;
+      this.type = type;
     }
 
     public static isLastMessageUpdated = (e: DomainEvent): e is LastMessageUpdated =>
