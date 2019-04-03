@@ -173,11 +173,7 @@ export namespace externalEvents {
       e.tag === GuestProfileUpdated.tag
   }
 
-  export enum InboxEntryType {
-    Message = 'MESSAGE',
-    Note = 'NOTE',
-    Files = 'FILES'
-  }
+  export type InboxEntryType = 'MESSAGE' | 'NOTE' | 'FILES';
 
   export class LastMessageUpdated extends ExternalEvent {
     public static readonly tag = 'last_message_updated';
