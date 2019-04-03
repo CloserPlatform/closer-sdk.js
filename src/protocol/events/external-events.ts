@@ -183,14 +183,17 @@ export namespace externalEvents {
     public readonly userId: string;
     public readonly timestamp: number;
     public readonly type: InboxEntryType;
+    public readonly payload?: any;
 
-    constructor(body: string, roomId: string, timestamp: number, userId: string, type: InboxEntryType) {
+    constructor(body: string, roomId: string, timestamp: number, userId: string, type: InboxEntryType,
+                payload?: any) {
       super(LastMessageUpdated.tag);
       this.body = body;
       this.roomId = roomId;
       this.timestamp = timestamp;
       this.userId = userId;
       this.type = type;
+      this.payload = payload;
     }
 
     public static isLastMessageUpdated = (e: DomainEvent): e is LastMessageUpdated =>
