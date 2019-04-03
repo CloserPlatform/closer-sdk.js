@@ -1,6 +1,8 @@
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
 // tslint:disable:max-file-line-count
+// tslint:disable:no-any
+
 import { DomainEvent } from './domain-event';
 
 export namespace externalEvents {
@@ -183,16 +185,18 @@ export namespace externalEvents {
     public readonly userId: string;
     public readonly timestamp: number;
     public readonly type: InboxEntryType;
+    public readonly threadCreatedAt: number;
     public readonly payload?: any;
 
     constructor(body: string, roomId: string, timestamp: number, userId: string, type: InboxEntryType,
-                payload?: any) {
+                threadCreatedAt: number, payload?: any) {
       super(LastMessageUpdated.tag);
       this.body = body;
       this.roomId = roomId;
       this.timestamp = timestamp;
       this.userId = userId;
       this.type = type;
+      this.threadCreatedAt = threadCreatedAt;
       this.payload = payload;
     }
 
