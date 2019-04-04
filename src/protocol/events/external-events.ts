@@ -36,11 +36,13 @@ export namespace externalEvents {
 
     public readonly adviserId: string;
     public readonly roomId: string;
+    public readonly requesterId?: string;
 
-    constructor(adviserId: string, roomId: string) {
+    constructor(adviserId: string, roomId: string, requesterId?: string) {
       super(AssigneeChanged.tag);
       this.adviserId = adviserId;
       this.roomId = roomId;
+      this.requesterId = requesterId;
     }
 
     public static isAssigneeChanged = (e: DomainEvent): e is AssigneeChanged =>
@@ -94,11 +96,13 @@ export namespace externalEvents {
 
     public readonly adviserId: string;
     public readonly roomId: string;
+    public readonly requesterId?: string;
 
-    constructor(adviserId: string, roomId: string) {
+    constructor(adviserId: string, roomId: string, requesterId?: string) {
       super(FollowerAdded.tag);
       this.adviserId = adviserId;
       this.roomId = roomId;
+      this.requesterId = requesterId;
     }
 
     public static isFollowerAdded = (e: DomainEvent): e is FollowerAdded =>
@@ -110,11 +114,13 @@ export namespace externalEvents {
 
     public readonly adviserId: string;
     public readonly roomId: string;
+    public readonly requesterId?: string;
 
-    constructor(adviserId: string, roomId: string) {
+    constructor(adviserId: string, roomId: string, requesterId?: string) {
       super(FollowerRemoved.tag);
       this.adviserId = adviserId;
       this.roomId = roomId;
+      this.requesterId = requesterId;
     }
 
     public static isFollowerRemoved = (e: DomainEvent): e is FollowerRemoved =>
