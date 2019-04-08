@@ -323,12 +323,14 @@ export namespace externalEvents {
     public readonly presence: Presence;
     public readonly timestamp: number;
     public readonly userId: string;
+    public readonly reason?: string;
 
-    constructor(presence: Presence, timestamp: number, userId: string) {
+    constructor(presence: Presence, timestamp: number, userId: string, reason?: string) {
       super(PresenceUpdated.tag);
       this.presence = presence;
       this.timestamp = timestamp;
       this.userId = userId;
+      this.reason = reason;
     }
 
     public static isPresenceUpdated = (e: DomainEvent): e is PresenceUpdated =>
