@@ -65,6 +65,20 @@ export namespace externalEvents {
     e.tag === AssigneeRemoved.tag
   }
 
+  export class ConversationSnoozed extends ExternalEvent {
+    public static readonly tag = 'conversation_snoozed';
+
+    public readonly roomId: string;
+
+    constructor(roomId: string) {
+      super(ConversationSnoozed.tag);
+      this.roomId = roomId;
+    }
+
+    public static isConversationSnoozed = (e: DomainEvent): e is ConversationSnoozed =>
+    e.tag === ConversationSnoozed.tag
+  }
+
   export enum ConversationStatus {
     Waiting = 'waiting',
     InProgress = 'inProgress',
@@ -89,6 +103,20 @@ export namespace externalEvents {
 
     public static isConversationStatusChanged = (e: DomainEvent): e is ConversationStatusChanged =>
     e.tag === ConversationStatusChanged.tag
+  }
+
+    export class ConversationUnsnoozed extends ExternalEvent {
+    public static readonly tag = 'conversation_unsnoozed';
+
+    public readonly roomId: string;
+
+    constructor(roomId: string) {
+      super(ConversationUnsnoozed.tag);
+      this.roomId = roomId;
+    }
+
+    public static isConversationUnsnoozed = (e: DomainEvent): e is ConversationUnsnoozed =>
+    e.tag === ConversationUnsnoozed.tag
   }
 
   export class FollowerAdded extends ExternalEvent {

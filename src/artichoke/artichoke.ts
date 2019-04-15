@@ -97,8 +97,16 @@ export class Artichoke {
     return this.artichokeApi.event$.pipe(filter(externalEvents.AssigneeRemoved.isAssigneeRemoved));
   }
 
+  public get conversationSnoozed$(): Observable<externalEvents.ConversationSnoozed> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.ConversationSnoozed.isConversationSnoozed));
+  }
+
   public get conversationStatusChanged$(): Observable<externalEvents.ConversationStatusChanged> {
     return this.artichokeApi.event$.pipe(filter(externalEvents.ConversationStatusChanged.isConversationStatusChanged));
+  }
+
+  public get conversationUnsnoozed$(): Observable<externalEvents.ConversationUnsnoozed> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.ConversationUnsnoozed.isConversationUnsnoozed));
   }
 
   public get followerAdded$(): Observable<externalEvents.FollowerAdded> {
