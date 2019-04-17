@@ -25,6 +25,7 @@ export namespace customEvents {
     [Subtag.ASSIGNEE_CHANGED]: {
       room: ID;
       assignee: ID;
+      requesterId?: ID;
     };
     [Subtag.ASSIGNEE_REMOVED]: {
       assignee: ID;
@@ -39,9 +40,11 @@ export namespace customEvents {
     };
     [Subtag.FOLLOWER_ADDED]: {
       user: ID;
+      requesterId?: ID;
     };
     [Subtag.FOLLOWER_REMOVED]: {
       user: ID;
+      requesterId?: ID;
     };
     [Subtag.ALL_FOLLOWERS_REMOVED]: {};
     [Subtag.STATUS_CHANGED]: {
