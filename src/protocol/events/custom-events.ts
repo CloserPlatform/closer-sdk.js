@@ -9,7 +9,6 @@ export namespace customEvents {
     ASSIGNEE_REMOVED = 'ASSIGNEE_REMOVED',
     CALL_ANSWERED = 'CALL_ANSWERED',
     CALL_ENDED = 'CALL_ENDED',
-    INTENT_DETECTED = 'INTENT_DETECTED',
     FOLLOWER_ADDED = 'FOLLOWER_ADDED',
     FOLLOWER_REMOVED = 'FOLLOWER_REMOVED',
     ALL_FOLLOWERS_REMOVED = 'ALL_FOLLOWERS_REMOVED',
@@ -38,16 +37,6 @@ export namespace customEvents {
       duration: number;
       userId: string;
       reason: CallReason;
-    };
-    [Subtag.INTENT_DETECTED]: {
-      intent: {
-        label: string;
-        probability: number;
-      };
-      roomId: string;
-      orgId: string;
-      messageId: string;
-      modelVersion: string;
     };
     [Subtag.FOLLOWER_ADDED]: {
       user: ID;
