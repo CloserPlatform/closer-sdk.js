@@ -103,6 +103,23 @@ export namespace roomEvents {
       e.tag === MessageSent.tag
   }
 
+  export class MessageUpdated extends RoomEvent {
+    public static readonly tag = 'room_message_updated';
+    public readonly messageId: string;
+    public readonly context: any;
+
+    constructor(roomId: string, authorId: string,  messageId: string, context: any,
+                timestamp: number) {
+      super(roomId, authorId, timestamp, MessageUpdated.tag);
+
+      this.messageId = messageId;
+      this.context = context;
+    }
+
+    public static isMessageUpdated = (e: DomainEvent | RoomEvent): e is MessageUpdated =>
+      e.tag === MessageUpdated.tag
+  }
+
   export class CustomMessageSent<C = any> extends RoomEvent {
     public static readonly tag = 'room_custom_message_sent';
     public readonly subtag: string;
