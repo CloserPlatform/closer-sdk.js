@@ -189,6 +189,16 @@ const makeRoom = (type: RoomType): wireEntities.Room => {
       api.cb(m);
     });
 
+    it('should run a callback on message update', (done) => {
+      room.messageUpdated$.subscribe((msg) => {
+        expect(msg.context.foo).toBe('bar');
+        done();
+      });
+
+      const m = new roomEvents.MessageUpdated(roomId, chad, msg1, {foo: 'bar'}, timestamp);
+      api.cb(m);
+    });
+
     it('should run a callback on incoming custom message', (done) => {
       room.getCustomMessageStream('json').subscribe((msg) => {
         expect(msg.authorId).toBe(chad);
