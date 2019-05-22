@@ -96,6 +96,10 @@ export abstract class Room implements wireEntities.Room {
         return this.roomEvent.pipe(filter(roomEvents.MessageSent.isMessageSent));
     }
 
+    public get messageUpdated$(): Observable<roomEvents.MessageUpdated> {
+        return this.roomEvent.pipe(filter(roomEvents.MessageUpdated.isMessageUpdated));
+    }
+
     public get messageDelivered$(): Observable<roomEvents.MessageDelivered> {
         return this.roomEvent.pipe(filter(roomEvents.MessageDelivered.isMessageDelivered));
     }
