@@ -192,6 +192,7 @@ export class RTCPeerConnectionFacade {
           this.dtlsRole = answer.sdp.includes('a=setup:active') ? 'active' : 'passive';
           this.logger.debug(`Detected DTLS role: ${this.dtlsRole}`);
         }
+        this.patchSDPAnswer(answer);
 
         return this.setLocalDescription(answer);
       })
@@ -201,6 +202,13 @@ export class RTCPeerConnectionFacade {
 
         return answer;
       });
+  }
+
+  private patchSDPAnswer = (answer: RTCSessionDescriptionInit): void => {
+    if (this.dtlsRole === 'passive' && answer.sdp && answer.sdp.includes('a=setup:active')) {
+      this.logger.info('DTLS role mismatch detected, patching SDP answer');
+      answer.sdp = answer.sdp.replace(/a=setup:active/g, 'a=setup:passive');
+    }
   }
 
   private setRemoteDescription = (remoteDescription: RTCSessionDescriptionInit): Promise<void> => {
