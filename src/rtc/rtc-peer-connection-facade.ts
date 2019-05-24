@@ -28,6 +28,7 @@ export class RTCPeerConnectionFacade {
   // FIXME Required by the various hacks:
   private renegotiationTimer: number;
   private isRemoteSDPset = false;
+  private dtlsRole: 'active' | 'passive';
 
   private logger: LoggerService;
 
@@ -134,6 +135,12 @@ export class RTCPeerConnectionFacade {
   }
 
   public handleRemoteAnswer(remoteDescription: RTCSessionDescriptionInit): void {
+    if (!this.dtlsRole && remoteDescription.sdp) {
+      this.logger.debug('Detecting DTLS role based on remote answer');
+      this.dtlsRole = remoteDescription.sdp.includes('a=setup:active') ? 'passive' : 'active';
+      this.logger.debug(`Detected DTLS role: ${this.dtlsRole}`);
+    }
+
     this.logger.debug('Adding remote answer');
 
     this.setRemoteDescription(remoteDescription)
@@ -179,6 +186,12 @@ export class RTCPeerConnectionFacade {
       })
       .then(answer => {
         this.logger.debug('Created an RTC answer');
+
+        if (!this.dtlsRole && answer.sdp) {
+          this.logger.debug('Detecting DTLS role based on created answer');
+          this.dtlsRole = answer.sdp.includes('a=setup:active') ? 'active' : 'passive';
+          this.logger.debug(`Detected DTLS role: ${this.dtlsRole}`);
+        }
 
         return this.setLocalDescription(answer);
       })
