@@ -306,6 +306,7 @@ export namespace externalEvents {
 
   export class UpcomingMeeting {
     public readonly duration: number;
+    public readonly guestId: string;
     public readonly guestName: string;
     public readonly langTag: string;
     public readonly meetingId: string;
@@ -313,9 +314,10 @@ export namespace externalEvents {
     public readonly roomId: string;
     public readonly start: number;
 
-    constructor(duration: number, guestName: string, langTag: string, meetingId: string, minutesToMeeting: number,
+    constructor(duration: number, guestId: string, guestName: string, langTag: string, meetingId: string, minutesToMeeting: number,
       roomId: string, start: number) {
         this.duration = duration;
+        this.guestId = guestId;
         this.guestName = guestName;
         this.langTag = langTag;
         this.meetingId = meetingId;
