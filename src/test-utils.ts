@@ -36,7 +36,7 @@ export const whenever = (condition: boolean):
   condition ? it : xit;
 
 export const isWebRTCSupported = (): boolean =>
-  !!window.RTCPeerConnection
+  !!window.RTCPeerConnection;
 
 export const getStream = (onStream: (stream: MediaStream) => void, onError: (err: Error) => void,
                           constraints?: MediaStreamConstraints): void => {

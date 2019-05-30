@@ -314,8 +314,8 @@ export namespace externalEvents {
     public readonly roomId: string;
     public readonly start: number;
 
-    constructor(duration: number, guestId: string, guestName: string, langTag: string, meetingId: string, minutesToMeeting: number,
-      roomId: string, start: number) {
+    constructor(duration: number, guestId: string, guestName: string, langTag: string, meetingId: string,
+                minutesToMeeting: number, roomId: string, start: number) {
         this.duration = duration;
         this.guestId = guestId;
         this.guestName = guestName;
