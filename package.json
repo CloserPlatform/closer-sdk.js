@@ -15,7 +15,7 @@
     "clean": "rimraf dist node_modules coverage dist-demo-app",
     "commit-hash": "git rev-parse HEAD > dist-demo-app/version.txt",
     "docs": "typedoc --out dist/docs --exclude '**/*.spec.ts' ./src",
-    "lint": "tslint -c tslint.json src/**/*.ts",
+    "lint": "tslint -c tslint.json 'src/**/*.ts'",
     "pretest": "npm run lint",
     "pretest:ci": "npm run lint",
     "posttest": "istanbul check-coverage --statement 65 --branch 45 --function 50 --line 65",
