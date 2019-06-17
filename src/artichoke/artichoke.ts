@@ -121,6 +121,16 @@ export class Artichoke {
     return this.artichokeApi.event$.pipe(filter(externalEvents.GuestProfileUpdated.isGuestProfileUpdated));
   }
 
+  public get lastAdviserTimestampSet$(): Observable<externalEvents.LastAdviserTimestampSet> {
+    return this.artichokeApi.event$.pipe(filter(externalEvents.LastAdviserTimestampSet.isLastAdviserTimestampSet));
+  }
+
+  public get lastAdviserTimestampRemoved$(): Observable<externalEvents.LastAdviserTimestampRemoved> {
+    return this.artichokeApi.event$.pipe(
+      filter(externalEvents.LastAdviserTimestampRemoved.isLastAdviserTimestampRemoved)
+    );
+  }
+
   public get lastMessageUpdated$(): Observable<externalEvents.LastMessageUpdated> {
     return this.artichokeApi.event$.pipe(filter(externalEvents.LastMessageUpdated.isLastMessageUpdated));
   }
