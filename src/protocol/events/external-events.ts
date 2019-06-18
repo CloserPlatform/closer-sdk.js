@@ -238,6 +238,41 @@ export namespace externalEvents {
       e.tag === LastMessageUpdated.tag
   }
 
+  export class LastAdviserTimestampSet extends ExternalEvent {
+    public static readonly tag = 'last_adviser_timestamp_set';
+
+    public readonly roomId: string;
+    public readonly timestamp: number;
+
+    constructor(
+      roomId: string,
+      timestamp: number,
+    ) {
+      super(LastAdviserTimestampSet.tag);
+      this.roomId = roomId;
+      this.timestamp = timestamp;
+    }
+
+    public static isLastAdviserTimestampSet = (e: DomainEvent): e is LastAdviserTimestampSet =>
+      e.tag === LastAdviserTimestampSet.tag
+  }
+
+  export class LastAdviserTimestampRemoved extends ExternalEvent {
+    public static readonly tag = 'last_adviser_timestamp_removed';
+
+    public readonly roomId: string;
+
+    constructor(
+      roomId: string,
+    ) {
+      super(LastAdviserTimestampRemoved.tag);
+      this.roomId = roomId;
+    }
+
+    public static isLastAdviserTimestampRemoved = (e: DomainEvent): e is LastAdviserTimestampRemoved =>
+      e.tag === LastAdviserTimestampRemoved.tag
+  }
+
   export class MeetingCancelled extends ExternalEvent {
     public static readonly tag = 'meeting_cancelled';
 
