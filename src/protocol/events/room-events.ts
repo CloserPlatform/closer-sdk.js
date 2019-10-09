@@ -84,6 +84,20 @@ export namespace roomEvents {
       e.tag === Left.tag
   }
 
+  export class FakeMessageSent extends RoomEvent {
+    public static readonly tag = 'fake_room_message_sent';
+    public readonly messageId: string;
+
+    constructor(roomId: string, authorId: string,  messageId: string, timestamp: number) {
+      super(roomId, authorId, timestamp, FakeMessageSent.tag);
+
+      this.messageId = messageId;
+    }
+
+    public static isFakeMessageSent = (e: DomainEvent | RoomEvent): e is FakeMessageSent =>
+      e.tag === FakeMessageSent.tag
+  }
+
   export class MessageSent extends RoomEvent {
     public static readonly tag = 'room_message_sent';
     public readonly message: string;
@@ -108,7 +122,7 @@ export namespace roomEvents {
     public readonly messageId: string;
     public readonly context: any;
 
-    constructor(roomId: string, authorId: string,  messageId: string, context: any,
+    constructor(roomId: string, authorId: string, messageId: string, context: any,
                 timestamp: number) {
       super(roomId, authorId, timestamp, MessageUpdated.tag);
 
