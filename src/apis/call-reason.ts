@@ -6,5 +6,6 @@ export enum CallReason {
     ConnectionDropped = 'connection_dropped',
     Disconnected = 'disconnected',
     CallRejected = 'rejected',
-    Busy = 'busy'
+    Busy = 'busy',
+    TimeLimitExceeded = 'time_limit_exceeded'
 }
