@@ -54,9 +54,9 @@ export const defaultConfig: Config = {
       bundlePolicy: 'max-bundle',
       rtcpMuxPolicy: 'require',
       iceServers: [{
-        urls: ['stun:turn.ratel.im:3478', 'turn:turn.ratel.im:3478'],
-        username: 'test123',
-        credential: 'test456'
+        urls: ['stun:turn.closer.app:443', 'turn:turn.closer.app:443'],
+        username: 'closer-user',
+        credential: 'roxU2H%hJ7NNuiPlunS@zq+o'
       }]
     }
   },
