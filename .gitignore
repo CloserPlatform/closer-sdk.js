@@ -8,5 +8,6 @@
 /im/bundle.js
 npm-debug.log
 *.tgz
-
 .npmrc
+profile.json
+

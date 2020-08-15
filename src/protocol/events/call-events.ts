@@ -3,7 +3,7 @@
 // tslint:disable:max-classes-per-file
 // tslint:disable:ban-types
 
-import { VideoContentType } from '../protocol';
+import { VideoContentType, Metadata } from '../protocol';
 import { DomainEvent } from './domain-event';
 
 export namespace callEvents {
@@ -51,9 +51,9 @@ export namespace callEvents {
     public static readonly tag = 'call_invited';
     public readonly authorId: string;
     public readonly invitee: string;
-    public readonly metadata?: any;
+    public readonly metadata?: Metadata;
 
-    constructor(callId: string, authorId: string, invitee: string, timestamp: number, metadata?: any) {
+    constructor(callId: string, authorId: string, invitee: string, timestamp: number, metadata?: Metadata) {
       super(callId, timestamp, Invited.tag);
 
       this.invitee = invitee;

@@ -451,13 +451,13 @@ export namespace externalEvents {
     public readonly unreadCount: number;
 
     constructor(tab: ConversationTab, unreadCount: number) {
-      super(UnreadCountUpdated.tag);
+      super(UnreadTotalUpdated.tag);
       this.tab = tab;
       this.unreadCount = unreadCount;
     }
 
     public static isUnreadTotalUpdated = (e: DomainEvent): e is UnreadTotalUpdated =>
-    e.tag === UnreadTotalUpdated.tag
+      e.tag === UnreadTotalUpdated.tag
   }
 
 }

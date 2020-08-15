@@ -1,54 +1,65 @@
-import { RTCConfig } from '../rtc/rtc-config';
 import { ObjectUtils } from '../utils/object-utils';
 import { LogLevel } from '../logger/log-level';
+import { RTCConfig } from './rtc-config';
 
-export interface URLConfig {
-  protocol?: string;
-  hostname?: string;
-  pathname?: string;
-  port?: string;
-}
-
-export interface CallstatsConfig {
-  appId: string;
-  appSecret: string;
-  appVersion?: string;
-}
-
-export interface UserChatConfig extends URLConfig {
-  rtc?: RTCConfig;
+export interface UserArtichokeConfig {
+  server?: string;
+  reconnectDelayMs?: number;
+  heartbeatTimeoutMultiplier?: number;
+  apiPath?: string;
+  wsPath?: string;
+  askTimeoutMs?: number;
   reconnectionDisabled?: boolean;
-  callstats?: CallstatsConfig;
 }
 
-export interface ChatConfig extends URLConfig {
-  rtc: RTCConfig;
+export interface ArtichokeConfig {
+  server: string;
+  reconnectDelayMs: number;
+  heartbeatTimeoutMultiplier: number;
+  apiPath: string;
+  wsPath: string;
+  askTimeoutMs: number;
   reconnectionDisabled: boolean;
-  callstats?: CallstatsConfig;
 }
 
-// tslint:disable-next-line:no-empty-interface
-export interface RatelConfig extends URLConfig {}
+export interface UserSpinnerConfig {
+  server?: string;
+}
+
+export interface SpinnerConfig {
+  server: string;
+}
 
 export interface UserConfig {
   logLevel?: LogLevel;
-  chat?: UserChatConfig;
-  ratel?: RatelConfig;
+  rtc?: RTCConfig;
+  artichoke?: UserArtichokeConfig;
+  spinner?: UserSpinnerConfig;
 }
 
 export interface Config {
   logLevel: LogLevel;
-  chat: ChatConfig;
-  ratel: RatelConfig;
+  rtc: RTCConfig;
+  artichoke: ArtichokeConfig;
+  spinner: SpinnerConfig;
 }
 
-export const defaultConfig: Config = {
-  logLevel: LogLevel.WARN,
-  chat: {
-    reconnectionDisabled: false,
-    protocol: 'https:',
-    hostname: 'artichoke.ratel.io',
-    port: '',
+// tslint:disable-next-line:only-arrow-functions
+export function getDefaultConfig(): Config {
+  return {
+    logLevel: LogLevel.WARN,
+    artichoke: {
+      server: 'https://artichoke.closer.app',
+      reconnectDelayMs: 2000,
+      heartbeatTimeoutMultiplier: 2,
+      reconnectionDisabled: false,
+      askTimeoutMs: 5000,
+      apiPath: 'api/',
+      wsPath: 'ws/',
+    },
+    spinner: {
+      server: 'https://spinner.closer.app',
+    },
     rtc: {
       iceTransportPolicy: 'all',
       bundlePolicy: 'max-bundle',
@@ -57,24 +68,21 @@ export const defaultConfig: Config = {
         urls: ['stun:turn.closer.app:443', 'turn:turn.closer.app:443'],
         username: 'closer-user',
         credential: 'roxU2H%hJ7NNuiPlunS@zq+o'
-      }]
-    }
-  },
-  ratel: {
-    protocol: 'https:',
-    hostname: 'api.dev.ratel.io',
-    port: '',
-  },
-};
+      }],
+    },
+  };
+}
 
 export const load = (conf: UserConfig): Config => {
 
   // tslint:disable-next-line:no-any
   const merge = (a: any, b: any): any => {
     if (Array.isArray(a)) {
+      // tslint:disable-next-line:no-unsafe-any
       return a.map((ai, i) => merge(ai, b[i]));
     } else if (typeof a === 'object') {
       const result = a;
+      // tslint:disable-next-line:no-unsafe-any
       Object.getOwnPropertyNames(b).forEach((p) => result[p] = merge(a[p], b[p]));
 
       return result;
@@ -85,5 +93,6 @@ export const load = (conf: UserConfig): Config => {
     }
   };
 
-  return merge(ObjectUtils.deepcopy(conf), ObjectUtils.deepcopy(defaultConfig));
+  // tslint:disable-next-line:no-unsafe-any
+  return merge(ObjectUtils.deepcopy(conf), ObjectUtils.deepcopy(getDefaultConfig()));
 };

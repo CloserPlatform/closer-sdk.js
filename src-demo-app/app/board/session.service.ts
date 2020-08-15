@@ -107,7 +107,7 @@ export class SessionService {
       Logger.log('Call created: ', call);
     });
 
-    session.chat.connect$.subscribe(hello => {
+    session.chat.connection$.subscribe(hello => {
       Page.setHeader(`Connected as ${session.id} with deviceId: ${hello.deviceId}`);
       this.connectionEstablishedEvent.next();
       Logger.log('Connected to Artichoke!', hello);

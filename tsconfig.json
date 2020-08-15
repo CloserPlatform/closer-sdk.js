@@ -2,8 +2,8 @@
   "compileOnSave": false,
   "buildOnSave": false,
   "compilerOptions": {
-    "module": "commonjs",
-    "target": "es5",
+    "module": "CommonJS",
+    "target": "es6",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "noImplicitAny": true,
@@ -14,16 +14,15 @@
     "noUnusedParameters": true,
     "strictNullChecks": true,
     "removeComments": false,
-    "inlineSourceMap": true,
     "noEmitHelpers": false,
-    "declaration": true,
-    "declarationDir": ".",
     "typeRoots": [
       "node_modules/@types"
     ],
     "types": [
+      "dom",
       "node",
-      "webrtc"
+      "webrtc",
+      "jasmine"
     ],
     "lib": [
       "es2015",
@@ -31,11 +30,5 @@
       "es2017",
       "dom"
     ]
-  },
-  "exclude": [
-    "node_modules",
-    "src-demo-app",
-    "dist-demo-app",
-    "dist"
-  ]
+  }
 }

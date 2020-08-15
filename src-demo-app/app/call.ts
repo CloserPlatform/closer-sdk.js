@@ -171,7 +171,11 @@ export class CallHandler {
   }
 
   private getVideoEnabledStatusWrapper = (): Observable<boolean> =>
-    this.call.message$.pipe(map(msg => JSON.parse(msg.message).video as boolean))
+    this.call.message$.pipe(map(msg => {
+      const message = msg as RatelSdk.PeerDataChannelMessage;
+
+      return JSON.parse(message.message).video as boolean;
+    }))
 
   private notifyVideoChange = (enabled: boolean): void => {
     this.call.broadcast(JSON.stringify({video: enabled}));

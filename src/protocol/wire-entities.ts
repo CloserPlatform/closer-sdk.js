@@ -4,6 +4,7 @@ export interface Call {
   id: ID;
   created: Timestamp;
   ended?: Timestamp;
+  invitees: ReadonlyArray<ID>;
   creator: ID;
   users: ReadonlyArray<ID>;
   direct: boolean;

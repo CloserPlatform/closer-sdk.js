@@ -1,7 +1,7 @@
 import * as wireEntities from '../protocol/wire-entities';
 import { roomEvents } from '../protocol/events/room-events';
 import * as proto from '../protocol/protocol';
-import { ArtichokeAPI } from '../apis/artichoke-api';
+import { ArtichokeApi } from '../artichoke/artichoke-api';
 import { Room } from './room';
 import { RoomType } from './room-type';
 import { Observable } from 'rxjs';
@@ -11,7 +11,11 @@ import { LoggerService } from '../logger/logger-service';
 export class GroupRoom extends Room {
   public readonly roomType: RoomType = RoomType.GROUP;
 
-  constructor(room: wireEntities.Room, log: LoggerService, api: ArtichokeAPI) {
+  constructor(
+    room: wireEntities.Room,
+    log: LoggerService,
+    api: ArtichokeApi
+  ) {
     super(room, log, api);
 
     // FIXME - unsubscribe
@@ -24,10 +28,8 @@ export class GroupRoom extends Room {
     return room.roomType === RoomType.GROUP;
   }
 
-  public getUsers(): Promise<ReadonlyArray<proto.ID>> {
-    // FIXME remove the cache
-    // NOTE No need to retrieve the list if it's cached here.
-    return Promise.resolve(this.users);
+  public getCachedUsers(): ReadonlyArray<proto.ID> {
+    return this.users;
   }
 
   public join(): Promise<void> {
@@ -43,14 +45,14 @@ export class GroupRoom extends Room {
   }
 
   public get joined$(): Observable<roomEvents.Joined> {
-    return this.roomEvent.pipe(filter(roomEvents.Joined.isJoined));
+    return this.roomEvent$.pipe(filter(roomEvents.Joined.isJoined));
   }
 
   public get left$(): Observable<roomEvents.Left> {
-    return this.roomEvent.pipe(filter(roomEvents.Left.isLeft));
+    return this.roomEvent$.pipe(filter(roomEvents.Left.isLeft));
   }
 
   public get invited$(): Observable<roomEvents.Invited> {
-    return this.roomEvent.pipe(filter(roomEvents.Invited.isInvited));
+    return this.roomEvent$.pipe(filter(roomEvents.Invited.isInvited));
   }
 }

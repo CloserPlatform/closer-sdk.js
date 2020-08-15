@@ -1,15 +1,15 @@
 import { callEvents } from '../protocol/events/call-events';
 import * as proto from '../protocol/protocol';
 import * as wireEntities from '../protocol/wire-entities';
-import { ArtichokeAPI } from '../apis/artichoke-api';
-import { CallReason } from '../apis/call-reason';
+import { ArtichokeApi } from '../artichoke/artichoke-api';
+import { CallReason } from './call-reason';
 import { CallType } from './call-type';
 import { PeerConnectionStatus, PeerDataChannelMessage, RemoteTrack, RTCPool } from '../rtc/rtc-pool';
 import { Observable } from 'rxjs';
-import { filter, first, takeUntil } from 'rxjs/operators';
-import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
+import { filter, take, takeUntil } from 'rxjs/operators';
 import { DataChannelMessage } from '../rtc/data-channel';
 import { LoggerService } from '../logger/logger-service';
+import { MediaTrackOptimizer } from '../rtc/media-track-optimizer';
 
 export abstract class Call implements wireEntities.Call {
   public readonly id: proto.ID;
@@ -18,50 +18,16 @@ export abstract class Call implements wireEntities.Call {
   public readonly direct: boolean;
   public ended?: proto.Timestamp;
   public users: ReadonlyArray<proto.ID>;
+  public readonly invitees: ReadonlyArray<proto.ID>;
   public orgId?: proto.ID;
   public abstract readonly callType: CallType;
-  protected pool: RTCPool;
-
-  constructor(call: wireEntities.Call, private logger: LoggerService,
-              protected artichokeApi: ArtichokeAPI, rtcPoolRepository: RTCPoolRepository,
-              tracks?: ReadonlyArray<MediaStreamTrack>) {
-    this.id = call.id;
-    this.created = call.created;
-    this.ended = call.ended;
-    this.creator = call.creator;
-    this.users = call.users;
-    this.direct = call.direct;
-    this.orgId = call.orgId;
-
-    this.pool = rtcPoolRepository.getRtcPoolInstance(call.id);
-
-    this.end$.pipe(first()).subscribe(endEvent => {
-      this.ended = endEvent.timestamp;
-      this.pool.destroyAllConnections();
-    });
-
-    this.activeDevice$.pipe(takeUntil(this.end$)).subscribe(this.pool.destroyAllConnections);
-
-    if (tracks) {
-      this.addTracks(tracks);
-    }
-
-    if (this.creator === this.artichokeApi.sessionId) {
-      this.users = [];
-      this.setupListeners();
-      this.establishRTCWithOldUsers();
-    } else {
-      this.setupListeners();
-    }
-
-    logger.debug(`Created`);
-  }
 
   public addTracks(tracks: ReadonlyArray<MediaStreamTrack>): void {
-    tracks.forEach((track) => this.addTrack(track));
+    tracks.forEach(track => this.addTrack(track));
   }
 
   public addTrack(track: MediaStreamTrack): void {
+    this.mediaTrackOptimizer.addContentHint(track);
     this.pool.addTrack(track);
   }
 
@@ -73,16 +39,10 @@ export abstract class Call implements wireEntities.Call {
     return this.pool.remoteTrack$;
   }
 
-  public setAnswerOptions(options: RTCAnswerOptions): void {
-    this.pool.setAnswerOptions(options);
-  }
-
   public replaceTrackByKind(track: MediaStreamTrack): Promise<void> {
-    return this.pool.replaceTrackByKind(track);
-  }
+    this.mediaTrackOptimizer.addContentHint(track);
 
-  public setOfferOptions(options: RTCOfferOptions): void {
-    this.pool.setOfferOptions(options);
+    return this.pool.replaceTrackByKind(track);
   }
 
   public broadcast(message: DataChannelMessage): void {
@@ -97,8 +57,12 @@ export abstract class Call implements wireEntities.Call {
     return this.pool.peerStatus$;
   }
 
+  public getCachedUsers(): ReadonlyArray<proto.ID> {
+    return this.users;
+  }
+
   public getUsers(): Promise<ReadonlyArray<proto.ID>> {
-    return Promise.resolve(this.users);
+    return this.artichokeApi.getCallUsers(this.id);
   }
 
   public getMessages(): Promise<ReadonlyArray<callEvents.CallEvent>> {
@@ -127,11 +91,11 @@ export abstract class Call implements wireEntities.Call {
     return this.artichokeApi.leaveCall(this.id, reason);
   }
 
-  public setAudioToggle(enabled: boolean, timestamp: proto.Timestamp): Promise<void> {
+  public setAudioToggle(enabled: boolean, timestamp: proto.Timestamp): void {
     return this.artichokeApi.setAudioToggle(this.id, enabled, timestamp);
   }
 
-  public setVideoToggle(enabled: boolean, timestamp: proto.Timestamp, content?: proto.VideoContentType): Promise<void> {
+  public setVideoToggle(enabled: boolean, timestamp: proto.Timestamp, content?: proto.VideoContentType): void {
     return this.artichokeApi.setVideoToggle(this.id, enabled, timestamp, content);
   }
 
@@ -167,10 +131,6 @@ export abstract class Call implements wireEntities.Call {
     return this.getCallEvent().pipe(filter(callEvents.Ended.isEnded));
   }
 
-  protected getInvited$(): Observable<callEvents.Invited> {
-    return this.getCallEvent().pipe(filter(callEvents.Invited.isInvited));
-  }
-
   public get audioToggle$(): Observable<callEvents.AudioStreamToggled> {
     return this.getCallEvent().pipe(filter(callEvents.AudioStreamToggled.isAudioStreamToggled));
   }
@@ -179,27 +139,40 @@ export abstract class Call implements wireEntities.Call {
     return this.getCallEvent().pipe(filter(callEvents.VideoStreamToggled.isVideoStreamToggled));
   }
 
-  private getCallEvent = (): Observable<callEvents.CallEvent> =>
-    this.artichokeApi.event$
-      .pipe(filter(callEvents.CallEvent.isCallEvent))
-      .pipe(filter(ev => ev.callId === this.id))
+  protected constructor(
+    call: wireEntities.Call,
+    private logger: LoggerService,
+    private mediaTrackOptimizer: MediaTrackOptimizer,
+    protected artichokeApi: ArtichokeApi,
+    private pool: RTCPool,
+    tracks?: ReadonlyArray<MediaStreamTrack>
+  ) {
+    this.id = call.id;
+    this.created = call.created;
+    this.ended = call.ended;
+    this.creator = call.creator;
+    this.users = call.users;
+    this.direct = call.direct;
+    this.orgId = call.orgId;
+    this.invitees = call.invitees;
 
-  private establishRTCWithOldUsers(): void {
-    this.logger.debug('Establishing rtc with existing call old users');
-    this.artichokeApi.getCallUsers(this.id).then(users => {
-      const oldUsers = users.filter(u => u !== this.artichokeApi.sessionId && !this.users.includes(u));
-      oldUsers.forEach(user => this.pool.connect(user));
-      this.logger.debug(`Old call users count: ${oldUsers.length}`);
-      this.users = this.users.concat(oldUsers);
-    })
-      .catch(err => this.logger.error(`Get call old users failed: ${err}`));
-  }
+    this.end$.pipe(take(1)).subscribe(endEvent => {
+      this.logger.debug(`Call ended, ending and destroying all connections`);
+      this.ended = endEvent.timestamp;
+      this.pool.destroyAllConnections();
+    });
 
-  private setupListeners(): void {
+    this.activeDevice$
+      .pipe(takeUntil(this.end$))
+      .subscribe(() => this.pool.destroyAllConnections());
+
     this.joined$.pipe(takeUntil(this.end$)).subscribe(joined => {
       this.logger.debug(`User ${joined.authorId} joined, creating rtc connection`);
       this.users = [...this.users, joined.authorId];
-      this.pool.connect(joined.authorId);
+      this.pool.connect(joined.authorId).then(
+        () => this.logger.debug('Connected'),
+        err => this.logger.error(err as string)
+      );
     });
 
     this.left$.pipe(takeUntil(this.end$)).subscribe(left => {
@@ -207,5 +180,41 @@ export abstract class Call implements wireEntities.Call {
       this.users = this.users.filter(u => u !== left.authorId);
       this.pool.destroyConnection(left.authorId);
     });
+
+    if (tracks) {
+      this.addTracks(tracks);
+    }
+
+    if (this.creator === this.artichokeApi.sessionId) {
+      this.users = [];
+      this.establishRTCWithOldUsers();
+    }
+
+    logger.debug(`Created`);
+  }
+
+  protected getInvited$(): Observable<callEvents.Invited> {
+    return this.getCallEvent().pipe(filter(callEvents.Invited.isInvited));
+  }
+
+  private getCallEvent = (): Observable<callEvents.CallEvent> =>
+    this.artichokeApi.domainEvent$.pipe(
+      filter(callEvents.CallEvent.isCallEvent),
+      filter(ev => ev.callId === this.id),
+    )
+
+  private establishRTCWithOldUsers(): void {
+    this.logger.debug('Establishing rtc with existing call old users');
+    this.artichokeApi.getCallUsers(this.id).then(users => {
+      const oldUsers = users.filter(u => u !== this.artichokeApi.sessionId && !this.users.includes(u));
+      oldUsers.forEach(user =>
+        this.pool.connect(user).then(
+          () => this.logger.debug('Connected'),
+          err => this.logger.error(err as string)
+        ));
+      this.logger.debug(`Old call users count: ${oldUsers.length}`);
+      this.users = this.users.concat(oldUsers);
+    })
+      .catch(err => this.logger.error(`Get call old users failed: ${err}`));
   }
 }

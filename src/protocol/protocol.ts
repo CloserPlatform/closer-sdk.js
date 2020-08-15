@@ -3,11 +3,33 @@ export type Type = string;
 export type ID = string;
 export type Ref = string;
 export type Timestamp = number;
+export type ApiKey = ID;
+export type DeviceId = ID;
+
+export type Signature = string;
+
+export interface Payload {
+  orgId: ID;
+  externalId: ID;
+  timestamp: Timestamp;
+}
+
+export interface SessionData {
+  payload: Payload;
+  signature: Signature;
+}
+
+export interface AgentContext {
+  id: ID;
+  orgId: ID;
+  apiKey: ApiKey;
+}
 
 // // Datatypes:
-// FIXME
 // tslint:disable-next-line:no-any
 export type Context = any;
+// tslint:disable-next-line:no-any
+export type Metadata = any;
 
 export type VideoContentType = 'camera' | 'screen';
 
@@ -15,7 +37,7 @@ export type VideoContentType = 'camera' | 'screen';
 export interface CreateCall {
   users: ReadonlyArray<ID>;
   // tslint:disable-next-line:no-any
-  metadata?: any;
+  metadata?: Metadata;
 }
 
 export interface CreateDirectEntity {
@@ -25,7 +47,7 @@ export interface CreateDirectEntity {
 export interface CreateDirectCall extends CreateDirectEntity {
   timeout?: number;
   // tslint:disable-next-line:no-any
-  metadata?: any;
+  metadata?: Metadata;
 }
 
 export interface CreateDirectRoom extends CreateDirectEntity {
@@ -49,14 +71,14 @@ export interface PushRegistration {
 }
 
 // tslint:disable-next-line:no-any
-export const createCall = (users: ReadonlyArray<ID>, metadata?: any): CreateCall =>
+export const createCall = (users: ReadonlyArray<ID>, metadata?: Metadata): CreateCall =>
   ({
     users,
     metadata
   });
 
 // tslint:disable-next-line:no-any
-export const createDirectCall = (user: ID, timeout?: number, metadata?: any): CreateDirectCall =>
+export const createDirectCall = (user: ID, timeout?: number, metadata?: Metadata): CreateDirectCall =>
   ({
     user,
     timeout,

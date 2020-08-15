@@ -1,6 +1,6 @@
 import * as wireEntities from '../protocol/wire-entities';
 import { BusinessRoom } from './business-room';
-import { ArtichokeAPI } from '../apis/artichoke-api';
+import { ArtichokeApi } from '../artichoke/artichoke-api';
 import { Room } from './room';
 import { DirectRoom } from './direct-room';
 import { GroupRoom } from './group-room';
@@ -9,7 +9,7 @@ import { LoggerFactory } from '../logger/logger-factory';
 export class RoomFactory {
 
   constructor(private loggerFactory: LoggerFactory,
-              private artichokeAPI: ArtichokeAPI) {}
+              private artichokeAPI: ArtichokeApi) {}
 
   public create = (room: wireEntities.Room): Room => {
     if (room.direct) {

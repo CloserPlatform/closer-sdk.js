@@ -1,36 +1,24 @@
-import { ArtichokeAPI } from '../apis/artichoke-api';
-import { RTCConfig } from './rtc-config';
 import { RTCPool } from './rtc-pool';
 import * as proto from '../protocol/protocol';
-import { LoggerFactory } from '../logger/logger-factory';
 import { LoggerService } from '../logger/logger-service';
-import { WebRTCStats } from './stats/webrtc-stats';
+import { RTCPoolFactory } from './rtc-pool-factory';
 
 export class RTCPoolRepository {
 
-  private rtcPools: {[callId: string]: RTCPool} = {};
+  private rtcPools: { [callId: string]: RTCPool } = {};
 
-  private logger: LoggerService;
-
-  constructor(private rtcConfig: RTCConfig,
-              private loggerFactory: LoggerFactory,
-              private artichokeApi: ArtichokeAPI,
-              private webrtcStats: WebRTCStats) {
-    this.logger = loggerFactory.create('RTCPoolRepository');
+  constructor(
+    private loggerService: LoggerService,
+    private rtcPoolFactory: RTCPoolFactory
+  ) {
   }
 
   public getRtcPoolInstance = (callId: proto.ID): RTCPool => {
     const rtcPool = this.rtcPools[callId];
 
     if (!rtcPool) {
-      this.logger.debug(`creating RTCPool for call ${callId}`);
-      this.rtcPools[callId] = new RTCPool(
-        callId,
-        this.rtcConfig,
-        this.loggerFactory,
-        this.artichokeApi,
-        this.webrtcStats
-      );
+      this.loggerService.debug(`creating RTCPool for call ${callId}`);
+      this.rtcPools[callId] = this.rtcPoolFactory.create(callId);
     }
 
     return this.rtcPools[callId];

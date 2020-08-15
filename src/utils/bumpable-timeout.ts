@@ -1,18 +1,17 @@
 export class BumpableTimeout {
-  private readonly timeout_ms: number;
-  private readonly onTimeoutClb: () => void;
+
   private timeoutId?: number;
 
-  constructor(timeout_ms: number, onTimeoutClb: () => void) {
-    this.timeout_ms = timeout_ms;
-    this.onTimeoutClb = onTimeoutClb;
-
+  constructor(
+    private timeoutMs: number,
+    private onTimeoutCb: () => void,
+  ) {
     this.bump();
   }
 
   public bump(): void {
     this.clear();
-    this.timeoutId = window.setTimeout(this.onTimeoutClb, this.timeout_ms);
+    this.timeoutId = window.setTimeout(this.onTimeoutCb, this.timeoutMs);
   }
 
   public clear(): void {

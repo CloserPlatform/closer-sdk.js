@@ -3,7 +3,8 @@
     "tslint-immutable"
   ],
   "rules": {
-    "typedef": [true, "call-signature", "arrow-call-signature"],
+    // "typedef": [true, "call-signature", "arrow-call-signature"],
+    "typedef": [true, "call-signature"],
     "class-name": true,
     "comment-format": [
       true,
@@ -119,10 +120,8 @@
     "no-unsafe-any": true,
     "no-unsafe-finally": true,
     "no-unused-expression": true,
-    "no-unused-variable": true,
-    "no-use-before-declare": true,
     "no-var-requires": true,
-    "no-void-expression": true,
+    // "no-void-expression": true, TURN ME ON
     "number-literal-format": true,
     // "object-literal-sort-keys": true,
     "one-variable-per-declaration": true,
@@ -139,12 +138,11 @@
     "return-undefined": true,
     "space-before-function-paren": false,
     "space-within-parens": true,
-    "strict-boolean-expressions": true,
-    "strict-type-predicates": true,
+    // "strict-boolean-expressions": true, TURN ME ON
+    // "strict-type-predicates": true, TURN ME ON
     "switch-default": true,
     "switch-final-break": true,
     "type-literal-delimiter": true,
-    "typeof-compare": true,
     "unified-signatures": true,
     "use-default-type-parameter": true,
     "use-isnan": true,

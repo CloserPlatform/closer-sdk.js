@@ -1,40 +1,55 @@
 'use strict';
 
-const path = require('path');
-const loaders = require('./webpack/loaders');
-const plugins = require('./webpack/plugins');
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
-    entry: path.resolve(__dirname, 'src/main.ts'),
-
-    output: {
-        path: path.resolve(__dirname, 'dist'),
-        filename: 'ratel-sdk.js',
-        library: 'RatelSDK',
-        libraryTarget: 'umd',
-        umdNamedDefine: true
-    },
-
-    devtool: process.env.NODE_ENV === 'production' ?
-        'source-map' :
-        'inline-source-map',
-
-    resolve: {
-        unsafeCache: false,
-        extensions: [
-            '.ts',
-            '.js',
-            '.json'
-        ]
-    },
-
-    plugins: plugins,
-
-    module: {
-        rules: [
-            loaders.tslint,
-            loaders.tsx,
-            loaders.json
-        ],
-    }
+  entry: __dirname + '/src/index.ts',
+  devtool: 'source-map',
+  plugins: [
+    new CleanWebpackPlugin(),
+  ],
+  output: {
+    path: __dirname + '/dist',
+    filename: 'closer-sdk.js',
+    library: 'CloserSDK',
+    libraryTarget: 'umd',
+    umdNamedDefine: true
+  },
+  resolve: {
+    unsafeCache: false,
+    extensions: [
+      '.ts',
+      '.js',
+      '.json'
+    ]
+  },
+  module: {
+    rules: [
+      {
+        test: /\.tsx?$/,
+        loader: 'ts-loader?configFile=tsconfig.sdk.json'
+      }
+    ],
+  },
+  optimization: {
+    // removeAvailableModules: false,
+    // usedExports: true,
+    // removeEmptyChunks: false,
+    // splitChunks: false,
+    // Set it to single to create a single runtime bundle for all chunks
+    // runtimeChunk: 'single',
+    minimize: true,
+    usedExports: true,
+    minimizer: [
+      new TerserPlugin({
+        sourceMap: true,
+        extractComments: {
+          condition: 'all',
+          filename: () => '',
+          banner: () => '',
+        },
+      })
+    ],
+  },
 };

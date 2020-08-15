@@ -1,5 +1,5 @@
-import { ID } from '../protocol';
-import { CallReason } from '../../apis/call-reason';
+import { ID, Metadata } from '../protocol';
+import { CallReason } from '../../calls/call-reason';
 
 // tslint:disable-next-line:no-namespace
 export namespace customEvents {
@@ -79,7 +79,7 @@ export namespace customEvents {
         previews: ReadonlyArray<string>;
         size?: number;
         // tslint:disable-next-line:no-any
-        metadata?: any;
+        metadata?: Metadata;
       }>;
     };
     [Subtag.LEKTA_MESSAGE]: {};

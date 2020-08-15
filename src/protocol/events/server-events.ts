@@ -4,7 +4,12 @@
 import { DomainEvent } from './domain-event';
 
 export namespace serverEvents {
-  export class Hello implements DomainEvent {
+  // tslint:disable-next-line:no-empty-interface
+  export interface ServerEvent extends DomainEvent {
+
+  }
+
+  export class Hello implements ServerEvent {
     public static readonly tag: string = 'hello';
     public readonly __discriminator__ = 'domainEvent';
     public readonly deviceId: string;
@@ -22,7 +27,7 @@ export namespace serverEvents {
       e.tag === Hello.tag
   }
 
-  export class OutputHeartbeat implements DomainEvent {
+  export class OutputHeartbeat implements ServerEvent {
     public static readonly tag: string = 'output_heartbeat';
     public readonly __discriminator__ = 'domainEvent';
     public readonly tag = OutputHeartbeat.tag;

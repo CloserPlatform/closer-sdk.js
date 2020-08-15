@@ -1,14 +1,14 @@
 stages:
   - test
   - bump
-  - publish
 
 test:
   only:
     - branches
+  before_script:
+    - cp $NPM_RC .npmrc
   script:
-    - npm install
-    - npm run test:ci
+    - docker build -t tmp .
   stage: test
   tags:
     - shell
@@ -32,26 +32,3 @@ bump_version:
   stage: bump
   tags:
     - docker
-
-publish:
-  only:
-    - tags
-  script:
-    - npm install
-    - npm run build
-    - npm publish
-  stage: publish
-  tags:
-    - shell
-
-deploy_demoapp:
-  only:
-    - tags
-  script:
-    - npm install
-    - npm run build
-    - npm run build-demo-app
-    - cp -r dist-demo-app/* /var/www/ratel-sdk-js-demo.local/
-  stage: publish
-  tags:
-    - shell

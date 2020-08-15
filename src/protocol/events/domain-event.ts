@@ -1,4 +1,4 @@
-import { Decoder } from '../../codec';
+import { Decoder } from '../codec';
 
 export interface DomainEvent {
   readonly tag: string;
@@ -6,5 +6,5 @@ export interface DomainEvent {
 }
 
 export const decoder: Decoder<DomainEvent> = {
-  decode: (data: string): DomainEvent => JSON.parse(data),
+  decode: (data: string): DomainEvent => JSON.parse(data) as DomainEvent,
 };

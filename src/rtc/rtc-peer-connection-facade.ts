@@ -1,15 +1,13 @@
 // tslint:disable:max-file-line-count
-import { ArtichokeAPI } from '../apis/artichoke-api';
+import { ArtichokeApi } from '../artichoke/artichoke-api';
 import { ID } from '../protocol/protocol';
-import { RTCConfig } from './rtc-config';
-import { TimeUtils } from '../utils/time-utils';
 import { DataChannel, DataChannelMessage } from './data-channel';
-import { LoggerFactory } from '../logger/logger-factory';
 import { LoggerService } from '../logger/logger-service';
-import { PeerCandidateQueue } from './peer-candidate-queue';
 import { WebRTCStats } from './stats/webrtc-stats';
 import { WebRTCStatsCollector } from './stats/webrtc-stats-collector';
 import { NoopCollector } from './stats/noop-collector';
+import { Delayer } from '../utils/delayer';
+import { Queue } from '../utils/queue';
 
 export enum ConnectionStatus {
   Failed,
@@ -20,42 +18,30 @@ export enum ConnectionStatus {
 export class RTCPeerConnectionFacade {
   public static readonly renegotiationTimeout = 100;
 
-  private rtcPeerConnection: RTCPeerConnection;
-  private dataChannel: DataChannel;
-
   private statsCollector: WebRTCStatsCollector = new NoopCollector();
 
   // FIXME Required by the various hacks:
-  private renegotiationTimer: number;
   private isRemoteSDPset = false;
   private dtlsRole: 'active' | 'passive';
 
-  private logger: LoggerService;
-
-  private candidateQueue: PeerCandidateQueue;
-
-  constructor(private callId: ID, private peerId: ID, private config: RTCConfig,
-              loggerFactory: LoggerFactory,
-              private artichokeApi: ArtichokeAPI,
-              private onRemoteTrack: (track: MediaStreamTrack) => void,
-              private onStatusChange: (status: ConnectionStatus) => void,
-              onDataChannelMessage: (msg: DataChannelMessage) => void,
-              initialMediaTracks: ReadonlyArray<MediaStreamTrack>,
-              webrtcStats: WebRTCStats,
-              private answerOptions?: RTCAnswerOptions,
-              private offerOptions?: RTCOfferOptions) {
-    this.logger = loggerFactory.create(`RTCPeerConnectionFacade Call(${callId}) Peer(${peerId})`);
-    this.logger.info('Creating the connection');
-    this.rtcPeerConnection = new RTCPeerConnection(config);
+  constructor(
+    private callId: ID,
+    private peerId: ID,
+    private rtcPeerConnection: RTCPeerConnection,
+    private artichokeApi: ArtichokeApi,
+    private onRemoteTrack: (track: MediaStreamTrack) => void,
+    private onStatusChange: (status: ConnectionStatus) => void,
+    private candidateQueue: Queue<RTCIceCandidateInit>,
+    private logger: LoggerService,
+    private dataChannel: DataChannel,
+    private delayer: Delayer,
+    initialMediaTracks: ReadonlyArray<MediaStreamTrack>,
+    webrtcStats: WebRTCStats,
+  ) {
     this.statsCollector = webrtcStats.createCollector(this.rtcPeerConnection, callId, peerId);
     initialMediaTracks.forEach(track => this.addTrack(track));
-    this.dataChannel = new DataChannel(callId, this.rtcPeerConnection, onDataChannelMessage, loggerFactory);
-    this.candidateQueue = new PeerCandidateQueue(callId, loggerFactory);
     this.registerRtcEvents();
   }
-
-  public connect = (offerOptons?: RTCOfferOptions): void =>
-    this.offer(offerOptons)
 
   public disconnect(): void {
     this.logger.info('Disconnecting');
@@ -88,12 +74,12 @@ export class RTCPeerConnectionFacade {
     if (this.isRemoteSDPset) {
       this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit))
         .then(_ => this.logger.debug('Candidate successfully added'))
-        .catch(err => {
+        .catch((err?: DOMError) => {
           this.logger.error('Could not add candidate: ', err);
           this.statsCollector.reportError('addIceCandidate', err);
         });
     } else {
-      this.candidateQueue.addCandidate(candidate);
+      this.candidateQueue.add(candidate);
     }
   }
 
@@ -101,7 +87,7 @@ export class RTCPeerConnectionFacade {
     return this.dataChannel.send(msg);
   }
 
-  public replaceTrackByKind = (track: MediaStreamTrack): Promise<void> => {
+  public replaceTrackByKind(track: MediaStreamTrack): Promise<void> {
     const maybeSender = this.rtcPeerConnection.getSenders()
       .filter(sender => sender.track && sender.track.kind === track.kind)[0];
     if (maybeSender) {
@@ -113,12 +99,11 @@ export class RTCPeerConnectionFacade {
     }
   }
 
-  public handleRemoteOffer = (remoteDescription: RTCSessionDescriptionInit,
-                              options?: RTCAnswerOptions): void => {
+  public handleRemoteOffer(remoteDescription: RTCSessionDescriptionInit, options?: RTCAnswerOptions): Promise<void> {
     this.logger.debug('Received an RTC offer - calling setRemoteDescription');
 
-    this.setRemoteDescription(remoteDescription)
-      .catch(err => {
+    return this.setRemoteDescription(remoteDescription)
+      .catch((err?: DOMError) => {
         this.statsCollector.reportError('setRemoteDescription', err);
         throw err;
       })
@@ -131,10 +116,11 @@ export class RTCPeerConnectionFacade {
       .catch(err => {
         this.logger.error(`Could not process the RTC description: ${err}`);
         this.handleFailedConnection();
+        throw err;
       });
   }
 
-  public handleRemoteAnswer(remoteDescription: RTCSessionDescriptionInit): void {
+  public handleRemoteAnswer(remoteDescription: RTCSessionDescriptionInit): Promise<void> {
     if (!this.dtlsRole && remoteDescription.sdp) {
       this.logger.debug('Detecting DTLS role based on remote answer');
       this.dtlsRole = remoteDescription.sdp.includes('a=setup:active') ? 'passive' : 'active';
@@ -143,34 +129,34 @@ export class RTCPeerConnectionFacade {
 
     this.logger.debug('Adding remote answer');
 
-    this.setRemoteDescription(remoteDescription)
+    return this.setRemoteDescription(remoteDescription)
       .then(_ => this.logger.debug('Successfully added SDP answer'))
       .catch(err => {
         this.logger.error(`Could not process the RTC description: ${err}`);
         this.handleFailedConnection();
+        throw err;
       });
   }
 
-  private offer(options?: RTCOfferOptions): void {
+  public offer(options?: RTCOfferOptions): Promise<void> {
     this.logger.debug('Creating an RTC offer.');
 
     this.dataChannel.createConnection();
 
-    this.rtcPeerConnection.createOffer(options || this.offerOptions)
-      .catch(err => {
+    return this.rtcPeerConnection.createOffer(options)
+      .catch((err?: DOMError) => {
         this.statsCollector.reportError('createOffer', err);
         throw err;
       })
       .then(offer => this.setLocalDescription(offer))
-      .then(offer => this.artichokeApi.sendDescription(this.callId, this.peerId, offer).then(_ => offer))
       .then(offer => {
+        this.artichokeApi.sendDescription(this.callId, this.peerId, offer);
         this.logger.debug(`Sent an RTC offer: ${offer.sdp}`);
-
-        return offer;
       })
       .catch(err => {
         this.logger.error(`Could not create an RTC offer: ${err}`);
         this.handleFailedConnection();
+        throw err;
       });
   }
 
@@ -179,8 +165,8 @@ export class RTCPeerConnectionFacade {
 
     this.dataChannel.createConnection();
 
-    return this.rtcPeerConnection.createAnswer(options || this.answerOptions)
-      .catch(err => {
+    return this.rtcPeerConnection.createAnswer(options)
+      .catch((err?: DOMError) => {
         this.statsCollector.reportError('createAnswer', err);
         throw err;
       })
@@ -196,44 +182,44 @@ export class RTCPeerConnectionFacade {
 
         return this.setLocalDescription(answer);
       })
-      .then(answer => this.artichokeApi.sendDescription(this.callId, this.peerId, answer).then(_ => answer))
       .then(answer => {
+        this.artichokeApi.sendDescription(this.callId, this.peerId, answer);
         this.logger.debug(`Sent an RTC answer: ${answer.sdp}`);
 
         return answer;
       });
   }
 
-  private patchSDPAnswer = (answer: RTCSessionDescriptionInit): void => {
+  private patchSDPAnswer(answer: RTCSessionDescriptionInit): void {
     if (this.dtlsRole === 'passive' && answer.sdp && answer.sdp.includes('a=setup:active')) {
       this.logger.info('DTLS role mismatch detected, patching SDP answer');
       answer.sdp = answer.sdp.replace(/a=setup:active/g, 'a=setup:passive');
     }
   }
 
-  private setRemoteDescription = (remoteDescription: RTCSessionDescriptionInit): Promise<void> => {
+  private setRemoteDescription(remoteDescription: RTCSessionDescriptionInit): Promise<void> {
     this.logger.debug('Setting remote RTC description.');
 
     return this.rtcPeerConnection.setRemoteDescription(remoteDescription)
-      .then(this.drainCandidatesAfterSettingRemoteSDP);
+      .then(() => this.drainCandidatesAfterSettingRemoteSDP());
   }
 
-  private drainCandidatesAfterSettingRemoteSDP = (): void => {
+  private drainCandidatesAfterSettingRemoteSDP(): void {
     this.isRemoteSDPset = true;
-    this.candidateQueue.drainCandidates().forEach(candidate =>
-      this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate as RTCIceCandidateInit))
-        .catch(err => {
+    this.candidateQueue.drain().forEach(candidate =>
+      this.rtcPeerConnection.addIceCandidate(new RTCIceCandidate(candidate))
+        .catch((err?: DOMError) => {
           this.logger.error('Could not add candidate: ', err);
           this.statsCollector.reportError('addIceCandidate', err);
         }));
   }
 
-  private setLocalDescription = (localDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> => {
+  private setLocalDescription(localDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
     this.logger.debug('Setting local RTC description.');
 
     return this.rtcPeerConnection.setLocalDescription(localDescription)
       .then(() => localDescription)
-      .catch((err) => {
+      .catch((err?: DOMError) => {
         this.statsCollector.reportError('setLocalDescription', err);
         throw err;
       });
@@ -252,14 +238,13 @@ export class RTCPeerConnectionFacade {
     }
   }
 
-  private registerRtcEvents = (): void => {
+  private registerRtcEvents(): void {
     this.logger.debug('registering rtc events');
     this.rtcPeerConnection.onicecandidate = (event): void => {
       if (event.candidate) {
         this.logger.debug(`Created ICE candidate: ${event.candidate.candidate}`);
-        this.artichokeApi.sendCandidate(this.callId, this.peerId, event.candidate)
-          .then(_ => this.logger.debug('Candidate sent successfully'))
-          .catch(err => this.logger.error(`Could not send an ICE candidate: ${err}`));
+        this.artichokeApi.sendCandidate(this.callId, this.peerId, event.candidate);
+        this.logger.debug('Candidate sent successfully');
       } else {
         this.logger.debug('Done gathering ICE candidates.');
       }
@@ -277,18 +262,16 @@ export class RTCPeerConnectionFacade {
       this.printRtcStates();
       // FIXME Chrome triggers renegotiation on... Initial offer creation...
       // FIXME Firefox triggers renegotiation when remote offer is received.
-      if (!this.config.negotiationNeededDisabled) {
-        if (this.isEstablished()) {
-          this.renegotiationTimer = TimeUtils.onceDelayed(
-            this.renegotiationTimer, RTCPeerConnectionFacade.renegotiationTimeout, () => {
-              this.logger.debug('Renegotiating');
-              this.offer();
-            });
-        } else {
-          this.logger.debug('onnegotiationneeded - connection not established - doing nothing');
-        }
+      if (this.isEstablished()) {
+        this.delayer.delayOnce(RTCPeerConnectionFacade.renegotiationTimeout, () => {
+            this.logger.debug('Renegotiating');
+            this.offer().then(
+              () => this.logger.debug('Sending renegotiatin offer'),
+              err => this.logger.error('Renegotiation offer failed', err)
+            );
+          });
       } else {
-        this.logger.info('negotitationneeded was called but it is disabled');
+        this.logger.debug('onnegotiationneeded - connection not established - doing nothing');
       }
     };
 
@@ -315,14 +298,14 @@ export class RTCPeerConnectionFacade {
     this.logger.debug('Registered all rtc events');
   }
 
-  private printRtcStates = (): void => {
+  private printRtcStates(): void {
     this.logger.debug(`Connection state: ${this.rtcPeerConnection.connectionState}`);
     this.logger.debug(`Signaling state: ${this.rtcPeerConnection.signalingState}`);
     this.logger.debug(`ICE Connection state: ${this.rtcPeerConnection.iceConnectionState}`);
     this.logger.debug(`ICE Gathering state: ${this.rtcPeerConnection.iceGatheringState}`);
   }
 
-  private notifyStatusChange = (iceConnectionState: RTCIceConnectionState): void => {
+  private notifyStatusChange(iceConnectionState: RTCIceConnectionState): void {
     switch (iceConnectionState) {
       case 'failed':
         this.statsCollector.reportError('iceConnectionFailure');
@@ -338,7 +321,7 @@ export class RTCPeerConnectionFacade {
     }
   }
 
-  private handleFailedConnection = (): void => {
+  private handleFailedConnection(): void {
     this.logger.warn('Connection failed, emitting failed & closing connection');
     this.onStatusChange(ConnectionStatus.Failed);
   }

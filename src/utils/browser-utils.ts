@@ -1,26 +1,20 @@
+import adapter from 'webrtc-adapter';
 import { DataChannel } from '../rtc/data-channel';
-// tslint:disable-next-line
-const adapter = require('webrtc-adapter');
 
 export class BrowserUtils {
 
-  public static readonly supportedBrowsers: {[browserName: string]: number} = {
-    chrome: 67, // opera is also chrome
+  private static readonly supportedBrowsers: {[browserName: string]: number} = {
+    chrome: 67, // opera is also recognized as chrome by webrtc-adapter
     firefox: 61,
     edge: 17134,
     safari: 605
   };
 
-  /*
-   * SDK supports Call.broadcast over DataChannel which is not supported by EDGE
-   * Pass true if your logic is based on boradcast
-   * WARNING: This will disable SDK on EDGE browser
-   */
-  public static isBrowserSupported(callBroadcastRequired = false): boolean {
-    return adapter.browserDetails.version !== null
-      && (callBroadcastRequired ? DataChannel.isSupported() : true)
+  public static isBrowserSupported(): boolean {
+    return BrowserUtils.isWebRtcAvailable()
+      && adapter.browserDetails.version !== null
+      && DataChannel.isSupported()
       && BrowserUtils.isBrowserVersionSupported()
-      && BrowserUtils.isWebRtcAvailable()
       && BrowserUtils.isUserMediaAvailable();
   }
 
@@ -28,12 +22,8 @@ export class BrowserUtils {
     return adapter.browserDetails.browser;
   }
 
-  public static getBrowserVersion(): string {
+  public static getBrowserVersion(): number | undefined {
     return adapter.browserDetails.version;
-  }
-
-  public static getBrowserIntVersion(): number {
-    return parseInt(BrowserUtils.getBrowserVersion(), 10);
   }
 
   public static isChrome(): boolean {
@@ -53,7 +43,10 @@ export class BrowserUtils {
   }
 
   private static isBrowserVersionSupported(): boolean {
-    return BrowserUtils.getBrowserIntVersion() >= BrowserUtils.supportedBrowsers[BrowserUtils.getBrowserName()];
+    const maybeBrowserVersion = BrowserUtils.getBrowserVersion();
+
+    return typeof maybeBrowserVersion !== 'undefined' &&
+      maybeBrowserVersion >= BrowserUtils.supportedBrowsers[BrowserUtils.getBrowserName()];
   }
 
   private static isWebRtcAvailable(): boolean {

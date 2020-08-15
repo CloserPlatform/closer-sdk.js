@@ -1,89 +1,79 @@
-import { LoggerFactory } from '../logger/logger-factory';
 import { LoggerService } from '../logger/logger-service';
+import { Queue } from '../utils/queue';
 
 export type DataChannelMessage = string;
 
 export class DataChannel {
 
   private rtcDataChannel?: RTCDataChannel;
-  private messageQueue: ReadonlyArray<DataChannelMessage> = [];
 
-  private logger: LoggerService;
-
-  constructor(private label: string,
-              private rtcPeerConnection: RTCPeerConnection,
-              private onChannelMessage: (msg: DataChannelMessage) => void,
-              loggerFactory: LoggerFactory) {
-    this.logger = loggerFactory.create(`DataChannel label(${label})`);
+  constructor(
+    private label: string,
+    private messageCallback: (message: DataChannelMessage) => void,
+    private rtcPeerConnection: RTCPeerConnection,
+    private logger: LoggerService,
+    private messageQueue: Queue<DataChannelMessage>,
+  ) {
     this.logger.debug('Creating');
   }
 
-  // Edge do not support rtc data channels ATM - 06.07.2018
-  public static isSupported = (): boolean =>
-    typeof RTCPeerConnection.prototype.createDataChannel !== 'undefined'
+  public static isSupported(): boolean {
+    // tslint:disable-next-line:no-unbound-method
+    return typeof RTCPeerConnection.prototype.createDataChannel !== 'undefined';
+  }
 
-  public createConnection = (): void => {
-    // Becasue the not `negotiated` is not fully supported by Safari
-    if (DataChannel.isSupported()) {
-      this.logger.debug('DataChannel is supported - creating connection');
-      if (!this.rtcDataChannel) {
-        this.rtcDataChannel = this.rtcPeerConnection.createDataChannel(this.label, {negotiated: true, id: 1});
-        this.registerChannelEvents(this.rtcDataChannel);
-      } else {
-        this.logger.warn('Cannot create channel - channel already exists');
-      }
+  public createConnection(): void {
+    this.logger.debug('DataChannel is supported - creating connection');
+    if (!this.rtcDataChannel) {
+      this.rtcDataChannel = this.rtcPeerConnection.createDataChannel(this.label, {negotiated: true, id: 1});
+
+      return this.registerChannelEvents(this.rtcDataChannel);
     } else {
-      this.logger.warn('channel is not supported, your peers will not receive any p2p messages');
+      return this.logger.error('Cannot create channel - channel already exists');
     }
   }
 
-  public send = (msg: DataChannelMessage): void => {
+  public send(msg: DataChannelMessage): void {
     if (this.rtcDataChannel) {
       switch (this.rtcDataChannel.readyState) {
         case 'connecting':
           this.logger.info('Connection is connecting, adding message to queue');
-          this.addToQueue(msg);
-          break;
+
+          return this.messageQueue.add(msg);
         case 'open':
-          this.logger.debug('Sending message');
-          this.sendMessageViaChannel(this.rtcDataChannel, msg);
-          break;
+          this.logger.debug('Sending message', msg);
+
+          return this.sendMessageViaChannel(this.rtcDataChannel, msg);
         case 'closing':
-          this.logger.error('Can not send message, channel is closing');
-          break;
+          return this.logger.error('Can not send message, channel is closing');
         case 'closed':
-          this.logger.error('Can not send message, channel is already closed');
-          break;
+          return this.logger.error('Can not send message, channel is already closed');
         default:
-          this.logger.error('Unsupported rtc data channel state');
+          return this.logger.error('Unsupported rtc data channel state');
       }
     } else {
       this.logger.info('There is no data channel, adding message to queue');
-      this.addToQueue(msg);
+
+      return this.messageQueue.add(msg);
     }
   }
 
-  private sendMessageViaChannel = (channel: RTCDataChannel, msg: DataChannelMessage): void =>
-    channel.send(msg)
-
-  private addToQueue = (msg: DataChannelMessage): void => {
-    this.messageQueue = [...this.messageQueue, msg];
+  private sendMessageViaChannel(channel: RTCDataChannel, msg: DataChannelMessage): void {
+    return channel.send(msg);
   }
 
-  private registerChannelEvents = (channel: RTCDataChannel): void => {
+  private registerChannelEvents(channel: RTCDataChannel): void {
     channel.onopen = (): void => {
       this.logger.debug('Opened');
-      this.messageQueue.forEach(msg => this.sendMessageViaChannel(channel, msg));
-      this.messageQueue = [];
+
+      return this.messageQueue.drain().forEach(msg => this.sendMessageViaChannel(channel, msg));
     };
     channel.onmessage = (ev): void => {
-      this.onChannelMessage(ev.data);
+      this.logger.debug('Received message', ev.data);
+
+      return this.messageCallback(ev.data as DataChannelMessage);
     };
-    channel.onclose = (): void => {
-      this.logger.debug('Closed');
-    };
-    channel.onerror = (er): void => {
-      this.logger.error('On channel error:', er);
-    };
+    channel.onclose = (): void => this.logger.debug('Closed');
+    channel.onerror = (er): void => this.logger.error('On channel error:', er);
   }
 }
