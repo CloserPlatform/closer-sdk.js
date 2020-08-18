@@ -17,24 +17,31 @@ export interface LoginFormData {
 
 export const makeLoginForm = (id: string, onClick: (formData: LoginFormData) => void): JQuery => {
   const defaultEmails: ReadonlyArray<string> = [
+    'none',
     'charlie@ratel.io',
     'jimmy@ratel.io',
     'alice@anymind.com',
     'bob@anymind.com',
     'chaki@anymind.com',
-    'duli@anymind.com',
-    'none'
+    'duli@anymind.com'
   ];
+  const urls = {
+    artichoke: 'https://artichoke.stage.closer.app',
+    // 'https://artichoke.stage.closer.app'
+    spinner: 'https://spinner.stage.closer.app'
+    // 'https://spinner.stage.closerapp.com'
+  };
+
   const form = $('<form id="login_form">')
     .append([
-      makeInput('server-artichoke', 'ArtichokeServer:', 'ArtichokeServer', 'https://artichoke.stage.closerapp.com'),
-      makeInput('server-auth', 'AuthServer:', 'AuthServer', 'https://spinner.stage.closerapp.com'),
-      makeSelect('user-email-select', 'Email:', defaultEmails),
-      makeDiv().html(
-        '<a href="https://git.contactis.pl/closer/runny-sea-men/blob/master/data/agents.csv" ' +
-        'target="_blank">Agents data<a/>'),
-      makeInput('user-email', '', 'charlie@ratel.io', ''),
-      makeInput('user-password', 'Password:', 'stokrotka2817', 'stokrotka2817')
+      makeInput('server-artichoke', 'ArtichokeServer:', 'ArtichokeServer', urls.artichoke),
+      makeInput('server-auth', 'AuthServer:', 'AuthServer', urls.spinner),
+      // makeSelect('user-email-select', 'Email:', defaultEmails),
+      // makeDiv().html(
+      //   '<a href="https://git.contactis.pl/closer/runny-sea-men/blob/master/data/agents.csv" ' +
+      //   'target="_blank">Agents data<a/>'),
+      makeInput('user-email', 'Email: ', 'Your email...', ''),
+      makeInput('user-password', 'Password:', 'Your password...', '')
     ]);
 
   const button = $('<button class="btn btn-primary" form="login_form">')
@@ -44,10 +51,11 @@ export const makeLoginForm = (id: string, onClick: (formData: LoginFormData) => 
       const artichokeServer = String($('#server-artichoke').val());
       const authServer = String($('#server-auth').val());
       const userEmail = String($('#user-email').val());
-      const userEmailSelect = String($('#user-email-select').val());
+      // const userEmailSelect = String($('#user-email-select').val());
       const userPassword = String($('#user-password').val());
-      const email = userEmailSelect === 'none' ? userEmail : userEmailSelect;
-      onClick({artichokeServer, authServer, userEmail: email, userPassword});
+      // const email = userEmailSelect === 'none' ? userEmail : userEmailSelect;
+      // onClick({artichokeServer, authServer, userEmail: email, userPassword});
+      onClick({artichokeServer, authServer, userEmail, userPassword});
     });
 
   return $('<div>')
@@ -107,6 +115,34 @@ export const makeCheckbox = (id: string, value: string, checked: boolean,
   return $('<div>').append(input, [makeLabel(id, '', value)]);
 };
 
+export const makeChatBox = (): JQuery => {
+  const textBox = $('<textarea readonly cols="75" rows="7">');
+  textBox.prop({
+    class: 'bg-light m-3'
+  });
+
+  return textBox;
+};
+
+export const makeInputWithBtn = (id: string, callback: (value: string) => void, label: string,
+                                buttonLabel: string, placeholder?: string, value?: string): JQuery => {
+    const form = $(`<form id="form-${id}">`)
+    .append([
+      makeInput(`input-${id}`, label, placeholder || '', value || '')
+    ]);
+
+  const button = $(`<button class="btn btn-primary" form="form-${id}">`)
+    .append(buttonLabel)
+    .on('click', (ev) => {
+      ev.preventDefault();
+      callback(String($(`#input-${id}`).val()));
+    });
+
+  return $('<div>')
+    .prop('id', id)
+    .append([form, button]);
+};
+
 export const makeCallingInput = (id: string, onCall: (userId: string) => void,
                                  placeholder?: string, value?: string): JQuery => {
   const form = $('<form id="calling_form">')
@@ -129,7 +165,7 @@ export const makeCallingInput = (id: string, onCall: (userId: string) => void,
 export const makeButton = (className: string, contents: JQuery | string, onClick: () => void): JQuery =>
   $('<button>').prop({
     type: 'button',
-    class: `btn ${className}`
+    class: `btn ${className} mx-2`
   })
     .append(contents)
     .click(onClick);

@@ -1,4 +1,5 @@
-import { ChatModule } from '../chat/chat.module';
+// tslint:disable:no-floating-promises
+import { BoardModule } from '../board/board.module';
 import { LoginService } from './login.service';
 import { UrlService } from '../url.service';
 import { Logger } from '../logger';
@@ -6,11 +7,11 @@ import { LoginFormData, makeLoginForm } from '../view';
 import { Page } from '../page';
 
 export class LoginModule {
-
   private loginBox?: JQuery;
+  private loginService: LoginService;
 
-  constructor(private loginService: LoginService,
-              private chatModule: ChatModule) {
+  constructor(private actionboardModule: BoardModule) {
+    this.loginService = new LoginService();
   }
 
   public init = (): void => {
@@ -30,7 +31,10 @@ export class LoginModule {
         } else {
           Logger.error('There is no loginbox');
         }
-        this.chatModule.init(session, formData);
+
+        this.actionboardModule.init(session, formData);
+      }).catch(e => {
+        Logger.error(`Error logging: ${e}`);
       });
   }
 }
