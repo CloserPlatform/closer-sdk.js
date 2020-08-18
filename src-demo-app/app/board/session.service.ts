@@ -6,7 +6,7 @@ import { AuthSession } from '../login/login.service';
 import { UrlService } from '../url.service';
 import { CallHandler } from '../call';
 import { Page } from '../page';
-import { CommunicatorReconnectionService } from './reconnection.service';
+import { CommunicatorReconnectionService } from '../call/reconnection.service';
 import { ReplaySubject } from 'rxjs/internal/ReplaySubject';
 import { Subject } from 'rxjs/internal/Subject';
 

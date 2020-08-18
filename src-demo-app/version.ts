@@ -4,7 +4,7 @@ export const displayVersion = (): void => {
         contentType: 'text/plain',
         url: 'version.txt',
         success(version): void {
-            $('.navbar').append(`<div class="text-center"><span>Commit: ${version}</span></div>`);
+            $('#nav').append(`<div class="text-muted text-center"><small>Commit: ${version}</small></div>`);
         }
     });
 };
