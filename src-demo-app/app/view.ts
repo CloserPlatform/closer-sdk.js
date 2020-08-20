@@ -9,37 +9,45 @@ import { Logger } from './logger';
 import { Observable } from 'rxjs/internal/Observable';
 
 export interface LoginFormData {
-  artichokeServer: string;
-  authServer: string;
   userEmail: string;
   userPassword: string;
 }
 
-export const makeLoginForm = (id: string, onClick: (formData: LoginFormData) => void): JQuery => {
-  const defaultEmails: ReadonlyArray<string> = [
-    'none',
-    'charlie@ratel.io',
-    'jimmy@ratel.io',
-    'alice@anymind.com',
-    'bob@anymind.com',
-    'chaki@anymind.com',
-    'duli@anymind.com'
-  ];
+export interface ServerFormData {
+  artichokeServer: string;
+  authServer: string;
+}
+
+export const makeServersForm = (artichokeId: string, authId: string): JQuery => {
   const urls = {
     artichoke: 'https://artichoke.stage.closer.app',
-    // 'https://artichoke.stage.closer.app'
     spinner: 'https://spinner.stage.closer.app'
-    // 'https://spinner.stage.closerapp.com'
   };
+
+  const form = $('<form id="server-form">')
+    .append([
+      makeInput(artichokeId, 'ArtichokeServer:', 'ArtichokeServer', urls.artichoke),
+      makeInput(authId, 'SpinnerServer:', 'AuthServer', urls.spinner),
+    ]);
+
+  return $('<div>')
+    .prop('id', 'srv-form')
+    .append(form);
+};
+
+export const makeLoginForm = (id: string, onClick: (formData: LoginFormData) => void): JQuery => {
+  // const defaultEmails: ReadonlyArray<string> = [
+  //   'none',
+  //   'charlie@ratel.io',
+  //   'jimmy@ratel.io',
+  //   'alice@anymind.com',
+  //   'bob@anymind.com',
+  //   'chaki@anymind.com',
+  //   'duli@anymind.com'
+  // ];
 
   const form = $('<form id="login_form">')
     .append([
-      makeInput('server-artichoke', 'ArtichokeServer:', 'ArtichokeServer', urls.artichoke),
-      makeInput('server-auth', 'AuthServer:', 'AuthServer', urls.spinner),
-      // makeSelect('user-email-select', 'Email:', defaultEmails),
-      // makeDiv().html(
-      //   '<a href="https://git.contactis.pl/closer/runny-sea-men/blob/master/data/agents.csv" ' +
-      //   'target="_blank">Agents data<a/>'),
       makeInput('user-email', 'Email: ', 'Your email...', ''),
       makeInput('user-password', 'Password:', 'Your password...', '')
     ]);
@@ -48,14 +56,9 @@ export const makeLoginForm = (id: string, onClick: (formData: LoginFormData) => 
     .append('Login!')
     .click(event => {
       event.preventDefault();
-      const artichokeServer = String($('#server-artichoke').val());
-      const authServer = String($('#server-auth').val());
       const userEmail = String($('#user-email').val());
-      // const userEmailSelect = String($('#user-email-select').val());
       const userPassword = String($('#user-password').val());
-      // const email = userEmailSelect === 'none' ? userEmail : userEmailSelect;
-      // onClick({artichokeServer, authServer, userEmail: email, userPassword});
-      onClick({artichokeServer, authServer, userEmail, userPassword});
+      onClick({userEmail, userPassword});
     });
 
   return $('<div>')
@@ -118,29 +121,50 @@ export const makeCheckbox = (id: string, value: string, checked: boolean,
 export const makeChatBox = (): JQuery => {
   const textBox = $('<textarea readonly cols="75" rows="7">');
   textBox.prop({
-    class: 'bg-light m-3'
+    class: 'form-control mb-4'
   });
 
   return textBox;
 };
 
-export const makeInputWithBtn = (id: string, callback: (value: string) => void, label: string,
-                                buttonLabel: string, placeholder?: string, value?: string): JQuery => {
-    const form = $(`<form id="form-${id}">`)
-    .append([
-      makeInput(`input-${id}`, label, placeholder || '', value || '')
-    ]);
+export const makePlaceholderInput = (id: string, placeholder: string): JQuery => {
+  const input = $('<input>')
+  .prop({
+    id,
+    type: 'text',
+    class: 'form-control',
+    placeholder,
+  });
 
-  const button = $(`<button class="btn btn-primary" form="form-${id}">`)
+  return input;
+};
+
+export const makeInputWithBtn = (id: string, callback: (value: string) => void,
+                                buttonLabel: string, placeholder?: string): JQuery => {
+    const input = makePlaceholderInput(`input-${id}`, placeholder);
+  const button = $(`<button class="btn btn-outline-primary" type="button" form="form-${id}">`)
     .append(buttonLabel)
     .on('click', (ev) => {
       ev.preventDefault();
       callback(String($(`#input-${id}`).val()));
     });
+  const buttonDiv = makeDiv().prop({
+    class: 'input-group-append'
+  }).append(button);
 
-  return $('<div>')
-    .prop('id', id)
-    .append([form, button]);
+  const formDiv = $('<div>')
+    .prop({
+      id,
+      class: 'input-group my-3'
+    })
+    .append([input, buttonDiv]);
+
+    return $(`<form id="form-${id}">`)
+    .on('submit', e => {
+      e.preventDefault();
+      callback(String($(`#input-${id}`).val()));
+    })
+    .append(formDiv);
 };
 
 export const makeCallingInput = (id: string, onCall: (userId: string) => void,

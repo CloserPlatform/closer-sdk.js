@@ -1,6 +1,12 @@
 ![SDK](./sdk.png)
 
 # Ratel JavaScript SDK
+demo-app uses @swagger/spinner, make sure npm can install it by creating a file `.npmrc` with contents: 
+```
+strict-ssl=false
+registry=https://nexus.ratel.io/repository/npm/
+```
+
 Building:
 
 ```
