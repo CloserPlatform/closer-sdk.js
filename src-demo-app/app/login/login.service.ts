@@ -1,10 +1,6 @@
 import { SpinnerClient, LoginForm, AgentCtx } from '@swagger/spinner';
 import { Credentials } from '../credentials';
-
-export interface AuthSession {
-  id: string;
-  apiKey: string;
-}
+import { Logger } from '../logger';
 
 export class LoginService {
   public spinnerClient: SpinnerClient;
@@ -15,7 +11,14 @@ export class LoginService {
       password: credentials.pwd
     };
 
-    const agentCtx = this.spinnerClient.login(loginForm);
+    const agentCtx = await this.spinnerClient.login(loginForm);
+
+    return agentCtx;
+  }
+
+  public getSession = async (credentials: Credentials): Promise<AgentCtx> => {
+    this.spinnerClient.apiKey = credentials.apiKey;
+    const agentCtx = await this.spinnerClient.getSession();
 
     return agentCtx;
   }

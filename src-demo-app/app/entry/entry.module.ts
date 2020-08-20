@@ -5,24 +5,31 @@ import { Nav } from '../nav';
 import { LoginModule } from '../login/login.module';
 import { GuestModule } from '../guest/guest.module';
 import { Credentials } from '../credentials';
+import { Logger } from '../logger';
 
 export class EntryModule {
-  private loginModule: LoginModule;
-  private guestModule: GuestModule;
-  private credentials: Credentials;
+  private loginModule = new LoginModule();
+  private guestModule = new GuestModule();
+  private credentials = new Credentials();
   private spinnerClient: SpinnerClient;
 
   private inner: JQuery;
 
   public init = (): void => {
-    this.credentials = new Credentials();
-    this.loginModule = new LoginModule();
-    this.guestModule = new GuestModule();
-
     Nav.setLogoutCallback(() => {
-      alert('not working yet');
+      this.credentials.clear();
+      location.reload();
     });
-    this.render();
+
+    if (!this.credentials.areServersSaved()) {
+      this.render();
+    } else {
+      if (this.credentials.isGuest) {
+        this.proceed(this.guestModule.init);
+      } else {
+        this.proceed(this.loginModule.init);
+      }
+    }
   }
 
   public toggleVisible = (visible = true): void => {
@@ -34,14 +41,18 @@ export class EntryModule {
   }
 
   private proceed = (next: (c: Credentials, sc: SpinnerClient) => void): void => {
+    this.spinnerClient = new SpinnerClient(`${this.credentials.authServer}/api`);
+    next(this.credentials, this.spinnerClient);
+  }
+
+  private buttonsCallback = (next: (c: Credentials, sc: SpinnerClient) => void): void => {
     const artichokeServer = String($(`#${Page.artichokeFormId}`).val());
     const authServer = String($(`#${Page.authFormId}`).val());
 
     if (artichokeServer && authServer) {
       this.credentials.setServers(artichokeServer, authServer);
-      this.spinnerClient = new SpinnerClient(`${authServer}/api`);
       this.toggleVisible(false);
-      next(this.credentials, this.spinnerClient);
+      this.proceed(next);
     } else {
       alert('Empty servers inputs');
     }
@@ -50,16 +61,18 @@ export class EntryModule {
   private render = (): void => {
     const form = makeServersForm(Page.artichokeFormId, Page.authFormId);
     const existingButton = makeButton('btn-info', 'CONTINUE AS EXISTING USER', () => {
-      this.proceed(this.loginModule.init);
+      this.buttonsCallback(this.loginModule.init);
     });
     const guestButton = makeButton('btn-info', 'CONTINUE AS GUEST', () => {
-      this.proceed(this.guestModule.init);
+      this.buttonsCallback(this.guestModule.init);
     });
 
-    const btnsDiv = makeDiv().prop({
+    const buttonsContainer = makeDiv().prop({
       class: 'd-flex justify-content-center align-items-center m-3'
     }).append([existingButton, guestButton]);
-    this.inner = makeDiv().append([form, btnsDiv]);
+
+    this.inner = makeDiv().append([form, buttonsContainer]);
+
     Page.contents.empty();
     Page.contents.append(this.inner);
   }

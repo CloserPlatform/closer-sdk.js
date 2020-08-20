@@ -1,5 +1,5 @@
 ## Demo app structure
-`app.module` display `entry.module` \[A module that displays inputs for servers and provides next actions\]
+`app.module` displays `entry.module` \[A module that displays inputs for servers and provides next actions\]
 
 User can choose path of:
  - existing user:

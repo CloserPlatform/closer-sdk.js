@@ -20,6 +20,7 @@ export class Nav {
     const div = makeDiv().prop({
       class: 'd-flex justify-content-center align-items-center m-3'
     }).append(button);
+
     Nav.navButtonsRight.empty();
     Nav.navButtonsRight.append(div);
   }

@@ -1,5 +1,4 @@
 // tslint:disable:no-floating-promises
-// tslint:disable:no-any
 
 import * as RatelSdk from '../../../';
 import { Logger } from '../logger';
@@ -7,6 +6,7 @@ import { makeDiv, makeInputWithBtn, makeChatBox } from '../view';
 import { Page } from '../page';
 import { ChatService } from './chat.service';
 import { ConversationModule } from '../conversation/conversation.module';
+import { Credentials } from '../credentials';
 
 export class ChatModule {
   private inner: JQuery;
@@ -14,7 +14,7 @@ export class ChatModule {
   private chatService: ChatService;
   private conversationModule: ConversationModule;
 
-  constructor (session: RatelSdk.Session) {
+  constructor (private credentials: Credentials, session: RatelSdk.Session) {
     this.chatService = new ChatService(session);
     this.conversationModule = new ConversationModule();
   }
@@ -34,16 +34,18 @@ export class ChatModule {
     }
   }
 
-  private roomCallback = async (inputValue: string): Promise<any> => {
+  private roomCallback = async (inputValue: string): Promise<void> => {
     try {
-      this.conversationModule.init(inputValue, this.chatService.session);
+      await this.conversationModule.init(inputValue, this.chatService.session);
+      this.credentials.setRoom(inputValue);
     } catch (e) {
       Logger.error(e);
     }
   }
 
   private render = (): void => {
-    const input = makeInputWithBtn(Page.roomInputId, this.roomCallback, 'Connect to room', 'Room id...');
+    const input = makeInputWithBtn(Page.roomInputId, this.roomCallback,
+      'Connect to room', 'Room id...', this.credentials.roomId || '');
 
     this.inner = makeDiv().append(input);
     Page.contents.append(this.inner);

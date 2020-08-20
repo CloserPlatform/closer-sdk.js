@@ -127,21 +127,22 @@ export const makeChatBox = (): JQuery => {
   return textBox;
 };
 
-export const makePlaceholderInput = (id: string, placeholder: string): JQuery => {
+export const makePlaceholderInput = (id: string, placeholder: string, initial: string): JQuery => {
   const input = $('<input>')
   .prop({
     id,
     type: 'text',
     class: 'form-control',
     placeholder,
+    value: initial
   });
 
   return input;
 };
 
 export const makeInputWithBtn = (id: string, callback: (value: string) => void,
-                                buttonLabel: string, placeholder?: string): JQuery => {
-    const input = makePlaceholderInput(`input-${id}`, placeholder);
+                                buttonLabel: string, placeholder: string, initial: string): JQuery => {
+    const input = makePlaceholderInput(`input-${id}`, placeholder, initial);
   const button = $(`<button class="btn btn-outline-primary" type="button" form="form-${id}">`)
     .append(buttonLabel)
     .on('click', (ev) => {

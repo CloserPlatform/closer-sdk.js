@@ -1,5 +1,3 @@
-// tslint:disable:no-any
-
 import { SpinnerClient } from '@swagger/spinner';
 import { makeInputWithBtn, makeDiv } from '../view';
 import { Page } from '../page';
@@ -12,13 +10,18 @@ export class GuestModule {
   private inner: JQuery;
   private guestService: GuestService;
   private credentials: Credentials;
-  private conversationModule: ConversationModule;
+  private conversationModule = new ConversationModule();
 
-  public init = (credentials: Credentials, sc: SpinnerClient): void => {
-    this.conversationModule = new ConversationModule();
-    this.guestService = new GuestService(credentials, sc);
+  public init = async (credentials: Credentials, sc: SpinnerClient): Promise<void> => {
+    this.guestService = new GuestService(sc);
     this.credentials = credentials;
-    this.renderInputs();
+
+    if (this.credentials.isGuestSessionSaved()) {
+      this.guestService.spinnerClient.apiKey = this.credentials.apiKey;
+      await this.orgCallback(this.credentials.orgId, false);
+    } else {
+      this.renderInputs();
+    }
   }
 
   public toggleVisible = (visible = true): void => {
@@ -32,18 +35,25 @@ export class GuestModule {
     }
   }
 
-  private orgCallback = async (orgId: string): Promise<any> => {
+  private orgCallback = async (orgId: string, newSession = true): Promise<void> => {
     try {
-      const {leadCtx, session} = await this.guestService.connectGuest(orgId, this.credentials);
-      Page.contents.empty();
-      await this.conversationModule.init(leadCtx.roomId, session);
+      if (!newSession) {
+        const {session, roomId} = await this.guestService.getExistingGuestSession(this.credentials);
+        Page.contents.empty();
+        await this.conversationModule.init(roomId, session);
+      } else {
+        const {leadCtx, session} = await this.guestService.getNewGuestSession(orgId, this.credentials);
+        this.credentials.setGuestCtx(leadCtx.id, leadCtx.orgId, leadCtx.apiKey);
+        Page.contents.empty();
+        await this.conversationModule.init(leadCtx.roomId, session);
+      }
     } catch (e) {
       Logger.error(e);
     }
   }
 
   private renderInputs = (): void => {
-    const orgInput = makeInputWithBtn(Page.orgInputId, this.orgCallback, 'Get org guest profile', 'Org id...');
+    const orgInput = makeInputWithBtn(Page.orgInputId, this.orgCallback, 'Get org guest profile', 'Org id...', '');
 
     this.inner = makeDiv().append(orgInput);
 
