@@ -1,5 +1,3 @@
-// tslint:disable:no-any
-
 import * as RatelSdk from '../../../';
 import { Logger } from '../logger';
 
@@ -18,7 +16,7 @@ export class ConversationService {
     this.room.typing$.subscribe(f);
   }
 
-  public setRoom = async (roomId: string): Promise<any> => {
+  public setRoom = async (roomId: string): Promise<void> => {
     const room = await this.session.chat.getRoom(roomId);
     this.room = room;
   }
@@ -37,7 +35,7 @@ export class ConversationService {
     }
   }
 
-  public sendMessage = async (msg: string): Promise<any> => {
+  public sendMessage = async (msg: string): Promise<void> => {
     if (this.room) {
       try {
         const response = await this.room.send(msg);

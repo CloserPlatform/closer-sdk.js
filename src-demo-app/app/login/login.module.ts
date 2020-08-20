@@ -1,8 +1,7 @@
-// tslint:disable:no-any
-import { SpinnerClient } from '@swagger/spinner';
+// tslint:disable:no-floating-promises
+import { SpinnerClient, AgentCtx } from '@swagger/spinner';
 import { BoardModule } from '../board/board.module';
 import { LoginService } from './login.service';
-import { UrlService } from '../url.service';
 import { Logger } from '../logger';
 import { LoginFormData, makeLoginForm } from '../view';
 import { Page } from '../page';
@@ -10,39 +9,41 @@ import { Credentials } from '../credentials';
 
 export class LoginModule {
   private loginBox?: JQuery;
-  private loginService: LoginService;
   private credentials: Credentials;
+  private loginService = new LoginService();
+  private boardModule = new BoardModule();
 
-  private boardModule: BoardModule;
-
-  constructor() {
-    this.loginService = new LoginService();
-    this.boardModule = new BoardModule();
-  }
-
-  public init = (c: Credentials, sc: SpinnerClient): void => {
+  public init = async (c: Credentials, sc: SpinnerClient): Promise<void> => {
     this.credentials = c;
     this.loginService.spinnerClient = sc;
-    this.loginBox = this.renderLogin();
 
-    Page.contents.empty();
-    Page.contents.append(this.loginBox);
+    if (this.credentials.isSessionSaved()) {
+      const agentCtx = await this.loginService.getSession(this.credentials);
+      await this.proceedToBoard(agentCtx);
+    } else {
+      this.render();
+    }
   }
 
-  private renderLogin = (): JQuery =>
-    makeLoginForm('login-box', this.handleLoginProbe)
+  private proceedToBoard = async (agentCtx: AgentCtx): Promise<void> => {
+    this.credentials.setAgentCtx(agentCtx.id, agentCtx.orgId, agentCtx.apiKey);
+    await this.boardModule.init(agentCtx, this.credentials, this.loginService.spinnerClient);
+  }
 
-  private handleLoginProbe = async (formData: LoginFormData): Promise<any> => {
+  private handleLoginProbe = async (formData: LoginFormData): Promise<void> => {
     this.credentials.setCredentials(formData.userEmail, formData.userPassword);
 
     try {
       const agentCtx =  await this.loginService.login(this.credentials);
-
-      this.credentials.setAgentCtx(agentCtx.id, agentCtx.orgId, agentCtx.apiKey);
       this.loginBox.hide();
-      await this.boardModule.init(agentCtx, this.credentials, this.loginService.spinnerClient);
+      this.proceedToBoard(agentCtx);
     } catch (e) {
-      alert(`Error logging ${e}`);
+      alert('Error logging');
     }
+  }
+  private render = (): void => {
+    this.loginBox = makeLoginForm('login-box', this.handleLoginProbe);
+    Page.contents.empty();
+    Page.contents.append(this.loginBox);
   }
 }

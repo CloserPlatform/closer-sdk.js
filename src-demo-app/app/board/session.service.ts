@@ -3,7 +3,6 @@ import * as View from '../view';
 import * as RatelSDK from '../../../';
 import { Logger } from '../logger';
 import { createStream } from '../stream';
-import { AuthSession } from '../login/login.service';
 import { UrlService } from '../url.service';
 import { CallHandler } from '../call';
 import { Page } from '../page';

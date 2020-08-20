@@ -1,5 +1,3 @@
-// tslint:disable:no-any
-
 import * as RatelSdk from '../../../';
 import { makeChatBox, makeInputWithBtn, makeDiv } from'../view';
 import { Page } from '../page';
@@ -13,10 +11,10 @@ export class ConversationModule {
   private infoText: JQuery;
   private inner: JQuery;
 
-  private infoTimeout: any;
+  private infoTimeout: ReturnType<typeof setTimeout>;
   private conversationService: ConversationService;
 
-  public init = async (roomId: string, session: RatelSdk.Session): Promise<any> => {
+  public init = async (roomId: string, session: RatelSdk.Session): Promise<void> => {
     this.conversationService = new ConversationService(session);
     await this.conversationService.setRoom(roomId);
     this.conversationService.setMessageCallback(this.handleMessageCallback);
@@ -53,7 +51,7 @@ export class ConversationModule {
     this.infoText.empty();
   }
 
-  private refreehTextBox = async (): Promise<any> => {
+  private refreehTextBox = async (): Promise<void> => {
     const history = await this.conversationService.getRoomMessageHistory();
     this.textBoxEmpty();
     history.forEach(message => {
@@ -71,7 +69,7 @@ export class ConversationModule {
   private render = (): void => {
     this.textBox = makeChatBox();
 
-    const msgInput = makeInputWithBtn(Page.msgInputId, this.sendCallback, 'Send', 'Type your message here...');
+    const msgInput = makeInputWithBtn(Page.msgInputId, this.sendCallback, 'Send', 'Type your message here...', '');
     this.infoText = makeDiv().prop({
       class: 'mb-3'
     });
@@ -80,7 +78,7 @@ export class ConversationModule {
     Page.contents.append(this.inner);
   }
 
-  private sendCallback = async (inputValue: string): Promise<any> => {
+  private sendCallback = async (inputValue: string): Promise<void> => {
     if (!this.conversationService.room) {
       alert('Not connected to any room');
     } else {

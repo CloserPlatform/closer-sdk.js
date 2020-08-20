@@ -1,12 +1,9 @@
-// tslint:disable:no-any
-
 import { SpinnerClient, AgentCtx } from '@swagger/spinner';
 import * as RatelSdk from '../../../';
 import { Logger } from '../logger';
 import { CallModule } from '../call/call.module';
 import { ChatModule } from '../chat/chat.module';
-import { AuthSession } from '../login/login.service';
-import { LoginFormData, makeButton, makeDiv } from '../view';
+import { makeButton } from '../view';
 import { BoardService } from './board.service';
 import { Nav } from '../nav';
 import { Credentials } from '../credentials';
@@ -22,17 +19,18 @@ export class BoardModule {
     this.boardService = new BoardService();
   }
 
-  public init = async (agentCtx: AgentCtx, credentials: Credentials, sc: SpinnerClient): Promise<any> => {
-    const success = await this.boardService.init(agentCtx, credentials, sc);
-
-    if (!success) {
-      this.handleConnectFailed(new Error('Couldn\'t initialize session'));
-    } else {
+  public init = async (agentCtx: AgentCtx, credentials: Credentials, sc: SpinnerClient): Promise<void> => {
+    this.credentials = credentials;
+    try {
+      await this.boardService.init(agentCtx, credentials, sc);
       this.render();
+    } catch (e) {
+      this.handleConnectFailed(e as Error);
     }
   }
+
   private render = (): void => {
-    this.chatModule = new ChatModule(this.boardService.session);
+    this.chatModule = new ChatModule(this.credentials, this.boardService.session);
     this.callModule = new CallModule();
 
     this.renderNav();
