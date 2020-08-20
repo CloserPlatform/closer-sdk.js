@@ -6,15 +6,17 @@ import { Logger } from '../logger';
 import { makeDiv, makeInputWithBtn, makeChatBox } from '../view';
 import { Page } from '../page';
 import { ChatService } from './chat.service';
+import { ConversationModule } from '../conversation/conversation.module';
 
 export class ChatModule {
   private inner: JQuery;
-  private textBox: JQuery;
 
   private chatService: ChatService;
+  private conversationModule: ConversationModule;
 
   constructor (session: RatelSdk.Session) {
     this.chatService = new ChatService(session);
+    this.conversationModule = new ConversationModule();
   }
 
   public init = (): void => {
@@ -24,46 +26,26 @@ export class ChatModule {
   public toggleVisible = (visible = true): void => {
     if (visible) {
       this.inner.show();
+      this.conversationModule.toggleVisible();
     }
     else {
       this.inner.hide();
+      this.conversationModule.toggleVisible(false);
     }
   }
 
-  private textBoxAppend = (value: string): void => {
-    this.textBox.append(`${value}\n`);
-  }
-  private textBoxEmpty = (): void => {
-    this.textBox.empty();
-  }
-
   private roomCallback = async (inputValue: string): Promise<any> => {
-    this.textBoxEmpty();
     try {
-      const history = await this.chatService.getRoomMessageHistory(inputValue);
-      history.forEach(message => {
-        this.textBoxAppend(message);
-      });
+      this.conversationModule.init(inputValue, this.chatService.session);
     } catch (e) {
       Logger.error(e);
     }
   }
 
-  private sendCallback = (inputValue: string): void => {
-    if (!this.chatService.room) {
-      alert('Not connected to any room');
-    } else {
-      this.chatService.sendMessage(inputValue);
-    }
-  }
-
   private render = (): void => {
-    this.textBox = makeChatBox();
+    const input = makeInputWithBtn(Page.roomInputId, this.roomCallback, 'Connect to room', 'Room id...');
 
-    const input = makeInputWithBtn('chat-input', this.roomCallback, 'Room id:', 'Get room messages', '', '');
-    const msgInput = makeInputWithBtn('msg-input', this.sendCallback, 'Message:', 'Send', '', '');
-
-    this.inner = makeDiv().append([input, this.textBox, msgInput]);
+    this.inner = makeDiv().append(input);
     Page.contents.append(this.inner);
   }
 }

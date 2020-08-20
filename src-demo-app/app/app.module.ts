@@ -2,10 +2,10 @@ import { LoginModule } from './login/login.module';
 import { BoardModule } from './board/board.module';
 import { Logger } from './logger';
 import * as RatelSdk from '../../';
+import { EntryModule } from './entry/entry.module';
 
 export class AppModule {
-  private loginModule?: LoginModule;
-  private boardModule?: BoardModule;
+  private entryModule: EntryModule;
 
   public init = (): void => {
     const browserInfo = `${RatelSdk.BrowserUtils.getBrowserName()} ${RatelSdk.BrowserUtils.getBrowserVersion()}`;
@@ -18,9 +18,8 @@ export class AppModule {
       Logger.log('Browser is supported, initiating the app');
     }
 
-    this.boardModule = new BoardModule();
-    this.loginModule = new LoginModule(this.boardModule);
+    this.entryModule = new EntryModule();
 
-    this.loginModule.init();
+    this.entryModule.init();
   }
 }

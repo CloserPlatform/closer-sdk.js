@@ -1,3 +1,4 @@
+import { AgentCtx } from '@swagger/spinner';
 import * as View from '../view';
 import * as RatelSDK from '../../../';
 import { Logger } from '../logger';
@@ -10,6 +11,10 @@ import { CommunicatorReconnectionService } from '../call/reconnection.service';
 import { ReplaySubject } from 'rxjs/internal/ReplaySubject';
 import { Subject } from 'rxjs/internal/Subject';
 
+export interface AuthCtx {
+  id: string;
+  apiKey: string;
+}
 export class SessionService {
 
   // Connection Events
@@ -31,15 +36,15 @@ export class SessionService {
     );
   }
 
-  public connect = (session: AuthSession, artichokeServer: string, authServer: string): Promise<RatelSDK.Session> => {
+  public connect = (authCtx: AuthCtx, artichokeServer: string, authServer: string): Promise<RatelSDK.Session> => {
     const chatUrl = UrlService.getURL(artichokeServer);
     const ratelUrl = UrlService.getURL(authServer);
 
-    Logger.log(`Connecting to ${chatUrl} as: ${JSON.stringify(session)}`);
+    Logger.log(`Connecting to ${chatUrl} as: ${JSON.stringify(authCtx)}`);
 
     return RatelSDK.withApiKey(
-      session.id,
-      session.apiKey,
+      authCtx.id,
+      authCtx.apiKey,
       {
         logLevel: 0,
         ratel: {

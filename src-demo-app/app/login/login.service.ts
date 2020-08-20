@@ -1,4 +1,5 @@
-import { Logger } from '../logger';
+import { SpinnerClient, LoginForm, AgentCtx } from '@swagger/spinner';
+import { Credentials } from '../credentials';
 
 export interface AuthSession {
   id: string;
@@ -6,22 +7,16 @@ export interface AuthSession {
 }
 
 export class LoginService {
+  public spinnerClient: SpinnerClient;
 
-  private static readonly successStatusCode = 200;
+  public login = async (credentials: Credentials): Promise<AgentCtx> => {
+    const loginForm: LoginForm = {
+      email: credentials.email,
+      password: credentials.pwd
+    };
 
-  public login = (authServer: URL, email: string, password: string): Promise<AuthSession> =>
-    new Promise<AuthSession>((resolve, reject): void => {
-      const xhttp = new XMLHttpRequest();
-      xhttp.open('POST', `${authServer}api/session`, false);
-      xhttp.setRequestHeader('Content-Type', 'application/json');
-      xhttp.send(JSON.stringify({email, password}));
-      if (xhttp.status !== LoginService.successStatusCode) {
-        reject('Invalid credentials.');
-      } else {
-        const result = JSON.parse(xhttp.responseText);
-        Logger.log('Logged successfully', result);
-        resolve(result);
-      }
-    })
+    const agentCtx = this.spinnerClient.login(loginForm);
 
+    return agentCtx;
+  }
 }

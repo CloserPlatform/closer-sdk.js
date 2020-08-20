@@ -1,5 +1,6 @@
 // tslint:disable:no-any
 
+import { SpinnerClient, AgentCtx } from '@swagger/spinner';
 import * as RatelSdk from '../../../';
 import { Logger } from '../logger';
 import { CallModule } from '../call/call.module';
@@ -7,9 +8,12 @@ import { ChatModule } from '../chat/chat.module';
 import { AuthSession } from '../login/login.service';
 import { LoginFormData, makeButton, makeDiv } from '../view';
 import { BoardService } from './board.service';
+import { Nav } from '../nav';
+import { Credentials } from '../credentials';
 
 export class BoardModule {
   private boardService: BoardService;
+  private credentials: Credentials;
 
   private chatModule: ChatModule;
   private callModule: CallModule;
@@ -18,8 +22,8 @@ export class BoardModule {
     this.boardService = new BoardService();
   }
 
-  public init = async (authSession: AuthSession, loginFormData: LoginFormData): Promise<any> => {
-    const success = await this.boardService.init(authSession, loginFormData);
+  public init = async (agentCtx: AgentCtx, credentials: Credentials, sc: SpinnerClient): Promise<any> => {
+    const success = await this.boardService.init(agentCtx, credentials, sc);
 
     if (!success) {
       this.handleConnectFailed(new Error('Couldn\'t initialize session'));
@@ -49,11 +53,7 @@ export class BoardModule {
       this.chatModule.toggleVisible(false);
     });
 
-    const navigation = makeDiv().prop({
-      class: 'd-flex justify-content-center align-items-center m-3 bg-light'
-    }).append([chatButton, callButton]);
-
-    $('#nav').append(navigation);
+    Nav.setNavButtons([chatButton, callButton]);
   }
 
   private handleConnectFailed = (e: Error): void => {
