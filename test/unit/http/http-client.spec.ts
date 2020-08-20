@@ -25,7 +25,7 @@ const getHttpClient = (
 describe('HttpClient', () => {
 
   describe('setDeviceId', () => {
-    it('get request', () => {
+    it('get request', async () => {
       const xmlHttpRequestFactory = getXMLHttpRequestFactory();
       const httpClient = getHttpClient(xmlHttpRequestFactory);
       const mockedRequest = new XMLHttpRequest();
@@ -36,7 +36,7 @@ describe('HttpClient', () => {
 
       const newDeviceId = 'xy';
       httpClient.setDeviceId(newDeviceId);
-      httpClient.get('/test');
+      await expectAsync(httpClient.get('/test')).toBeRejected();
 
       expect(xmlHttpRequestFactory.create).toHaveBeenCalled();
       expect(mockedRequest.setRequestHeader).toHaveBeenCalledWith(ApiHeaders.deviceIdKey, newDeviceId);
@@ -118,7 +118,7 @@ describe('HttpClient', () => {
       (mockedRequest as any).onreadystatechange({} as any);
     });
 
-    it('get with headers - rejected', done => {
+    it('get with headers - rejected', async () => {
       const xmlHttpRequestFactory = getXMLHttpRequestFactory();
       const httpClient = getHttpClient(xmlHttpRequestFactory, apiHeaders);
       const mockedRequest = new XMLHttpRequest();
@@ -129,17 +129,14 @@ describe('HttpClient', () => {
       spyOnProperty(mockedRequest,  'responseText', 'get').and.returnValue(JSON.stringify(errorJson));
       spyOn(xmlHttpRequestFactory, 'create').and.returnValue(mockedRequest);
 
-      httpClient.get<typeof errorJson>('/test')
-        .then(() => done.fail())
-        .catch(err => {
-          expect(errorJson).toEqual(err);
-          done();
-        });
+      const promise = httpClient.get<typeof errorJson>('/test');
       // tslint:disable-next-line
       (mockedRequest as any).onreadystatechange({} as any);
+
+      await expectAsync(promise).toBeRejectedWith(errorJson);
     });
 
-    it('get with headers - rejected - parse error', done => {
+    it('get with headers - rejected - parse error', async () => {
       const xmlHttpRequestFactory = getXMLHttpRequestFactory();
       const httpClient = getHttpClient(xmlHttpRequestFactory, apiHeaders);
       const mockedRequest = new XMLHttpRequest();
@@ -150,14 +147,11 @@ describe('HttpClient', () => {
       spyOnProperty(mockedRequest,  'responseText', 'get').and.returnValue(invalidJsonError);
       spyOn(xmlHttpRequestFactory, 'create').and.returnValue(mockedRequest);
 
-      httpClient.get<typeof invalidJsonError>('/test')
-        .then(() => done.fail())
-        .catch(err => {
-          expect(invalidJsonError).not.toEqual(err);
-          done();
-        });
+      const promise = httpClient.get<typeof invalidJsonError>('/test');
       // tslint:disable-next-line
       (mockedRequest as any).onreadystatechange({} as any);
+
+      await expectAsync(promise).toBeRejected();
     });
   });
 
@@ -224,8 +218,8 @@ describe('HttpClient', () => {
     });
   });
 
-  describe('getAuthPaginated', () => {
-    it('correct json response, no pagination headers', done => {
+  describe('getPaginated', () => {
+    it('correct json response, no pagination headers', async () => {
       const xmlHttpRequestFactory = getXMLHttpRequestFactory();
       const httpClient = getHttpClient(xmlHttpRequestFactory, apiHeaders);
       const mockedRequest = new XMLHttpRequest();
@@ -240,7 +234,7 @@ describe('HttpClient', () => {
       spyOn(mockedRequest, 'setRequestHeader');
       spyOn(xmlHttpRequestFactory, 'create').and.returnValue(mockedRequest);
 
-      httpClient.getPaginated<typeof testObject>('/test')
+      const promise = httpClient.getPaginated<typeof testObject>('/test')
         .then(res => {
           expect(xmlHttpRequestFactory.create).toHaveBeenCalled();
           expect(mockedRequest.setRequestHeader).toHaveBeenCalledWith(ApiHeaders.apiKeyKey, apiHeaders.apiKey);
@@ -250,11 +244,10 @@ describe('HttpClient', () => {
           expect(res.items[0]).toEqual(testObject);
           expect(res.limit).toEqual(0);
           expect(res.offset).toEqual(0);
-          done();
-        })
-        .catch(done.fail);
+        });
       // tslint:disable-next-line
       (mockedRequest as any).onreadystatechange({} as any);
+      await expectAsync(promise).toBeResolved();
     });
 
     it('correct json response with pagination headers', done => {
@@ -297,7 +290,7 @@ describe('HttpClient', () => {
       (mockedRequest as any).onreadystatechange({} as any);
     });
 
-    it('incorrect json response', done => {
+    it('incorrect json response', async () => {
       const xmlHttpRequestFactory = getXMLHttpRequestFactory();
       const httpClient = getHttpClient(xmlHttpRequestFactory, apiHeaders);
       const mockedRequest = new XMLHttpRequest();
@@ -311,11 +304,11 @@ describe('HttpClient', () => {
       spyOn(mockedRequest, 'setRequestHeader');
       spyOn(xmlHttpRequestFactory, 'create').and.returnValue(mockedRequest);
 
-      httpClient.getPaginated('/test')
-        .then(() => done.fail())
-        .catch(done);
+      const promise = httpClient.getPaginated('/test');
+
       // tslint:disable-next-line
       (mockedRequest as any).onreadystatechange({} as any);
+      await expectAsync(promise).toBeRejected();
     });
   });
 });

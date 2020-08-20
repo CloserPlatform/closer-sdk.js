@@ -56,8 +56,8 @@ export class HttpClient {
           };
         } catch (err) {
           this.logger.debug(
-            `Api - getAuthPaginated: Cannot parse response: ${err}\n Tried to parse:  ${resp.responseText}`);
-          throw new Error('Api - getAuthPaginated: Cannot parse response');
+            `Api - getPaginated: Cannot parse response: ${err}\n Tried to parse:  ${resp.responseText}`);
+          throw new Error('Api - getPaginated: Cannot parse response');
         }
       });
   }

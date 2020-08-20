@@ -29,14 +29,16 @@ describe('PromiseUtils', () => {
      );
   });
 
-  it('wrapPromise should reject if an error appears in mapping', done => {
-    PromiseUtils.wrapPromise(
+  it('wrapPromise should reject if an error appears in mapping', async () => {
+
+    const promise = PromiseUtils.wrapPromise(
       Promise.resolve(
         [testVal]),
       () => {
         throw Error('error!');
       }
-    ).then(() => done.fail())
-      .catch(done);
+    );
+
+    await expectAsync(promise).toBeRejected();
   });
 });

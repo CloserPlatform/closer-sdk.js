@@ -4,6 +4,7 @@ import { getArtichokeApiMock } from '../../mocks/artichoke-api.mock';
 import { BusinessRoom, Room, roomEvents } from '../../../src';
 import { of } from 'rxjs';
 import EndReason = roomEvents.EndReason;
+import { ObjectUtils } from '../../../src/utils/object-utils';
 
 const roomEvent: wireRoom = {
   id: 'id',
@@ -17,7 +18,7 @@ const roomEvent: wireRoom = {
 
 const getRoom = (api = getArtichokeApiMock()): BusinessRoom =>
   new BusinessRoom(
-    roomEvent,
+    ObjectUtils.deepcopy(roomEvent),
     getLoggerServiceMock(),
     api,
   );
