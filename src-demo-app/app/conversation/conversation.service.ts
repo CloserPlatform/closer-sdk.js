@@ -57,12 +57,10 @@ export class ConversationService {
 
   public sendMessage = (msg: string): void => {
     if (this.room) {
-      try {
-        const response = this.room.send(msg);
-        Logger.log('Message response', response);
-      } catch (e) {
-        Logger.error(e);
-      }
+      this.room.send(msg).subscribe(
+        res => Logger.log('Message response', res),
+        e => Logger.error(e)
+      );
     } else {
       alert('No Room');
     }
