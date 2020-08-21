@@ -60,11 +60,6 @@ export class SessionService {
       Logger.log('Call created: ', call);
     });
 
-    session.artichoke.connection$.subscribe(hello => {
-      Page.setHeader(`Connected as ${session.id} with deviceId: ${hello.deviceId}`);
-      Logger.log('Connected to Artichoke!', hello);
-    });
-
     session.artichoke.callInvitation$.subscribe(async callInvitation => {
       Logger.log('Received call invitation: ', callInvitation);
       try {

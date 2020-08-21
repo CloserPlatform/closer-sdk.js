@@ -22,7 +22,8 @@ import {
   repeatWhen,
   retryWhen,
   takeUntil,
-  tap
+  tap,
+  share,
 } from 'rxjs/operators';
 import { CallFactory } from '../calls/call-factory';
 import { RoomFactory } from '../rooms/room-factory';
@@ -30,6 +31,12 @@ import { externalEvents } from '../protocol/events/external-events';
 import { LoggerService } from '../logger/logger-service';
 
 export class Artichoke {
+  /**
+   * Subscribing will connect or preserve another reference to websocket connection.
+   * Reconnection is enabled by default - unsubscribe all observers to disable and disconnect.
+   */
+  public readonly connection$: Observable<serverEvents.Hello>;
+
   private heartbeatTimeout?: BumpableTimeout;
 
   private serverUnreachableEvent = new Subject<void>();
@@ -42,18 +49,12 @@ export class Artichoke {
     private reconnectDelayMs: number,
     private heartbeatTimeoutMultiplier: number,
   ) {
-  }
-
-  /**
-   * Subscribing will connect or preserve another connection via websocket.
-   * Reconnection is enabled by default - unsubscribe all observers to disable.
-   */
-  public get connection$(): Observable<serverEvents.Hello> {
-    return merge(
+    // Do not move this as a property accessor, it must be only one object to make rx `share` operator work.
+    this.connection$ = merge(
       this.artichokeApi.connection$.pipe(
         filter(serverEvents.OutputHeartbeat.is),
         tap((ev: serverEvents.OutputHeartbeat) => this.handleHeartbeatEvent(ev)),
-        ignoreElements()
+        ignoreElements(),
       ),
       this.artichokeApi.connection$.pipe(
         filter(serverEvents.Hello.is),
@@ -66,6 +67,11 @@ export class Artichoke {
       takeUntil(this.serverUnreachableEvent),
       // On WebSocket gracefull close
       repeatWhen(attempts => attempts.pipe(delay(this.reconnectDelayMs))),
+      // IMPORTANT
+      // Share the observable, so the internal logic would behave like one consistent stream
+      // Without this operator, if client subscribes two times, we would have
+      // two heartbeats answers and reconnections logic
+      share(),
     );
   }
 

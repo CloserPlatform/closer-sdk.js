@@ -13,7 +13,7 @@ import { Observable, Subject } from 'rxjs';
 import { callCommand } from '../protocol/commands/call-commands';
 import { WebsocketClient } from '../http/websocket-client';
 import { HttpClient } from '../http/http-client';
-import { distinctUntilChanged, tap } from 'rxjs/operators';
+import { tap } from 'rxjs/operators';
 import { serverCommands } from '../protocol/commands/server-command';
 
 export class ArtichokeApi {
@@ -37,9 +37,7 @@ export class ArtichokeApi {
   }
 
   public get domainEvent$(): Observable<DomainEvent> {
-    // If connection has many subscribers, we will get many side effect - thats why we need to distinctUntilChanged
-    // Can not use `share` operator since it breaks rxjswebsocket connection flow.
-    return this.domainEvent.asObservable().pipe(distinctUntilChanged());
+    return this.domainEvent.asObservable();
   }
 
   // GroupCall API:
