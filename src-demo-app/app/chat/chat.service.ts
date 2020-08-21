@@ -1,6 +1,5 @@
-import * as RatelSdk from '../../../';
-import { Logger } from '../logger';
+import { Session } from '../../../';
 
 export class ChatService {
-  constructor(public session: RatelSdk.Session) { }
+  constructor(public session: Session) { }
 }

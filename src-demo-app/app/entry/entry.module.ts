@@ -5,7 +5,6 @@ import { Nav } from '../nav';
 import { LoginModule } from '../login/login.module';
 import { GuestModule } from '../guest/guest.module';
 import { Credentials } from '../credentials';
-import { Logger } from '../logger';
 
 export class EntryModule {
   private loginModule = new LoginModule();

@@ -1,8 +1,8 @@
 // tslint:disable:no-floating-promises
 
-import * as RatelSdk from '../../../';
+import { Session } from '../../../';
 import { Logger } from '../logger';
-import { makeDiv, makeInputWithBtn, makeChatBox } from '../view';
+import { makeDiv, makeInputWithBtn } from '../view';
 import { Page } from '../page';
 import { ChatService } from './chat.service';
 import { ConversationModule } from '../conversation/conversation.module';
@@ -14,7 +14,7 @@ export class ChatModule {
   private chatService: ChatService;
   private conversationModule: ConversationModule;
 
-  constructor (private credentials: Credentials, session: RatelSdk.Session) {
+  constructor (private credentials: Credentials, session: Session) {
     this.chatService = new ChatService(session);
     this.conversationModule = new ConversationModule();
   }

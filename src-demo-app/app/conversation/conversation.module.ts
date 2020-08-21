@@ -1,4 +1,4 @@
-import * as RatelSdk from '../../../';
+import { Session, roomEvents } from '../../../';
 import { makeChatBox, makeInputWithBtn, makeDiv } from'../view';
 import { Page } from '../page';
 import { ConversationService } from './conversation.service';
@@ -14,7 +14,7 @@ export class ConversationModule {
   private infoTimeout: ReturnType<typeof setTimeout>;
   private conversationService: ConversationService;
 
-  public init = async (roomId: string, session: RatelSdk.Session): Promise<void> => {
+  public init = async (roomId: string, session: Session): Promise<void> => {
     this.conversationService = new ConversationService(session);
     await this.conversationService.setRoom(roomId);
     this.conversationService.setMessageCallback(this.handleMessageCallback);
@@ -31,7 +31,7 @@ export class ConversationModule {
     }
   }
 
-  private handleMessageCallback = (msg: RatelSdk.roomEvents.MessageSent): void => {
+  private handleMessageCallback = (msg: roomEvents.MessageSent): void => {
     const ctx = JSON.stringify(msg.context);
     this.textBoxAppend(msg.message);
     if (ctx !== '{}') {
@@ -39,9 +39,11 @@ export class ConversationModule {
     }
   }
 
-  private handleTypingCallback = (ts: RatelSdk.roomEvents.TypingSent): void => {
+  private handleTypingCallback = (ts: roomEvents.TypingSent): void => {
     this.infoText.empty();
     this.infoText.append('<small class="text-primary">User is typing...</small>');
+
+    Logger.log(ts);
 
     clearTimeout(this.infoTimeout);
     this.infoTimeout = setTimeout(this.clearInfoText, ConversationModule.INFO_TIME);

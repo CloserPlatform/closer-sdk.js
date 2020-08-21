@@ -17,7 +17,6 @@ export class GuestModule {
     this.credentials = credentials;
 
     if (this.credentials.isGuestSessionSaved()) {
-      this.guestService.spinnerClient.apiKey = this.credentials.apiKey;
       await this.orgCallback(this.credentials.orgId, false);
     } else {
       this.renderInputs();

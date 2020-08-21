@@ -1,37 +1,39 @@
-import * as RatelSdk from '../../../';
+import { Session, Room, roomEvents, protocol } from '../../../';
 import { Logger } from '../logger';
 
 export class ConversationService {
   private static readonly retrieveMessagesCount = 20;
 
-  public room: RatelSdk.Room;
+  public room: Room;
 
-  constructor(public session: RatelSdk.Session) { }
+  constructor(public session: Session) { }
 
-  public setMessageCallback = (f: (m: RatelSdk.roomEvents.MessageSent) => void): void => {
+  public setMessageCallback = (f: (m: roomEvents.MessageSent) => void): void => {
     this.room.message$.subscribe(f);
   }
 
-  public setTypingCallback = (f: (t: RatelSdk.roomEvents.TypingSent) => void): void => {
+  public setTypingCallback = (f: (t: roomEvents.TypingSent) => void): void => {
     this.room.typing$.subscribe(f);
   }
 
   public setRoom = async (roomId: string): Promise<void> => {
-    const room = await this.session.chat.getRoom(roomId);
+    const room = await this.session.artichoke.getRoom(roomId);
     this.room = room;
   }
 
   public getRoomMessageHistory = async (): Promise<ReadonlyArray<string>> => {
     try {
-      const filter: RatelSdk.protocol.HistoryFilter = {
-        filter: [RatelSdk.roomEvents.MessageSent.tag],
+      const filter: protocol.HistoryFilter = {
+        filter: [roomEvents.MessageSent.tag],
         customFilter: []
       };
       const messages = await this.room.getLatestMessages(ConversationService.retrieveMessagesCount, filter);
 
-      return messages.items.map((item: RatelSdk.roomEvents.MessageSent) => item.message);
+      return messages.items.map((item: roomEvents.MessageSent) => item.message);
     } catch (e) {
       Logger.error(e);
+
+      return [];
     }
   }
 

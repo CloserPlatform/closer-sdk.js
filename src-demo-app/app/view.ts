@@ -36,16 +36,6 @@ export const makeServersForm = (artichokeId: string, authId: string): JQuery => 
 };
 
 export const makeLoginForm = (id: string, onClick: (formData: LoginFormData) => void): JQuery => {
-  // const defaultEmails: ReadonlyArray<string> = [
-  //   'none',
-  //   'charlie@ratel.io',
-  //   'jimmy@ratel.io',
-  //   'alice@anymind.com',
-  //   'bob@anymind.com',
-  //   'chaki@anymind.com',
-  //   'duli@anymind.com'
-  // ];
-
   const form = $('<form id="login_form">')
     .append([
       makeInput('user-email', 'Email: ', 'Your email...', ''),
@@ -54,7 +44,7 @@ export const makeLoginForm = (id: string, onClick: (formData: LoginFormData) => 
 
   const button = $('<button class="btn btn-primary" form="login_form">')
     .append('Login!')
-    .click(event => {
+    .on('click', event => {
       event.preventDefault();
       const userEmail = String($('#user-email').val());
       const userPassword = String($('#user-password').val());
@@ -71,7 +61,7 @@ export const makeLabel = (id: string, className: string, name: string | JQuery):
     for: id,
     class: className
   })
-    .append(name);
+  .append(name);
 
 export const makeSelect = (id: string, name: string, options: ReadonlyArray<string>,
                            cb?: (val: string) =>  void): JQuery => {
@@ -82,7 +72,7 @@ export const makeSelect = (id: string, name: string, options: ReadonlyArray<stri
     .append(options.map(value => $('<option>').prop({value}).text(value)));
 
   if (cb) {
-    select.change(() => cb(String(select.val())));
+    select.on('change', () => cb(String(select.val())));
   }
 
   return $('<div>').append([makeLabel(id, '', name), select]);
@@ -109,7 +99,7 @@ export const makeCheckbox = (id: string, value: string, checked: boolean,
       type: 'checkbox',
       checked: !!checked
     });
-  input.click(() => {
+  input.on('click', () => {
     if (onClick) {
       onClick(input.is(':checked'));
     }
@@ -142,7 +132,7 @@ export const makePlaceholderInput = (id: string, placeholder: string, initial: s
 
 export const makeInputWithBtn = (id: string, callback: (value: string) => void,
                                 buttonLabel: string, placeholder: string, initial: string): JQuery => {
-    const input = makePlaceholderInput(`input-${id}`, placeholder, initial);
+  const input = makePlaceholderInput(`input-${id}`, placeholder, initial);
   const button = $(`<button class="btn btn-outline-primary" type="button" form="form-${id}">`)
     .append(buttonLabel)
     .on('click', (ev) => {
@@ -177,7 +167,7 @@ export const makeCallingInput = (id: string, onCall: (userId: string) => void,
 
   const button = $('<button class="btn btn-primary" form="calling_form">')
     .append('Call')
-    .click((ev) => {
+    .on('click', (ev) => {
       ev.preventDefault();
       onCall(String($('#calling-id').val()));
     });
@@ -193,7 +183,7 @@ export const makeButton = (className: string, contents: JQuery | string, onClick
     class: `btn ${className} mx-2`
   })
     .append(contents)
-    .click(onClick);
+    .on('click', onClick);
 
 export const makeButtonGroup = (): JQuery =>
   $('<div>').addClass('btn-group buttons');

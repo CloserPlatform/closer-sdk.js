@@ -2,7 +2,6 @@
 import { SpinnerClient, AgentCtx } from '@swagger/spinner';
 import { BoardModule } from '../board/board.module';
 import { LoginService } from './login.service';
-import { Logger } from '../logger';
 import { LoginFormData, makeLoginForm } from '../view';
 import { Page } from '../page';
 import { Credentials } from '../credentials';
@@ -35,12 +34,15 @@ export class LoginModule {
 
     try {
       const agentCtx =  await this.loginService.login(this.credentials);
-      this.loginBox.hide();
+      if (this.loginBox) {
+        this.loginBox.hide();
+      }
       this.proceedToBoard(agentCtx);
     } catch (e) {
       alert('Error logging');
     }
   }
+
   private render = (): void => {
     this.loginBox = makeLoginForm('login-box', this.handleLoginProbe);
     Page.contents.empty();

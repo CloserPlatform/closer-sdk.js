@@ -1,6 +1,5 @@
 import { SpinnerClient, LoginForm, AgentCtx } from '@swagger/spinner';
 import { Credentials } from '../credentials';
-import { Logger } from '../logger';
 
 export class LoginService {
   public spinnerClient: SpinnerClient;

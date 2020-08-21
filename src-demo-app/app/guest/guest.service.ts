@@ -1,22 +1,21 @@
-import * as RatelSdk from '../../../';
-import { SpinnerClient, LeadCtx, SignUpGuest, GuestProfile } from '@swagger/spinner';
+// import * as RatelSdk from '../../../';
+import { Session } from '../../../';
+import { SpinnerClient, LeadCtx, SignUpGuest } from '@swagger/spinner';
 import { SessionService } from '../board/session.service';
 import { Credentials } from '../credentials';
 
 export interface NewConnnect {
-  session: RatelSdk.Session;
+  session: Session;
   leadCtx: LeadCtx;
 }
 
 export interface ExistingConnect {
-  session: RatelSdk.Session;
+  session: Session;
   roomId: string;
 }
 
 export class GuestService {
-  private static readonly successStatusCode = 200;
-
-  public session: RatelSdk.Session;
+  public session: Session;
   public spinnerClient: SpinnerClient;
   private sessionService: SessionService;
 
@@ -26,6 +25,7 @@ export class GuestService {
   }
 
   public getExistingGuestSession = async (credentials: Credentials): Promise<ExistingConnect> => {
+    this.spinnerClient.apiKey = credentials.apiKey;
     const guestProfile = await this.spinnerClient.getGuestProfile(credentials.orgId, credentials.id);
 
     const authCtx = {
@@ -33,7 +33,7 @@ export class GuestService {
       apiKey: credentials.apiKey
     };
 
-    const session = await this.sessionService.connect(authCtx, credentials.artichokeServer, credentials.authServer);
+    const session = this.sessionService.connect(authCtx, credentials.artichokeServer, credentials.authServer);
     this.session = session;
 
     return {session, roomId: guestProfile.roomId};
@@ -44,7 +44,7 @@ export class GuestService {
     const body: SignUpGuest = new SignUpGuest(signUpArgs);
 
     const leadCtx = await this.spinnerClient.signUpGuest(body);
-    const session = await this.sessionService.connect(leadCtx,
+    const session = this.sessionService.connect(leadCtx,
       credentials.artichokeServer, credentials.authServer);
 
     this.session = session;

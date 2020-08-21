@@ -15,15 +15,17 @@ export class Credentials {
   constructor() {
     const json = localStorage.getItem(Credentials.storageName);
     try {
-      const obj = JSON.parse(json);
+      if (json) {
+        const obj = JSON.parse(json);
 
-      this.artichokeServer = obj.artichokeServer;
-      this.authServer = obj.authServer;
-      this.apiKey = obj.apiKey;
-      this.id = obj.id;
-      this.orgId = obj.orgId;
-      this.roomId = obj.roomId;
-      this.isGuest = obj.isGuest;
+        this.artichokeServer = obj.artichokeServer;
+        this.authServer = obj.authServer;
+        this.apiKey = obj.apiKey;
+        this.id = obj.id;
+        this.orgId = obj.orgId;
+        this.roomId = obj.roomId;
+        this.isGuest = obj.isGuest;
+      }
     } catch (e) { }
   }
 
