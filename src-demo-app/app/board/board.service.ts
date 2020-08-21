@@ -1,8 +1,6 @@
 import { SpinnerClient, AgentCtx } from '@swagger/spinner';
 import { Session } from '../../../';
 import { SessionService } from './session.service';
-// import { LoginFormData } from '../view';
-// import { Logger } from '../logger';
 import { Credentials } from '../credentials';
 
 export class BoardService {

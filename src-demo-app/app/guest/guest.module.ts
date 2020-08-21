@@ -52,7 +52,7 @@ export class GuestModule {
   }
 
   private renderInputs = (): void => {
-    const orgInput = makeInputWithBtn(Page.orgInputId, this.orgCallback, 'Get org guest profile', 'Org id...', '');
+    const orgInput = makeInputWithBtn(Page.orgInputId, this.orgCallback, 'Get org guest profile', 'Org id...', 'b4aea823-cf75-470c-8d0e-6e31407ade87');
 
     this.inner = makeDiv().append(orgInput);
 

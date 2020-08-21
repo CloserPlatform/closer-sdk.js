@@ -1,6 +1,6 @@
 import { SpinnerClient, AgentCtx } from '@swagger/spinner';
 import { Logger } from '../logger';
-// import { CallModule } from '../call/call.module';
+import { CallModule } from '../call/call.module';
 import { ChatModule } from '../chat/chat.module';
 import { makeButton } from '../view';
 import { BoardService } from './board.service';
@@ -12,7 +12,7 @@ export class BoardModule {
   private credentials: Credentials;
 
   private chatModule: ChatModule;
-  // private callModule: CallModule;
+  private callModule: CallModule;
 
   constructor() {
     this.boardService = new BoardService();
@@ -30,23 +30,23 @@ export class BoardModule {
 
   private render = (): void => {
     this.chatModule = new ChatModule(this.credentials, this.boardService.session);
-    // this.callModule = new CallModule();
+    this.callModule = new CallModule();
 
     this.renderNav();
 
     this.chatModule.init();
-    // this.callModule.init(this.boardService.session);
+    this.callModule.init(this.boardService.session);
 
-    // this.callModule.toggleVisible(false);
+    this.callModule.toggleVisible(false);
   }
 
   private renderNav = (): void => {
     const chatButton = makeButton('btn-info', 'CHAT MODULE', () => {
       this.chatModule.toggleVisible();
-      // this.callModule.toggleVisible(false);
+      this.callModule.toggleVisible(false);
     });
     const callButton = makeButton('btn-info', 'CALLS MODULE', () => {
-      // this.callModule.toggleVisible();
+      this.callModule.toggleVisible();
       this.chatModule.toggleVisible(false);
     });
 

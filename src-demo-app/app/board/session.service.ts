@@ -1,13 +1,10 @@
-// import * as View from '../view';
-// import { Session, CloserSDK, callEvents, BusinessCall, CallReason } from '../../../';
-import { Session, CloserSDK, UserConfig } from '../../../';
+import * as View from '../view';
+import { Session, CloserSDK, UserConfig, Call, CallReason } from '../../../';
 import { Logger } from '../logger';
-// import { createStream } from '../stream';
-// import { CallHandler } from '../call';
+import { createStream } from '../stream';
+import { CallHandler } from '../call/call-handler';
 import { Page } from '../page';
-import { CommunicatorReconnectionService } from '../call/reconnection.service';
-import { ReplaySubject } from 'rxjs/internal/ReplaySubject';
-import { Subject } from 'rxjs/internal/Subject';
+import { Subscription } from 'rxjs';
 
 export interface AuthCtx {
   id: string;
@@ -15,23 +12,9 @@ export interface AuthCtx {
 }
 export class SessionService {
 
-  // Connection Events
-  private readonly connectionEstablishedEvent = new ReplaySubject<void>(1);
-  private readonly connectionLostEvent = new Subject<void>();
-
-  // Internal events
-  private readonly connectionErrorEvent = new Subject<void>();
-
-  private readonly communicatorReconnectionService: CommunicatorReconnectionService;
+  private sessionSubscription?: Subscription;
 
   constructor() {
-    const reconnectionTimeout = 1000;
-    this.communicatorReconnectionService = new CommunicatorReconnectionService(
-      reconnectionTimeout,
-      this.connectionEstablishedEvent,
-      this.connectionLostEvent,
-      this.connectionErrorEvent
-      );
   }
 
   public connect = (authCtx: AuthCtx, artichokeServer: string, spinnerServer: string): Session => {
@@ -50,15 +33,19 @@ export class SessionService {
     return session;
   }
 
+  public disconnect(): void {
+    if (this.sessionSubscription) {
+      this.sessionSubscription.unsubscribe();
+    }
+  }
+
   private setCallbacks = (session: Session): Session => {
     session.artichoke.error$.subscribe(error => {
       Logger.log('An error has occured: ', error);
-      this.connectionErrorEvent.next();
     });
 
     session.artichoke.serverUnreachable$.subscribe(() => {
       Logger.log('Server unreachable');
-      this.connectionLostEvent.next();
     });
 
     session.artichoke.roomCreated$.subscribe(m => {
@@ -75,19 +62,59 @@ export class SessionService {
 
     session.artichoke.connection$.subscribe(hello => {
       Page.setHeader(`Connected as ${session.id} with deviceId: ${hello.deviceId}`);
-      this.connectionEstablishedEvent.next();
       Logger.log('Connected to Artichoke!', hello);
     });
 
-    session.artichoke.callInvitation$.subscribe(callInvitation => {
+    session.artichoke.callInvitation$.subscribe(async callInvitation => {
       Logger.log('Received call invitation: ', callInvitation);
-      // this.handleCallInvitation(session, callInvitation);
+      try {
+        const call = await session.artichoke.getCall(callInvitation.callId);
+        this.handleCallInvitation(call);
+      } catch (err) {
+        Logger.error('Could not get call for call invitation', err, callInvitation);
+      }
     });
 
-    // TODO: should reconnect?
-    this.communicatorReconnectionService.enableReconnection(() => undefined);
+    this.sessionSubscription = session.artichoke.connection$.subscribe(
+      () => {
+        Page.setHeader(`Connected Session(${session.id})`);
+        Logger.log('Connected to Artichoke!');
+      },
+      err => Logger.error('Connection error', err),
+      () => {
+        Page.setHeader(`Disconnected Session(${session.id})`);
+        Logger.log('Session disconnected');
+      }
+    );
+    Page.setHeader(`Connecting..`);
 
     return session;
+  }
+
+  private handleCallInvitation = (call: Call): void => {
+    const line = `${call.creator} calls you`;
+    const closeModal = View.confirmModal('Call invitation', line, 'Answer', () => {
+      createStream(stream => {
+        const callHandler = new CallHandler(call, stream.getTracks(), () => this.disconnect());
+        callHandler.answer()
+          .then(() => Logger.log('Call answered'))
+          .catch(err => {
+            Logger.error('Call answer failed', err);
+            alert(`Answer failed ${err}`);
+          });
+      });
+    }, 'Reject', () => {
+      Logger.log('Rejecting call...');
+      call.reject(CallReason.CallRejected).then(
+        res => Logger.log('Call rejected', res),
+        err => Logger.error('Call rejecting failed', err)
+      );
+    });
+
+    call.end$.subscribe(e => {
+      Logger.log('Call ended: ', e.reason);
+      closeModal();
+    });
   }
 
   // private handleCallInvitation = (session: Session, callInvitation: callEvents.Invited): void =>  {
