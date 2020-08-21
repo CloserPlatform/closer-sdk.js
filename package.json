@@ -1,6 +1,6 @@
 {
   "name": "closer-sdk-js",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "repository": "https://git.contactis.pl/ratel/ratel-sdk-js",
   "description": "Closer SDK JS",
   "main": "dist/closer-sdk.js",
