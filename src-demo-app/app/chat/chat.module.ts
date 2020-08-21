@@ -36,7 +36,7 @@ export class ChatModule {
 
   private roomCallback = async (inputValue: string): Promise<void> => {
     try {
-      await this.conversationModule.init(inputValue, this.chatService.session);
+      await this.conversationModule.init(inputValue, this.chatService.session, this.credentials);
       this.credentials.setRoom(inputValue);
     } catch (e) {
       Logger.error(e);

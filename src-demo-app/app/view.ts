@@ -61,7 +61,7 @@ export const makeLabel = (id: string, className: string, name: string | JQuery):
     for: id,
     class: className
   })
-  .append(name);
+    .append(name);
 
 export const makeSelect = (id: string, name: string, options: ReadonlyArray<string>,
                            cb?: (val: string) =>  void): JQuery => {
@@ -72,7 +72,7 @@ export const makeSelect = (id: string, name: string, options: ReadonlyArray<stri
     .append(options.map(value => $('<option>').prop({value}).text(value)));
 
   if (cb) {
-    select.on('change', () => cb(String(select.val())));
+    select.on('change', (() => cb(String(select.val()))));
   }
 
   return $('<div>').append([makeLabel(id, '', name), select]);
@@ -108,10 +108,17 @@ export const makeCheckbox = (id: string, value: string, checked: boolean,
   return $('<div>').append(input, [makeLabel(id, '', value)]);
 };
 
+export const makeMessageEntry = (message: string, classNames: ReadonlyArray<string>): JQuery => {
+  const msgDiv = $('<div>').prop({
+    class: `bg-light border-bottom border-3 rounded my-1 mx-3 py-1 px-4 ${classNames.join(' ')}`
+  }).append(message);
+
+  return msgDiv;
+};
+
 export const makeChatBox = (): JQuery => {
-  const textBox = $('<textarea readonly cols="75" rows="7">');
-  textBox.prop({
-    class: 'form-control mb-4'
+  const textBox = $('<div>').prop({
+    class: 'd-flex flex-column mb-4 form-control align-items-start chat-box'
   });
 
   return textBox;
@@ -131,8 +138,18 @@ export const makePlaceholderInput = (id: string, placeholder: string, initial: s
 };
 
 export const makeInputWithBtn = (id: string, callback: (value: string) => void,
-                                buttonLabel: string, placeholder: string, initial: string): JQuery => {
+    buttonLabel: string, placeholder: string,
+    initial: string, onchange: (() => void) | undefined = undefined): JQuery => (
+  makeInputWithBtnAndOnChangeCallback(id, callback, buttonLabel, placeholder, initial, onchange)
+);
+
+export const makeInputWithBtnAndOnChangeCallback = (id: string, callback: (value: string) => void,
+    buttonLabel: string, placeholder: string, initial: string, onchange: (() => void) | undefined): JQuery => {
   const input = makePlaceholderInput(`input-${id}`, placeholder, initial);
+  if (onchange) {
+    input.on('change', onchange);
+  }
+
   const button = $(`<button class="btn btn-outline-primary" type="button" form="form-${id}">`)
     .append(buttonLabel)
     .on('click', (ev) => {
@@ -156,7 +173,7 @@ export const makeInputWithBtn = (id: string, callback: (value: string) => void,
       callback(String($(`#input-${id}`).val()));
     })
     .append(formDiv);
-};
+}
 
 export const makeCallingInput = (id: string, onCall: (userId: string) => void,
                                  placeholder?: string, value?: string): JQuery => {
@@ -180,7 +197,7 @@ export const makeCallingInput = (id: string, onCall: (userId: string) => void,
 export const makeButton = (className: string, contents: JQuery | string, onClick: () => void): JQuery =>
   $('<button>').prop({
     type: 'button',
-    class: `btn ${className} mx-2`
+    class: `btn ${className}`
   })
     .append(contents)
     .on('click', onClick);

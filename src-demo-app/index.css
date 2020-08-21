@@ -1,5 +1,4 @@
 html, body {
-    overflow: hidden;
     height: 100%;
 }
 
@@ -126,4 +125,13 @@ body {
     width: 100%;
     height: 90%;
     padding: 10px;
+}
+
+.chat-box {
+    height: 50vh;
+    overflow-y: scroll;
+}
+
+.border-3 {
+    border-width: 3px !important;
 }

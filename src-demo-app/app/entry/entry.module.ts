@@ -59,10 +59,10 @@ export class EntryModule {
 
   private render = (): void => {
     const form = makeServersForm(Page.artichokeFormId, Page.authFormId);
-    const existingButton = makeButton('btn-info', 'CONTINUE AS EXISTING USER', () => {
+    const existingButton = makeButton('btn-info mx-2', 'CONTINUE AS EXISTING USER', () => {
       this.buttonsCallback(this.loginModule.init);
     });
-    const guestButton = makeButton('btn-info', 'CONTINUE AS GUEST', () => {
+    const guestButton = makeButton('btn-info mx-2', 'CONTINUE AS GUEST', () => {
       this.buttonsCallback(this.guestModule.init);
     });
 

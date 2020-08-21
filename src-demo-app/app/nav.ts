@@ -18,7 +18,7 @@ export class Nav {
   public static setLogoutCallback = (c: () => void): void => {
     const button = makeButton('btn-dark', 'Sign out', c);
     const div = makeDiv().prop({
-      class: 'd-flex justify-content-center align-items-center m-3'
+      class: 'd-flex justify-content-center align-items-center my-3'
     }).append(button);
 
     Nav.navButtonsRight.empty();
@@ -27,10 +27,10 @@ export class Nav {
 
   public static setNavButtons = (objs: ReadonlyArray<JQuery>): void => {
     const navigation = makeDiv().prop({
-      class: 'd-flex justify-content-center align-items-center m-3'
+      class: 'd-flex justify-content-center align-items-center my-3'
     });
     objs.forEach(o => {
-      navigation.append(o);
+      navigation.append(o.addClass('mr-3'));
     });
 
     Nav.navButtons.empty();

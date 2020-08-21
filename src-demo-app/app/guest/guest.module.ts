@@ -39,12 +39,12 @@ export class GuestModule {
       if (!newSession) {
         const {session, roomId} = await this.guestService.getExistingGuestSession(this.credentials);
         Page.contents.empty();
-        await this.conversationModule.init(roomId, session);
+        await this.conversationModule.init(roomId, session, this.credentials);
       } else {
         const {leadCtx, session} = await this.guestService.getNewGuestSession(orgId, this.credentials);
         this.credentials.setGuestCtx(leadCtx.id, leadCtx.orgId, leadCtx.apiKey);
         Page.contents.empty();
-        await this.conversationModule.init(leadCtx.roomId, session);
+        await this.conversationModule.init(leadCtx.roomId, session, this.credentials);
       }
     } catch (e) {
       Logger.error(e);

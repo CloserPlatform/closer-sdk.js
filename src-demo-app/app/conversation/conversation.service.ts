@@ -16,12 +16,32 @@ export class ConversationService {
     this.room.typing$.subscribe(f);
   }
 
+  public setDelieveredCallback = (f: (d: roomEvents.MessageDelivered) => void): void => {
+    this.room.messageDelivered$.subscribe(f);
+  }
+
+  public setMarkedCallback = (f: (m: roomEvents.MarkSent) => void): void => {
+    this.room.marked$.subscribe(f);
+  }
+
   public setRoom = async (roomId: string): Promise<void> => {
     const room = await this.session.artichoke.getRoom(roomId);
     this.room = room;
   }
 
-  public getRoomMessageHistory = async (): Promise<ReadonlyArray<string>> => {
+  public indicateTyping = (): void => {
+    this.room.indicateTyping();
+  }
+
+  public setMark = (): void => {
+    this.room.setMark(Date.now());
+  }
+
+  public setDelievered = (msgId: string): void => {
+    this.room.setDelivered(msgId);
+  }
+
+  public getRoomMessageHistory = async (): Promise<protocol.Paginated<roomEvents.RoomEvent> | void> => {
     try {
       const filter: protocol.HistoryFilter = {
         filter: [roomEvents.MessageSent.tag],
@@ -29,18 +49,16 @@ export class ConversationService {
       };
       const messages = await this.room.getLatestMessages(ConversationService.retrieveMessagesCount, filter);
 
-      return messages.items.map((item: roomEvents.MessageSent) => item.message);
+      return messages;
     } catch (e) {
       Logger.error(e);
-
-      return [];
     }
   }
 
-  public sendMessage = async (msg: string): Promise<void> => {
+  public sendMessage = (msg: string): void => {
     if (this.room) {
       try {
-        const response = await this.room.send(msg);
+        const response = this.room.send(msg);
         Logger.log('Message response', response);
       } catch (e) {
         Logger.error(e);
