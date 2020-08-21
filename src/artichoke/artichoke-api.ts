@@ -13,27 +13,31 @@ import { Observable, Subject } from 'rxjs';
 import { callCommand } from '../protocol/commands/call-commands';
 import { WebsocketClient } from '../http/websocket-client';
 import { HttpClient } from '../http/http-client';
-import { tap } from 'rxjs/operators';
+import { tap, share } from 'rxjs/operators';
 import { serverCommands } from '../protocol/commands/server-command';
 
 export class ArtichokeApi {
+
   private callPath = 'calls';
   private roomPath = 'rooms';
   private pushNotificationsPath = 'push';
 
   private domainEvent = new Subject<DomainEvent>();
+  private connectionEvent: Observable<serverEvents.ServerEvent>;
 
   constructor(
     public sessionId: proto.ID,
     private websocketClient: WebsocketClient,
     private httpClient: HttpClient,
   ) {
+    this.connectionEvent = this.websocketClient.connection$.pipe(
+      tap(event => this.handleDomainEvent(event)),
+      share()
+    );
   }
 
   public get connection$(): Observable<serverEvents.ServerEvent> {
-    return this.websocketClient.connection$.pipe(
-      tap(event => this.handleDomainEvent(event)),
-    );
+    return this.connectionEvent;
   }
 
   public get domainEvent$(): Observable<DomainEvent> {

@@ -70,8 +70,8 @@ export const getArtichoke = (api = getArtichokeApiMock()): Artichoke =>
 describe('Unit: Artichoke', () => {
   it('connect$', done => {
     const api = getArtichokeApiMock();
-    const client = getArtichoke(api);
     spyOnProperty(api, 'connection$', 'get').and.returnValue(of(helloEvent));
+    const client = getArtichoke(api);
     client.connection$.subscribe(done, done.fail);
   });
 
@@ -101,10 +101,10 @@ describe('Unit: Artichoke', () => {
 
     it('not emit after timeout if heartbeat received', done => {
       const api = getArtichokeApiMock();
-      const client = getArtichoke(api);
       spyOn(api, 'sendHeartbeat');
       const subject = new Subject<ArtichokeMessage>();
       spyOnProperty(api, 'connection$', 'get').and.returnValue(subject);
+      const client = getArtichoke(api);
       jasmine.clock().install();
       client.serverUnreachable$.subscribe(() => done.fail(), done.fail);
       client.connection$.subscribe();
@@ -134,8 +134,8 @@ describe('Unit: Artichoke', () => {
   describe('connection$', () => {
     it('connect on hello', done => {
       const api = getArtichokeApiMock();
-      const client = getArtichoke(api);
       spyOnProperty(api, 'connection$', 'get').and.returnValue(of(helloEvent));
+      const client = getArtichoke(api);
       client.connection$.subscribe(done, done.fail);
     });
 

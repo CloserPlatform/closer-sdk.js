@@ -35,7 +35,7 @@ export class Artichoke {
    * Subscribing will connect or preserve another reference to websocket connection.
    * Reconnection is enabled by default - unsubscribe all observers to disable and disconnect.
    */
-  public readonly connection$: Observable<serverEvents.Hello>;
+  private readonly connection: Observable<serverEvents.Hello>;
 
   private heartbeatTimeout?: BumpableTimeout;
 
@@ -50,7 +50,7 @@ export class Artichoke {
     private heartbeatTimeoutMultiplier: number,
   ) {
     // Do not move this as a property accessor, it must be only one object to make rx `share` operator work.
-    this.connection$ = merge(
+    this.connection = merge(
       this.artichokeApi.connection$.pipe(
         filter(serverEvents.OutputHeartbeat.is),
         tap((ev: serverEvents.OutputHeartbeat) => this.handleHeartbeatEvent(ev)),
@@ -73,6 +73,10 @@ export class Artichoke {
       // two heartbeats answers and reconnections logic
       share(),
     );
+  }
+
+  public get connection$(): Observable<serverEvents.Hello> {
+    return this.connection;
   }
 
   public get error$(): Observable<errorEvents.Error> {
