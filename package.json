@@ -1,6 +1,6 @@
 {
   "name": "closer-sdk-js",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "repository": "https://github.com/CloserPlatform/closer-sdk.js",
   "description": "Closer SDK JS",
   "main": "dist/closer-sdk.js",
