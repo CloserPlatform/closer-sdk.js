@@ -18,6 +18,7 @@ RUN npm run build
 # web demo app
 COPY web-demo-app web-demo-app
 WORKDIR /workdir/web-demo-app
+RUN npm i
 RUN npm run build
 
 CMD npm run start
