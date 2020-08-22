@@ -37,17 +37,15 @@
     "ci-test": "npm run test"
   },
   "dependencies": {
-    "@swagger/spinner": "^0.1.483",
-    "jquery": "^3.5.1",
-    "jquery-ui": "^1.12.1",
-    "jquery-ui-bundle": "^1.12.1-migrate",
-    "webrtc-adapter": "^7.7.0"
+    "webrtc-adapter": "^7.7.0",
+    "rxjs": "^6.6.2"
   },
   "peerDependencies": {
     "rxjs": "^6.6.2",
     "@types/webrtc": "^0.0.26"
   },
   "devDependencies": {
+    "@swagger/spinner": "^0.1.484",
     "@types/jasmine": "^3.5.12",
     "@types/jquery": "^3.5.1",
     "@types/jqueryui": "^1.12.13",
@@ -58,6 +56,9 @@
     "http-server": "^0.12.3",
     "istanbul-instrumenter-loader": "^2.0.0",
     "jasmine-core": "^3.6.0",
+    "jquery": "^3.5.1",
+    "jquery-ui": "^1.12.1",
+    "jquery-ui-bundle": "^1.12.1-migrate",
     "karma": "^5.1.1",
     "karma-chrome-launcher": "^3.1.0",
     "karma-coverage": "^1.1.2",
@@ -68,7 +69,6 @@
     "karma-sourcemap-writer": "^0.1.2",
     "karma-spec-reporter": "0.0.32",
     "karma-webpack": "^4.0.2",
-    "rxjs": "^6.6.2",
     "source-map-support": "^0.4.15",
     "terser-webpack-plugin": "^4.1.0",
     "ts-loader": "^8.0.2",
