@@ -1,7 +1,7 @@
 {
   "name": "closer-sdk-js",
   "version": "1.0.8",
-  "repository": "https://git.contactis.pl/ratel/ratel-sdk-js",
+  "repository": "https://github.com/CloserPlatform/closer-sdk.js",
   "description": "Closer SDK JS",
   "main": "dist/closer-sdk.js",
   "types": "dist/index.d.ts",
@@ -83,5 +83,21 @@
   },
   "publishConfig": {
     "registry": "https://nexus.ratel.io/repository/npm-internal/"
+  },
+  "keywords": [
+    "sdk",
+    "closer",
+    "audio",
+    "video",
+    "chat",
+    "bot",
+    "webrtc"
+  ],
+  "homepage": "https://closer.app",
+  "author": "Closer Sp. z o. o.",
+  "license": "MIT",
+  "bugs":  {
+    "url" : "https://github.com/CloserPlatform/closer-sdk.js/issues",
+    "email" : "tech@closer.app"
   }
 }
