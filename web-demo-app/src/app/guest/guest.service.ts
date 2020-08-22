@@ -1,4 +1,4 @@
-import { Session } from 'closer-sdk-js';
+import { Session } from '@closerplatform/closer-sdk';
 import { SpinnerClient, LeadCtx, SignUpGuest } from '@swagger/spinner';
 import { SessionService } from '../board/session.service';
 import { Credentials } from '../credentials';

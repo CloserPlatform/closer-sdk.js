@@ -1,5 +1,5 @@
 import { SpinnerClient, AgentCtx } from '@swagger/spinner';
-import { Session } from 'closer-sdk-js';
+import { Session } from '@closerplatform/closer-sdk';
 import { SessionService } from './session.service';
 import { Credentials } from '../credentials';
 

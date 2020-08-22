@@ -1,30 +1,42 @@
-# closer-sdk.js
-web-demo-app uses @swagger/spinner, make sure npm can install it by creating a file `.npmrc` with contents: 
-```
-registry=https://nexus.ratel.io/repository/npm/
-```
+closer-sdk.js
+==============
 
-Building:
+[![NPM](https://img.shields.io/npm/v/@closerplatform/closer-sdk.svg)](https://www.npmjs.com/package/@closerplatform/closer-sdk)
 
-```
-npm ci
-npm run build
-```
+closer-sdk.js allows you to add Chat & WebRTC calls to your web and mobile apps.
 
-Running:
+### Technical Support
+If you need technical support, please contact
+[tech@closer.app](mailto:tech@closer.app).
 
-```
-npm start
-```
+Installation
+------------
 
-Test environment:
+### NPM
+
+We recommend using `npm` to add the CloserSDK as a dependency.
 
 ```
-npm test
-npm run test-dev
+npm install closer-sdk --save
 ```
 
-## Tested on:
+Using this method, you can `import` closer-sdk.js using ES Module or TypeScript syntax:
+
+```js
+import { CloserSDK } from 'closer-sdk';
+
+```
+
+Or using CommonJS:
+
+```js
+const CloserSDK = require('closer-sdk').CloserSDK;
+```
+
+Compatibility
+--------------
+
+### Works with:
 - Chrome 67*
 - Safari 11.1.1
 - Mobile Safari iOS 11.4 (*webview is not supported)
@@ -40,3 +52,17 @@ For now, the solution is to add both tracks (audio&video) before the first sdp o
 * rtcpMuxPolicy `negotiate` is not supported by Edge - use `require` instead 
 * negotiationNeededDisabled turn on to disable in call renegotiation (which does't work between Chrome&Safari)
 * Call broadcast & message event is based on RtcDataChannel which is not supported by Edge - check BrowserUtils.isBrowserSupported docs
+
+Testing
+-------
+
+Running unit tests requires firefox and chrome browsers. You can run unit tests via:
+
+```
+npm run test
+```
+
+License
+-------
+
+See [LICENSE](https://github.com/CloserPlatform/closer-sdk.js/blob/master/LICENSE)

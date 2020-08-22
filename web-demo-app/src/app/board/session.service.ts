@@ -1,5 +1,5 @@
 import * as View from '../view';
-import { Session, CloserSDK, UserConfig, Call, CallReason } from 'closer-sdk-js';
+import { Session, CloserSDK, UserConfig, Call, CallReason } from '@closerplatform/closer-sdk';
 import { Logger } from '../logger';
 import { createStream } from '../stream';
 import { CallHandler } from '../call/call-handler';

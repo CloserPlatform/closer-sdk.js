@@ -1,5 +1,5 @@
 {
-  "description": "Web demo app for closer-sdk-js",
+  "description": "Web demo app for closer-sdk",
   "private": true,
   "scripts": {
     "build": "webpack --config webpack.config.js --mode=development && npm run version",
@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@swagger/spinner": "^0.1.484",
-    "closer-sdk-js": "file:../",
+    "@closerplatform/closer-sdk": "file:../",
     "rxjs": "file:../node_modules/rxjs",
     "jquery": "^3.5.1",
     "jquery-ui": "^1.12.1",

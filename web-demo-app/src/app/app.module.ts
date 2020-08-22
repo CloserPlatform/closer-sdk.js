@@ -1,4 +1,4 @@
-import { BrowserUtils } from 'closer-sdk-js';
+import { BrowserUtils } from '@closerplatform/closer-sdk';
 import { Logger } from './logger';
 import { EntryModule } from './entry/entry.module';
 

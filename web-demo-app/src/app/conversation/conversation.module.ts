@@ -1,6 +1,6 @@
 // tslint:disable:readonly-array
 
-import { Session, roomEvents } from 'closer-sdk-js';
+import { Session, roomEvents } from '@closerplatform/closer-sdk';
 import { makeChatBox, makeInputWithBtn, makeDiv, makeMessageEntry } from'../view';
 import { Page } from '../page';
 import { ConversationService } from './conversation.service';

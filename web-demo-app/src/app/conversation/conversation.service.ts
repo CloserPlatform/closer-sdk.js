@@ -1,4 +1,4 @@
-import { Session, Room, roomEvents, protocol } from 'closer-sdk-js';
+import { Session, Room, roomEvents, protocol } from '@closerplatform/closer-sdk';
 import { Logger } from '../logger';
 
 export class ConversationService {

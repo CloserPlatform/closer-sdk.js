@@ -1,13 +1,13 @@
 {
-  "name": "closer-sdk-js",
-  "version": "1.0.10",
+  "name": "@closerplatform/closer-sdk",
+  "version": "1.0.11",
   "repository": "https://github.com/CloserPlatform/closer-sdk.js",
   "description": "Closer SDK JS",
   "main": "dist/closer-sdk.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "prepublish:lib": "npm run build",
-    "publish:lib": "npm publish",
+    "publish:lib": "npm publish --access public",
     "prebuild": "npm run lint",
     "prebuild:ci": "npm run lint",
     "profile": "webpack --profile --json > profile.json",
@@ -68,9 +68,6 @@
     "webpack-cli": "^3.3.12",
     "webpack-karma-die-hard": "^1.0.4"
   },
-  "publishConfig": {
-    "registry": "https://nexus.ratel.io/repository/npm-internal/"
-  },
   "keywords": [
     "sdk",
     "closer",
@@ -83,8 +80,8 @@
   "homepage": "https://closer.app",
   "author": "Closer Sp. z o. o.",
   "license": "MIT",
-  "bugs":  {
-    "url" : "https://github.com/CloserPlatform/closer-sdk.js/issues",
-    "email" : "tech@closer.app"
+  "bugs": {
+    "url": "https://github.com/CloserPlatform/closer-sdk.js/issues",
+    "email": "tech@closer.app"
   }
 }

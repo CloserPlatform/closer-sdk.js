@@ -1,5 +1,5 @@
 import { Logger } from '../logger';
-import { DirectCall, CallReason } from 'closer-sdk-js';
+import { DirectCall, CallReason } from '@closerplatform/closer-sdk';
 import {
   makeButton, makeButtonGroup, makeCallbox, makeCheckbox, makeControls, makeDiv, makeRemoteTrack, makeSelect,
   makeSplitGrid,
