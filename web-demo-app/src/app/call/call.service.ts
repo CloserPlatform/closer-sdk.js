@@ -1,4 +1,4 @@
-import { Session, BrowserUtils } from '../../../';
+import { Session, BrowserUtils } from 'closer-sdk-js';
 import { createStream } from '../stream';
 import { CallHandler } from './call-handler';
 import { Logger } from '../logger';

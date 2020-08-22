@@ -1,6 +1,6 @@
 // tslint:disable:no-floating-promises
 
-import { Session } from '../../../';
+import { Session } from 'closer-sdk-js';
 import { Logger } from '../logger';
 import { makeDiv, makeInputWithBtn } from '../view';
 import { Page } from '../page';

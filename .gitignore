@@ -1,13 +1,11 @@
-/node_modules
-/dist
-/dist-demo-app
+node_modules
+dist
 .idea
-/coverage
-/typings
-/im/version.txt
-/im/bundle.js
+coverage
 npm-debug.log
 *.tgz
 .npmrc
 profile.json
 
+web-demo-app/dist
+web-demo-app/node_modules

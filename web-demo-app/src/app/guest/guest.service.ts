@@ -1,5 +1,4 @@
-// import * as RatelSdk from '../../../';
-import { Session } from '../../../';
+import { Session } from 'closer-sdk-js';
 import { SpinnerClient, LeadCtx, SignUpGuest } from '@swagger/spinner';
 import { SessionService } from '../board/session.service';
 import { Credentials } from '../credentials';

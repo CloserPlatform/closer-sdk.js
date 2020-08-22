@@ -1,5 +1,5 @@
 import { Logger } from '../logger';
-import * as MachokeSDK from '../../../';
+import { DirectCall, CallReason } from 'closer-sdk-js';
 import {
   makeButton, makeButtonGroup, makeCallbox, makeCheckbox, makeControls, makeDiv, makeRemoteTrack, makeSelect,
   makeSplitGrid,
@@ -19,7 +19,7 @@ export class CallHandler {
   private localVideoStatusWrapperEvent = new Subject<boolean>();
 
   constructor(
-    private call: MachokeSDK.DirectCall,
+    private call: DirectCall,
     private localTracks: ReadonlyArray<MediaStreamTrack>,
     disconnectCallback: () => void,
   ) {
@@ -44,7 +44,7 @@ export class CallHandler {
 
     const disconnectButton = makeButton('btn-warning', 'Disconnect from Machoke', () => disconnectCallback());
 
-    const hangupButton = makeButton('btn-danger', 'Hangup!', () => this.end(MachokeSDK.CallReason.Hangup));
+    const hangupButton = makeButton('btn-danger', 'Hangup!', () => this.end(CallReason.Hangup));
 
     const buttons = makeButtonGroup().append([
       hangupButton, disconnectButton, videoCheckbox, audioCheckbox]);
@@ -69,7 +69,7 @@ export class CallHandler {
   public answer = (): Promise<void> =>
     this.call.answer(this.localTracks)
 
-  public end = (reason: MachokeSDK.CallReason): void => {
+  public end = (reason: CallReason): void => {
     this.call.leave(reason);
     this.callHandler.remove();
     this.stopLocalStream();

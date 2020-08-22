@@ -109,7 +109,7 @@ module.exports = (config) => {
 
 const istanbulInstrumenter = {
   enforce: 'post',
-  exclude: [/src-demo-app/, /^(.)*\.mock\.ts$/],
+  exclude: [/web-demo-app/, /^(.)*\.mock\.ts$/],
   test: /^(.(?!\.spec))*\.tsx?$/,
   loader: 'istanbul-instrumenter-loader',
   query: {

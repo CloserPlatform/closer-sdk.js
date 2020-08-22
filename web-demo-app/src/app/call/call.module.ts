@@ -1,5 +1,5 @@
 import { makeCallingInput } from '../view';
-import { Session } from '../../../';
+import { Session } from 'closer-sdk-js';
 import { Page } from '../page';
 import { CallService } from './call.service';
 import { Logger } from '../logger';

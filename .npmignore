@@ -1,4 +1,4 @@
-/coverage
+coverage
 npm-debug.log
 .git
 *.config.js
@@ -6,9 +6,10 @@ npm-debug.log
 *.json
 .npmignore
 *.tgz
-/dist/docs
-/src
-**/*.spec.d.ts
+dist/docs
+src
+web-demo-app
+react-native-demo-app
 Dockerfile
 profile.json
 .npmrc

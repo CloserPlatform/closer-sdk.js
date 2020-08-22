@@ -6,7 +6,7 @@ test:
   only:
     - branches
   before_script:
-    - cp $NPM_RC .npmrc
+    - cp $NPM_RC web-demo-app/.npmrc
   script:
     - docker build -t tmp .
   stage: test

@@ -12,7 +12,7 @@ import { ArtichokeMessage } from '../../../src/protocol/artichoke-message';
 import { fromArray } from 'rxjs/internal/observable/fromArray';
 import { Subject } from 'rxjs';
 
-const domainCommand: DomainCommand = {tag: 'test', __discriminator__: 'domainCommand'};
+const domainCommand: DomainCommand = { tag: 'test', __discriminator__: 'domainCommand' };
 const helloEvent = new serverEvents.Hello('deviceId', 1, 1);
 const sendMessage: roomCommand.SendMessage = {
   body: 'test', context: '', roomId: '1', tag: 'test', __discriminator__: 'domainCommand'
@@ -20,7 +20,7 @@ const sendMessage: roomCommand.SendMessage = {
 
 const getChatEventReceived = (ref?: Ref): chatEvents.Received => ({
   ref,
-  message: {id: '1', authorId: '2', channelId: '3', tag: 'test', data: 'test', timestamp: 1},
+  message: { id: '1', authorId: '2', channelId: '3', tag: 'test', data: 'test', timestamp: 1 },
   eventId: '1',
   tag: Received.tag,
   __discriminator__: 'domainEvent'
@@ -87,7 +87,7 @@ describe('WebsocketClient', () => {
       }, done.fail);
       socketMock.next(messageReceived);
       jasmine.clock().tick(askTimeout - 1);
-      expect(client.send).toHaveBeenCalledWith({...sendMessage, ref: refId} as DomainCommand);
+      expect(client.send).toHaveBeenCalledWith({ ...sendMessage, ref: refId } as DomainCommand);
       expect(sendMessage.ref).not.toBeDefined();
       jasmine.clock().uninstall();
     });
@@ -107,7 +107,7 @@ describe('WebsocketClient', () => {
       });
       socketMock.next(messageReceived);
       jasmine.clock().tick(askTimeout);
-      expect(client.send).toHaveBeenCalledWith({...sendMessage, ref: refId} as DomainCommand);
+      expect(client.send).toHaveBeenCalledWith({ ...sendMessage, ref: refId } as DomainCommand);
       expect(sendMessage.ref).not.toBeDefined();
       jasmine.clock().uninstall();
     });
@@ -143,22 +143,22 @@ describe('WebsocketClient', () => {
         });
       socketMock.next(errorEvent);
       jasmine.clock().tick(askTimeout - 1);
-      expect(client.send).toHaveBeenCalledWith({...sendMessage, ref: refId} as DomainCommand);
+      expect(client.send).toHaveBeenCalledWith({ ...sendMessage, ref: refId } as DomainCommand);
       jasmine.clock().uninstall();
     });
 
-    it('reject if send failed', async done => {
+    it('reject if send failed', done => {
       const socket$ = getSocketAsSubjectMock();
       const client = getWebsocketClient(socket$);
       const errorReason = 'errorReason';
       spyOn(client, 'send').and.throwError(errorReason);
-      try {
-        await client.ask(sendMessage);
-        done.fail('Should fail');
-      } catch (e) {
-        expect(e.message).toContain(errorReason);
-        done();
-      }
+
+      client.ask(sendMessage).subscribe(
+        () => done.fail('Should fail'),
+        (e) => {
+          expect(e.message).toContain(errorReason);
+          done();
+        });
     });
   });
 

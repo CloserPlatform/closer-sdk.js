@@ -1,5 +1,5 @@
 import * as View from '../view';
-import { Session, CloserSDK, UserConfig, Call, CallReason } from '../../../';
+import { Session, CloserSDK, UserConfig, Call, CallReason } from 'closer-sdk-js';
 import { Logger } from '../logger';
 import { createStream } from '../stream';
 import { CallHandler } from '../call/call-handler';
@@ -111,34 +111,4 @@ export class SessionService {
       closeModal();
     });
   }
-
-  // private handleCallInvitation = (session: Session, callInvitation: callEvents.Invited): void =>  {
-  //   session.artichoke.getCall(callInvitation.callId).then((call: BusinessCall) => {
-  //     Logger.log('Call invitation metadata: ', callInvitation.metadata);
-  //     const line = `${callInvitation.authorId} calls you`;
-  //     const closeModal = View.confirmModal('Call invitation', line, 'Answer', () => {
-  //       createStream(stream => {
-  //         const callHandler = new CallHandler(call, stream.getTracks(), session);
-  //         callHandler.answer()
-  //           .then(() => Logger.log('Call answered'))
-  //           .catch(err => {
-  //             Logger.error('Call answer failed', err);
-  //             alert(`Answer failed ${err}`);
-  //           });
-  //       });
-  //     }, 'Reject', () => {
-  //       Logger.log('Rejecting call...');
-  //       call.reject(CallReason.CallRejected).then(
-  //         res => Logger.log('Call rejected', res),
-  //         err => Logger.error('Call rejecting failed', err)
-  //       );
-  //     });
-
-  //     call.end$.subscribe(e => {
-  //       Logger.log('Call ended: ', e.reason);
-  //       closeModal();
-  //     });
-
-  //     }, err => Logger.error('Get call failed', err));
-  // }
 }
