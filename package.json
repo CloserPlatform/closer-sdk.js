@@ -1,6 +1,6 @@
 {
   "name": "@closerplatform/closer-sdk",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "repository": "https://github.com/CloserPlatform/closer-sdk.js",
   "description": "Closer SDK JS",
   "main": "dist/closer-sdk.js",
@@ -32,15 +32,15 @@
     "ci-deploy": "npm run build:ci && npm run build-demo-app:ci",
     "ci-test": "npm run test"
   },
-  "dependencies": {
-    "webrtc-adapter": "^7.7.0",
-    "rxjs": "^6.6.2"
-  },
+  "dependencies": {},
   "peerDependencies": {
     "rxjs": "^6.6.2",
-    "@types/webrtc": "^0.0.26"
+    "@types/webrtc": "^0.0.26",
+    "webrtc-adapter": "^7.7.0"
   },
   "devDependencies": {
+    "webrtc-adapter": "^7.7.0",
+    "rxjs": "^6.6.2",
     "@types/jasmine": "^3.5.12",
     "@types/webrtc": "^0.0.26",
     "clean-webpack-plugin": "^3.0.0",

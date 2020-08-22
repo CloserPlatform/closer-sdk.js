@@ -22,9 +22,9 @@
     "copy-webpack-plugin": "^4.6.0",
     "html-webpack-plugin": "^4.3.0",
     "http-server": "^0.12.3",
-    "ts-loader": "file:../node_modules/ts-loader",
-    "typescript": "file:../node_modules/typescript",
-    "webpack": "file:../node_modules/webpack",
-    "webpack-cli": "file:../node_modules/webpack-cli"
+    "ts-loader": "^8.0.2",
+    "typescript": "^3.9.7",
+    "webpack": "^4.44.1",
+    "webpack-cli": "^3.3.12"
   }
 }

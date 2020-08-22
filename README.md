@@ -24,7 +24,6 @@ Using this method, you can `import` closer-sdk.js using ES Module or TypeScript 
 
 ```js
 import { CloserSDK } from 'closer-sdk';
-
 ```
 
 Or using CommonJS:
