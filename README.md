@@ -1,14 +1,13 @@
-# Ratel JavaScript SDK
-demo-app uses @swagger/spinner, make sure npm can install it by creating a file `.npmrc` with contents: 
+# closer-sdk.js
+web-demo-app uses @swagger/spinner, make sure npm can install it by creating a file `.npmrc` with contents: 
 ```
-strict-ssl=false
 registry=https://nexus.ratel.io/repository/npm/
 ```
 
 Building:
 
 ```
-npm install
+npm ci
 npm run build
 ```
 
@@ -24,15 +23,6 @@ Test environment:
 npm test
 npm run test-dev
 ```
-
-## 307 response:
-When run locally, SDK will connect with ratel & artichoke via `http` protocol.
- This causes HSTS problem.
- To hack this in Chrome (http://stackoverflow.com/questions/34108241/non-authoritative-reason-header-field-http):
- - open chrome://net-internals/#hsts
- - delete domains: 'api.dev.ratel.io' and 'artichoke.ratel.io'
- - enjoy
-
 
 ## Tested on:
 - Chrome 67*
@@ -50,16 +40,3 @@ For now, the solution is to add both tracks (audio&video) before the first sdp o
 * rtcpMuxPolicy `negotiate` is not supported by Edge - use `require` instead 
 * negotiationNeededDisabled turn on to disable in call renegotiation (which does't work between Chrome&Safari)
 * Call broadcast & message event is based on RtcDataChannel which is not supported by Edge - check BrowserUtils.isBrowserSupported docs
-
-## Callstats
-To enable Callstats:
-* pass proper configuration
-```
-callstats: {
-  appId: 'your-app-id',
-  appSecret: 'your-app-secret'
-}
-```
-* ensure that Callstats library is properly loaded
-  * web: https://docs.callstats.io/javascript/#step-1-include-callstats-js
-  * React Native: https://www.npmjs.com/package/react-native-callstats
