@@ -9,71 +9,18 @@
  */
 
 import React from 'react';
-import {
-  SafeAreaView,
-  StyleSheet,
-  ScrollView,
-  View,
-  Text,
-  StatusBar,
-  TextInput,
-  Button
-} from 'react-native';
-
-const ServerInput = (props) => {
-  const [value, onChangeText] = React.useState(props.value);
-
-  return (
-    <View>
-      <TextInput
-        style={{ height: 40, borderColor: 'gray', borderWidth: 1 }}
-        onChangeText={text => onChangeText(text)}
-        value={value}
-        defaultValue={props.defaultValue}
-      />
-    </View>
-  );
-};
-
-const anonymousLogin = () => { };
+import { Login } from './src/components/login';
+import { Header, ThemeProvider } from 'react-native-elements';
 
 const App = () => {
   return (
-    <SafeAreaView style={styles.container}>
-      <View>
-        <Text style={styles.title}>
-          Closer SDK demo app
-        </Text>
-        <ServerInput id="spinner" name="Spinner" defaultValue="https://spinner.closer.app" />
-        <ServerInput id="artichoke" name="Artichoke" defaultValue="https://artichoke.closer.app" />
-        <Button
-          onPress={anonymousLogin}
-          title="CONTINUE AS GUEST"
-        />
-      </View>
-    </SafeAreaView>
+    <ThemeProvider>
+      <Header
+        centerComponent={{ text: 'Closer SDK demo app', style: { color: '#fff', fontSize: 20 } }}
+      />
+      <Login />
+    </ThemeProvider>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    marginHorizontal: 16,
-  },
-  title: {
-    textAlign: 'center',
-    marginVertical: 8,
-  },
-  fixToText: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  separator: {
-    marginVertical: 8,
-    borderBottomColor: '#737373',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-});
 
 export default App;
