@@ -1,10 +1,11 @@
 import { RTCPool } from './rtc-pool';
-import { protocol } from '..';
+import { ID } from '../protocol/protocol';
 import { RTCConfig } from '../config/rtc-config';
 import { LoggerFactory } from '../logger/logger-factory';
 import { ArtichokeApi } from '../artichoke/artichoke-api';
 import { WebRTCStats } from './stats/webrtc-stats';
 import { LoggerService } from '../logger/logger-service';
+import { SignalingClient } from './signaling-client';
 
 export class RTCPoolFactory {
     constructor(
@@ -16,14 +17,14 @@ export class RTCPoolFactory {
     ) {
     }
 
-    public create(callId: protocol.ID): RTCPool {
+    public create(callId: ID): RTCPool {
         this.loggerService.debug(`creating RTCPool for call ${callId}`);
 
         return new RTCPool(
             callId,
             this.rtcConfig,
             this.loggerFactory,
-            this.artichokeApi,
+            new SignalingClient(callId, this.artichokeApi),
             this.webRTCStats
         );
     }

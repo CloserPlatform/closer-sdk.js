@@ -24,7 +24,6 @@ export { GroupRoom } from './rooms/group-room';
 export { RoomType } from './rooms/room-type';
 
 // RTC
-export { ConnectionStatus } from './rtc/rtc-peer-connection-facade';
 export { PeerConnectionStatus } from './rtc/rtc-pool';
 export { PeerDataChannelMessage } from './rtc/rtc-pool';
 

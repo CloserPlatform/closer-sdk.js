@@ -2,9 +2,6 @@ import { getUserMediaMock } from '../mocks/get-user-media.mock';
 import { getRTCPeerConnectionFacade, getRTCPeerConnection } from '../mocks/peer-connection-facade.mock';
 import { getLoggerServiceMock } from '../mocks/logger.mock';
 import { createAnswer } from '../mocks/rtc-peer-connection.mock';
-import { getArtichokeApiMock } from '../mocks/artichoke-api.mock';
-
-const artichokeApi = getArtichokeApiMock();
 
 const logger = getLoggerServiceMock();
 
@@ -33,7 +30,7 @@ describe('Integration: PeerConnectionFacade', () => {
   describe('handleRemoteAnswer', () => {
     it('fail to set remote sdp without local', async done => {
       const rtcPeerConnection = getRTCPeerConnection();
-      const peerConnectionFacade = getRTCPeerConnectionFacade(rtcPeerConnection, logger, artichokeApi);
+      const peerConnectionFacade = getRTCPeerConnectionFacade(rtcPeerConnection, logger);
 
       const stream = await getUserMediaMock();
       stream.getTracks().forEach(track => peerConnectionFacade.addTrack(track));
