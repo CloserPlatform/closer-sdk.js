@@ -1,7 +1,7 @@
 // tslint:disable:readonly-array
 
 import { Session, roomEvents } from '@closerplatform/closer-sdk';
-import { makeChatBox, makeInputWithBtn, makeDiv, makeMessageEntry } from'../view';
+import { makeChatContainer, makeInputWithBtn, makeDiv, makeMessageEntry, makeChatWrapper } from'../view';
 import { Page } from '../page';
 import { ConversationService } from './conversation.service';
 import { Credentials } from '../credentials';
@@ -22,9 +22,11 @@ enum MessageColors {
 
 export class ConversationModule {
   private static readonly INFO_TIME = 2000;
+  private static readonly SCROLL_TIME = 200;
 
-  private textBox: JQuery;
-  private infoText: JQuery;
+  private chatContainer: JQuery;
+  private chatWrapper: JQuery;
+  private infoContainer: JQuery;
   private inner: JQuery;
   private messages: MessageHandle[];
 
@@ -48,6 +50,7 @@ export class ConversationModule {
 
     this.render();
     await this.refreehTextBox();
+    this.scrollToBottom();
   }
 
   public toggleVisible = (visible = true): void => {
@@ -59,28 +62,33 @@ export class ConversationModule {
     }
   }
 
+  private scrollToBottom = (): void => {
+    this.chatWrapper.animate({ scrollTop: this.chatWrapper.get(0).scrollHeight }, ConversationModule.SCROLL_TIME);
+  }
+
   private handleMessageCallback = (msg: roomEvents.MessageSent): void => {
     const ctx = JSON.stringify(msg.context);
     this.textBoxAppend(msg);
     if (ctx !== '{}') {
-      this.textBox.append(ctx);
+      this.chatContainer.append(ctx);
     }
+
+    this.scrollToBottom();
 
     if (msg.authorId !== this.credentials.id) {
       this.conversationService.setDelievered(msg.messageId);
-      this.infoText.empty();
+      this.infoContainer.empty();
       clearTimeout(this.infoTimeout);
     }
   }
 
   private handleTypingCallback = (ts: roomEvents.TypingSent): void => {
-    this.infoText.empty();
-    this.infoText.append('<small class="text-primary">User is typing...</small>');
+    this.setInfoText('User is typing...');
 
     Logger.log(ts);
 
     clearTimeout(this.infoTimeout);
-    this.infoTimeout = setTimeout(this.clearInfoText, ConversationModule.INFO_TIME);
+    this.infoTimeout = setTimeout(this.setInfoText, ConversationModule.INFO_TIME);
   }
 
   private handleDelieveredCallback = (message: roomEvents.MessageDelivered): void => {
@@ -102,13 +110,18 @@ export class ConversationModule {
     });
   }
 
-  private clearInfoText = (): void => {
-    this.infoText.empty();
+  private setInfoText = (text: string | undefined = undefined): void => {
+    this.infoContainer.empty();
+    if (text) {
+      this.infoContainer.append(`<small class="text-muted">${text}</small>`);
+    }
+    this.scrollToBottom();
   }
 
   private refreehTextBox = async (): Promise<void> => {
     this.messages = [];
     const history = await this.conversationService.getRoomMessageHistory();
+
     this.textBoxEmpty();
     if (history) {
       history.items.forEach(message => {
@@ -134,15 +147,22 @@ export class ConversationModule {
         authorId: message.authorId,
         elem: messageEntry
       });
-      this.textBox.append(messageEntry);
+      this.chatContainer.append(messageEntry);
     }
   }
   private textBoxEmpty = (): void => {
-    this.textBox.empty();
+    this.chatContainer.empty();
   }
 
   private render = (): void => {
-    this.textBox = makeChatBox();
+    this.chatWrapper = makeChatWrapper();
+    this.chatContainer = makeChatContainer();
+    this.infoContainer = makeDiv().prop({
+      class: 'my-2 align-self-center'
+    });
+
+    this.chatWrapper.append([this.chatContainer, this.infoContainer]);
+
     const legend = makeDiv().prop({
       class: 'd-flex justify-content-center my-3'
     }).append([
@@ -154,11 +174,8 @@ export class ConversationModule {
 
     const msgInput = makeInputWithBtn(Page.msgInputId, this.sendCallback, 'Send',
       'Type your message here...', '', this.conversationService.indicateTyping);
-    this.infoText = makeDiv().prop({
-      class: 'mb-3'
-    });
 
-    this.inner = makeDiv().append([legend, this.textBox, msgInput, this.infoText]);
+    this.inner = makeDiv().append([legend, this.chatWrapper, msgInput]);
     Page.contents.append(this.inner);
   }
 

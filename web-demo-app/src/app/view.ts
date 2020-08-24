@@ -116,12 +116,20 @@ export const makeMessageEntry = (message: string, classNames: ReadonlyArray<stri
   return msgDiv;
 };
 
-export const makeChatBox = (): JQuery => {
+export const makeChatContainer = (): JQuery => {
   const textBox = $('<div>').prop({
-    class: 'd-flex flex-column mb-4 form-control align-items-start chat-box'
+    class: 'd-flex flex-column align-items-start'
   });
 
   return textBox;
+};
+
+export const makeChatWrapper = (): JQuery => {
+  const chatWrapper = $('<div>').prop({
+    class: 'mb-4 form-control chat-box text-center'
+  });
+
+  return chatWrapper;
 };
 
 export const makePlaceholderInput = (id: string, placeholder: string, initial: string): JQuery => {
