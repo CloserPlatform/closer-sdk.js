@@ -6,6 +6,8 @@ import { Page } from '../page';
 import { ConversationService } from './conversation.service';
 import { Credentials } from '../credentials';
 import { Logger } from '../logger';
+import { SpinnerClient } from '@swagger/spinner';
+import { BoardModule } from '../board/board.module';
 
 interface MessageHandle {
   messageId: string;
@@ -23,7 +25,7 @@ enum MessageColors {
 export class ConversationModule {
   private static readonly INFO_TIME = 2000;
   private static readonly SCROLL_TIME = 200;
-  public readonly NAME = 'Conversation Module';
+  public readonly NAME = 'Conversation module';
 
   private chatContainer: JQuery;
   private chatWrapper: JQuery;
@@ -34,10 +36,10 @@ export class ConversationModule {
   private infoTimeout: ReturnType<typeof setTimeout>;
   private conversationService: ConversationService;
 
-  constructor (private roomId: string, private session: Session, private credentials: Credentials) { }
+  constructor (private boardModule: BoardModule, private credentials: Credentials, private roomId: string) { }
 
-  public init = async (): Promise<void> => {
-    this.conversationService = new ConversationService(this.session);
+  public init = async (session: Session, spinnerClient: SpinnerClient): Promise<void> => {
+    this.conversationService = new ConversationService(session, spinnerClient);
     await this.conversationService.setRoom(this.roomId);
 
     this.conversationService.setMessageCallback(this.handleMessageCallback);
@@ -51,6 +53,8 @@ export class ConversationModule {
 
     this.render();
     await this.refreehTextBox();
+    Page.contents.append(this.inner);
+
     this.scrollToBottom();
   }
 
@@ -142,7 +146,7 @@ export class ConversationModule {
       const position = isAuthor ? 'align-self-end' : 'align-self-start';
       const border = isAuthor ? 'border-right' : 'border-left';
 
-      const messageEntry = makeMessageEntry(message.message, [position, border, color]);
+      const messageEntry = makeMessageEntry(message.message, [position, border, color], this.switchToCallingModule);
       this.messages.push({
         messageId: message.messageId,
         authorId: message.authorId,
@@ -153,6 +157,19 @@ export class ConversationModule {
   }
   private textBoxEmpty = (): void => {
     this.chatContainer.empty();
+  }
+
+  private switchToCallingModule = (messageDiv: JQuery): void => {
+    const messageHandle = this.messages.find(m => m.elem === messageDiv);
+
+    if (messageHandle) {
+      if (messageHandle.authorId === this.credentials.id) {
+        alert('You are trying to call yourself');
+      } else {
+        this.credentials.setCallee(messageHandle.authorId);
+        this.boardModule.switch('Call module');
+      }
+    }
   }
 
   private render = (): void => {
@@ -172,12 +189,14 @@ export class ConversationModule {
       makeMessageEntry('Delievered', ['border-right', MessageColors.delievered]),
       makeMessageEntry('Read', ['border-right', MessageColors.read])
     ]);
+    const info = makeDiv().prop({
+      class: 'text-muted text-center'
+    }).append('Click on message to call its author');
 
     const msgInput = makeInputWithBtn(Page.msgInputId, this.sendCallback, 'Send',
       'Type your message here...', '', this.conversationService.indicateTyping);
 
-    this.inner = makeDiv().append([legend, this.chatWrapper, msgInput]);
-    Page.contents.append(this.inner);
+    this.inner = makeDiv().append([info, legend, this.chatWrapper, msgInput]);
   }
 
   private sendCallback = (inputValue: string): void => {

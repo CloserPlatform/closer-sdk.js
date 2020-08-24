@@ -1,5 +1,6 @@
 // tslint:disable:no-unsafe-any
 // tslint:disable:no-empty
+// tslint:disable:readonly-array
 export class Credentials {
   private static readonly storageName = 'crdls';
   public artichokeServer: string;
@@ -10,6 +11,8 @@ export class Credentials {
   public id: string;
   public orgId: string;
   public roomId: string;
+  public deviceId: string;
+  public calleeId: string;
   public isGuest = true;
 
   constructor() {
@@ -71,6 +74,14 @@ export class Credentials {
     this.roomId = roomId;
 
     this.save();
+  }
+
+  public setCallee = (callee: string): void => {
+    this.calleeId = callee;
+  }
+
+  public setDeviceId = (deviceId: string): void => {
+    this.deviceId = deviceId;
   }
 
   public setCredentials = (email: string, pwd: string): void => {

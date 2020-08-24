@@ -1,6 +1,6 @@
 import { Session } from '@closerplatform/closer-sdk';
 import { SpinnerClient, LeadCtx, SignUpGuest } from '@swagger/spinner';
-import { SessionService } from '../board/session.service';
+import { SessionService } from '../session.service';
 import { Credentials } from '../credentials';
 
 export interface NewConnnect {
@@ -32,10 +32,9 @@ export class GuestService {
       apiKey: credentials.apiKey
     };
 
-    const session = this.sessionService.connect(authCtx, credentials.artichokeServer, credentials.authServer);
-    this.session = session;
+    this.session = this.sessionService.connect(authCtx, credentials);
 
-    return {session, roomId: guestProfile.roomId};
+    return { session: this.session, roomId: guestProfile.roomId};
   }
 
   public getNewGuestSession = async (orgId: string, credentials: Credentials): Promise<NewConnnect> => {
@@ -43,9 +42,9 @@ export class GuestService {
     const body: SignUpGuest = new SignUpGuest(signUpArgs);
 
     const leadCtx = await this.spinnerClient.signUpGuest(body);
-    const session = this.sessionService.connect(leadCtx,
-      credentials.artichokeServer, credentials.authServer);
+    const session = this.sessionService.connect(leadCtx, credentials);
 
+    this.spinnerClient.apiKey = leadCtx.apiKey;
     this.session = session;
 
     return {leadCtx, session};

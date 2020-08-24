@@ -1,12 +1,13 @@
 import { Session, Room, roomEvents, protocol } from '@closerplatform/closer-sdk';
 import { Logger } from '../logger';
+import { SpinnerClient } from '@swagger/spinner';
 
 export class ConversationService {
   private static readonly retrieveMessagesCount = 20;
 
   public room: Room;
 
-  constructor(public session: Session) { }
+  constructor(public session: Session, public spinnerClient: SpinnerClient) { }
 
   public setMessageCallback = (f: (m: roomEvents.MessageSent) => void): void => {
     this.room.message$.subscribe(f);
@@ -26,6 +27,7 @@ export class ConversationService {
 
   public setRoom = async (roomId: string): Promise<void> => {
     const room = await this.session.artichoke.getRoom(roomId);
+
     this.room = room;
   }
 

@@ -14,8 +14,8 @@ export class GuestModule {
   private guestService: GuestService;
   private credentials: Credentials;
 
-  public init = async (credentials: Credentials, sc: SpinnerClient): Promise<void> => {
-    this.guestService = new GuestService(sc);
+  public init = async (credentials: Credentials, spinnerClient: SpinnerClient): Promise<void> => {
+    this.guestService = new GuestService(spinnerClient);
     this.credentials = credentials;
 
     if (this.credentials.isGuestSessionSaved()) {
@@ -53,11 +53,12 @@ export class GuestModule {
 
   private initializeBoard = async (session: Session, roomId: string): Promise<void> => {
     Page.contents.empty();
-    const boardModule = new BoardModule(this.credentials, session);
-    const conversationModule = new ConversationModule(roomId, session, this.credentials);
-    const callModule = new CallModule(this.credentials, session);
+    const boardModule = new BoardModule(this.credentials, session, this.guestService.spinnerClient);
+    const conversationModule = new ConversationModule(boardModule, this.credentials, roomId);
+    const callModule = new CallModule(boardModule, this.credentials);
 
     await boardModule.init([conversationModule, callModule]);
+    boardModule.makeModuleVisible('Conversation module');
   }
 
   private renderInputs = (): void => {

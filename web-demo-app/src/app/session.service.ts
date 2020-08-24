@@ -1,10 +1,11 @@
-import * as View from '../view';
-import { Session, CloserSDK, UserConfig, Call, CallReason } from '@closerplatform/closer-sdk';
-import { Logger } from '../logger';
-import { createStream } from '../stream';
-import { CallHandler } from '../call/call-handler';
-import { Page } from '../page';
+import * as View from './view';
+import { Session, CloserSDK, UserConfig, Call, CallReason, serverEvents } from '@closerplatform/closer-sdk';
+import { Logger } from './logger';
+import { createStream } from './stream';
+import { CallHandler } from './call/call-handler';
+import { Page } from './page';
 import { Subscription } from 'rxjs';
+import { Credentials } from './credentials';
 
 export interface AuthCtx {
   id: string;
@@ -14,21 +15,20 @@ export class SessionService {
 
   private sessionSubscription?: Subscription;
 
-  constructor() {
-  }
+  public connect = (authCtx: AuthCtx, credentials: Credentials): Session => {
+    const { artichokeServer: artichoke, authServer: spinner } = credentials;
 
-  public connect = (authCtx: AuthCtx, artichokeServer: string, spinnerServer: string): Session => {
-    Logger.log(`Connecting to ${artichokeServer} as: ${JSON.stringify(authCtx)}`);
+    Logger.log(`Connecting to ${artichoke} as: ${JSON.stringify(authCtx)}`);
 
     const userConfig: UserConfig = {
       logLevel: 0,
-      spinner: { server: spinnerServer },
-      artichoke: { server: artichokeServer }
+      spinner: { server: spinner },
+      artichoke: { server: artichoke }
     };
 
     const session = CloserSDK.init(authCtx.id, authCtx.apiKey, userConfig);
 
-    this.setCallbacks(session);
+    this.setCallbacks(session, credentials);
 
     return session;
   }
@@ -39,7 +39,7 @@ export class SessionService {
     }
   }
 
-  private setCallbacks = (session: Session): Session => {
+  private setCallbacks = (session: Session, credentials: Credentials): Session => {
     session.artichoke.error$.subscribe(error => {
       Logger.log('An error has occured: ', error);
     });
@@ -71,9 +71,11 @@ export class SessionService {
     });
 
     this.sessionSubscription = session.artichoke.connection$.subscribe(
-      () => {
+      (hello: serverEvents.Hello) => {
         Page.setHeader(`Connected Session(${session.id})`);
         Logger.log('Connected to Artichoke!');
+
+        credentials.setDeviceId(hello.deviceId);
       },
       err => Logger.error('Connection error', err),
       () => {
