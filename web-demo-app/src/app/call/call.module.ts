@@ -3,13 +3,17 @@ import { Session } from '@closerplatform/closer-sdk';
 import { Page } from '../page';
 import { CallService } from './call.service';
 import { Logger } from '../logger';
+import { Credentials } from '../credentials';
 
 export class CallModule {
+  public readonly NAME = 'Call module';
   private calleeInput?: JQuery;
   private callService: CallService;
 
-  public init = (session: Session): void => {
-    this.callService = new CallService(session);
+  constructor (public credentials: Credentials, private session: Session) { }
+
+  public init = (): void => {
+    this.callService = new CallService(this.session);
     this.calleeInput = this.renderInput(this.callService.callToUser);
 
     Page.contents.append(this.calleeInput);

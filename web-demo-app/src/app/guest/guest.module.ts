@@ -5,12 +5,14 @@ import { GuestService } from './guest.service';
 import { Credentials } from '../credentials';
 import { Logger } from '../logger';
 import { ConversationModule } from '../conversation/conversation.module';
+import { BoardModule } from '../board/board.module';
+import { CallModule } from '../call/call.module';
+import { Session } from '../../../../dist';
 
 export class GuestModule {
   private inner: JQuery;
   private guestService: GuestService;
   private credentials: Credentials;
-  private conversationModule = new ConversationModule();
 
   public init = async (credentials: Credentials, sc: SpinnerClient): Promise<void> => {
     this.guestService = new GuestService(sc);
@@ -26,29 +28,36 @@ export class GuestModule {
   public toggleVisible = (visible = true): void => {
     if (visible) {
       this.inner.show();
-      this.conversationModule.toggleVisible();
     }
     else {
-      this.conversationModule.toggleVisible(false);
       this.inner.hide();
     }
   }
 
-  private orgCallback = async (orgId: string, newSession = true): Promise<void> => {
+  private orgCallback = async (orgId: string, isNewSession = true): Promise<void> => {
     try {
-      if (!newSession) {
+      if (!isNewSession) {
         const {session, roomId} = await this.guestService.getExistingGuestSession(this.credentials);
-        Page.contents.empty();
-        await this.conversationModule.init(roomId, session, this.credentials);
+
+        await this.initializeBoard(session, roomId);
       } else {
         const {leadCtx, session} = await this.guestService.getNewGuestSession(orgId, this.credentials);
         this.credentials.setGuestCtx(leadCtx.id, leadCtx.orgId, leadCtx.apiKey);
-        Page.contents.empty();
-        await this.conversationModule.init(leadCtx.roomId, session, this.credentials);
+
+        await this.initializeBoard(session, leadCtx.roomId);
       }
     } catch (e) {
       Logger.error(e);
     }
+  }
+
+  private initializeBoard = async (session: Session, roomId: string): Promise<void> => {
+    Page.contents.empty();
+    const boardModule = new BoardModule(this.credentials, session);
+    const conversationModule = new ConversationModule(roomId, session, this.credentials);
+    const callModule = new CallModule(this.credentials, session);
+
+    await boardModule.init([conversationModule, callModule]);
   }
 
   private renderInputs = (): void => {

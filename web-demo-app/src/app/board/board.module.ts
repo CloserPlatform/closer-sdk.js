@@ -1,60 +1,51 @@
-import { SpinnerClient, AgentCtx } from '@swagger/spinner';
-import { Logger } from '../logger';
 import { CallModule } from '../call/call.module';
 import { ChatModule } from '../chat/chat.module';
 import { makeButton } from '../view';
 import { BoardService } from './board.service';
 import { Nav } from '../nav';
 import { Credentials } from '../credentials';
+import { Session } from '@closerplatform/closer-sdk';
+import { ConversationModule } from '../conversation/conversation.module';
+
+type Module = CallModule | ChatModule | ConversationModule;
+type Modules = ReadonlyArray<Module>;
 
 export class BoardModule {
-  private boardService: BoardService;
-  private credentials: Credentials;
+  public boardService: BoardService;
+  private modules: Modules;
 
-  private chatModule: ChatModule;
-  private callModule: CallModule;
-
-  constructor() {
-    this.boardService = new BoardService();
+  constructor(public credentials: Credentials, session: Session) {
+    this.boardService = new BoardService(session);
   }
 
-  public init = async (agentCtx: AgentCtx, credentials: Credentials, sc: SpinnerClient): Promise<void> => {
-    this.credentials = credentials;
-    try {
-      await this.boardService.init(agentCtx, credentials, sc);
-      this.render();
-    } catch (e) {
-      this.handleConnectFailed(e as Error);
-    }
+  public toggleVisible = (visible = true): void => {
+    this.modules.forEach(module => {
+      module.toggleVisible(visible);
+    });
   }
 
-  private render = (): void => {
-    this.chatModule = new ChatModule(this.credentials, this.boardService.session);
-    this.callModule = new CallModule();
-
+  public init = async (modules: Modules): Promise<void> => {
+    this.modules = modules;
+    modules.forEach(async module => {
+      await module.init();
+      module.toggleVisible(false);
+    });
     this.renderNav();
-
-    this.chatModule.init();
-    this.callModule.init(this.boardService.session);
-
-    this.callModule.toggleVisible(false);
   }
 
-  private renderNav = (): void => {
-    const chatButton = makeButton('btn-info', 'CHAT MODULE', () => {
-      this.chatModule.toggleVisible();
-      this.callModule.toggleVisible(false);
-    });
-    const callButton = makeButton('btn-info', 'CALLS MODULE', () => {
-      this.callModule.toggleVisible();
-      this.chatModule.toggleVisible(false);
-    });
+  public renderNav = (): void => {
+    if (this.modules) {
+      const buttons = this.modules.map(module => {
+        const button = makeButton('btn-info', module.NAME, () => {
+          module.toggleVisible();
+          this.modules.filter(other => other !== module).forEach((other) => other.toggleVisible(false));
+        });
 
-    Nav.setNavButtons([chatButton, callButton]);
-  }
+        return button;
+      });
 
-  private handleConnectFailed = (e: Error): void => {
-    Logger.error('Authorization failed', e);
-    alert('Authorization failed');
+      Nav.setNavButtons(buttons);
+    }
+
   }
 }
