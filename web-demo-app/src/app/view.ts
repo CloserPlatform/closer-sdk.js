@@ -109,11 +109,11 @@ export const makeCheckbox = (id: string, value: string, checked: boolean,
 };
 
 export const makeMessageEntry = (message: string, classNames: ReadonlyArray<string>): JQuery => {
-  const msgDiv = $('<div>').prop({
-    class: `bg-light border-bottom border-3 rounded my-1 mx-3 py-1 px-4 ${classNames.join(' ')}`
+  const wrapper = $('<div>').prop({
+    class: `bg-light chat-message border-bottom border-2 rounded my-1 mx-3 py-1 px-4 ${classNames.join(' ')}`
   }).append(message);
 
-  return msgDiv;
+  return wrapper;
 };
 
 export const makeChatContainer = (): JQuery => {

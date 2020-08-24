@@ -1,32 +1,32 @@
 // tslint:disable:no-floating-promises
 import { SpinnerClient, AgentCtx } from '@swagger/spinner';
-import { BoardModule } from '../board/board.module';
 import { LoginService } from './login.service';
 import { LoginFormData, makeLoginForm } from '../view';
 import { Page } from '../page';
 import { Credentials } from '../credentials';
+import { AgentModule } from '../agent/agent.module';
 
 export class LoginModule {
   private loginBox?: JQuery;
   private credentials: Credentials;
   private loginService = new LoginService();
-  private boardModule = new BoardModule();
 
-  public init = async (c: Credentials, sc: SpinnerClient): Promise<void> => {
-    this.credentials = c;
-    this.loginService.spinnerClient = sc;
+  public init = async (credentials: Credentials, spinnerClient: SpinnerClient): Promise<void> => {
+    this.credentials = credentials;
+    this.loginService.spinnerClient = spinnerClient;
 
     if (this.credentials.isSessionSaved()) {
       const agentCtx = await this.loginService.getSession(this.credentials);
-      await this.proceedToBoard(agentCtx);
+      await this.proceedToAgentModule(agentCtx);
     } else {
       this.render();
     }
   }
 
-  private proceedToBoard = async (agentCtx: AgentCtx): Promise<void> => {
+  private proceedToAgentModule = async (agentCtx: AgentCtx): Promise<void> => {
     this.credentials.setAgentCtx(agentCtx.id, agentCtx.orgId, agentCtx.apiKey);
-    await this.boardModule.init(agentCtx, this.credentials, this.loginService.spinnerClient);
+    const agentModule = new AgentModule();
+    agentModule.init(agentCtx, this.credentials, this.loginService.spinnerClient);
   }
 
   private handleLoginProbe = async (formData: LoginFormData): Promise<void> => {
@@ -37,7 +37,7 @@ export class LoginModule {
       if (this.loginBox) {
         this.loginBox.hide();
       }
-      this.proceedToBoard(agentCtx);
+      this.proceedToAgentModule(agentCtx);
     } catch (e) {
       alert('Error logging');
     }

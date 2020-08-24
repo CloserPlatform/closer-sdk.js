@@ -23,6 +23,7 @@ enum MessageColors {
 export class ConversationModule {
   private static readonly INFO_TIME = 2000;
   private static readonly SCROLL_TIME = 200;
+  public readonly NAME = 'Conversation Module';
 
   private chatContainer: JQuery;
   private chatWrapper: JQuery;
@@ -32,12 +33,12 @@ export class ConversationModule {
 
   private infoTimeout: ReturnType<typeof setTimeout>;
   private conversationService: ConversationService;
-  private credentials: Credentials;
 
-  public init = async (roomId: string, session: Session, credentials: Credentials): Promise<void> => {
-    this.credentials = credentials;
-    this.conversationService = new ConversationService(session);
-    await this.conversationService.setRoom(roomId);
+  constructor (private roomId: string, private session: Session, private credentials: Credentials) { }
+
+  public init = async (): Promise<void> => {
+    this.conversationService = new ConversationService(this.session);
+    await this.conversationService.setRoom(this.roomId);
 
     this.conversationService.setMessageCallback(this.handleMessageCallback);
     this.conversationService.setTypingCallback(this.handleTypingCallback);

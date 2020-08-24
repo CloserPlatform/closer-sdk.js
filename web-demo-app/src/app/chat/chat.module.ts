@@ -9,6 +9,7 @@ import { ConversationModule } from '../conversation/conversation.module';
 import { Credentials } from '../credentials';
 
 export class ChatModule {
+  public readonly NAME = 'Chat module';
   private inner: JQuery;
 
   private chatService: ChatService;
@@ -16,7 +17,6 @@ export class ChatModule {
 
   constructor (private credentials: Credentials, session: Session) {
     this.chatService = new ChatService(session);
-    this.conversationModule = new ConversationModule();
   }
 
   public init = (): void => {
@@ -26,17 +26,22 @@ export class ChatModule {
   public toggleVisible = (visible = true): void => {
     if (visible) {
       this.inner.show();
-      this.conversationModule.toggleVisible();
+      if (this.conversationModule) {
+        this.conversationModule.toggleVisible();
+      }
     }
     else {
       this.inner.hide();
-      this.conversationModule.toggleVisible(false);
+      if (this.conversationModule) {
+        this.conversationModule.toggleVisible();
+      }
     }
   }
 
   private roomCallback = async (inputValue: string): Promise<void> => {
     try {
-      await this.conversationModule.init(inputValue, this.chatService.session, this.credentials);
+      this.conversationModule = new ConversationModule(inputValue, this.chatService.session, this.credentials);
+      await this.conversationModule.init();
       this.credentials.setRoom(inputValue);
     } catch (e) {
       Logger.error(e);

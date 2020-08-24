@@ -132,6 +132,11 @@ body {
     overflow-y: scroll;
 }
 
-.border-3 {
+.border-2 {
     border-width: 2px !important;
+}
+
+.chat-message {
+    word-wrap: anywhere;
+    max-width: 75%;
 }
