@@ -7,6 +7,7 @@ import * as $ from 'jquery';
 import 'jquery-ui-bundle';
 import { Logger } from './logger';
 import { Observable } from 'rxjs/internal/Observable';
+import { Page } from './page';
 
 export interface LoginFormData {
   userEmail: string;
@@ -108,10 +109,16 @@ export const makeCheckbox = (id: string, value: string, checked: boolean,
   return $('<div>').append(input, [makeLabel(id, '', value)]);
 };
 
-export const makeMessageEntry = (message: string, classNames: ReadonlyArray<string>): JQuery => {
-  const wrapper = $('<div>').prop({
+export const makeMessageEntry = (message: string, classNames: ReadonlyArray<string>,
+                                  onClick: ((e: JQuery) => void) | undefined = undefined): JQuery => {
+  const wrapper: JQuery = $('<div>').prop({
     class: `bg-light chat-message border-bottom border-2 rounded my-1 mx-3 py-1 px-4 ${classNames.join(' ')}`
-  }).append(message);
+  })
+  .append(message);
+
+  if (onClick) {
+    wrapper.on('click', () => onClick(wrapper));
+  }
 
   return wrapper;
 };
@@ -187,14 +194,14 @@ export const makeCallingInput = (id: string, onCall: (userId: string) => void,
                                  placeholder?: string, value?: string): JQuery => {
   const form = $('<form id="calling_form">')
     .append([
-      makeInput('calling-id', 'Calle:', placeholder || '', value || '')
+      makeInput(Page.calleeInputId, 'Calle:', placeholder || '', value || '')
     ]);
 
   const button = $('<button class="btn btn-primary" form="calling_form">')
     .append('Call')
     .on('click', (ev) => {
       ev.preventDefault();
-      onCall(String($('#calling-id').val()));
+      onCall(String($(`#${Page.calleeInputId}`).val()));
     });
 
   return $('<div>')

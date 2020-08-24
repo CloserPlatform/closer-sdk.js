@@ -4,6 +4,8 @@ export class Page {
 
   public static readonly contents = $('#page-contents');
 
+  public static readonly calleeId = 'callee-id';
+  public static readonly calleeInputId = 'input-callee-id';
   public static readonly calleeBoxId = 'calling';
   public static readonly orgInputId = 'org-input';
   public static readonly roomInputId = 'room-input';

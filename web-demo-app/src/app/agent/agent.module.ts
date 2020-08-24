@@ -11,14 +11,14 @@ export class AgentModule {
   public credentials: Credentials;
   private agentService = new AgentService();
 
-  public init = async (agentCtx: AgentCtx, credentials: Credentials, sc: SpinnerClient): Promise<void> => {
+  public init = async (agentCtx: AgentCtx, credentials: Credentials, spinnerClient: SpinnerClient): Promise<void> => {
     this.credentials = credentials;
     try {
-      this.agentService.init(agentCtx, credentials, sc);
+      this.agentService.init(agentCtx, credentials, spinnerClient);
 
-      const boardModule = new BoardModule(credentials, this.agentService.session);
-      const chatModule = new ChatModule(credentials, this.agentService.session);
-      const callModule = new CallModule(credentials, this.agentService.session);
+      const boardModule = new BoardModule(credentials, this.agentService.session, spinnerClient);
+      const chatModule = new ChatModule(boardModule, credentials);
+      const callModule = new CallModule(boardModule, credentials);
 
       await boardModule.init([chatModule, callModule]);
     } catch (e) {

@@ -1,23 +1,38 @@
-import { Session, BrowserUtils } from '@closerplatform/closer-sdk';
+// tslint:disable: no-unused-expression
+import { SpinnerClient, CreateCall, Call } from '@swagger/spinner';
+import { Session } from '@closerplatform/closer-sdk';
 import { createStream } from '../stream';
 import { CallHandler } from './call-handler';
 import { Logger } from '../logger';
+import { Credentials } from '../credentials';
 
 export class CallService {
 
-  constructor (public session: Session) { }
+  constructor (public session: Session, public spinnerClient: SpinnerClient) { }
 
-  public callToUser = (calleeId: string): void => {
+  public callToUser = async (calleeId: string, credentials: Credentials): Promise<void> => {
     if (this.session) {
       createStream(stream => {
         const tracks = stream.getTracks();
-        this.session.artichoke.createDirectCall(tracks, calleeId, undefined,
-          {browser: BrowserUtils.getBrowserName()})
-          .then(directCall => new CallHandler(directCall, tracks, () => alert('Not implemented')))
-          .catch(err => {
-            Logger.error(err);
-            alert(`Failed to create call ${err}`);
-          });
+
+        if (!credentials.deviceId) {
+          alert('No device id in credentials');
+
+          return;
+        }
+
+        const body  = new CreateCall({ invitee: calleeId });
+
+        this.spinnerClient.createCall(credentials.deviceId, body)
+        .on200(async (callResponse: Call) => {
+          const call = await this.session.artichoke.getCall(callResponse.id);
+          Logger.log('Created direct call');
+
+          new CallHandler(call, tracks, () => alert('Not implemented'));
+        })
+        .onUnhandled(() => {
+          alert('Failed at creating call with spinner client');
+        });
       });
     } else {
       Logger.error('No session');
