@@ -22,70 +22,69 @@ export namespace customEvents {
   }
 
   export interface Context {
-    [Subtag.ASSIGNEE_CHANGED]: {
-      room: ID;
-      assignee: ID;
-      requesterId?: ID;
+    readonly [Subtag.ASSIGNEE_CHANGED]: {
+      readonly room: ID;
+      readonly assignee: ID;
+      readonly requesterId?: ID;
     };
-    [Subtag.ASSIGNEE_REMOVED]: {
-      assignee: ID;
+    readonly [Subtag.ASSIGNEE_REMOVED]: {
+      readonly assignee: ID;
     };
-    [Subtag.CALL_ANSWERED]: {
-      timestamp: number;
+    readonly [Subtag.CALL_ANSWERED]: {
+      readonly timestamp: number;
     };
-    [Subtag.CALL_ENDED]: {
-      duration: number;
-      userId: string;
-      reason: CallReason;
+    readonly [Subtag.CALL_ENDED]: {
+      readonly duration: number;
+      readonly userId: string;
+      readonly reason: CallReason;
     };
-    [Subtag.FOLLOWER_ADDED]: {
-      user: ID;
-      requesterId?: ID;
+    readonly [Subtag.FOLLOWER_ADDED]: {
+      readonly user: ID;
+      readonly requesterId?: ID;
     };
-    [Subtag.FOLLOWER_REMOVED]: {
-      user: ID;
-      requesterId?: ID;
+    readonly [Subtag.FOLLOWER_REMOVED]: {
+      readonly user: ID;
+      readonly requesterId?: ID;
     };
-    [Subtag.ALL_FOLLOWERS_REMOVED]: {};
-    [Subtag.STATUS_CHANGED]: {
-      status: 'waiting' | 'inProgress' | 'solved' | 'unsolved';
-      agent?: ID;
+    readonly [Subtag.ALL_FOLLOWERS_REMOVED]: {};
+    readonly [Subtag.STATUS_CHANGED]: {
+      readonly status: 'waiting' | 'inProgress' | 'solved' | 'unsolved';
+      readonly agent?: ID;
     };
-    [Subtag.MEETING_SCHEDULED]: {
-      id: ID;
-      agent: ID;
-      start: number;
-      duration: number;
+    readonly [Subtag.MEETING_SCHEDULED]: {
+      readonly id: ID;
+      readonly agent: ID;
+      readonly start: number;
+      readonly duration: number;
     };
-    [Subtag.MEETING_RESCHEDULED]: {
-      id: ID;
-      agent: ID;
-      start: number;
-      duration: number;
+    readonly [Subtag.MEETING_RESCHEDULED]: {
+      readonly id: ID;
+      readonly agent: ID;
+      readonly start: number;
+      readonly duration: number;
     };
-    [Subtag.MEETING_CANCELLED]: {
-      id: ID;
-      agent: ID;
-      start: number;
-      duration: number;
+    readonly [Subtag.MEETING_CANCELLED]: {
+      readonly id: ID;
+      readonly agent: ID;
+      readonly start: number;
+      readonly duration: number;
     };
-    [Subtag.MESSAGE_WITH_ATTACHMENTS]: {
-      message?: string;
-      attachments: ReadonlyArray<{
-        id: string;
-        url: string;
-        contentType?: string;
-        fileName?: string;
-        previews: ReadonlyArray<string>;
-        size?: number;
-        // tslint:disable-next-line:no-any
-        metadata?: Metadata;
+    readonly [Subtag.MESSAGE_WITH_ATTACHMENTS]: {
+      readonly message?: string;
+      readonly attachments: ReadonlyArray<{
+        readonly id: string;
+        readonly url: string;
+        readonly contentType?: string;
+        readonly fileName?: string;
+        readonly previews: ReadonlyArray<string>;
+        readonly size?: number;
+        readonly metadata?: Metadata;
       }>;
     };
-    [Subtag.LEKTA_MESSAGE]: {};
-    [Subtag.NOTE]: {
-      user: ID;
-      body: string;
+    readonly [Subtag.LEKTA_MESSAGE]: {};
+    readonly [Subtag.NOTE]: {
+      readonly user: ID;
+      readonly body: string;
     };
   }
 

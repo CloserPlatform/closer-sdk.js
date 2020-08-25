@@ -15,7 +15,8 @@ export namespace errorEvents {
       this.tag = Error.tag;
     }
 
-    public static isError = (evt: DomainEvent): evt is Error =>
-      evt.tag === Error.tag
+    public static isError(evt: DomainEvent): evt is Error {
+      return evt.tag === Error.tag;
+    }
   }
 }

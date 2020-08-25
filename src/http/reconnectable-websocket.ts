@@ -2,7 +2,7 @@ import { ApiKey, DeviceId } from '../protocol/protocol';
 
 export class ReconnectableWebSocket extends WebSocket {
 
-    public static deviceIdMap = new Map<ApiKey, DeviceId>();
+    public static readonly deviceIdMap = new Map<ApiKey, DeviceId>();
 
     // tslint:disable-next-line:readonly-array
     constructor(url: string, protocols?: string | string[]) {

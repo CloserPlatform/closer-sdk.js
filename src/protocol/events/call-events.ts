@@ -24,8 +24,9 @@ export namespace callEvents {
     public readonly tag: string;
     public readonly __discriminator__ = 'domainEvent';
 
-    public static isCallEvent = (e: DomainEvent): e is CallEvent =>
-      typeof (e as CallEvent).callId !== 'undefined'
+    public static isCallEvent(e: DomainEvent): e is CallEvent {
+      return typeof (e as CallEvent).callId !== 'undefined';
+    }
 
     protected constructor(callId: string, timestamp: number, tag: string) {
       this.callId = callId;
@@ -43,8 +44,9 @@ export namespace callEvents {
       this.authorId = authorId;
     }
 
-    public static isCreated = (e: DomainEvent): e is Created =>
-      e.tag === Created.tag
+    public static isCreated(e: DomainEvent): e is Created {
+      return e.tag === Created.tag;
+    }
   }
 
   export class Invited extends CallEvent {
@@ -61,8 +63,9 @@ export namespace callEvents {
       this.authorId = authorId;
     }
 
-    public static isInvited = (e: DomainEvent): e is Invited =>
-      e.tag === Invited.tag
+    public static isInvited(e: DomainEvent): e is Invited {
+      return e.tag === Invited.tag;
+    }
   }
 
   export class Answered extends CallEvent {
@@ -74,8 +77,9 @@ export namespace callEvents {
       this.authorId = authorId;
     }
 
-    public static isAnswered = (e: DomainEvent): e is Answered =>
-      e.tag === Answered.tag
+    public static isAnswered(e: DomainEvent): e is Answered {
+      return e.tag === Answered.tag;
+    }
   }
 
   export class Joined extends CallEvent {
@@ -87,8 +91,9 @@ export namespace callEvents {
       this.authorId = authorId;
     }
 
-    public static isJoined = (e: DomainEvent): e is Joined =>
-      e.tag === Joined.tag
+    public static isJoined(e: DomainEvent): e is Joined {
+      return e.tag === Joined.tag;
+    }
   }
 
   export class Left extends CallEvent {
@@ -103,8 +108,9 @@ export namespace callEvents {
       this.reason = reason;
     }
 
-    public static isLeft = (e: DomainEvent): e is Left =>
-      e.tag === Left.tag
+    public static isLeft(e: DomainEvent): e is Left {
+      return e.tag === Left.tag;
+    }
   }
 
   export class Rejected extends CallEvent {
@@ -119,8 +125,9 @@ export namespace callEvents {
       this.reason = reason;
     }
 
-    public static isRejected = (e: DomainEvent): e is Rejected =>
-      e.tag === Rejected.tag
+    public static isRejected(e: DomainEvent): e is Rejected {
+      return e.tag === Rejected.tag;
+    }
   }
 
   export class Ended extends CallEvent {
@@ -133,8 +140,9 @@ export namespace callEvents {
       this.reason = reason;
     }
 
-    public static isEnded = (e: DomainEvent): e is Ended =>
-      e.tag === Ended.tag
+    public static isEnded(e: DomainEvent): e is Ended {
+      return e.tag === Ended.tag;
+    }
   }
 
   export class CallHandledOnDevice extends CallEvent {
@@ -149,8 +157,9 @@ export namespace callEvents {
       this.device = device;
     }
 
-    public static isCallHandledOnDevice = (e: DomainEvent): e is CallHandledOnDevice =>
-      e.tag === CallHandledOnDevice.tag
+    public static isCallHandledOnDevice(e: DomainEvent): e is CallHandledOnDevice {
+      return e.tag === CallHandledOnDevice.tag;
+    }
   }
 
   export class DeviceOffline extends CallEvent {
@@ -165,8 +174,9 @@ export namespace callEvents {
       this.deviceId = deviceId;
     }
 
-    public static isDeviceOffline = (e: DomainEvent): e is DeviceOffline =>
-      e.tag === DeviceOffline.tag
+    public static isDeviceOffline(e: DomainEvent): e is DeviceOffline {
+      return e.tag === DeviceOffline.tag;
+    }
   }
 
   export class DeviceOnline extends CallEvent {
@@ -181,8 +191,9 @@ export namespace callEvents {
       this.deviceId = deviceId;
     }
 
-    public static isDeviceOnline = (e: DomainEvent): e is DeviceOnline =>
-      e.tag === DeviceOnline.tag
+    public static isDeviceOnline(e: DomainEvent): e is DeviceOnline {
+      return e.tag === DeviceOnline.tag;
+    }
   }
 
   export class AudioStreamToggled extends CallEvent {
@@ -198,8 +209,9 @@ export namespace callEvents {
       this.enabled = enabled;
     }
 
-    public static isAudioStreamToggled = (e: DomainEvent): e is AudioStreamToggled =>
-      e.tag === AudioStreamToggled.tag
+    public static isAudioStreamToggled(e: DomainEvent): e is AudioStreamToggled {
+      return e.tag === AudioStreamToggled.tag;
+    }
   }
 
   export class VideoStreamToggled extends CallEvent {
@@ -217,8 +229,9 @@ export namespace callEvents {
       this.content = contentType;
     }
 
-    public static isVideoStreamToggled = (e: DomainEvent): e is VideoStreamToggled =>
-      e.tag === VideoStreamToggled.tag
+    public static isVideoStreamToggled(e: DomainEvent): e is VideoStreamToggled {
+      return e.tag === VideoStreamToggled.tag;
+    }
   }
 
 }

@@ -1,4 +1,5 @@
 export class Delayer {
+  // tslint:disable-next-line:readonly-keyword
   private timeoutHandle = 0;
 
   /**

@@ -3,45 +3,45 @@ import { LogLevel } from '../logger/log-level';
 import { RTCConfig } from './rtc-config';
 
 export interface UserArtichokeConfig {
-  server?: string;
-  reconnectDelayMs?: number;
-  heartbeatTimeoutMultiplier?: number;
-  apiPath?: string;
-  wsPath?: string;
-  askTimeoutMs?: number;
-  reconnectionDisabled?: boolean;
+  readonly server?: string;
+  readonly reconnectDelayMs?: number;
+  readonly heartbeatTimeoutMultiplier?: number;
+  readonly apiPath?: string;
+  readonly wsPath?: string;
+  readonly askTimeoutMs?: number;
+  readonly reconnectionDisabled?: boolean;
 }
 
 export interface ArtichokeConfig {
-  server: string;
-  reconnectDelayMs: number;
-  heartbeatTimeoutMultiplier: number;
-  apiPath: string;
-  wsPath: string;
-  askTimeoutMs: number;
-  reconnectionDisabled: boolean;
+  readonly server: string;
+  readonly reconnectDelayMs: number;
+  readonly heartbeatTimeoutMultiplier: number;
+  readonly apiPath: string;
+  readonly wsPath: string;
+  readonly askTimeoutMs: number;
+  readonly reconnectionDisabled: boolean;
 }
 
 export interface UserSpinnerConfig {
-  server?: string;
+  readonly server?: string;
 }
 
 export interface SpinnerConfig {
-  server: string;
+  readonly server: string;
 }
 
 export interface UserConfig {
-  logLevel?: LogLevel;
-  rtc?: RTCConfig;
-  artichoke?: UserArtichokeConfig;
-  spinner?: UserSpinnerConfig;
+  readonly logLevel?: LogLevel;
+  readonly rtc?: RTCConfig;
+  readonly artichoke?: UserArtichokeConfig;
+  readonly spinner?: UserSpinnerConfig;
 }
 
 export interface Config {
-  logLevel: LogLevel;
-  rtc: RTCConfig;
-  artichoke: ArtichokeConfig;
-  spinner: SpinnerConfig;
+  readonly logLevel: LogLevel;
+  readonly rtc: RTCConfig;
+  readonly artichoke: ArtichokeConfig;
+  readonly spinner: SpinnerConfig;
 }
 
 // tslint:disable-next-line:only-arrow-functions

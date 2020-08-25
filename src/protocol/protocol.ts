@@ -9,20 +9,20 @@ export type DeviceId = ID;
 export type Signature = string;
 
 export interface Payload {
-  orgId: ID;
-  externalId: ID;
-  timestamp: Timestamp;
+  readonly orgId: ID;
+  readonly externalId: ID;
+  readonly timestamp: Timestamp;
 }
 
 export interface SessionData {
-  payload: Payload;
-  signature: Signature;
+  readonly payload: Payload;
+  readonly signature: Signature;
 }
 
 export interface AgentContext {
-  id: ID;
-  orgId: ID;
-  apiKey: ApiKey;
+  readonly id: ID;
+  readonly orgId: ID;
+  readonly apiKey: ApiKey;
 }
 
 // // Datatypes:
@@ -35,39 +35,37 @@ export type VideoContentType = 'camera' | 'screen';
 
 // // REST API:
 export interface CreateCall {
-  users: ReadonlyArray<ID>;
-  // tslint:disable-next-line:no-any
-  metadata?: Metadata;
+  readonly users: ReadonlyArray<ID>;
+  readonly metadata?: Metadata;
 }
 
 export interface CreateDirectEntity {
-  user: ID;
+  readonly user: ID;
 }
 
 export interface CreateDirectCall extends CreateDirectEntity {
-  timeout?: number;
-  // tslint:disable-next-line:no-any
-  metadata?: Metadata;
+  readonly timeout?: number;
+  readonly metadata?: Metadata;
 }
 
 export interface CreateDirectRoom extends CreateDirectEntity {
-  context?: Context;
+  readonly context?: Context;
 }
 
 export interface CreateRoom {
-  name: string;
+  readonly name: string;
 }
 
 export interface LeaveReason {
-  reason: string;
+  readonly reason: string;
 }
 
 export interface Invite {
-  user: ID;
+  readonly user: ID;
 }
 
 export interface PushRegistration {
-  pushId: ID;
+  readonly pushId: ID;
 }
 
 // tslint:disable-next-line:no-any
@@ -112,12 +110,12 @@ export const pushRegistration = (pushId: ID): PushRegistration =>
   });
 
 export interface HistoryFilter {
-  filter: ReadonlyArray<string>;
-  customFilter: ReadonlyArray<string>;
+  readonly filter: ReadonlyArray<string>;
+  readonly customFilter: ReadonlyArray<string>;
 }
 
 export interface Paginated<T> {
-  items: ReadonlyArray<T>;
-  offset: number;
-  limit: number;
+  readonly items: ReadonlyArray<T>;
+  readonly offset: number;
+  readonly limit: number;
 }

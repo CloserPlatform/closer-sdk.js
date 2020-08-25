@@ -2,6 +2,7 @@ import { LoggerService } from '../logger/logger-service';
 
 export class Queue<T> {
 
+  // tslint:disable-next-line:readonly-keyword
   private queue: ReadonlyArray<T> = [];
 
   constructor(

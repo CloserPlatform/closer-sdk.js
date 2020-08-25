@@ -11,7 +11,7 @@ export class RoomFactory {
   constructor(private loggerFactory: LoggerFactory,
               private artichokeAPI: ArtichokeApi) {}
 
-  public create = (room: wireEntities.Room): Room => {
+  public create(room: wireEntities.Room): Room {
     if (room.direct) {
       return new DirectRoom(room, this.loggerFactory.create(`DirectRoom(${room.id})`), this.artichokeAPI);
     } else if (room.orgId) {

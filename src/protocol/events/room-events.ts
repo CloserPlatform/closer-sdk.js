@@ -23,8 +23,9 @@ export namespace roomEvents {
     public readonly tag: string;
     public readonly __discriminator__ = 'domainEvent';
 
-    public static isRoomEvent = (e: DomainEvent): e is RoomEvent =>
-      typeof (e as RoomEvent).roomId !== 'undefined'
+    public static isRoomEvent(e: DomainEvent): e is RoomEvent {
+      return typeof (e as RoomEvent).roomId !== 'undefined';
+    }
 
     protected constructor(roomId: string, authorId: string, timestamp: number, tag: string) {
       this.roomId = roomId;
@@ -41,8 +42,9 @@ export namespace roomEvents {
       super(roomId, authorId, timestamp, Created.tag);
     }
 
-    public static isCreated = (e: DomainEvent): e is Created =>
-      e.tag === Created.tag
+    public static isCreated(e: DomainEvent): e is Created {
+      return e.tag === Created.tag;
+    }
   }
 
   export class Invited extends RoomEvent {
@@ -55,8 +57,9 @@ export namespace roomEvents {
       this.invitee = invitee;
     }
 
-    public static isInvited = (e: DomainEvent): e is Invited =>
-      e.tag === Invited.tag
+    public static isInvited(e: DomainEvent): e is Invited {
+      return e.tag === Invited.tag;
+    }
   }
 
   export class Joined extends RoomEvent {
@@ -66,8 +69,9 @@ export namespace roomEvents {
       super(roomId, authorId, timestamp, Joined.tag);
     }
 
-    public static isJoined = (e: DomainEvent): e is Joined =>
-      e.tag === Joined.tag
+    public static isJoined(e: DomainEvent): e is Joined {
+      return e.tag === Joined.tag;
+    }
   }
 
   export class Left extends RoomEvent {
@@ -80,22 +84,24 @@ export namespace roomEvents {
       this.endReason = endReason;
     }
 
-    public static isLeft = (e: DomainEvent): e is Left =>
-      e.tag === Left.tag
+    public static isLeft(e: DomainEvent): e is Left {
+      return e.tag === Left.tag;
+    }
   }
 
   export class FakeMessageSent extends RoomEvent {
     public static readonly tag = 'fake_room_message_sent';
     public readonly messageId: string;
 
-    constructor(roomId: string, authorId: string,  messageId: string, timestamp: number) {
+    constructor(roomId: string, authorId: string, messageId: string, timestamp: number) {
       super(roomId, authorId, timestamp, FakeMessageSent.tag);
 
       this.messageId = messageId;
     }
 
-    public static isFakeMessageSent = (e: DomainEvent | RoomEvent): e is FakeMessageSent =>
-      e.tag === FakeMessageSent.tag
+    public static isFakeMessageSent(e: DomainEvent | RoomEvent): e is FakeMessageSent {
+      return e.tag === FakeMessageSent.tag;
+    }
   }
 
   export class MessageSent extends RoomEvent {
@@ -105,7 +111,7 @@ export namespace roomEvents {
     public readonly context: any;
 
     constructor(roomId: string, authorId: string, message: string, messageId: string, context: any,
-                timestamp: number) {
+      timestamp: number) {
       super(roomId, authorId, timestamp, MessageSent.tag);
 
       this.message = message;
@@ -113,8 +119,9 @@ export namespace roomEvents {
       this.context = context;
     }
 
-    public static isMessageSent = (e: DomainEvent | RoomEvent): e is MessageSent =>
-      e.tag === MessageSent.tag
+    public static isMessageSent(e: DomainEvent | RoomEvent): e is MessageSent {
+      return e.tag === MessageSent.tag;
+    }
   }
 
   export class MessageUpdated extends RoomEvent {
@@ -123,15 +130,16 @@ export namespace roomEvents {
     public readonly context: any;
 
     constructor(roomId: string, authorId: string, messageId: string, context: any,
-                timestamp: number) {
+      timestamp: number) {
       super(roomId, authorId, timestamp, MessageUpdated.tag);
 
       this.messageId = messageId;
       this.context = context;
     }
 
-    public static isMessageUpdated = (e: DomainEvent | RoomEvent): e is MessageUpdated =>
-      e.tag === MessageUpdated.tag
+    public static isMessageUpdated(e: DomainEvent | RoomEvent): e is MessageUpdated {
+      return e.tag === MessageUpdated.tag;
+    }
   }
 
   export class CustomMessageSent<C = any> extends RoomEvent {
@@ -142,7 +150,7 @@ export namespace roomEvents {
     public readonly context: C;
 
     constructor(roomId: string, authorId: string, message: string, messageId: string, subtag: string, context: C,
-                timestamp: number) {
+      timestamp: number) {
       super(roomId, authorId, timestamp, CustomMessageSent.tag);
 
       this.subtag = subtag;
@@ -151,8 +159,9 @@ export namespace roomEvents {
       this.context = context;
     }
 
-    public static isCustomMessageSent = (e: DomainEvent | RoomEvent): e is CustomMessageSent =>
-      e.tag === CustomMessageSent.tag
+    public static isCustomMessageSent(e: DomainEvent | RoomEvent): e is CustomMessageSent {
+      return e.tag === CustomMessageSent.tag;
+    }
   }
 
   export class TypingSent extends RoomEvent {
@@ -162,8 +171,9 @@ export namespace roomEvents {
       super(roomId, authorId, timestamp, TypingSent.tag);
     }
 
-    public static isTypingSent = (e: DomainEvent): e is TypingSent =>
-      e.tag === TypingSent.tag
+    public static isTypingSent(e: DomainEvent): e is TypingSent {
+      return e.tag === TypingSent.tag;
+    }
   }
 
   export class MarkSent extends RoomEvent {
@@ -173,8 +183,9 @@ export namespace roomEvents {
       super(roomId, authorId, timestamp, MarkSent.tag);
     }
 
-    public static isMarkSent = (e: DomainEvent): e is MarkSent =>
-      e.tag === MarkSent.tag
+    public static isMarkSent(e: DomainEvent): e is MarkSent {
+      return e.tag === MarkSent.tag;
+    }
   }
 
   export class MessageDelivered extends RoomEvent {
@@ -187,7 +198,8 @@ export namespace roomEvents {
       this.messageId = messageId;
     }
 
-    public static isMessageDelivered = (e: DomainEvent): e is MessageDelivered =>
-      e.tag === MessageDelivered.tag
+    public static isMessageDelivered(e: DomainEvent): e is MessageDelivered {
+      return e.tag === MessageDelivered.tag;
+    }
   }
 }

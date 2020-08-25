@@ -5,6 +5,7 @@ import { RTCPoolFactory } from './rtc-pool-factory';
 
 export class RTCPoolRepository {
 
+  // tslint:disable-next-line:readonly-keyword
   private rtcPools: { [callId: string]: RTCPool } = {};
 
   constructor(
@@ -13,7 +14,7 @@ export class RTCPoolRepository {
   ) {
   }
 
-  public getRtcPoolInstance = (callId: proto.ID): RTCPool => {
+  public getRtcPoolInstance(callId: proto.ID): RTCPool {
     const rtcPool = this.rtcPools[callId];
 
     if (!rtcPool) {

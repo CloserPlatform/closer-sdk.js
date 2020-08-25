@@ -27,11 +27,11 @@ export type FabricEvent =
   ;
 
 export interface FabricAttributes {
-  remoteEndpointType:
+  readonly remoteEndpointType:
     'peer' | // The endpoint is a WebRTC client/peer.
     'server' // The endpoint is a media server or a middle-box.
   ;
-  fabricTransmissionDirection:
+  readonly fabricTransmissionDirection:
     'sendonly' | // PeerConnection is for sending only.
     'receiveonly' | // PeerConnection is for receiving only.
     'sendrecv' | // PeerConnection is for sending and receiving.

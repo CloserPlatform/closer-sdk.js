@@ -3,7 +3,7 @@ import { DataChannel } from '../rtc/data-channel';
 
 export class BrowserUtils {
 
-  private static readonly supportedBrowsers: {[browserName: string]: number} = {
+  private static readonly supportedBrowsers: {readonly [browserName: string]: number} = {
     chrome: 67, // opera is also recognized as chrome by webrtc-adapter
     firefox: 61,
     edge: 17134,

@@ -111,7 +111,7 @@
     "no-submodule-imports": false,
     "no-switch-case-fall-through": true,
     "no-this-assignment": true,
-    "no-unbound-method": true,
+    "no-unbound-method": [true, "ignore-static"],
     "no-unnecessary-callback-wrapper": true,
     "no-unnecessary-class": false,
     "no-unnecessary-initializer": true,
@@ -240,7 +240,7 @@
     "no-parameter-reassignment": true,
 
     // Immutability rules
-    // "readonly-keyword": true, // Impossible for angular
+    "readonly-keyword": true,
     "readonly-array": true,
     "no-let": true,
     // "no-object-mutation": true, // Impossible for angular

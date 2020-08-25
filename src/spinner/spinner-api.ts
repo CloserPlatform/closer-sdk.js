@@ -2,7 +2,7 @@ import { SessionData, AgentContext } from '../protocol/protocol';
 import { HttpClient } from '../http/http-client';
 
 export class SpinnerApi {
-  private verifyPath = 'session/verifySig';
+  private readonly verifyPath = 'session/verifySig';
 
   constructor(
     private httpClient: HttpClient,

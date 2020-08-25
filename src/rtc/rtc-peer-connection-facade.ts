@@ -18,10 +18,12 @@ export enum ConnectionStatus {
 export class RTCPeerConnectionFacade {
   public static readonly renegotiationTimeout = 100;
 
-  private statsCollector: WebRTCStatsCollector = new NoopCollector();
+  private readonly statsCollector: WebRTCStatsCollector = new NoopCollector();
 
   // FIXME Required by the various hacks:
+  // tslint:disable-next-line:readonly-keyword
   private isRemoteSDPset = false;
+  // tslint:disable-next-line:readonly-keyword
   private dtlsRole: 'active' | 'passive';
 
   constructor(

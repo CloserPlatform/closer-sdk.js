@@ -9,5 +9,6 @@ export type AudioHint = 'speech' | 'music';
 export type ContentHint = VideoHint | AudioHint | '';
 
 export interface MediaTrackContentHint {
+  // tslint:disable-next-line:readonly-keyword
   contentHint?: ContentHint;
 }

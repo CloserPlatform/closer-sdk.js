@@ -15,8 +15,10 @@ export abstract class Room implements wireEntities.Room {
     public readonly name: string;
     public readonly created: proto.Timestamp;
     public readonly direct: boolean;
+    // tslint:disable-next-line:readonly-keyword
     public users: ReadonlyArray<proto.ID> = [];
-    public orgId?: proto.ID;
+    public readonly orgId?: proto.ID;
+    // tslint:disable-next-line:readonly-keyword
     public marks: { [type: string]: proto.Timestamp } = {};
 
     public getLatestMessages(count?: number,

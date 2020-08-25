@@ -12,28 +12,29 @@ import { Queue } from '../utils/queue';
 import { Delayer } from '../utils/delayer';
 
 export interface RemoteTrack {
-  peerId: ID;
-  track: MediaStreamTrack;
+  readonly peerId: ID;
+  readonly track: MediaStreamTrack;
 }
 
 export interface PeerDataChannelMessage {
-  peerId: ID;
-  message: DataChannelMessage;
+  readonly peerId: ID;
+  readonly message: DataChannelMessage;
 }
 
 export interface PeerConnectionStatus {
-  peerId: ID;
-  status: ConnectionStatus;
+  readonly peerId: ID;
+  readonly status: ConnectionStatus;
 }
 
 export class RTCPool {
-  private peerConnections: Map<ID, RTCPeerConnectionFacade> = new Map();
+  private readonly peerConnections: Map<ID, RTCPeerConnectionFacade> = new Map();
+  // tslint:disable-next-line:readonly-keyword
   private tracks: ReadonlyArray<MediaStreamTrack> = [];
-  private remoteTrackEvent = new Subject<RemoteTrack>();
-  private messageEvent = new Subject<PeerDataChannelMessage>();
-  private connectionStatusEvent = new Subject<PeerConnectionStatus>();
+  private readonly remoteTrackEvent = new Subject<RemoteTrack>();
+  private readonly messageEvent = new Subject<PeerDataChannelMessage>();
+  private readonly connectionStatusEvent = new Subject<PeerConnectionStatus>();
 
-  private logger: LoggerService;
+  private readonly logger: LoggerService;
 
   constructor(
     public readonly callId: ID,
@@ -64,6 +65,7 @@ export class RTCPool {
     return this.remoteTrackEvent;
   }
 
+  // tslint:disable-next-line:readonly-keyword
   public broadcast = (msg: DataChannelMessage): void =>
     this.peerConnections.forEach(peerConnection => peerConnection.send(msg))
 
@@ -106,6 +108,7 @@ export class RTCPool {
       .then(_ => undefined);
   }
 
+  // tslint:disable-next-line:readonly-keyword
   private listenForDescriptionSent = (msg: rtcEvents.DescriptionSent): Promise<void> => {
     this.logger.debug(`Received an RTC description: ${msg.sdp.type} ${msg.sdp.sdp}`);
     switch (msg.sdp.type) {
@@ -121,6 +124,7 @@ export class RTCPool {
     }
   }
 
+  // tslint:disable-next-line:readonly-keyword
   private listenForCandidateSent = (msg: rtcEvents.CandidateSent): void => {
     this.logger.debug(`Received an RTC candidate: ${msg.candidate}`);
     this.getRTCPeerConnectionInstance(msg.sender).addCandidate(msg.candidate);
@@ -134,11 +138,13 @@ export class RTCPool {
     return this.getRtcPoolEvent().pipe(filter(rtcEvents.CandidateSent.is));
   }
 
+  // tslint:disable-next-line:readonly-keyword
   private getRtcPoolEvent = (): Observable<rtcEvents.RTCSignallingEvent> =>
     this.artichokeApi.domainEvent$
       .pipe(filter(rtcEvents.RTCSignallingEvent.is))
       .pipe(filter(e => e.callId === this.callId))
 
+  // tslint:disable-next-line:readonly-keyword
   private getRTCPeerConnectionInstance = (peerId: ID): RTCPeerConnectionFacade => {
     const maybeRTCPeerConnection = this.peerConnections.get(peerId);
     if (maybeRTCPeerConnection) {
@@ -154,12 +160,15 @@ export class RTCPool {
     }
   }
 
+  // tslint:disable-next-line:readonly-keyword
   private getTrackEventHandler = (peerId: ID): (track: MediaStreamTrack) => void =>
     (track: MediaStreamTrack): void => this.remoteTrackEvent.next({ peerId, track })
 
+  // tslint:disable-next-line:readonly-keyword
   private getDataChannelEventHandler = (peerId: ID): (message: DataChannelMessage) => void =>
     (message: DataChannelMessage): void => this.messageEvent.next({ peerId, message })
 
+  // tslint:disable-next-line:readonly-keyword
   private getConnectionStatusEventHandler = (peerId: ID): (status: ConnectionStatus) => void =>
     (status: ConnectionStatus): void => this.connectionStatusEvent.next({ peerId, status })
 

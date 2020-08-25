@@ -38,10 +38,13 @@ describe('CallFactory', () => {
   it('create my direct call', () => {
     const callEvent = getBusinessCallEvent();
 
-    callEvent.direct = true;
-    callEvent.orgId = undefined;
+    const modifiedCallEvent = {
+      ...callEvent,
+      direct: true,
+      orgId: undefined
+    };
 
-    const call = callFactory.create(callEvent);
+    const call = callFactory.create(modifiedCallEvent);
 
     expect(DirectCall.isDirect(call)).toBeTruthy();
   });
@@ -49,29 +52,45 @@ describe('CallFactory', () => {
   it('create my group call', () => {
     const callEvent = getBusinessCallEvent();
 
-    callEvent.orgId = undefined;
+    const modifiedCallEvent = {
+      ...callEvent,
+      orgId: undefined
+    };
 
-    const call = callFactory.create(callEvent);
+    const call = callFactory.create(modifiedCallEvent);
 
     expect(GroupCall.isGroup(call)).toBeTruthy();
   });
 
   it('create my business call with existing users', () => {
     const callEvent = getBusinessCallEvent();
-    callEvent.users = ['222'];
-    callFactory.create(callEvent);
+    const modifiedCallEvent = {
+      ...callEvent,
+      users: ['222']
+    };
+    const call = callFactory.create(modifiedCallEvent);
+    expect(call.users).toBe(modifiedCallEvent.users);
   });
 
   it('create my business call with existing invitees', () => {
     const callEvent = getBusinessCallEvent();
-    callEvent.invitees = ['222'];
-    callFactory.create(callEvent);
+    const modifiedCallEvent = {
+      ...callEvent,
+      invitees: ['222']
+    };
+    const call = callFactory.create(modifiedCallEvent);
+    expect(call.invitees).toBe(modifiedCallEvent.invitees);
   });
 
   it('create my business call with existing invitees and users', () => {
     const callEvent = getBusinessCallEvent();
-    callEvent.users = ['333'];
-    callEvent.invitees = ['222'];
-    callFactory.create(callEvent);
+    const modifiedCallEvent = {
+      ...callEvent,
+      users: ['333'],
+      invitees: ['222']
+    };
+    const call = callFactory.create(modifiedCallEvent);
+    expect(call.users).toBe(modifiedCallEvent.users);
+    expect(call.invitees).toBe(modifiedCallEvent.invitees);
   });
 });

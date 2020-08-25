@@ -17,8 +17,9 @@ export namespace rtcEvents {
       this.tag = tag;
     }
 
-    public static is = (e: DomainEvent): e is RTCSignallingEvent =>
-      typeof (e as RTCSignallingEvent).callId !== 'undefined'
+    public static is(e: DomainEvent): e is RTCSignallingEvent {
+      return typeof (e as RTCSignallingEvent).callId !== 'undefined';
+    }
   }
 
   export class DescriptionSent extends RTCSignallingEvent {
@@ -30,8 +31,9 @@ export namespace rtcEvents {
       this.sdp = sdp;
     }
 
-    public static is = (e: DomainEvent): e is DescriptionSent =>
-      e.tag === DescriptionSent.tag
+    public static is(e: DomainEvent): e is DescriptionSent {
+      return e.tag === DescriptionSent.tag;
+    }
   }
 
   export class CandidateSent extends RTCSignallingEvent {
@@ -43,8 +45,9 @@ export namespace rtcEvents {
       this.candidate = candidate;
     }
 
-    public static is = (e: DomainEvent): e is CandidateSent =>
-      e.tag === CandidateSent.tag
+    public static is(e: DomainEvent): e is CandidateSent {
+      return e.tag === CandidateSent.tag;
+    }
   }
 
 }

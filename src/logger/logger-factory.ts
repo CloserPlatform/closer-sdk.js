@@ -3,10 +3,11 @@ import { LoggerService } from './logger-service';
 
 export class LoggerFactory {
   constructor(
-    private logLevel: LogLevel,
+    private readonly logLevel: LogLevel,
   ) {
   }
 
-  public create = (logPrefix?: string): LoggerService =>
-    new LoggerService(this.logLevel, console, logPrefix)
+  public create(logPrefix?: string): LoggerService {
+    return new LoggerService(this.logLevel, console, logPrefix);
+  }
 }

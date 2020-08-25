@@ -1,5 +1,6 @@
 export class BumpableTimeout {
 
+  // tslint:disable-next-line:readonly-keyword
   private timeoutId?: number;
 
   constructor(

@@ -27,8 +27,9 @@ export namespace externalEvents {
       this.roomId = roomId;
     }
 
-    public static isAllFollowersRemoved = (e: DomainEvent): e is AllFollowersRemoved =>
-    e.tag === AllFollowersRemoved.tag
+    public static isAllFollowersRemoved(e: DomainEvent): e is AllFollowersRemoved {
+      return e.tag === AllFollowersRemoved.tag;
+    }
   }
 
   export class AssigneeChanged extends ExternalEvent {
@@ -45,8 +46,9 @@ export namespace externalEvents {
       this.requesterId = requesterId;
     }
 
-    public static isAssigneeChanged = (e: DomainEvent): e is AssigneeChanged =>
-    e.tag === AssigneeChanged.tag
+    public static isAssigneeChanged(e: DomainEvent): e is AssigneeChanged {
+      return e.tag === AssigneeChanged.tag;
+    }
   }
 
   export class AssigneeRemoved extends ExternalEvent {
@@ -61,8 +63,9 @@ export namespace externalEvents {
       this.roomId = roomId;
     }
 
-    public static isAssigneeRemoved = (e: DomainEvent): e is AssigneeRemoved =>
-    e.tag === AssigneeRemoved.tag
+    public static isAssigneeRemoved(e: DomainEvent): e is AssigneeRemoved {
+      return e.tag === AssigneeRemoved.tag;
+    }
   }
 
   export class ConversationSnoozed extends ExternalEvent {
@@ -75,8 +78,9 @@ export namespace externalEvents {
       this.roomId = roomId;
     }
 
-    public static isConversationSnoozed = (e: DomainEvent): e is ConversationSnoozed =>
-    e.tag === ConversationSnoozed.tag
+    public static isConversationSnoozed(e: DomainEvent): e is ConversationSnoozed {
+      return e.tag === ConversationSnoozed.tag;
+    }
   }
 
   export enum ConversationStatus {
@@ -101,11 +105,12 @@ export namespace externalEvents {
       this.adviserId = adviserId;
     }
 
-    public static isConversationStatusChanged = (e: DomainEvent): e is ConversationStatusChanged =>
-    e.tag === ConversationStatusChanged.tag
+    public static isConversationStatusChanged(e: DomainEvent): e is ConversationStatusChanged {
+      return e.tag === ConversationStatusChanged.tag;
+    }
   }
 
-    export class ConversationUnsnoozed extends ExternalEvent {
+  export class ConversationUnsnoozed extends ExternalEvent {
     public static readonly tag = 'conversation_unsnoozed';
 
     public readonly roomId: string;
@@ -115,8 +120,9 @@ export namespace externalEvents {
       this.roomId = roomId;
     }
 
-    public static isConversationUnsnoozed = (e: DomainEvent): e is ConversationUnsnoozed =>
-    e.tag === ConversationUnsnoozed.tag
+    public static isConversationUnsnoozed(e: DomainEvent): e is ConversationUnsnoozed {
+      return e.tag === ConversationUnsnoozed.tag;
+    }
   }
 
   export class FollowerAdded extends ExternalEvent {
@@ -133,8 +139,9 @@ export namespace externalEvents {
       this.requesterId = requesterId;
     }
 
-    public static isFollowerAdded = (e: DomainEvent): e is FollowerAdded =>
-    e.tag === FollowerAdded.tag
+    public static isFollowerAdded(e: DomainEvent): e is FollowerAdded {
+      return e.tag === FollowerAdded.tag;
+    }
   }
 
   export class FollowerRemoved extends ExternalEvent {
@@ -151,8 +158,9 @@ export namespace externalEvents {
       this.requesterId = requesterId;
     }
 
-    public static isFollowerRemoved = (e: DomainEvent): e is FollowerRemoved =>
-    e.tag === FollowerRemoved.tag
+    public static isFollowerRemoved(e: DomainEvent): e is FollowerRemoved {
+      return e.tag === FollowerRemoved.tag;
+    }
   }
 
   export class BackOfficeField {
@@ -192,21 +200,22 @@ export namespace externalEvents {
 
     constructor(backOfficeData: ReadonlyArray<BackOfficeField>, customerId: string, locale: string, timestamp: number,
       roomId: string, zoneId: string, email?: string, firstName?: string, lastName?: string, phone?: Phone) {
-        super(GuestProfileUpdated.tag);
-        this.backOfficeData = backOfficeData;
-        this.customerId = customerId;
-        this.locale = locale;
-        this.roomId = roomId;
-        this.timestamp = timestamp;
-        this.zoneId = zoneId;
-        this.email = email;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.phone = phone;
-      }
+      super(GuestProfileUpdated.tag);
+      this.backOfficeData = backOfficeData;
+      this.customerId = customerId;
+      this.locale = locale;
+      this.roomId = roomId;
+      this.timestamp = timestamp;
+      this.zoneId = zoneId;
+      this.email = email;
+      this.firstName = firstName;
+      this.lastName = lastName;
+      this.phone = phone;
+    }
 
-    public static isGuestProfileUpdated = (e: DomainEvent): e is GuestProfileUpdated =>
-      e.tag === GuestProfileUpdated.tag
+    public static isGuestProfileUpdated(e: DomainEvent): e is GuestProfileUpdated {
+      return e.tag === GuestProfileUpdated.tag;
+    }
   }
 
   export type InboxEntryType = 'MESSAGE' | 'NOTE' | 'FILES';
@@ -223,7 +232,7 @@ export namespace externalEvents {
     public readonly payload?: any;
 
     constructor(body: string, roomId: string, timestamp: number, userId: string, type: InboxEntryType,
-                threadCreatedAt: number, payload?: any) {
+      threadCreatedAt: number, payload?: any) {
       super(LastMessageUpdated.tag);
       this.body = body;
       this.roomId = roomId;
@@ -234,8 +243,9 @@ export namespace externalEvents {
       this.payload = payload;
     }
 
-    public static isLastMessageUpdated = (e: DomainEvent): e is LastMessageUpdated =>
-      e.tag === LastMessageUpdated.tag
+    public static isLastMessageUpdated(e: DomainEvent): e is LastMessageUpdated {
+      return e.tag === LastMessageUpdated.tag;
+    }
   }
 
   export class LastAdviserTimestampSet extends ExternalEvent {
@@ -253,8 +263,9 @@ export namespace externalEvents {
       this.timestamp = timestamp;
     }
 
-    public static isLastAdviserTimestampSet = (e: DomainEvent): e is LastAdviserTimestampSet =>
-      e.tag === LastAdviserTimestampSet.tag
+    public static isLastAdviserTimestampSet(e: DomainEvent): e is LastAdviserTimestampSet {
+      return e.tag === LastAdviserTimestampSet.tag;
+    }
   }
 
   export class LastAdviserTimestampRemoved extends ExternalEvent {
@@ -269,8 +280,9 @@ export namespace externalEvents {
       this.roomId = roomId;
     }
 
-    public static isLastAdviserTimestampRemoved = (e: DomainEvent): e is LastAdviserTimestampRemoved =>
-      e.tag === LastAdviserTimestampRemoved.tag
+    public static isLastAdviserTimestampRemoved(e: DomainEvent): e is LastAdviserTimestampRemoved {
+      return e.tag === LastAdviserTimestampRemoved.tag;
+    }
   }
 
   export class MeetingCancelled extends ExternalEvent {
@@ -291,8 +303,9 @@ export namespace externalEvents {
       this.start = start;
     }
 
-    public static isMeetingCancelled = (e: DomainEvent): e is MeetingCancelled =>
-    e.tag === MeetingCancelled.tag
+    public static isMeetingCancelled(e: DomainEvent): e is MeetingCancelled {
+      return e.tag === MeetingCancelled.tag;
+    }
   }
 
   export class MeetingRescheduled extends ExternalEvent {
@@ -313,8 +326,9 @@ export namespace externalEvents {
       this.start = start;
     }
 
-    public static isMeetingRescheduled = (e: DomainEvent): e is MeetingRescheduled =>
-    e.tag === MeetingRescheduled.tag
+    public static isMeetingRescheduled(e: DomainEvent): e is MeetingRescheduled {
+      return e.tag === MeetingRescheduled.tag;
+    }
   }
 
   export class MeetingScheduled extends ExternalEvent {
@@ -335,8 +349,9 @@ export namespace externalEvents {
       this.start = start;
     }
 
-    public static isMeetingScheduled = (e: DomainEvent): e is MeetingScheduled =>
-    e.tag === MeetingScheduled.tag
+    public static isMeetingScheduled(e: DomainEvent): e is MeetingScheduled {
+      return e.tag === MeetingScheduled.tag;
+    }
   }
 
   export class UpcomingMeeting {
@@ -350,16 +365,16 @@ export namespace externalEvents {
     public readonly start: number;
 
     constructor(duration: number, guestId: string, guestName: string, langTag: string, meetingId: string,
-                minutesToMeeting: number, roomId: string, start: number) {
-        this.duration = duration;
-        this.guestId = guestId;
-        this.guestName = guestName;
-        this.langTag = langTag;
-        this.meetingId = meetingId;
-        this.minutesToMeeting = minutesToMeeting;
-        this.roomId = roomId;
-        this.start = start;
-      }
+      minutesToMeeting: number, roomId: string, start: number) {
+      this.duration = duration;
+      this.guestId = guestId;
+      this.guestName = guestName;
+      this.langTag = langTag;
+      this.meetingId = meetingId;
+      this.minutesToMeeting = minutesToMeeting;
+      this.roomId = roomId;
+      this.start = start;
+    }
   }
 
   export class NotificationUpcomingMeeting extends ExternalEvent {
@@ -372,8 +387,9 @@ export namespace externalEvents {
       this.notification = notification;
     }
 
-    public static isNotificationUpcomingMeeting = (e: DomainEvent): e is NotificationUpcomingMeeting =>
-      e.tag === NotificationUpcomingMeeting.tag
+    public static isNotificationUpcomingMeeting(e: DomainEvent): e is NotificationUpcomingMeeting {
+      return e.tag === NotificationUpcomingMeeting.tag;
+    }
   }
 
   export enum Presence {
@@ -398,8 +414,9 @@ export namespace externalEvents {
       this.reason = reason;
     }
 
-    public static isPresenceUpdated = (e: DomainEvent): e is PresenceUpdated =>
-      e.tag === PresenceUpdated.tag
+    public static isPresenceUpdated(e: DomainEvent): e is PresenceUpdated {
+      return e.tag === PresenceUpdated.tag;
+    }
   }
 
   export class TypingSent extends ExternalEvent {
@@ -416,8 +433,9 @@ export namespace externalEvents {
       this.userId = userId;
     }
 
-    public static isTypingSent = (e: DomainEvent): e is TypingSent =>
-      e.tag === TypingSent.tag
+    public static isTypingSent(e: DomainEvent): e is TypingSent {
+      return e.tag === TypingSent.tag;
+    }
   }
 
   export class UnreadCountUpdated extends ExternalEvent {
@@ -432,8 +450,9 @@ export namespace externalEvents {
       this.unreadCount = unreadCount;
     }
 
-    public static isUnreadCountUpdated = (e: DomainEvent): e is UnreadCountUpdated =>
-    e.tag === UnreadCountUpdated.tag
+    public static isUnreadCountUpdated(e: DomainEvent): e is UnreadCountUpdated {
+      return e.tag === UnreadCountUpdated.tag;
+    }
   }
 
   export enum ConversationTab {
@@ -456,8 +475,9 @@ export namespace externalEvents {
       this.unreadCount = unreadCount;
     }
 
-    public static isUnreadTotalUpdated = (e: DomainEvent): e is UnreadTotalUpdated =>
-      e.tag === UnreadTotalUpdated.tag
+    public static isUnreadTotalUpdated(e: DomainEvent): e is UnreadTotalUpdated {
+      return e.tag === UnreadTotalUpdated.tag;
+    }
   }
 
 }

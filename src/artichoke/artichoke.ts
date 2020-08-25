@@ -37,9 +37,10 @@ export class Artichoke {
    */
   private readonly connection: Observable<serverEvents.Hello>;
 
+  // tslint:disable-next-line:readonly-keyword
   private heartbeatTimeout?: BumpableTimeout;
 
-  private serverUnreachableEvent = new Subject<void>();
+  private readonly serverUnreachableEvent = new Subject<void>();
 
   constructor(
     private artichokeApi: ArtichokeApi,

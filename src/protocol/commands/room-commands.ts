@@ -21,7 +21,7 @@ export namespace roomCommand {
   export class SendMessage extends RoomCommand {
     public static readonly tag = 'room_send_message';
 
-    public ref?: Ref;
+    public readonly ref?: Ref;
     public readonly body: string;
     public readonly context: any;
 
@@ -36,7 +36,7 @@ export namespace roomCommand {
   export class SendCustomMessage extends RoomCommand {
     public static readonly tag = 'room_send_custom_message';
 
-    public ref?: Ref;
+    public readonly ref?: Ref;
     public readonly body: string;
     public readonly context: any;
     public readonly subtag: string;

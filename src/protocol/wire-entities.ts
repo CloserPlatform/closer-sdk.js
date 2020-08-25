@@ -1,22 +1,22 @@
 import { ID, Timestamp } from './protocol';
 
 export interface Call {
-  id: ID;
-  created: Timestamp;
-  ended?: Timestamp;
-  invitees: ReadonlyArray<ID>;
-  creator: ID;
-  users: ReadonlyArray<ID>;
-  direct: boolean;
-  orgId?: ID;
+  readonly id: ID;
+  readonly created: Timestamp;
+  readonly ended?: Timestamp;
+  readonly invitees: ReadonlyArray<ID>;
+  readonly creator: ID;
+  readonly users: ReadonlyArray<ID>;
+  readonly direct: boolean;
+  readonly orgId?: ID;
 }
 
 export interface Room {
-  id: ID;
-  name: string;
-  created: Timestamp;
-  direct: boolean;
-  orgId?: ID;
-  users: ReadonlyArray<ID>;
-  marks: { [type: string]: number };
+  readonly id: ID;
+  readonly name: string;
+  readonly created: Timestamp;
+  readonly direct: boolean;
+  readonly orgId?: ID;
+  readonly users: ReadonlyArray<ID>;
+  readonly marks: { readonly [type: string]: number };
 }

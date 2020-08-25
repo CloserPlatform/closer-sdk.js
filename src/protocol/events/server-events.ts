@@ -23,8 +23,9 @@ export namespace serverEvents {
       this.heartbeatTimeout = heartbeatTimeout;
     }
 
-    public static is = (e: DomainEvent): e is Hello =>
-      e.tag === Hello.tag
+    public static is(e: DomainEvent): e is Hello {
+      return e.tag === Hello.tag;
+    }
   }
 
   export class OutputHeartbeat implements ServerEvent {
@@ -37,7 +38,8 @@ export namespace serverEvents {
       this.timestamp = timestamp;
     }
 
-    public static is = (e: DomainEvent): e is OutputHeartbeat =>
-      e.tag === OutputHeartbeat.tag
+    public static is(e: DomainEvent): e is OutputHeartbeat {
+      return e.tag === OutputHeartbeat.tag;
+    }
   }
 }

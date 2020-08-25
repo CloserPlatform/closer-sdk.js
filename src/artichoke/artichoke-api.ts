@@ -18,12 +18,12 @@ import { serverCommands } from '../protocol/commands/server-command';
 
 export class ArtichokeApi {
 
-  private callPath = 'calls';
-  private roomPath = 'rooms';
-  private pushNotificationsPath = 'push';
+  private readonly callPath = 'calls';
+  private readonly roomPath = 'rooms';
+  private readonly pushNotificationsPath = 'push';
 
-  private domainEvent = new Subject<DomainEvent>();
-  private connectionEvent: Observable<serverEvents.ServerEvent>;
+  private readonly domainEvent = new Subject<DomainEvent>();
+  private readonly connectionEvent: Observable<serverEvents.ServerEvent>;
 
   constructor(
     public sessionId: proto.ID,

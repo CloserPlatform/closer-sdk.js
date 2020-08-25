@@ -16,10 +16,12 @@ export abstract class Call implements wireEntities.Call {
   public readonly created: proto.Timestamp;
   public readonly creator: proto.ID;
   public readonly direct: boolean;
+  // tslint:disable-next-line:readonly-keyword
   public ended?: proto.Timestamp;
+  // tslint:disable-next-line:readonly-keyword
   public users: ReadonlyArray<proto.ID>;
   public readonly invitees: ReadonlyArray<proto.ID>;
-  public orgId?: proto.ID;
+  public readonly orgId?: proto.ID;
   public abstract readonly callType: CallType;
 
   public addTracks(tracks: ReadonlyArray<MediaStreamTrack>): void {
@@ -197,6 +199,7 @@ export abstract class Call implements wireEntities.Call {
     return this.getCallEvent().pipe(filter(callEvents.Invited.isInvited));
   }
 
+  // tslint:disable-next-line:readonly-keyword
   private getCallEvent = (): Observable<callEvents.CallEvent> =>
     this.artichokeApi.domainEvent$.pipe(
       filter(callEvents.CallEvent.isCallEvent),

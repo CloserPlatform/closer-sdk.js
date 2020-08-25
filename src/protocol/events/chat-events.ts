@@ -39,8 +39,9 @@ export namespace chatEvents {
       this.ref = ref;
     }
 
-    public static isReceived = (event: DomainEvent): event is Received =>
-      event.tag === Received.tag
+    public static isReceived(event: DomainEvent): event is Received {
+      return event.tag === Received.tag;
+    }
   }
 
 }

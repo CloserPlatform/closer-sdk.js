@@ -5,6 +5,7 @@ export type DataChannelMessage = string;
 
 export class DataChannel {
 
+  // tslint:disable-next-line:readonly-keyword
   private rtcDataChannel?: RTCDataChannel;
 
   constructor(
