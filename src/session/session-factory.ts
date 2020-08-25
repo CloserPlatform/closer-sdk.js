@@ -18,66 +18,106 @@ import { WebRTCStats } from '../rtc/stats/webrtc-stats';
 import { RTCPoolRepository } from '../rtc/rtc-pool-repository';
 import { MediaTrackOptimizer } from '../rtc/media-track-optimizer';
 import { RTCPoolFactory } from '../rtc/rtc-pool-factory';
+import { Spinner } from '../spinner/spinner';
+import { SpinnerApi } from '../spinner/spinner-api';
 
 export class SessionFactory {
 
     constructor(
-        private readonly sessionId: ID,
-        private readonly apiKey: ApiKey,
         private readonly config: Config,
         private readonly loggerFactory: LoggerFactory,
     ) {
     }
 
-    public create(): Session {
+    public async createWithNewGuest(orgId: ID): Promise<Session> {
+        const apiHeaders = new ApiHeaders('');
+        const spinner = this.createSpinner(apiHeaders);
+        const guest = await spinner.signUpGuest(orgId);
 
-        const logger = this.loggerFactory.create(`Session(${this.sessionId})`);
+        apiHeaders.apiKey = guest.apiKey;
 
-        logger.debug(`Configuration: ${JSON.stringify(this.config)}`);
-
-        return new Session(this.sessionId, this.createArtichoke());
+        return new Session(
+            guest.id,
+            this.createArtichoke(guest.id, apiHeaders),
+            this.createSpinner(apiHeaders),
+        );
     }
 
-    private createArtichoke(): Artichoke {
-        const artichokeApi = this.createArtichokeApi();
+    public async createWithExistingGuest(orgId: ID, sessionId: ID, apiKey: ApiKey): Promise<Session> {
+        const apiHeaders = new ApiHeaders(apiKey);
+        const spinner = this.createSpinner(apiHeaders);
+        const guest = await spinner.getGuestProfile(orgId, sessionId);
+
+        return new Session(
+            guest.id,
+            this.createArtichoke(guest.id, apiHeaders),
+            this.createSpinner(apiHeaders),
+        );
+    }
+
+    public create(sessionId: ID, apiKey: ApiKey): Session {
+        const apiHeaders = new ApiHeaders(apiKey);
+
+        return new Session(
+            sessionId,
+            this.createArtichoke(sessionId, apiHeaders),
+            this.createSpinner(apiHeaders),
+        );
+    }
+
+    private createSpinner(apiHeaders: ApiHeaders): Spinner {
+        return new Spinner(
+            new SpinnerApi(
+                new HttpClient(
+                    this.loggerFactory.create('Spinner HttpClient'),
+                    new URL(this.config.spinner.server),
+                    apiHeaders,
+                    new XMLHttpRequestFactory(),
+                )
+            )
+        );
+    }
+
+    private createArtichoke(sessionId: ID, apiHeaders: ApiHeaders): Artichoke {
+        const artichokeApi = this.createArtichokeApi(sessionId, apiHeaders);
 
         return new Artichoke(
             artichokeApi,
-          this.createCallFactory(artichokeApi),
-          new RoomFactory(
-            this.loggerFactory,
-            artichokeApi
-          ),
-          this.loggerFactory.create('Artichoke'),
-          this.config.artichoke.reconnectDelayMs,
-          this.config.artichoke.heartbeatTimeoutMultiplier,
+            this.createCallFactory(artichokeApi),
+            new RoomFactory(
+                this.loggerFactory,
+                artichokeApi
+            ),
+            this.loggerFactory.create('Artichoke'),
+            this.config.artichoke.reconnectDelayMs,
+            this.config.artichoke.heartbeatTimeoutMultiplier,
         );
     }
 
-    private createArtichokeApi(): ArtichokeApi {
+    private createArtichokeApi(sessionId: ID, apiHeaders: ApiHeaders): ArtichokeApi {
         return new ArtichokeApi(
-            this.sessionId,
-            this.createWebsocketClient(),
-            this.createHttpClient(),
+            sessionId,
+            this.createWebsocketClient(apiHeaders.apiKey),
+            this.createHttpClient(apiHeaders),
         );
     }
 
-    private createHttpClient(): HttpClient {
-        const httpClientLogger = this.loggerFactory.create('HttpClient');
+    private createHttpClient(apiHeaders: ApiHeaders): HttpClient {
+        const httpClientLogger = this.loggerFactory.create('Artichoke HttpClient');
         const httpApiUrl = new URL(this.config.artichoke.apiPath, this.config.artichoke.server);
-        const apiHeaders = new ApiHeaders(this.apiKey);
+
         const xmlHttpRequestFactory = new XMLHttpRequestFactory();
 
         return new HttpClient(httpClientLogger, httpApiUrl, apiHeaders, xmlHttpRequestFactory);
     }
 
-    private createWebsocketClient(): WebsocketClient {
-        const wsServerUrl = new URL(`${this.config.artichoke.wsPath}${this.apiKey}`, this.config.artichoke.server);
+    private createWebsocketClient(apiKey: ApiKey): WebsocketClient {
+        const wsServerUrl = new URL(`${this.config.artichoke.wsPath}${apiKey}`, this.config.artichoke.server);
         wsServerUrl.protocol = wsServerUrl.protocol === 'https:' ? 'wss:' : 'ws:';
 
         const ws = webSocket<ArtichokeMessage>({
-          url: wsServerUrl.href,
-          WebSocketCtor: ReconnectableWebSocket
+            url: wsServerUrl.href,
+            WebSocketCtor: ReconnectableWebSocket
         });
 
         return new WebsocketClient(ws, new UUIDGenerator(), this.config.artichoke.askTimeoutMs);
@@ -100,10 +140,10 @@ export class SessionFactory {
         );
 
         return new CallFactory(
-          this.loggerFactory,
-          artichokeApi,
-          rtcPoolRepository,
-          new MediaTrackOptimizer(this.config.rtc, this.loggerFactory.create('MediaTrackOptimizer'))
+            this.loggerFactory,
+            artichokeApi,
+            rtcPoolRepository,
+            new MediaTrackOptimizer(this.config.rtc, this.loggerFactory.create('MediaTrackOptimizer'))
         );
     }
 }

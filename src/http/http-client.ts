@@ -2,7 +2,7 @@ import { errorEvents } from '..';
 import { HeaderValue } from './header-value';
 import { PromiseReject, PromiseResolve } from '../utils/promise-utils';
 import { LoggerService } from '../logger/logger-service';
-import { Paginated } from '../protocol/protocol';
+import { Paginated, DeviceId, ApiKey } from '../protocol/protocol';
 import { ApiHeaders } from './api-headers';
 import { XMLHttpRequestFactory } from './xml-http-request-factory';
 
@@ -25,8 +25,12 @@ export class HttpClient {
   ) {
   }
 
-  public setDeviceId(deviceId: string): void {
+  public setDeviceId(deviceId: DeviceId): void {
     this.apiHeaders.deviceId = deviceId;
+  }
+
+  public setApiKey(apiKey: ApiKey): void {
+    this.apiHeaders.apiKey = apiKey;
   }
 
   public async get<Response>(path: string): Promise<Response> {
