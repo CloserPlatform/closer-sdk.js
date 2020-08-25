@@ -42,13 +42,7 @@ export class ConversationModule {
     await this.conversationService.setRoom(this.roomId);
 
     this.conversationService.setMessageCallback(this.handleMessageCallback);
-    this.conversationService.setTypingCallback(this.handleTypingCallback);
-    this.conversationService.setDelieveredCallback(this.handleDelieveredCallback);
-    this.conversationService.setMarkedCallback(this.handleMarkedCallback);
-
-    window.addEventListener('focus', () => {
-      this.conversationService.setMark();
-    });
+    this.setEvents();
 
     this.render();
     await this.refreehTextBox();
@@ -60,13 +54,43 @@ export class ConversationModule {
   public toggleVisible = (visible = true): void => {
     if (visible) {
       if (this.inner) {
+        this.setEvents();
         this.inner.show();
       }
     } else {
       if (this.inner) {
+        this.removeEvents();
         this.inner.hide();
       }
     }
+  }
+
+  private setMark = (): void => {
+    this.conversationService.setMark();
+  }
+
+  private setEvents = (): void => {
+    this.setEventsCallbacks();
+    window.addEventListener('focus', this.setMark);
+
+    if (this.inner) {
+      this.inner.on('click', this.setMark);
+    }
+  }
+
+  private removeEvents = (): void => {
+    this.conversationService.unsubscribeEvents();
+    window.removeEventListener('focus', this.setMark);
+
+    if (this.inner) {
+      this.inner.off('click');
+    }
+  }
+
+  private setEventsCallbacks = (): void => {
+    this.conversationService.setTypingCallback(this.handleTypingCallback);
+    this.conversationService.setDelieveredCallback(this.handleDelieveredCallback);
+    this.conversationService.setMarkedCallback(this.handleMarkedCallback);
   }
 
   private scrollToBottom = (): void => {
