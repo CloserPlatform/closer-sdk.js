@@ -1,5 +1,5 @@
 'use strict';
-const testTsconfig = require("./tsconfig.test.json");
+const testTsconfig = require('./tsconfig.test.json');
 
 module.exports = (config) => {
   config.set({
@@ -15,14 +15,14 @@ module.exports = (config) => {
       'karma-firefox-launcher'
     ],
     files: [
-      { pattern: "src/**/*.ts" },
-      { pattern: "test/**/*.ts" }
+      { pattern: 'src/**/*.ts' },
+      { pattern: 'test/**/*.ts' }
     ],
     preprocessors: {
-      "src/**/*.ts": ["karma-typescript", "coverage"],
-      "test/**/*.ts": ["karma-typescript"]
+      'src/**/*.ts': ['karma-typescript', 'coverage'],
+      'test/**/*.ts': ['karma-typescript']
     },
-    reporters: ["progress", "coverage", "karma-typescript"],
+    reporters: ['progress', 'coverage', 'karma-typescript'],
     karmaTypescriptConfig: testTsconfig,
     // only output json report to be remapped by remap-istanbul
     coverageReporter: {
