@@ -15,15 +15,6 @@
     "strictNullChecks": true,
     "removeComments": false,
     "noEmitHelpers": false,
-    "typeRoots": [
-      "node_modules/@types"
-    ],
-    "types": [
-      "dom",
-      "node",
-      "webrtc",
-      "jasmine"
-    ],
     "lib": [
       "es2015",
       "es2016",

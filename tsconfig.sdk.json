@@ -7,8 +7,6 @@
     "declaration": true,
     "declarationDir": "./dist",
     "baseUrl": "./src",
-    "types": [
-    ],
     "lib": [
       "es2015",
       "es2016",

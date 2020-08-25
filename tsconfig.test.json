@@ -1,10 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "baseUrl": "./test",
-    "inlineSourceMap": true
+    "baseUrl": "./test"
   },
   "include": [
+    "src",
     "test"
   ]
 }

@@ -1,88 +1,51 @@
 'use strict';
-const webpack = require('./webpack.config');
-const WebpackKarmaDieHardPlugin = require('webpack-karma-die-hard');
+const testTsconfig = require("./tsconfig.test.json");
 
 module.exports = (config) => {
-  const coverage = config.singleRun ? ['coverage'] : [];
-
   config.set({
     basePath: '',
     frameworks: [
-      'jasmine',
+      'jasmine', 'karma-typescript'
     ],
     plugins: [
       'karma-jasmine',
-      'karma-sourcemap-writer',
-      'karma-sourcemap-loader',
-      'karma-webpack',
+      'karma-typescript',
       'karma-coverage',
-      'karma-remap-istanbul',
-      'karma-spec-reporter',
       'karma-chrome-launcher',
       'karma-firefox-launcher'
     ],
-    mime: {
-      'application/javascript': ['ts']
-    },
     files: [
-      {
-        pattern: './test/index.spec.js',
-        served: true,
-        included: true,
-        watched: true,
-      }
+      { pattern: "src/**/*.ts" },
+      { pattern: "test/**/*.ts" }
     ],
     preprocessors: {
-      './test/index.spec.js': ['webpack', 'sourcemap'],
-      './test/**/*.spec.ts': ['webpack', 'sourcemap'],
+      "src/**/*.ts": ["karma-typescript", "coverage"],
+      "test/**/*.ts": ["karma-typescript"]
     },
-    webpack: Object.assign({}, webpack, {
-      output: null,
-      devtool: 'inline-source-map',
-      mode: 'development',
-      module: {
-        rules: [
-          {
-            test: /\.tsx?$/,
-            loader: 'ts-loader?configFile=tsconfig.test.json'
-          },
-          istanbulInstrumenter,
-        ],
-      },
-      plugins: [
-        // Do not run tests if compilation failed
-        new WebpackKarmaDieHardPlugin(),
-      ],
-    }),
-    reporters: ['spec']
-      .concat(coverage)
-      .concat(coverage.length > 0 ? ['karma-remap-istanbul'] : []),
-    remapIstanbulReporter: {
-      src: [
-        'coverage/chrome/coverage-final.json',
-        'coverage/headlesschrome/coverage-final.json',
-        'coverage/firefox/coverage-final.json'
-      ],
-      reports: {
-        html: 'coverage',
-        'text-summary': './coverage/summary.txt'
-      },
-      timeoutNotCreated: 2000,
-      timeoutNoMoreFiles: 2000,
-    },
+    reporters: ["progress", "coverage", "karma-typescript"],
+    karmaTypescriptConfig: testTsconfig,
     // only output json report to be remapped by remap-istanbul
     coverageReporter: {
       check: {
         global: {
-          statements: 74,
-          branches: 68,
-          lines: 76,
-          functions: 62,
+          statements: 85,
+          branches: 75,
+          functions: 80,
+          lines: 85,
         }
       },
-      type: 'json',
       dir: './coverage/',
-      subdir: browser => browser.toLowerCase().split(/[ /-]/)[0] // returns 'chrome' etc
+      reporters: [
+        // reporters not supporting the `file` property
+        { type: 'html', subdir: 'report-html' },
+        { type: 'lcov', subdir: 'report-lcov' },
+        // reporters supporting the `file` property, use `subdir` to directly
+        // output them in the `dir` directory
+        // { type: 'cobertura', subdir: '.', file: 'cobertura.txt' },
+        // { type: 'lcovonly', subdir: '.', file: 'report-lcovonly.txt' },
+        { type: 'text', subdir: '.', file: 'text.txt' },
+        { type: 'text-summary', subdir: '.', file: 'text-summary.txt' },
+      ],
     },
     port: 9876,
     colors: true,
@@ -105,14 +68,4 @@ module.exports = (config) => {
       }
     }
   });
-};
-
-const istanbulInstrumenter = {
-  enforce: 'post',
-  exclude: [/web-demo-app/, /^(.)*\.mock\.ts$/],
-  test: /^(.(?!\.spec))*\.tsx?$/,
-  loader: 'istanbul-instrumenter-loader',
-  query: {
-    embedSource: true,
-  },
 };
