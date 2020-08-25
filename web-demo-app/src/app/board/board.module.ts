@@ -10,6 +10,12 @@ import { ConversationModule } from '../conversation/conversation.module';
 import { SpinnerClient } from '@swagger/spinner';
 import { Logger } from '../logger';
 
+export enum ModuleNames {
+  call = 'Call module',
+  chat = 'Chat module',
+  conversation = 'Conversation module'
+}
+
 type Module = CallModule | ChatModule | ConversationModule;
 type Modules = Module[];
 
@@ -21,18 +27,22 @@ export class BoardModule {
     this.boardService = new BoardService(session, spinnerClient);
   }
 
-  public init = async (modules: Modules): Promise<void> => {
+  public init = (modules: Modules, defaultModule: Module | undefined = undefined): void => {
     this.modules = modules;
     modules.forEach(async module => {
       await module.init(this.boardService.session, this.boardService.spinnerClient);
-      module.toggleVisible(false);
+      if (module !== defaultModule) {
+        module.toggleVisible(false);
+      }
     });
     this.renderNav();
   }
 
-  public addModule = async (module: Module): Promise<void> => {
+  public addModule = async (module: Module, makeVisible: boolean): Promise<void> => {
     await module.init(this.boardService.session, this.boardService.spinnerClient);
-    module.toggleVisible(false);
+    if (makeVisible) {
+      this.makeVisible(module);
+    }
     this.modules.push(module);
     this.renderNav();
   }
@@ -50,9 +60,7 @@ export class BoardModule {
 
   public makeModuleVisible = (moduleName: string): void => {
     const module = this.modules.find(m => m.NAME === moduleName);
-    Logger.log('Making module visible', module, moduleName, this.modules);
     if (module) {
-      Logger.log('Making module if visible');
       this.makeVisible(module);
     }
   }

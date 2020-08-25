@@ -5,10 +5,10 @@ import { CallService } from './call.service';
 import { Logger } from '../logger';
 import { Credentials } from '../credentials';
 import { SpinnerClient } from '@swagger/spinner';
-import { BoardModule } from '../board/board.module';
+import { BoardModule, ModuleNames } from '../board/board.module';
 
 export class CallModule {
-  public readonly NAME = 'Call module';
+  public readonly NAME = ModuleNames.call;
   private calleeInput?: JQuery;
   private callService: CallService;
 

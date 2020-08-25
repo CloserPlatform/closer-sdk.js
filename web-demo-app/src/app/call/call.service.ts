@@ -30,8 +30,8 @@ export class CallService {
 
           new CallHandler(call, tracks, () => alert('Not implemented'));
         })
-        .onUnhandled(() => {
-          alert('Failed at creating call with spinner client');
+        .onUnhandled((data, res) => {
+          alert(`Failed at creating call - ${res.statusText}: ${data}: `);
         });
       });
     } else {

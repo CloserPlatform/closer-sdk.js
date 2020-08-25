@@ -5,9 +5,8 @@ import { makeChatContainer, makeInputWithBtn, makeDiv, makeMessageEntry, makeCha
 import { Page } from '../page';
 import { ConversationService } from './conversation.service';
 import { Credentials } from '../credentials';
-import { Logger } from '../logger';
 import { SpinnerClient } from '@swagger/spinner';
-import { BoardModule } from '../board/board.module';
+import { BoardModule, ModuleNames } from '../board/board.module';
 
 interface MessageHandle {
   messageId: string;
@@ -25,7 +24,7 @@ enum MessageColors {
 export class ConversationModule {
   private static readonly INFO_TIME = 2000;
   private static readonly SCROLL_TIME = 200;
-  public readonly NAME = 'Conversation module';
+  public readonly NAME = ModuleNames.conversation;
 
   private chatContainer: JQuery;
   private chatWrapper: JQuery;
@@ -60,10 +59,13 @@ export class ConversationModule {
 
   public toggleVisible = (visible = true): void => {
     if (visible) {
-      this.inner.show();
-      Logger.log(this.messages);
+      if (this.inner) {
+        this.inner.show();
+      }
     } else {
-      this.inner.hide();
+      if (this.inner) {
+        this.inner.hide();
+      }
     }
   }
 
@@ -87,10 +89,8 @@ export class ConversationModule {
     }
   }
 
-  private handleTypingCallback = (ts: roomEvents.TypingSent): void => {
+  private handleTypingCallback = (): void => {
     this.setInfoText('User is typing...');
-
-    Logger.log(ts);
 
     clearTimeout(this.infoTimeout);
     this.infoTimeout = setTimeout(this.setInfoText, ConversationModule.INFO_TIME);
@@ -167,7 +167,7 @@ export class ConversationModule {
         alert('You are trying to call yourself');
       } else {
         this.credentials.setCallee(messageHandle.authorId);
-        this.boardModule.switch('Call module');
+        this.boardModule.switch(ModuleNames.call);
       }
     }
   }

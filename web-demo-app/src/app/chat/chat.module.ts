@@ -8,10 +8,10 @@ import { ChatService } from './chat.service';
 import { ConversationModule } from '../conversation/conversation.module';
 import { Credentials } from '../credentials';
 import { SpinnerClient } from '@swagger/spinner';
-import { BoardModule } from '../board/board.module';
+import { BoardModule, ModuleNames } from '../board/board.module';
 
 export class ChatModule {
-  public readonly NAME = 'Chat module';
+  public readonly NAME = ModuleNames.chat;
   public chatService: ChatService;
 
   private inner: JQuery;
@@ -41,9 +41,8 @@ export class ChatModule {
       this.toggleVisible(false);
       this.credentials.setRoom(inputValue);
       const conversationModule = new ConversationModule(this.boardModule, this.credentials, inputValue);
-      this.boardModule.addModule(conversationModule);
+      this.boardModule.addModule(conversationModule, true);
       this.boardModule.removeModule(this);
-      this.boardModule.makeModuleVisible('Conversation module');
     } catch (e) {
       Logger.error(e);
     }
