@@ -32,15 +32,15 @@ export class GroupRoom extends Room {
     return this.users;
   }
 
-  public join(): Promise<void> {
+  public async join(): Promise<void> {
     return this.artichokeAPI.joinRoom(this.id);
   }
 
-  public leave(): Promise<void> {
+  public async leave(): Promise<void> {
     return this.artichokeAPI.leaveRoom(this.id);
   }
 
-  public invite(user: proto.ID): Promise<void> {
+  public async invite(user: proto.ID): Promise<void> {
     return this.artichokeAPI.inviteToRoom(this.id, user);
   }
 

@@ -41,7 +41,7 @@ export abstract class Call implements wireEntities.Call {
     return this.pool.remoteTrack$;
   }
 
-  public replaceTrackByKind(track: MediaStreamTrack): Promise<void> {
+  public async replaceTrackByKind(track: MediaStreamTrack): Promise<void> {
     this.mediaTrackOptimizer.addContentHint(track);
 
     return this.pool.replaceTrackByKind(track);
@@ -63,31 +63,31 @@ export abstract class Call implements wireEntities.Call {
     return this.users;
   }
 
-  public getUsers(): Promise<ReadonlyArray<proto.ID>> {
+  public async getUsers(): Promise<ReadonlyArray<proto.ID>> {
     return this.artichokeApi.getCallUsers(this.id);
   }
 
-  public getMessages(): Promise<ReadonlyArray<callEvents.CallEvent>> {
+  public async getMessages(): Promise<ReadonlyArray<callEvents.CallEvent>> {
     return this.artichokeApi.getCallHistory(this.id);
   }
 
-  public answer(tracks: ReadonlyArray<MediaStreamTrack>): Promise<void> {
+  public async answer(tracks: ReadonlyArray<MediaStreamTrack>): Promise<void> {
     this.addTracks(tracks);
 
     return this.artichokeApi.answerCall(this.id);
   }
 
-  public reject(reason: CallReason): Promise<void> {
+  public async reject(reason: CallReason): Promise<void> {
     return this.artichokeApi.rejectCall(this.id, reason);
   }
 
-  public pull(tracks: ReadonlyArray<MediaStreamTrack>): Promise<void> {
+  public async pull(tracks: ReadonlyArray<MediaStreamTrack>): Promise<void> {
     this.addTracks(tracks);
 
     return this.artichokeApi.pullCall(this.id);
   }
 
-  public leave(reason: CallReason): Promise<void> {
+  public async leave(reason: CallReason): Promise<void> {
     this.pool.destroyAllConnections();
 
     return this.artichokeApi.leaveCall(this.id, reason);

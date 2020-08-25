@@ -10,7 +10,9 @@ export interface PromiseReject extends Callback<errorEvents.Error> {
 
 export class PromiseUtils {
 
-  public static wrapPromise<T, U>(promise: Promise<ReadonlyArray<T>>, fun: (arg: T) => U): Promise<ReadonlyArray<U>> {
+  public static async wrapPromise<T, U>(
+    promise: Promise<ReadonlyArray<T>>, fun: (arg: T) => U
+  ): Promise<ReadonlyArray<U>> {
     return promise.then((arr: ReadonlyArray<T>) => arr.map(fun));
   }
 }

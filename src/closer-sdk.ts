@@ -29,7 +29,7 @@ export class CloserSDK {
         return sessionFactory.create();
     }
 
-    public static initWithSignedAuth(sessionData: SessionData, userConfig: UserConfig): Promise<Session> {
+    public static async initWithSignedAuth(sessionData: SessionData, userConfig?: UserConfig): Promise<Session> {
         if (!CloserSDK.isSupported()) {
             throw new Error('Platform is not supported');
         }

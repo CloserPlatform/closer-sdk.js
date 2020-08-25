@@ -21,17 +21,22 @@ export abstract class Room implements wireEntities.Room {
     // tslint:disable-next-line:readonly-keyword
     public marks: { [type: string]: proto.Timestamp } = {};
 
-    public getLatestMessages(count?: number,
-                             historyFilter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
+    public async getLatestMessages(
+        count?: number,
+        historyFilter?: proto.HistoryFilter,
+    ): Promise<proto.Paginated<roomEvents.RoomEvent>> {
         return this.artichokeAPI.getRoomHistoryLast(this.id, count || Room.defaultRoomCount, historyFilter);
     }
 
-    public getMessages(offset: number, limit: number,
-                       historyFilter?: proto.HistoryFilter): Promise<proto.Paginated<roomEvents.RoomEvent>> {
+    public async getMessages(
+        offset: number,
+        limit: number,
+        historyFilter?: proto.HistoryFilter,
+    ): Promise<proto.Paginated<roomEvents.RoomEvent>> {
         return this.artichokeAPI.getRoomHistoryPage(this.id, offset, limit, historyFilter);
     }
 
-    public getUsers(): Promise<ReadonlyArray<proto.ID>> {
+    public async getUsers(): Promise<ReadonlyArray<proto.ID>> {
         return this.artichokeAPI.getRoomUsers(this.id);
     }
 

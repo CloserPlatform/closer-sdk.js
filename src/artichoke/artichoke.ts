@@ -183,30 +183,33 @@ export class Artichoke {
     return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.UnreadTotalUpdated.isUnreadTotalUpdated));
   }
 
-  public createCall(tracks: ReadonlyArray<MediaStreamTrack>, users: ReadonlyArray<proto.ID>, metadata?: proto.Metadata):
-    Promise<GroupCall> {
+  public async createCall(
+    tracks: ReadonlyArray<MediaStreamTrack>,
+    users: ReadonlyArray<proto.ID>,
+    metadata?: proto.Metadata
+  ): Promise<GroupCall> {
     return this.wrapCall(this.artichokeApi.createCall(users, metadata), tracks) as Promise<GroupCall>; // Trust me.
   }
 
-  public createDirectCall(tracks: ReadonlyArray<MediaStreamTrack>,
+  public async createDirectCall(tracks: ReadonlyArray<MediaStreamTrack>,
     peer: proto.ID, timeout?: number, metadata?: proto.Metadata):
     Promise<DirectCall> {
     return this.wrapCall(this.artichokeApi.createDirectCall(peer, timeout, metadata), tracks);
   }
 
-  public getCall(call: proto.ID): Promise<Call> {
+  public async getCall(call: proto.ID): Promise<Call> {
     return this.wrapCall(this.artichokeApi.getCall(call));
   }
 
-  public getCalls(): Promise<ReadonlyArray<Call>> {
+  public async getCalls(): Promise<ReadonlyArray<Call>> {
     return PromiseUtils.wrapPromise(this.artichokeApi.getCalls(), call => this.callFactory.create(call));
   }
 
-  public getActiveCalls(): Promise<ReadonlyArray<Call>> {
+  public async getActiveCalls(): Promise<ReadonlyArray<Call>> {
     return PromiseUtils.wrapPromise(this.artichokeApi.getActiveCalls(), call => this.callFactory.create(call));
   }
 
-  public getCallsWithPendingInvitations(): Promise<ReadonlyArray<Call>> {
+  public async getCallsWithPendingInvitations(): Promise<ReadonlyArray<Call>> {
     return PromiseUtils.wrapPromise(this.artichokeApi.getCallsWithPendingInvitations(),
         call => this.callFactory.create(call));
   }
@@ -220,40 +223,40 @@ export class Artichoke {
     return this.artichokeApi.domainEvent$.pipe(filter(roomEvents.Invited.isInvited));
   }
 
-  public createRoom(name: string): Promise<GroupRoom> {
+  public async createRoom(name: string): Promise<GroupRoom> {
     return this.wrapRoom(this.artichokeApi.createRoom(name)) as Promise<GroupRoom>; // Trust me.
   }
 
-  public createDirectRoom(peer: proto.ID, context?: proto.Context): Promise<DirectRoom> {
+  public async createDirectRoom(peer: proto.ID, context?: proto.Context): Promise<DirectRoom> {
     return this.wrapRoom(this.artichokeApi.createDirectRoom(peer, context));
   }
 
-  public getRoom(room: proto.ID): Promise<Room> {
+  public async getRoom(room: proto.ID): Promise<Room> {
     return this.wrapRoom(this.artichokeApi.getRoom(room));
   }
 
-  public getRooms(): Promise<ReadonlyArray<Room>> {
+  public async getRooms(): Promise<ReadonlyArray<Room>> {
     return PromiseUtils.wrapPromise(this.artichokeApi.getRooms(), room => this.roomFactory.create(room));
   }
 
-  public getRoster(): Promise<ReadonlyArray<Room>> {
+  public async getRoster(): Promise<ReadonlyArray<Room>> {
     return PromiseUtils.wrapPromise(this.artichokeApi.getRoster(), room => this.roomFactory.create(room));
   }
 
-  public registerForPushNotifications(pushId: proto.ID): Promise<void> {
+  public async registerForPushNotifications(pushId: proto.ID): Promise<void> {
     return this.artichokeApi.registerForPushNotifications(pushId);
   }
 
-  public unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
+  public async unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
     return this.artichokeApi.unregisterFromPushNotifications(pushId);
   }
 
   // Utils:
-  private wrapCall(promise: Promise<wireEntities.Call>, tracks?: ReadonlyArray<MediaStreamTrack>): Promise<Call> {
+  private async wrapCall(promise: Promise<wireEntities.Call>, tracks?: ReadonlyArray<MediaStreamTrack>): Promise<Call> {
     return promise.then(call => this.callFactory.create(call, tracks));
   }
 
-  private wrapRoom(promise: Promise<wireEntities.Room>): Promise<Room> {
+  private async wrapRoom(promise: Promise<wireEntities.Room>): Promise<Room> {
     return promise.then(room => this.roomFactory.create(room));
   }
 

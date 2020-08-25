@@ -7,7 +7,7 @@ export class Spinner {
     ) {
     }
 
-    public verifySignature(sessionData: SessionData): Promise<AgentContext> {
+    public async verifySignature(sessionData: SessionData): Promise<AgentContext> {
         return this.spinnerApi.verifySignature(sessionData);
     }
 }

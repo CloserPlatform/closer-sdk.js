@@ -79,7 +79,7 @@ export class RTCPool {
     this.peerConnections.forEach(peerConnection => peerConnection.removeTrack(track));
   }
 
-  public connect(peerId: ID): Promise<void> {
+  public async connect(peerId: ID): Promise<void> {
     return this.getRTCPeerConnectionInstance(peerId).offer();
   }
 
@@ -99,7 +99,7 @@ export class RTCPool {
     this.peerConnections.forEach((_, peerId) => this.destroyConnection(peerId));
   }
 
-  public replaceTrackByKind(track: MediaStreamTrack): Promise<void> {
+  public async replaceTrackByKind(track: MediaStreamTrack): Promise<void> {
     return Promise.all(
       Array.from(this.peerConnections)
         .map(peerIdPeerConnectionPair => peerIdPeerConnectionPair[1])
@@ -109,7 +109,7 @@ export class RTCPool {
   }
 
   // tslint:disable-next-line:readonly-keyword
-  private listenForDescriptionSent = (msg: rtcEvents.DescriptionSent): Promise<void> => {
+  private listenForDescriptionSent = async (msg: rtcEvents.DescriptionSent): Promise<void> => {
     this.logger.debug(`Received an RTC description: ${msg.sdp.type} ${msg.sdp.sdp}`);
     switch (msg.sdp.type) {
       case 'offer':

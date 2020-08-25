@@ -27,11 +27,11 @@ export class GroupCall extends Call {
         return call.callType === CallType.GROUP;
     }
 
-    public invite(user: proto.ID): Promise<void> {
+    public async invite(user: proto.ID): Promise<void> {
         return this.artichokeApi.inviteToCall(this.id, user);
     }
 
-    public join(tracks: ReadonlyArray<MediaStreamTrack>): Promise<void> {
+    public async join(tracks: ReadonlyArray<MediaStreamTrack>): Promise<void> {
         this.addTracks(tracks);
 
         return this.artichokeApi.joinCall(this.id);

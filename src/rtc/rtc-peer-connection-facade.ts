@@ -89,7 +89,7 @@ export class RTCPeerConnectionFacade {
     return this.dataChannel.send(msg);
   }
 
-  public replaceTrackByKind(track: MediaStreamTrack): Promise<void> {
+  public async replaceTrackByKind(track: MediaStreamTrack): Promise<void> {
     const maybeSender = this.rtcPeerConnection.getSenders()
       .filter(sender => sender.track && sender.track.kind === track.kind)[0];
     if (maybeSender) {
@@ -101,7 +101,10 @@ export class RTCPeerConnectionFacade {
     }
   }
 
-  public handleRemoteOffer(remoteDescription: RTCSessionDescriptionInit, options?: RTCAnswerOptions): Promise<void> {
+  public async handleRemoteOffer(
+    remoteDescription: RTCSessionDescriptionInit,
+    options?: RTCAnswerOptions
+  ): Promise<void> {
     this.logger.debug('Received an RTC offer - calling setRemoteDescription');
 
     return this.setRemoteDescription(remoteDescription)
@@ -109,7 +112,7 @@ export class RTCPeerConnectionFacade {
         this.statsCollector.reportError('setRemoteDescription', err);
         throw err;
       })
-      .then(_descr => {
+      .then(async _descr => {
         this.logger.debug('RTC offer was successfully set');
 
         return this.answer(options);
@@ -122,7 +125,7 @@ export class RTCPeerConnectionFacade {
       });
   }
 
-  public handleRemoteAnswer(remoteDescription: RTCSessionDescriptionInit): Promise<void> {
+  public async handleRemoteAnswer(remoteDescription: RTCSessionDescriptionInit): Promise<void> {
     if (!this.dtlsRole && remoteDescription.sdp) {
       this.logger.debug('Detecting DTLS role based on remote answer');
       this.dtlsRole = remoteDescription.sdp.includes('a=setup:active') ? 'passive' : 'active';
@@ -140,7 +143,7 @@ export class RTCPeerConnectionFacade {
       });
   }
 
-  public offer(options?: RTCOfferOptions): Promise<void> {
+  public async offer(options?: RTCOfferOptions): Promise<void> {
     this.logger.debug('Creating an RTC offer.');
 
     this.dataChannel.createConnection();
@@ -162,7 +165,7 @@ export class RTCPeerConnectionFacade {
       });
   }
 
-  private answer(options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
+  private async answer(options?: RTCAnswerOptions): Promise<RTCSessionDescriptionInit> {
     this.logger.debug('Creating an RTC answer.');
 
     this.dataChannel.createConnection();
@@ -172,7 +175,7 @@ export class RTCPeerConnectionFacade {
         this.statsCollector.reportError('createAnswer', err);
         throw err;
       })
-      .then(answer => {
+      .then(async answer => {
         this.logger.debug('Created an RTC answer');
 
         if (!this.dtlsRole && answer.sdp) {
@@ -199,7 +202,7 @@ export class RTCPeerConnectionFacade {
     }
   }
 
-  private setRemoteDescription(remoteDescription: RTCSessionDescriptionInit): Promise<void> {
+  private async setRemoteDescription(remoteDescription: RTCSessionDescriptionInit): Promise<void> {
     this.logger.debug('Setting remote RTC description.');
 
     return this.rtcPeerConnection.setRemoteDescription(remoteDescription)
@@ -216,7 +219,7 @@ export class RTCPeerConnectionFacade {
         }));
   }
 
-  private setLocalDescription(localDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
+  private async setLocalDescription(localDescription: RTCSessionDescriptionInit): Promise<RTCSessionDescriptionInit> {
     this.logger.debug('Setting local RTC description.');
 
     return this.rtcPeerConnection.setLocalDescription(localDescription)

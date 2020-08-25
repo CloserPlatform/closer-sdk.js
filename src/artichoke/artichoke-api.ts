@@ -53,90 +53,90 @@ export class ArtichokeApi {
     return this.websocketClient.send(new rtcCommands.SendCandidate(callId, sessionId, candidate));
   }
 
-  public createCall(sessionIds: ReadonlyArray<proto.ID>, metadata?: proto.Metadata): Promise<wireEntities.Call> {
+  public async createCall(sessionIds: ReadonlyArray<proto.ID>, metadata?: proto.Metadata): Promise<wireEntities.Call> {
     return this.httpClient.post(this.callPath, proto.createCall(sessionIds, metadata));
   }
 
-  public createDirectCall(
+  public async createDirectCall(
     sessionId: proto.ID, timeout?: number, metadata?: proto.Metadata
   ): Promise<wireEntities.Call> {
     return this.httpClient.post(this.callPath, proto.createDirectCall(sessionId, timeout, metadata));
   }
 
-  public getCall(callId: proto.ID): Promise<wireEntities.Call> {
+  public async getCall(callId: proto.ID): Promise<wireEntities.Call> {
     return this.httpClient.get(`${this.callPath}/${callId}`);
   }
 
-  public getCalls(): Promise<ReadonlyArray<wireEntities.Call>> {
+  public async getCalls(): Promise<ReadonlyArray<wireEntities.Call>> {
     return this.httpClient.get(this.callPath);
   }
 
-  public getActiveCalls(): Promise<ReadonlyArray<wireEntities.Call>> {
+  public async getActiveCalls(): Promise<ReadonlyArray<wireEntities.Call>> {
     return this.httpClient.get(`${this.callPath}/active`);
   }
 
-  public getCallsWithPendingInvitations(): Promise<ReadonlyArray<wireEntities.Call>> {
+  public async getCallsWithPendingInvitations(): Promise<ReadonlyArray<wireEntities.Call>> {
     return this.httpClient.get(`${this.callPath}/pending-invitation`);
   }
 
-  public getCallHistory(callId: proto.ID): Promise<ReadonlyArray<callEvents.CallEvent>> {
+  public async getCallHistory(callId: proto.ID): Promise<ReadonlyArray<callEvents.CallEvent>> {
     return this.httpClient.get(`${this.callPath}/${callId}/history`);
   }
 
-  public getCallUsers(callId: proto.ID): Promise<ReadonlyArray<proto.ID>> {
+  public async getCallUsers(callId: proto.ID): Promise<ReadonlyArray<proto.ID>> {
     return this.httpClient.get(`${this.callPath}/${callId}/users`);
   }
 
-  public answerCall(callId: proto.ID): Promise<void> {
+  public async answerCall(callId: proto.ID): Promise<void> {
     return this.httpClient.post(`${this.callPath}/${callId}/answer`);
   }
 
-  public rejectCall(callId: proto.ID, reason: CallReason): Promise<void> {
+  public async rejectCall(callId: proto.ID, reason: CallReason): Promise<void> {
     return this.httpClient.post(`${this.callPath}/${callId}/reject`, proto.leaveReason(reason));
   }
 
-  public joinCall(callId: proto.ID): Promise<void> {
+  public async joinCall(callId: proto.ID): Promise<void> {
     return this.httpClient.post(`${this.callPath}/${callId}/join`);
   }
 
-  public pullCall(callId: proto.ID): Promise<void> {
+  public async pullCall(callId: proto.ID): Promise<void> {
     return this.httpClient.post(`${this.callPath}/${callId}/pull`);
   }
 
-  public leaveCall(callId: proto.ID, reason: CallReason): Promise<void> {
+  public async leaveCall(callId: proto.ID, reason: CallReason): Promise<void> {
     return this.httpClient.post(`${this.callPath}/${callId}/leave`, proto.leaveReason(reason));
   }
 
-  public inviteToCall(callId: proto.ID, sessionId: proto.ID): Promise<void> {
+  public async inviteToCall(callId: proto.ID, sessionId: proto.ID): Promise<void> {
     return this.httpClient.post(`${this.callPath}/${callId}/invite/${sessionId}`);
   }
 
   // Room API:
-  public createRoom(name: string): Promise<wireEntities.Room> {
+  public async createRoom(name: string): Promise<wireEntities.Room> {
     return this.httpClient.post(this.roomPath, proto.createRoom(name));
   }
 
-  public createDirectRoom(sessionId: proto.ID, context?: proto.Context): Promise<wireEntities.Room> {
+  public async createDirectRoom(sessionId: proto.ID, context?: proto.Context): Promise<wireEntities.Room> {
     return this.httpClient.post(this.roomPath, proto.createDirectRoom(sessionId, context));
   }
 
-  public getRoom(roomId: proto.ID): Promise<wireEntities.Room> {
+  public async getRoom(roomId: proto.ID): Promise<wireEntities.Room> {
     return this.httpClient.get(`${this.roomPath}/${roomId}`);
   }
 
-  public getRooms(): Promise<ReadonlyArray<wireEntities.Room>> {
+  public async getRooms(): Promise<ReadonlyArray<wireEntities.Room>> {
     return this.httpClient.get(this.roomPath);
   }
 
-  public getRoster(): Promise<ReadonlyArray<wireEntities.Room>> {
+  public async getRoster(): Promise<ReadonlyArray<wireEntities.Room>> {
     return this.httpClient.get(`${this.roomPath}/roster`);
   }
 
-  public getRoomUsers(roomId: proto.ID): Promise<ReadonlyArray<proto.ID>> {
+  public async getRoomUsers(roomId: proto.ID): Promise<ReadonlyArray<proto.ID>> {
     return this.httpClient.get(`${this.roomPath}/${roomId}/users`);
   }
 
-  public getRoomHistoryLast(
+  public async getRoomHistoryLast(
     roomId: proto.ID,
     count: number,
     filter?: proto.HistoryFilter
@@ -150,7 +150,7 @@ export class ArtichokeApi {
     return this.httpClient.getPaginated(`${this.roomPath}/${roomId}/${endpoint}`);
   }
 
-  public getRoomHistoryPage(
+  public async getRoomHistoryPage(
     roomId: proto.ID,
     offset: number,
     limit: number,
@@ -165,15 +165,15 @@ export class ArtichokeApi {
     return this.httpClient.getPaginated(`${this.roomPath}/${roomId}/${endpoint}`);
   }
 
-  public joinRoom(roomId: proto.ID): Promise<void> {
+  public async joinRoom(roomId: proto.ID): Promise<void> {
     return this.httpClient.post(`${this.roomPath}/${roomId}/join`);
   }
 
-  public leaveRoom(roomId: proto.ID): Promise<void> {
+  public async leaveRoom(roomId: proto.ID): Promise<void> {
     return this.httpClient.post(`${this.roomPath}/${roomId}/leave`);
   }
 
-  public inviteToRoom(roomId: proto.ID, sessionId: proto.ID): Promise<void> {
+  public async inviteToRoom(roomId: proto.ID, sessionId: proto.ID): Promise<void> {
     return this.httpClient.post(`${this.roomPath}/${roomId}/invite`, proto.invite(sessionId));
   }
 
@@ -213,11 +213,11 @@ export class ArtichokeApi {
   }
 
   // Push Notifications API:
-  public registerForPushNotifications(pushId: proto.ID): Promise<void> {
+  public async registerForPushNotifications(pushId: proto.ID): Promise<void> {
     return this.httpClient.post(`${this.pushNotificationsPath}/register`, proto.pushRegistration(pushId));
   }
 
-  public unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
+  public async unregisterFromPushNotifications(pushId: proto.ID): Promise<void> {
     return this.httpClient.delete(`${this.pushNotificationsPath}/unregister/${pushId}`);
   }
 

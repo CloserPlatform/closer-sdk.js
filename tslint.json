@@ -3,7 +3,6 @@
     "tslint-immutable"
   ],
   "rules": {
-    // "typedef": [true, "call-signature", "arrow-call-signature"],
     "typedef": [true, "call-signature"],
     "class-name": true,
     "comment-format": [
@@ -123,23 +122,23 @@
     "no-var-requires": true,
     // "no-void-expression": true, TURN ME ON
     "number-literal-format": true,
-    // "object-literal-sort-keys": true,
+    "object-literal-sort-keys": false,
     "one-variable-per-declaration": true,
     "only-arrow-functions": true,
-    // "ordered-imports": true,
+    "ordered-imports": false,
     "prefer-conditional-expression": true,
     "prefer-for-of": true,
     "prefer-method-signature": true,
     "prefer-object-spread": true,
     "prefer-switch": true,
     "prefer-template": true,
-    // "promise-function-async": true,
+    "promise-function-async": true,
     "radix": true,
     "return-undefined": true,
     "space-before-function-paren": false,
     "space-within-parens": true,
-    // "strict-boolean-expressions": true, TURN ME ON
-    // "strict-type-predicates": true, TURN ME ON
+    // "strict-boolean-expressions": true,
+    // "strict-type-predicates": true,
     "switch-default": true,
     "switch-final-break": true,
     "type-literal-delimiter": true,
@@ -206,7 +205,7 @@
       true,
       "multiline"
     ],
-    // "interface-name": true,
+    "interface-name": false,
     "prefer-const": true,
     "triple-equals": [
       true,
@@ -243,14 +242,20 @@
     "readonly-keyword": true,
     "readonly-array": true,
     "no-let": true,
-    // "no-object-mutation": true, // Impossible for angular
+    "no-array-mutation": true,
+    // "no-object-mutation": true,
     "no-delete": true,
-    // "no-method-signature": true,
+    "no-method-signature": false,
 
     // Functional style rules
+    "no-this": false,
+    "no-class": false,
     "no-mixed-interface": true,
-    // "no-expression-statement": true,
+    // "no-expression-statement": [true, {"ignore-prefix": ["logger.", "super"]}],
     // "no-if-statement": true,
-    "no-loop-statement": true
+    "no-loop-statement": true,
+    "no-throw": false,
+    "no-try": false,
+    "no-reject": false
   }
 }

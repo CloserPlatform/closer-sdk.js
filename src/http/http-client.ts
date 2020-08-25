@@ -29,19 +29,19 @@ export class HttpClient {
     this.apiHeaders.deviceId = deviceId;
   }
 
-  public get<Response>(path: string): Promise<Response> {
+  public async get<Response>(path: string): Promise<Response> {
     return this.getRaw(path, this.apiHeaders.getHeaders()).then(resp => this.parseData<Response>(resp));
   }
 
-  public post<Body, Response>(path: string, body?: Body): Promise<Response> {
+  public async post<Body, Response>(path: string, body?: Body): Promise<Response> {
     return this.postRaw(path, this.apiHeaders.getHeaders(), body).then(resp => this.parseData<Response>(resp));
   }
 
-  public delete<Response>(path: string): Promise<Response> {
+  public async delete<Response>(path: string): Promise<Response> {
     return this.deleteRaw(path, this.apiHeaders.getHeaders()).then(resp => this.parseData<Response>(resp));
   }
 
-  public getPaginated<Item>(path: string): Promise<Paginated<Item>> {
+  public async getPaginated<Item>(path: string): Promise<Paginated<Item>> {
     return this.getRaw(path, this.apiHeaders.getHeaders())
       .then(resp => {
         try {
@@ -62,7 +62,7 @@ export class HttpClient {
       });
   }
 
-  private getRaw(path: string, headers: ReadonlyArray<HeaderValue>): Promise<XMLHttpRequest> {
+  private async getRaw(path: string, headers: ReadonlyArray<HeaderValue>): Promise<XMLHttpRequest> {
     return new Promise<XMLHttpRequest>((resolve, reject): void => {
       const url = this.getPathWithBaseUrl(path);
       this.logger.debug(`GET ${url}`);
@@ -75,12 +75,12 @@ export class HttpClient {
     });
   }
 
-  private deleteRaw<Body>(path: string,
+  private async deleteRaw<Body>(path: string,
                           headers: ReadonlyArray<HeaderValue>, body?: Body): Promise<XMLHttpRequest> {
     return this.httpRequestWithBody('DELETE')(path, headers, body);
   }
 
-  private postRaw<Body>(path: string,
+  private async postRaw<Body>(path: string,
                         headers: ReadonlyArray<HeaderValue>, body?: Body): Promise<XMLHttpRequest> {
     return this.httpRequestWithBody('POST')(path, headers, body);
   }
@@ -88,7 +88,7 @@ export class HttpClient {
   private httpRequestWithBody(method: 'POST' | 'DELETE'): <Body>(path: string,
                                                                  headers: ReadonlyArray<HeaderValue>,
                                                                  body?: Body) => Promise<XMLHttpRequest> {
-    return <Body>(path: string, headers: ReadonlyArray<HeaderValue>,
+    return async <Body>(path: string, headers: ReadonlyArray<HeaderValue>,
                   body?: Body): Promise<XMLHttpRequest> =>
       new Promise<XMLHttpRequest>((resolve, reject): void => {
 
