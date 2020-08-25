@@ -3,7 +3,7 @@ import { Logger } from '../logger';
 import { Credentials } from '../credentials';
 import { AgentCtx, SpinnerClient } from '@swagger/spinner';
 import { AgentService } from './agent.service';
-import { BoardModule } from '../board/board.module';
+import { BoardModule, ModuleNames } from '../board/board.module';
 import { ChatModule } from '../chat/chat.module';
 import { CallModule } from '../call/call.module';
 
@@ -20,7 +20,8 @@ export class AgentModule {
       const chatModule = new ChatModule(boardModule, credentials);
       const callModule = new CallModule(boardModule, credentials);
 
-      await boardModule.init([chatModule, callModule]);
+      boardModule.init([chatModule, callModule]);
+      boardModule.makeModuleVisible(ModuleNames.chat);
     } catch (e) {
       this.handleConnectFailed(e as Error);
     }

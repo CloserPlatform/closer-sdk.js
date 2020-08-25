@@ -27,10 +27,14 @@ export class GuestModule {
 
   public toggleVisible = (visible = true): void => {
     if (visible) {
-      this.inner.show();
+      if (this.inner) {
+        this.inner.show();
+      }
     }
     else {
-      this.inner.hide();
+      if (this.inner) {
+        this.inner.hide();
+      }
     }
   }
 
@@ -57,8 +61,7 @@ export class GuestModule {
     const conversationModule = new ConversationModule(boardModule, this.credentials, roomId);
     const callModule = new CallModule(boardModule, this.credentials);
 
-    await boardModule.init([conversationModule, callModule]);
-    boardModule.makeModuleVisible('Conversation module');
+    boardModule.init([conversationModule, callModule], conversationModule);
   }
 
   private renderInputs = (): void => {
