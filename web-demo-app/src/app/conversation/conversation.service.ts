@@ -1,11 +1,13 @@
 import { Session, Room, roomEvents, protocol } from '@closerplatform/closer-sdk';
 import { Logger } from '../logger';
 import { SpinnerClient } from '@swagger/spinner';
+import { Subscription } from 'rxjs';
 
 export class ConversationService {
   private static readonly retrieveMessagesCount = 20;
 
   public room: Room;
+  private subscriptions = new Array<Subscription>();
 
   constructor(public session: Session, public spinnerClient: SpinnerClient) { }
 
@@ -14,15 +16,18 @@ export class ConversationService {
   }
 
   public setTypingCallback = (f: (t: roomEvents.TypingSent) => void): void => {
-    this.room.typing$.subscribe(f);
+    const subscription = this.room.typing$.subscribe(f);
+    this.subscriptions.push(subscription);
   }
 
   public setDelieveredCallback = (f: (d: roomEvents.MessageDelivered) => void): void => {
-    this.room.messageDelivered$.subscribe(f);
+    const subscription = this.room.messageDelivered$.subscribe(f);
+    this.subscriptions.push(subscription);
   }
 
   public setMarkedCallback = (f: (m: roomEvents.MarkSent) => void): void => {
-    this.room.marked$.subscribe(f);
+    const subscription = this.room.marked$.subscribe(f);
+    this.subscriptions.push(subscription);
   }
 
   public setRoom = async (roomId: string): Promise<void> => {
@@ -41,6 +46,12 @@ export class ConversationService {
 
   public setDelievered = (msgId: string): void => {
     this.room.setDelivered(msgId);
+  }
+
+  public unsubscribeEvents = (): void => {
+    this.subscriptions.forEach(subscription => subscription.unsubscribe());
+
+    this.subscriptions = [];
   }
 
   public getRoomMessageHistory = async (): Promise<protocol.Paginated<roomEvents.RoomEvent> | void> => {
