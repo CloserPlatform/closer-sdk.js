@@ -6,34 +6,17 @@ import { makeDiv, makeInputWithBtn } from '../view';
 import { Page } from '../page';
 import { ChatService } from './chat.service';
 import { ConversationModule } from '../conversation/conversation.module';
-import { Credentials } from '../credentials';
 import { SpinnerClient } from '@swagger/spinner';
-import { BoardModule, ModuleNames } from '../board/board.module';
+import { ModuleNames } from '../board/board.module';
+import { SubModule } from '../board/submodule';
 
-export class ChatModule {
+export class ChatModule extends SubModule {
   public readonly NAME = ModuleNames.chat;
   public chatService: ChatService;
 
-  private inner: JQuery;
-
-  constructor (private boardModule: BoardModule, private credentials: Credentials) { }
-
-  public init = (session: Session, spinnerClient: SpinnerClient): void => {
+  public init = async (session: Session, spinnerClient: SpinnerClient): Promise<void> => {
     this.chatService = new ChatService(session, spinnerClient);
     this.render();
-  }
-
-  public toggleVisible = (visible = true): void => {
-    if (visible) {
-      if (this.inner) {
-        this.inner.show();
-      }
-    }
-    else {
-      if (this.inner) {
-        this.inner.hide();
-      }
-    }
   }
 
   private roomCallback = async (inputValue: string): Promise<void> => {

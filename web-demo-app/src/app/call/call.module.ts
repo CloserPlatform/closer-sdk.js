@@ -2,40 +2,32 @@ import { makeInputWithBtn } from '../view';
 import { Session } from '@closerplatform/closer-sdk';
 import { Page } from '../page';
 import { CallService } from './call.service';
-import { Logger } from '../logger';
-import { Credentials } from '../credentials';
 import { SpinnerClient } from '@swagger/spinner';
-import { BoardModule, ModuleNames } from '../board/board.module';
+import { ModuleNames } from '../board/board.module';
+import { SubModule } from '../board/submodule';
 
-export class CallModule {
+export class CallModule extends SubModule {
   public readonly NAME = ModuleNames.call;
-  private calleeInput?: JQuery;
   private callService: CallService;
 
-  constructor (public boardModule: BoardModule, public credentials: Credentials) { }
-
-  public init = (session: Session, spinnerClient: SpinnerClient): void => {
+  public init = async (session: Session, spinnerClient: SpinnerClient): Promise<void> => {
     this.callService = new CallService(session, spinnerClient);
-    this.calleeInput = this.renderInput((calleeId: string) => this.callService.callToUser(calleeId, this.credentials));
-
-    Page.contents.append(this.calleeInput);
+    this.render();
   }
 
-  public toggleVisible = (visible = true): void => {
-    if (this.calleeInput) {
-      if (visible) {
-        const calleeID = this.credentials.calleeId || '';
-        $(`#${Page.calleeInputId}`).val(calleeID);
-        this.calleeInput.show();
-      }
-      else {
-        this.calleeInput.hide();
-      }
-    } else {
-      Logger.error('Can not toggle visibility, CallModule not initialized');
-    }
+  protected onShow = (): Promise<void> => {
+    const calleeID = this.credentials.calleeId || '';
+    $(`#${Page.calleeInputId}`).val(calleeID);
+
+    return Promise.resolve();
   }
 
-  private renderInput = (callingCallback: (calleeId: string) => void): JQuery =>
-    makeInputWithBtn(Page.calleeId, callingCallback, 'Call', 'Callee id...', '')
+  private onCallClick = async (calleeId: string): Promise<void> => {
+    await this.callService.callToUser(calleeId, this.credentials);
+  }
+
+  private render = (): void => {
+    this.inner = makeInputWithBtn(Page.calleeId, this.onCallClick, 'Call', 'Callee id...', '');
+    Page.contents.append(this.inner);
+  }
 }

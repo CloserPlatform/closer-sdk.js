@@ -1,12 +1,16 @@
 // tslint:disable:readonly-array
 
 import { Session, roomEvents } from '@closerplatform/closer-sdk';
-import { makeChatContainer, makeInputWithBtn, makeDiv, makeMessageEntry, makeChatWrapper } from'../view';
+import { makeChatContainer, makeInputWithBtn, makeDiv, makeMessageEntry,
+  makeChatWrapper, makeChatLegend, makeChatInfoText, makeChatEventInfoContainer } from'../view';
 import { Page } from '../page';
 import { ConversationService } from './conversation.service';
 import { Credentials } from '../credentials';
 import { SpinnerClient } from '@swagger/spinner';
 import { BoardModule, ModuleNames } from '../board/board.module';
+import { SubModule } from '../board/submodule';
+import { Subject, Observable } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
 interface MessageHandle {
   messageId: string;
@@ -14,72 +18,50 @@ interface MessageHandle {
   elem: JQuery;
 }
 
-enum MessageColors {
+export enum MessageColors {
   undelievered = 'border-warning',
   delievered = 'border-success',
   opposite = 'border-secondary',
   read = 'border-info'
 }
 
-export class ConversationModule {
+export class ConversationModule extends SubModule {
   private static readonly INFO_TIME = 2000;
   private static readonly SCROLL_TIME = 200;
   public readonly NAME = ModuleNames.conversation;
 
+  private unsubscribeEvent = new Subject<void>();
+
   private chatContainer: JQuery;
   private chatWrapper: JQuery;
-  private infoContainer: JQuery;
-  private inner: JQuery;
+  private eventInfoContainer: JQuery;
   private messages: MessageHandle[];
 
   private infoTimeout: ReturnType<typeof setTimeout>;
   private conversationService: ConversationService;
 
-  constructor (private boardModule: BoardModule, private credentials: Credentials, private roomId: string) { }
+  constructor (public boardModule: BoardModule, public credentials: Credentials, private roomId: string) {
+    super(boardModule, credentials);
+  }
 
   public init = async (session: Session, spinnerClient: SpinnerClient): Promise<void> => {
     this.conversationService = new ConversationService(session, spinnerClient);
     await this.conversationService.setRoom(this.roomId);
 
-    this.conversationService.setMessageCallback(this.handleMessageCallback);
-    this.setEvents();
+    await this.render();
+  }
 
-    this.render();
+  protected onShow = async (): Promise<void> => {
     await this.refreehTextBox();
-    Page.contents.append(this.inner);
-
-    this.scrollToBottom();
-  }
-
-  public toggleVisible = (visible = true): void => {
-    if (visible) {
-      if (this.inner) {
-        this.setEvents();
-        this.inner.show();
-      }
-    } else {
-      if (this.inner) {
-        this.removeEvents();
-        this.inner.hide();
-      }
-    }
-  }
-
-  private setMark = (): void => {
-    this.conversationService.setMark();
-  }
-
-  private setEvents = (): void => {
-    this.setEventsCallbacks();
+    this.subscribeChatEvents();
     window.addEventListener('focus', this.setMark);
-
     if (this.inner) {
       this.inner.on('click', this.setMark);
     }
   }
 
-  private removeEvents = (): void => {
-    this.conversationService.unsubscribeEvents();
+  protected onHide = async (): Promise<void> => {
+    this.unsubscribeEvent.next();
     window.removeEventListener('focus', this.setMark);
 
     if (this.inner) {
@@ -87,17 +69,37 @@ export class ConversationModule {
     }
   }
 
-  private setEventsCallbacks = (): void => {
-    this.conversationService.setTypingCallback(this.handleTypingCallback);
-    this.conversationService.setDelieveredCallback(this.handleDelieveredCallback);
-    this.conversationService.setMarkedCallback(this.handleMarkedCallback);
+  private subscribeChatEvents = (): void => {
+    this.conversationService.room.message$
+    .pipe(takeUntil(this.unsubscribe$))
+    .subscribe(this.handleMessage);
+
+    this.conversationService.room.typing$
+    .pipe(takeUntil(this.unsubscribe$))
+    .subscribe(this.handleTyping);
+
+    this.conversationService.room.messageDelivered$
+    .pipe(takeUntil(this.unsubscribe$))
+    .subscribe(this.handleDelievered);
+
+    this.conversationService.room.marked$
+    .pipe(takeUntil(this.unsubscribe$))
+    .subscribe(this.handleMarked);
+  }
+
+  private get unsubscribe$(): Observable<void> {
+    return this.unsubscribeEvent.asObservable();
   }
 
   private scrollToBottom = (): void => {
     this.chatWrapper.animate({ scrollTop: this.chatWrapper.get(0).scrollHeight }, ConversationModule.SCROLL_TIME);
   }
 
-  private handleMessageCallback = (msg: roomEvents.MessageSent): void => {
+  private setMark = (): void => {
+    this.conversationService.room.setMark(Date.now());
+  }
+
+  private handleMessage = (msg: roomEvents.MessageSent): void => {
     const ctx = JSON.stringify(msg.context);
     this.textBoxAppend(msg);
     if (ctx !== '{}') {
@@ -107,27 +109,27 @@ export class ConversationModule {
     this.scrollToBottom();
 
     if (msg.authorId !== this.credentials.id) {
-      this.conversationService.setDelievered(msg.messageId);
-      this.infoContainer.empty();
+      this.conversationService.room.setDelivered(msg.messageId);
+      this.eventInfoContainer.empty();
       clearTimeout(this.infoTimeout);
     }
   }
 
-  private handleTypingCallback = (): void => {
+  private handleTyping = (): void => {
     this.setInfoText('User is typing...');
 
     clearTimeout(this.infoTimeout);
     this.infoTimeout = setTimeout(this.setInfoText, ConversationModule.INFO_TIME);
   }
 
-  private handleDelieveredCallback = (message: roomEvents.MessageDelivered): void => {
+  private handleDelievered = (message: roomEvents.MessageDelivered): void => {
     const messageHandle = this.messages.find(m => m.messageId === message.messageId);
     if (messageHandle) {
       messageHandle.elem.removeClass(MessageColors.undelievered).addClass(MessageColors.delievered);
     }
   }
 
-  private handleMarkedCallback = (mark: roomEvents.MarkSent): void => {
+  private handleMarked = (mark: roomEvents.MarkSent): void => {
     if (mark.authorId === this.credentials.id) {
       return;
     }
@@ -140,9 +142,9 @@ export class ConversationModule {
   }
 
   private setInfoText = (text: string | undefined = undefined): void => {
-    this.infoContainer.empty();
+    this.eventInfoContainer.empty();
     if (text) {
-      this.infoContainer.append(`<small class="text-muted">${text}</small>`);
+      this.eventInfoContainer.append(`<small class="text-muted">${text}</small>`);
     }
     this.scrollToBottom();
   }
@@ -183,7 +185,7 @@ export class ConversationModule {
     this.chatContainer.empty();
   }
 
-  private switchToCallingModule = (messageDiv: JQuery): void => {
+  private switchToCallingModule = async (messageDiv: JQuery): Promise<void> => {
     const messageHandle = this.messages.find(m => m.elem === messageDiv);
 
     if (messageHandle) {
@@ -191,44 +193,42 @@ export class ConversationModule {
         alert('You are trying to call yourself');
       } else {
         this.credentials.setCallee(messageHandle.authorId);
-        this.boardModule.switch(ModuleNames.call);
+        await this.boardModule.switchTo(ModuleNames.call);
       }
     }
   }
 
-  private render = (): void => {
-    this.chatWrapper = makeChatWrapper();
-    this.chatContainer = makeChatContainer();
-    this.infoContainer = makeDiv().prop({
-      class: 'my-2 align-self-center'
-    });
-
-    this.chatWrapper.append([this.chatContainer, this.infoContainer]);
-
-    const legend = makeDiv().prop({
-      class: 'd-flex justify-content-center my-3'
-    }).append([
-      makeMessageEntry('Others\' message', ['border-left', MessageColors.opposite]),
-      makeMessageEntry('Not delievered', ['border-right', MessageColors.undelievered]),
-      makeMessageEntry('Delievered', ['border-right', MessageColors.delievered]),
-      makeMessageEntry('Read', ['border-right', MessageColors.read])
-    ]);
-    const info = makeDiv().prop({
-      class: 'text-muted text-center'
-    }).append('Click on message to call its author');
-
-    const msgInput = makeInputWithBtn(Page.msgInputId, this.sendCallback, 'Send',
-      'Type your message here...', '', this.conversationService.indicateTyping);
-
-    this.inner = makeDiv().append([info, legend, this.chatWrapper, msgInput]);
+  private indicateTyping = (): void => {
+    this.conversationService.room.indicateTyping();
   }
 
-  private sendCallback = (inputValue: string): void => {
+  private sendButtonCallback = (inputValue: string): void => {
     if (!this.conversationService.room) {
       alert('Not connected to any room');
     } else {
       this.conversationService.sendMessage(inputValue);
       $(`#${Page.msgInputInnerId}`).val('');
     }
+  }
+
+  private render = async (): Promise<void> => {
+    this.chatWrapper = makeChatWrapper();
+    this.chatContainer = makeChatContainer();
+    this.eventInfoContainer = makeChatEventInfoContainer();
+
+    this.chatWrapper.append([this.chatContainer, this.eventInfoContainer]);
+
+    const legend = makeChatLegend();
+    const info = makeChatInfoText('Click on message to call its author');
+
+    const msgInput = makeInputWithBtn(Page.msgInputId, this.sendButtonCallback, 'Send',
+      'Type your message here...', '', this.indicateTyping);
+
+    this.inner = makeDiv().append([info, legend, this.chatWrapper, msgInput]);
+
+    await this.onShow();
+
+    Page.contents.append(this.inner);
+    this.scrollToBottom();
   }
 }

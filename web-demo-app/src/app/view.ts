@@ -8,6 +8,7 @@ import 'jquery-ui-bundle';
 import { Logger } from './logger';
 import { Observable } from 'rxjs/internal/Observable';
 import { Page } from './page';
+import { MessageColors } from './conversation/conversation.module';
 
 export interface LoginFormData {
   userEmail: string;
@@ -139,6 +140,17 @@ export const makeChatWrapper = (): JQuery => {
   return chatWrapper;
 };
 
+export const makeChatLegend = (): JQuery => (
+  makeDiv().prop({
+    class: 'd-flex justify-content-center my-3'
+  }).append([
+    makeMessageEntry('Others\' message', ['border-left', MessageColors.opposite]),
+    makeMessageEntry('Not delievered', ['border-right', MessageColors.undelievered]),
+    makeMessageEntry('Delievered', ['border-right', MessageColors.delievered]),
+    makeMessageEntry('Read', ['border-right', MessageColors.read])
+  ])
+);
+
 export const makePlaceholderInput = (id: string, placeholder: string, initial: string): JQuery => {
   const input = $('<input>')
   .prop({
@@ -151,6 +163,18 @@ export const makePlaceholderInput = (id: string, placeholder: string, initial: s
 
   return input;
 };
+
+export const makeChatInfoText = (text: string): JQuery => (
+  makeDiv().prop({
+    class: 'text-muted text-center'
+  }).append(text)
+);
+
+export const makeChatEventInfoContainer = (): JQuery => (
+  makeDiv().prop({
+    class: 'my-2 align-self-center'
+  })
+);
 
 export const makeInputWithBtn = (id: string, callback: (value: string) => void,
     buttonLabel: string, placeholder: string,
