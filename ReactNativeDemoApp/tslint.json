@@ -85,7 +85,6 @@
     "no-floating-promises": true,
     "no-for-in-array": true,
     "no-implicit-dependencies": true,
-    "no-import-side-effect": true,
     "no-inferrable-types": true,
     "no-inferred-empty-object-type": true,
     "no-invalid-template-strings": true,
@@ -119,12 +118,10 @@
     "no-unsafe-finally": true,
     "no-unused-expression": true,
     "no-var-requires": true,
-    "no-void-expression": true,
     "number-literal-format": true,
     "object-literal-sort-keys": true,
     "one-variable-per-declaration": true,
     "only-arrow-functions": true,
-    "ordered-imports": true,
     "prefer-conditional-expression": true,
     "prefer-for-of": true,
     "prefer-method-signature": true,
@@ -200,11 +197,6 @@
     "array-type": [true, "array"],
     "object-literal-shorthand": true,
     "object-literal-key-quotes": [true, "as-needed"],
-    "arrow-return-shorthand": [
-      true,
-      "multiline"
-    ],
-    "interface-name": true,
     "prefer-const": true,
     "triple-equals": [
       true,
