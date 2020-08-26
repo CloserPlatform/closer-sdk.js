@@ -1,4 +1,5 @@
 ## Prerequisites and setting up development environment on macOS with Xcode & iOS simulator
+You are likely to have some of the tools listed below already installed
 1. Installing Node and Watchman, easiest way via `Homebrew`
   - `brew install node`
   - `brew install watchman`
