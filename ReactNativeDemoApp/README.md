@@ -10,6 +10,9 @@
  - `sudo gem install cocoapods`
 5. Installing React Native Demo App dependencies: 
  - Navigate to `ReactNativeDemoApp` directory, create `.npmrc` (necessary for @swagger/spinner) file and run `npm install`
+6. Installing Pods
+ - Navigate to `ReactNativeDemoApp/ios` directory, and run `pod install`
+7. You can now run the application
 
 ## Running application
 ### Run instructions for iOS:
