@@ -1,26 +1,22 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * Generated with the TypeScript template
- * https://github.com/react-native-community/react-native-template-typescript
- *
- * @format
- */
-
 import React from 'react';
-import { Login } from './src/components/login';
+import { StyleSheet } from 'react-native';
 import { Header, ThemeProvider } from 'react-native-elements';
+import { Login } from './src/components/login';
 
-const App = () => {
-  return (
-    <ThemeProvider>
+const App = () => (
+  <ThemeProvider>
       <Header
-        centerComponent={{ text: 'Closer SDK demo app', style: { color: '#fff', fontSize: 20 } }}
+        centerComponent={{ text: 'Closer SDK demo app', style: styles.header }}
       />
-      <Login />
-    </ThemeProvider>
-  );
-};
+    <Login />
+  </ThemeProvider>
+);
+
+const styles = StyleSheet.create({
+  header: {
+    color: '#fff',
+    fontSize: 20,
+  }
+});
 
 export default App;
