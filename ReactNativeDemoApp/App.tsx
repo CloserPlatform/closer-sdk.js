@@ -2,6 +2,8 @@ import 'react-native-gesture-handler';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { SpinnerClient } from '@swagger/spinner';
+import { defaultServers } from './src/defaults';
 import { Components, RootStackParamList } from './src/components/types';
 import { Welcome } from './src/components/welcome';
 import { GuestBoard } from './src/components/guest/guestboard';
@@ -9,6 +11,8 @@ import { AgentBoard } from './src/components/agent/agentboard';
 import { ErrorPage } from './src/components/errorPage';
 
 const Stack = createStackNavigator<RootStackParamList>();
+
+const spinnerClient = new SpinnerClient(defaultServers.spinner);
 
 export const App = () => (
   <NavigationContainer>

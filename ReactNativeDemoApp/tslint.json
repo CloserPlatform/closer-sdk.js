@@ -119,7 +119,6 @@
     "no-unused-expression": true,
     "no-var-requires": true,
     "number-literal-format": true,
-    "object-literal-sort-keys": true,
     "one-variable-per-declaration": true,
     "only-arrow-functions": true,
     "prefer-conditional-expression": true,

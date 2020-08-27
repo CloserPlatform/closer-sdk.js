@@ -1,4 +1,5 @@
 import { StackNavigationProp } from '@react-navigation/stack';
+import { SpinnerClient } from '@swagger/spinner';
 
 export enum Components {
   Agent = 'AgentBoard',
@@ -12,6 +13,9 @@ export interface ServerParams {
   artichoke: string;
   spinner: string;
 }
+export interface GuestOrAgentScreenParams extends ServerParams {
+  spinnerClient: SpinnerClient;
+}
 
 export interface ErrorParams {
   reason: string;
@@ -22,8 +26,8 @@ export interface ErrorParams {
 export type RootStackParamList = {
   Welcome: undefined;
   Login: undefined;
-  GuestBoard: ServerParams;
-  AgentBoard: ServerParams;
+  GuestBoard: GuestOrAgentScreenParams;
+  AgentBoard: GuestOrAgentScreenParams;
   ErrorPage: ErrorParams;
 };
 
