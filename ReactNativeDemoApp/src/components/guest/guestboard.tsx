@@ -2,30 +2,31 @@
 import React, { useState, useEffect } from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import { Input, Button } from 'react-native-elements';
-import { BaseNavigation, Components, GuestOrAgentScreenParams } from '../types';
-import { defaultOrg } from '../../defaults';
 import { SpinnerClient } from '@swagger/spinner';
-import { protocol, Session } from '@closerplatform/closer-sdk';
+import { protocol, Session, CloserSDK, UserConfig } from '@closerplatform/closer-sdk';
+import { BaseNavigation, Components, ServerParams } from '../types';
+import { defaultOrg } from '../../defaults';
 import { Chat } from '../shared/chat';
-import { SessionService } from '../../sessionService';
+// import { SessionService } from '../../sessionService';
 
 interface GuestContext {
-  apiKey?: protocol.ApiKey;
-  id?: protocol.ID;
-  orgId?: protocol.ID;
-  roomId?: protocol.ID;
+  readonly apiKey?: protocol.ApiKey;
+  readonly id?: protocol.ID;
+  readonly orgId?: protocol.ID;
+  readonly roomId?: protocol.ID;
 }
 
 type ThisNavigation = BaseNavigation<Components.Guest>;
 interface Props {
-  navigation: ThisNavigation;
-  route: {
-    params: GuestOrAgentScreenParams;
+  readonly navigation: ThisNavigation;
+  readonly route: {
+    readonly params: ServerParams;
   };
 }
 
 export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
-  const [guestCtx, setGuestCtx] = useState(loadContext(route.params.spinnerClient));
+  const [guestCtx, setGuestCtx] = useState(loadContext());
+  const [spinnerClient, setSpinnerClient] = useState<SpinnerClient>();
   const [session, setSession] = useState<Session>();
 
   useEffect(() => {
@@ -33,10 +34,37 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
       const authCtx = { id: guestCtx.id, apiKey: guestCtx.apiKey };
       const servers = { artichoke: route.params.artichoke, spinner: route.params.spinner };
 
-      setSession(SessionService.connect(authCtx, servers));
-      console.log('Set session');
+      const userConfig: UserConfig = {
+        logLevel: 0,
+        spinner: { server: route.params.spinner },
+        artichoke: { server: route.params.artichoke }
+      };
+
+      const s = CloserSDK.init(authCtx.id, authCtx.apiKey, userConfig);
+      // setSession(SessionService.connectToArtichoke(authCtx, servers));
+      console.log('Set session', s);
     }
   }, [guestCtx]);
+
+  useEffect(() => {
+    const sc = new SpinnerClient(`${route.params.spinner}/api`);
+    sc.apiKey = '6bd77298-9e3a-4d62-a2dd-97b374c5a481';
+    setSpinnerClient(sc);
+
+    getGuestProfile(guestCtx.orgId, guestCtx.id, sc, navigation)
+    .then(ctx => {
+      if (!ctx || !ctx.roomId) {
+        throw new Error();
+      }
+      else {
+        setGuestCtx({ ...guestCtx, roomId: ctx.roomId});
+      }
+    })
+    .catch(e => {
+      navigation.navigate(Components.Error, { reason: 'Fetched invalid guest profile' });
+    });
+
+  }, []);
 
   const renderOrgInput = (): JSX.Element => (
     <View style={styles.container}>
@@ -49,26 +77,13 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
       <Button
         title='Sign up as guest'
         style={styles.signUpButton}
-        onPress={() => signUpGuest(guestCtx.orgId, route.params.spinnerClient, navigation)}
+        onPress={() => signUpGuest(guestCtx.orgId, spinnerClient, navigation)}
         />
     </View>
   );
 
   const renderBoard = (): JSX.Element => {
     if (!guestCtx.roomId) {
-      getGuestProfile(guestCtx.orgId, guestCtx.id, route.params.spinnerClient, navigation)
-      .then(ctx => {
-        if (!ctx || !ctx.roomId) {
-          throw new Error();
-        }
-        else {
-          setGuestCtx({ ...guestCtx, roomId: ctx.roomId});
-        }
-      })
-      .catch(e => {
-        navigation.navigate(Components.Error, { reason: 'Fetched invalid guest profile' });
-      });
-
       return <Text>Loading...</Text>;
     }
     else {
@@ -103,9 +118,7 @@ const styles = StyleSheet.create({
   }
 });
 
-const loadContext = (sc: SpinnerClient): GuestContext => {
-  sc.apiKey = '6bd77298-9e3a-4d62-a2dd-97b374c5a481';
-
+const loadContext = (): GuestContext => {
   return {
     orgId: defaultOrg,
     id: 'e4f96178-04e2-46cf-aed2-dcbecaf023c4',
@@ -113,10 +126,13 @@ const loadContext = (sc: SpinnerClient): GuestContext => {
   };
 };
 
-const signUpGuest = async (orgId: string | undefined, spinnerClient: SpinnerClient,
+const signUpGuest = async (orgId: string | undefined, spinnerClient: SpinnerClient | undefined,
   navigation: ThisNavigation): Promise<GuestContext | undefined> => {
     if (!orgId) {
       navigation.navigate(Components.Error, { reason: 'No org id while trying to sign up guest' });
+    }
+    else if (!spinnerClient) {
+      navigation.navigate(Components.Error, { reason: 'Spinner client does not exist' });
     }
     else {
       try {
@@ -131,9 +147,12 @@ const signUpGuest = async (orgId: string | undefined, spinnerClient: SpinnerClie
 };
 
 const getGuestProfile = async (orgId: string | undefined, id: string| undefined,
-  spinnerClient: SpinnerClient, navigation: ThisNavigation): Promise<GuestContext | undefined> => {
+  spinnerClient: SpinnerClient | undefined, navigation: ThisNavigation): Promise<GuestContext | undefined> => {
     if (!orgId || !id) {
       navigation.navigate(Components.Error, { reason: 'No org or id while trying to get guest profile' });
+    }
+    else if (!spinnerClient) {
+      navigation.navigate(Components.Error, { reason: 'Spinner client does not exist' });
     }
     else if (!spinnerClient.apiKey) {
       navigation.navigate(Components.Error, { reason: 'Api key is not specified' });

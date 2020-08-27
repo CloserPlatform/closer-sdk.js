@@ -10,25 +10,21 @@ export enum Components {
 }
 
 export interface ServerParams {
-  artichoke: string;
-  spinner: string;
+  readonly artichoke: string;
+  readonly spinner: string;
 }
-export interface GuestOrAgentScreenParams extends ServerParams {
-  spinnerClient: SpinnerClient;
-}
-
 export interface ErrorParams {
-  reason: string;
+  readonly reason: string;
 }
 
 // This is necessary because of createStackNavigation in App.tsx
 // tslint:disable-next-line: interface-over-type-literal
 export type RootStackParamList = {
-  Welcome: undefined;
-  Login: undefined;
-  GuestBoard: GuestOrAgentScreenParams;
-  AgentBoard: GuestOrAgentScreenParams;
-  ErrorPage: ErrorParams;
+  readonly Welcome: undefined;
+  readonly Login: undefined;
+  readonly GuestBoard: ServerParams;
+  readonly AgentBoard: ServerParams;
+  readonly ErrorPage: ErrorParams;
 };
 
 export type BaseNavigation<T extends Components> = StackNavigationProp<RootStackParamList, T>;

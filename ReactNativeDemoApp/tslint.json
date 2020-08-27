@@ -77,6 +77,7 @@
     "no-arg": true,
     "no-boolean-literal-compare": true,
     "no-conditional-assignment": true,
+    "no-console": false,
     "no-construct": true,
     "no-duplicate-imports": true,
     "no-duplicate-super": true,
@@ -85,6 +86,7 @@
     "no-floating-promises": true,
     "no-for-in-array": true,
     "no-implicit-dependencies": true,
+    "no-import-side-effect": false,
     "no-inferrable-types": true,
     "no-inferred-empty-object-type": true,
     "no-invalid-template-strings": true,
@@ -108,7 +110,7 @@
     "no-submodule-imports": false,
     "no-switch-case-fall-through": true,
     "no-this-assignment": true,
-    "no-unbound-method": true,
+    "no-unbound-method": [true, "ignore-static"],
     "no-unnecessary-callback-wrapper": true,
     "no-unnecessary-class": false,
     "no-unnecessary-initializer": true,
@@ -119,8 +121,10 @@
     "no-unused-expression": true,
     "no-var-requires": true,
     "number-literal-format": true,
+    "object-literal-sort-keys": false,
     "one-variable-per-declaration": true,
     "only-arrow-functions": true,
+    "ordered-imports": false,
     "prefer-conditional-expression": true,
     "prefer-for-of": true,
     "prefer-method-signature": true,
@@ -132,8 +136,6 @@
     "return-undefined": true,
     "space-before-function-paren": false,
     "space-within-parens": true,
-    "strict-boolean-expressions": true,
-    "strict-type-predicates": true,
     "switch-default": true,
     "switch-final-break": true,
     "type-literal-delimiter": true,
@@ -196,6 +198,11 @@
     "array-type": [true, "array"],
     "object-literal-shorthand": true,
     "object-literal-key-quotes": [true, "as-needed"],
+    "arrow-return-shorthand": [
+      false,
+      "multiline"
+    ],
+    "interface-name": false,
     "prefer-const": true,
     "triple-equals": [
       true,
@@ -226,11 +233,19 @@
     ],
     "no-parameter-reassignment": true,
 
+    "readonly-keyword": true,
     "readonly-array": true,
     "no-let": true,
+    "no-array-mutation": true,
     "no-delete": true,
+    "no-method-signature": false,
 
+    "no-this": false,
+    "no-class": false,
     "no-mixed-interface": true,
-    "no-loop-statement": true
+    "no-loop-statement": true,
+    "no-throw": false,
+    "no-try": false,
+    "no-reject": false
   }
 }

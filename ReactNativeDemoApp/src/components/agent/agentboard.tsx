@@ -1,14 +1,14 @@
 import React from 'react';
 import { Text } from 'react-native';
-import { BaseNavigation, Components, GuestOrAgentScreenParams } from '../types';
+import { BaseNavigation, Components, ServerParams } from '../types';
 import { Button } from 'react-native-elements';
 
 type ThisNavigation = BaseNavigation<Components.Agent>;
 
 interface Props {
-  navigation: ThisNavigation;
-  route: {
-    params: GuestOrAgentScreenParams;
+  readonly navigation: ThisNavigation;
+  readonly route: {
+    readonly params: ServerParams;
   };
 }
 

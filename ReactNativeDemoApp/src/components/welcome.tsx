@@ -8,7 +8,7 @@ import { SpinnerClient } from '@swagger/spinner';
 
 type ThisNavigation = BaseNavigation<Components.Welcome>;
 interface Props {
-  navigation: ThisNavigation;
+  readonly navigation: ThisNavigation;
 }
 
 export const Welcome = ({ navigation }: Props): JSX.Element => {
@@ -64,13 +64,9 @@ const styles = StyleSheet.create({
 });
 
 const loginAsGuest = (navigation: ThisNavigation, params: ServerParams) => {
-  const spinnerClient = new SpinnerClient(`${params.spinner}/api`);
-
-  navigation.navigate(Components.Guest, { ...params, spinnerClient});
+  navigation.navigate(Components.Guest, params);
 };
 
 const loginExisting = (navigation: ThisNavigation, params: ServerParams) => {
-  const spinnerClient = new SpinnerClient(`${params.spinner}/api`);
-
-  navigation.navigate(Components.Agent, { ...params, spinnerClient });
+  navigation.navigate(Components.Agent, params);
 };

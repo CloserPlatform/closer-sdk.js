@@ -6,9 +6,9 @@ import { Button } from 'react-native-elements';
 type ThisNavigation = BaseNavigation<Components.Agent>;
 
 interface Props {
-  navigation: ThisNavigation;
-  route: {
-    params: ErrorParams;
+  readonly navigation: ThisNavigation;
+  readonly route: {
+    readonly params: ErrorParams;
   };
 }
 

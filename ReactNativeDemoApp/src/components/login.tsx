@@ -6,7 +6,7 @@ import { Components, BaseNavigation, ServerParams } from './types';
 
 type ThisNavigation = BaseNavigation<Components.Login>;
 interface Props {
-  navigation: ThisNavigation;
+  readonly navigation: ThisNavigation;
 }
 
 export const Login = ({ navigation }: Props): JSX.Element => {
