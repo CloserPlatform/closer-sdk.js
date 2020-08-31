@@ -7,8 +7,7 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "hard-copy-sdk": "rm -rf node_modules/@closerplatform && mkdir node_modules/@closerplatform && mkdir node_modules/@closerplatform/closer-sdk && cp -r ../dist/ node_modules/@closerplatform/closer-sdk/dist/ && cp ../package.json node_modules/@closerplatform/closer-sdk/"
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
     "@closerplatform/closer-sdk": "file:../",
@@ -35,7 +34,6 @@
     "@typescript-eslint/eslint-plugin": "^2.27.0",
     "@typescript-eslint/parser": "^2.27.0",
     "babel-jest": "^25.1.0",
-    "babel-plugin-module-resolver": "^4.0.0",
     "eslint": "^6.5.1",
     "jest": "^25.1.0",
     "metro-react-native-babel-preset": "^0.59.0",

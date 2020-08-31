@@ -7,7 +7,7 @@ import { protocol, Session, CloserSDK, UserConfig } from '@closerplatform/closer
 import { BaseNavigation, Components, ServerParams } from '../types';
 import { defaultOrg } from '../../defaults';
 import { Chat } from '../shared/chat';
-// import { SessionService } from '../../sessionService';
+import { SessionService } from '../../sessionService';
 
 interface GuestContext {
   readonly apiKey?: protocol.ApiKey;
@@ -40,9 +40,12 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
         artichoke: { server: route.params.artichoke }
       };
 
+      const url = new URL('http://www.closer.app');
+      console.log('Url', url,);
+      console.log('proto', url.protocol);
+
       console.log('before init');
-      const s = CloserSDK.init(authCtx.id, authCtx.apiKey, userConfig);
-      // setSession(SessionService.connectToArtichoke(authCtx, servers));
+      const s = (SessionService.connectToArtichoke(authCtx, servers));
       console.log('Set session', s);
     }
   }, [guestCtx]);

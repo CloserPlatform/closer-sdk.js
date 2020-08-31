@@ -8,9 +8,7 @@ const path = require('path');
 
 const extraNodeModules =
   new Proxy(
-    { 
-      "@closerplatform/closer-sdk": path.resolve(__dirname, '../'),
-    },
+    { },
     {
       get: (target, name) => {
         if (target.hasOwnProperty(name)) {
@@ -38,8 +36,6 @@ module.exports = {
  },
  resolver: {
    extraNodeModules,
-   // Allow to process TS files
-  //  sourceExts: ['ts', 'tsx', 'js', 'jsx'],
  },
  watchFolders,
 }
