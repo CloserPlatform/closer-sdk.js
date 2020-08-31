@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Text, StyleSheet, View } from 'react-native';
-import { Login } from './login';
 import { BaseNavigation, Components, ServerParams } from './types';
 import { Input, Button } from 'react-native-elements';
 import { defaultServers } from '../defaults';

@@ -19,7 +19,6 @@ export class SessionService {
     };
 
     const session = CloserSDK.init(authCtx.id, authCtx.apiKey, userConfig);
-    console.log('Session service successfully init', session);
 
     return session;
   }

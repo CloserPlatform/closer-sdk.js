@@ -1,14 +1,16 @@
 // tslint:disable: strict-boolean-expressions
+// tslint:disable: no-floating-promises
 import React, { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-community/async-storage';
 import { Text, View, StyleSheet } from 'react-native';
 import { Input, Button } from 'react-native-elements';
 import { SpinnerClient } from '@swagger/spinner';
-import { protocol, Session, CloserSDK, UserConfig } from '@closerplatform/closer-sdk';
-import { BaseNavigation, Components, ServerParams } from '../types';
+import { protocol, Session } from '@closerplatform/closer-sdk';
+import { BaseNavigation, Components, ServerParams, StorageNames } from '../types';
 import { defaultOrg } from '../../defaults';
 import { Chat } from '../shared/chat';
 import { SessionService } from '../../sessionService';
-
+import { load } from '../../../../dist/config/config';
 interface GuestContext {
   readonly apiKey?: protocol.ApiKey;
   readonly id?: protocol.ID;
@@ -25,80 +27,91 @@ interface Props {
 }
 
 export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
-  const [guestCtx, setGuestCtx] = useState(loadContext());
+  const [guestCtx, setGuestCtx] = useState<GuestContext>();
   const [spinnerClient, setSpinnerClient] = useState<SpinnerClient>();
   const [session, setSession] = useState<Session>();
 
   useEffect(() => {
-    if (guestCtx.roomId && !session && guestCtx.id && guestCtx.apiKey) {
+    if (guestCtx?.roomId && !session && guestCtx.id && guestCtx.apiKey) {
       const authCtx = { id: guestCtx.id, apiKey: guestCtx.apiKey };
       const servers = { artichoke: route.params.artichoke, spinner: route.params.spinner };
 
-      const userConfig: UserConfig = {
-        logLevel: 0,
-        spinner: { server: route.params.spinner },
-        artichoke: { server: route.params.artichoke }
-      };
-
-      const url = new URL('http://www.closer.app');
-      console.log('Url', url,);
-      console.log('proto', url.protocol);
-
-      console.log('before init');
-      const s = (SessionService.connectToArtichoke(authCtx, servers));
-      console.log('Set session', s);
+      const s = SessionService.connectToArtichoke(authCtx, servers);
+      setSession(s);
+      setCallbacks(s);
     }
   }, [guestCtx]);
 
   useEffect(() => {
-    const sc = new SpinnerClient(`${route.params.spinner}/api`);
-    sc.apiKey = '6bd77298-9e3a-4d62-a2dd-97b374c5a481';
-    setSpinnerClient(sc);
+    loadContext()
+    .then(loadedCtx => {
+      setGuestCtx({ ...guestCtx, ...loadedCtx });
+      if (loadedCtx.apiKey) {
+        const sc = new SpinnerClient(`${route.params.spinner}/api`);
+        sc.apiKey = loadedCtx.apiKey;
+        setSpinnerClient(sc);
 
-    getGuestProfile(guestCtx.orgId, guestCtx.id, sc, navigation)
-    .then(ctx => {
-      if (!ctx || !ctx.roomId) {
-        throw new Error();
-      }
-      else {
-        setGuestCtx({ ...guestCtx, roomId: ctx.roomId});
+        if (loadedCtx.id && loadedCtx.orgId) {
+          getGuestProfile(loadedCtx.orgId, loadedCtx.id, sc, navigation)
+          .then(ctx => {
+            if (!ctx || !ctx.roomId) {
+              throw new Error();
+            }
+            else {
+              setGuestCtx(ctx);
+              AsyncStorage.setItem('isGuest', 'true');
+            }
+          })
+          .catch(e => {
+            navigation.navigate(Components.Error, { reason: 'Fetched invalid guest profile' });
+          });
+        }
       }
     })
-    .catch(e => {
-      navigation.navigate(Components.Error, { reason: 'Fetched invalid guest profile' });
-    });
-
+    .catch(e => navigation.navigate(Components.Error, { reason: 'Error loading saved credentials' }));
   }, []);
 
   const renderOrgInput = (): JSX.Element => (
     <View style={styles.container}>
       <Input
         label='Organization id:'
-        value={guestCtx.orgId}
+        value={guestCtx?.orgId}
         onChangeText={(value) => setGuestCtx({ ...guestCtx, orgId: value})}
         inputStyle={styles.input}
       />
       <Button
         title='Sign up as guest'
         style={styles.signUpButton}
-        onPress={() => signUpGuest(guestCtx.orgId, spinnerClient, navigation)}
+        // TODO: Receive and save in state guest conntext from signUpGuest
+        onPress={async () => {
+          if (guestCtx) {
+            const ctx = await signUpGuest(guestCtx.orgId, spinnerClient, navigation);
+            setGuestCtx({ ...guestCtx, ...ctx });
+          }
+        }}
         />
     </View>
   );
 
   const renderBoard = (): JSX.Element => {
-    if (!guestCtx.roomId) {
-      return <Text>Loading...</Text>;
+    if (!session) {
+      return <Text>Waiting for session...</Text>;
+    }
+    else if (!guestCtx?.roomId) {
+      return <Text>Room is not specified</Text>;
+    }
+    else if (guestCtx.id) {
+      return (
+        <Chat roomId={guestCtx.roomId} session={session} id={guestCtx.id}/>
+      );
     }
     else {
-      return (
-        <Chat roomId={guestCtx.roomId}/>
-      );
+      return <Text>No id</Text>;
     }
   };
 
   const render = (): JSX.Element => {
-    if (guestCtx.id && guestCtx.apiKey && guestCtx.orgId) {
+    if (guestCtx?.id && guestCtx.apiKey && guestCtx.orgId) {
       return renderBoard();
     }
     else {
@@ -122,12 +135,25 @@ const styles = StyleSheet.create({
   }
 });
 
-const loadContext = (): GuestContext => {
+const loadContext = async (): Promise<GuestContext> => {
   return {
-    orgId: defaultOrg,
-    id: 'e4f96178-04e2-46cf-aed2-dcbecaf023c4',
-    apiKey: '6bd77298-9e3a-4d62-a2dd-97b374c5a481'
+    orgId: await AsyncStorage.getItem(StorageNames.OrgId) || defaultOrg,
+    id: await AsyncStorage.getItem(StorageNames.Id) || 'e4f96178-04e2-46cf-aed2-dcbecaf023c4',
+    apiKey: await AsyncStorage.getItem(StorageNames.ApiKey) || '6bd77298-9e3a-4d62-a2dd-97b374c5a481'
   };
+};
+
+const saveApiKey = (apiKey: string): void => {
+  AsyncStorage.setItem(StorageNames.ApiKey, apiKey);
+  AsyncStorage.setItem(StorageNames.IsGuest, 'true');
+};
+const saveId = (id: string): void => {
+  AsyncStorage.setItem(StorageNames.Id, id);
+  AsyncStorage.setItem(StorageNames.IsGuest, 'true');
+};
+const saveOrgId = (orgId: string): void => {
+  AsyncStorage.setItem(StorageNames.OrgId, orgId);
+  AsyncStorage.setItem(StorageNames.IsGuest, 'true');
 };
 
 const signUpGuest = async (orgId: string | undefined, spinnerClient: SpinnerClient | undefined,
@@ -143,7 +169,11 @@ const signUpGuest = async (orgId: string | undefined, spinnerClient: SpinnerClie
         const leadCtx = await spinnerClient.signUpGuest({ orgId });
         spinnerClient.apiKey = leadCtx.apiKey;
 
-        return { apiKey: leadCtx.apiKey, id: leadCtx.id, roomId: leadCtx.roomId };
+        saveApiKey(leadCtx.apiKey);
+        saveId(leadCtx.id);
+        saveOrgId(leadCtx.orgId);
+
+        return { apiKey: leadCtx.apiKey, id: leadCtx.id, roomId: leadCtx.roomId, orgId };
       } catch (e) {
         navigation.navigate(Components.Error, { reason: 'Could not sign up as guest at spinner api' });
       }
@@ -165,7 +195,7 @@ const getGuestProfile = async (orgId: string | undefined, id: string| undefined,
       try {
         const guestProfile = await spinnerClient.getGuestProfile(orgId, id);
 
-        return { roomId: guestProfile.roomId };
+        return { roomId: guestProfile.roomId, apiKey: spinnerClient.apiKey, orgId, id };
       } catch (e) {
         navigation.navigate(Components.Error, { reason: 'Could not get guest profile at spinner api' });
       }

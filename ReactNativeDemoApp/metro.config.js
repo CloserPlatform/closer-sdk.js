@@ -22,6 +22,7 @@ const extraNodeModules =
 
 const watchFolders = [
   path.resolve(__dirname, '../'),
+  path.resolve(__dirname, '../node_modules/rxjs')
 ]
 
 module.exports = {

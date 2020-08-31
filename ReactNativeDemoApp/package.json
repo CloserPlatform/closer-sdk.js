@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@closerplatform/closer-sdk": "file:../",
+    "@react-native-community/async-storage": "^1.12.0",
     "@react-native-community/masked-view": "^0.1.10",
     "@react-navigation/native": "^5.7.3",
     "@react-navigation/stack": "^5.9.0",
@@ -22,7 +23,9 @@
     "react-native-reanimated": "^1.13.0",
     "react-native-safe-area-context": "^3.1.7",
     "react-native-screens": "^2.10.1",
-    "react-native-vector-icons": "^7.0.0"
+    "react-native-url-polyfill": "^1.2.0",
+    "react-native-vector-icons": "^7.0.0",
+    "rxjs": "file:../node_modules/rxjs"
   },
   "devDependencies": {
     "@babel/core": "^7.8.4",
