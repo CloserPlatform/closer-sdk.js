@@ -40,6 +40,7 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
         artichoke: { server: route.params.artichoke }
       };
 
+      console.log('before init');
       const s = CloserSDK.init(authCtx.id, authCtx.apiKey, userConfig);
       // setSession(SessionService.connectToArtichoke(authCtx, servers));
       console.log('Set session', s);

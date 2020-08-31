@@ -4,14 +4,42 @@
  *
  * @format
  */
+const path = require('path');
+
+const extraNodeModules =
+  new Proxy(
+    { 
+      "@closerplatform/closer-sdk": path.resolve(__dirname, '../'),
+    },
+    {
+      get: (target, name) => {
+        if (target.hasOwnProperty(name)) {
+          return target[name]
+        }
+        // Redirect dependencies referenced from shared folders to mobile package node_modules
+        return path.join(process.cwd(), `node_modules/${name}`)
+      },
+    },
+ )
+
+const watchFolders = [
+  path.resolve(__dirname, '../'),
+]
 
 module.exports = {
-  transformer: {
-    getTransformOptions: async () => ({
-      transform: {
-        experimentalImportSupport: false,
-        inlineRequires: false,
-      },
-    }),
-  },
-};
+ projectRoot: __dirname,
+ transformer: {
+   getTransformOptions: async () => ({
+     transform: {
+       experimentalImportSupport: false,
+       inlineRequires: false,
+     },
+   }),
+ },
+ resolver: {
+   extraNodeModules,
+   // Allow to process TS files
+  //  sourceExts: ['ts', 'tsx', 'js', 'jsx'],
+ },
+ watchFolders,
+}
