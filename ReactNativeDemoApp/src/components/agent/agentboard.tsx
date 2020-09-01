@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Text, StyleSheet, View } from 'react-native';
-import { BaseNavigation, Components, ServerParams } from '../types';
 import { Input, Button } from 'react-native-elements';
+import { Subject, Observable } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { SpinnerClient, AgentCtx } from '@swagger/spinner';
-import { Login } from './login';
 import { Session, protocol } from '@closerplatform/closer-sdk';
+import { BaseNavigation, Components, ServerParams } from '../types';
 import { SessionService } from '../../sessionService';
-import { Chat } from '../shared/chat';
+import { AgentContext, loadContext } from './agentboard.service';
 import { Storage, StorageNames } from '../../storage';
-
-export interface AgentContext {
-  readonly id?: protocol.ID;
-  readonly orgId?: protocol.ID;
-  readonly roomId?: protocol.ID;
-  readonly apiKey?: string;
-}
+import { Chat } from '../shared/chat';
+import { Login } from './login';
 
 type ThisNavigation = BaseNavigation<Components.Agent>;
 interface Props {
@@ -29,6 +25,7 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
   const [roomId, setRoomId] = useState<string>();
   const [agentContext, setAgentContext] = useState<AgentContext>();
   const [session, setSession] = useState<Session>();
+  const [unsubscribeEvent] = useState(new Subject<void>());
 
   useEffect(() => {
     const sc = new SpinnerClient(`${route.params.spinner}/api`);
@@ -39,29 +36,82 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
 
       if (loadedCtx?.apiKey) {
         sc.apiKey = loadedCtx.apiKey;
-
-        // sc.getSession()
-        // .then(agentCtx => {
-          //   setAgentContext({ ...agentContext, id: agentCtx.id, orgId: agentCtx.orgId });
-          //   setSession(SessionService.connectToArtichoke(
-            //     { id: agentCtx.id, apiKey: agentCtx.apiKey },
-            //     { artichoke: route.params.artichoke, spinner: route.params.spinner }));
-            // })
-            // .catch(e => navigation.navigate(Components.Error, { reason: 'Error getting sesion from saved key' }));
-        }
+      }
     })
     .catch(e => navigation.navigate(Components.Error, { reason: 'Error while loading saved credentials' }));
     setSpinnerClient(sc);
+
+    return () => {
+      unsubscribeEvent.next();
+    };
   }, []);
 
   useEffect(() => {
     if (!session && spinnerClient && agentContext?.apiKey && agentContext.id) {
       spinnerClient.apiKey = agentContext.apiKey;
 
-      setSession(SessionService.connectToArtichoke({ apiKey: agentContext.apiKey, id: agentContext.id },
-        { artichoke: route.params.artichoke, spinner: route.params.spinner}));
+      const s = SessionService.connectToArtichoke({ apiKey: agentContext.apiKey, id: agentContext.id },
+        { artichoke: route.params.artichoke, spinner: route.params.spinner});
+
+      setCallbacks(s);
+      setSession(s);
     }
   }, [agentContext]);
+
+  const setCallbacks = (s: Session): void => {
+    s.artichoke.error$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(error => {
+      console.log('An error has occured: ', error);
+    });
+
+    s.artichoke.serverUnreachable$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(() => {
+      console.log('Server unreachable');
+    });
+
+    s.artichoke.roomCreated$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(m => {
+      console.log('Room created: ', m);
+    });
+
+    s.artichoke.roomInvitation$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(invitation => {
+      console.log('Received room invitation: ', invitation);
+    });
+
+    s.artichoke.callCreated$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(call => {
+      console.log('Call created: ', call);
+    });
+
+    s.artichoke.callInvitation$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(async callInvitation => {
+      console.log('Received call invitation: ', callInvitation);
+    });
+
+    s.artichoke.connection$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(
+      () => {
+        console.log('Connected to Artichoke!');
+        // credentials.setDeviceId(hello.deviceId);
+      },
+      err => console.error('Connection error', err),
+      () => {
+        console.log('Session disconnected');
+      }
+    );
+  };
+
+  const unsubscribe$ = (): Observable<void> => {
+    return unsubscribeEvent.asObservable();
+  };
 
   const renderRoomInput = (): JSX.Element => {
     return (
@@ -143,16 +193,3 @@ const styles = StyleSheet.create({
     padding: 20,
   }
 });
-
-const loadContext = async (): Promise<AgentContext | undefined> => {
-  const isGuest = await Storage.getItem(StorageNames.IsGuest);
-
-  if (isGuest === 'false') {
-    const apiKey = await Storage.getItem(StorageNames.ApiKey);
-    const orgId = await Storage.getItem(StorageNames.OrgId);
-    const id =  await Storage.getItem(StorageNames.Id);
-    const roomId = await Storage.getItem(StorageNames.RoomId);
-
-    return { apiKey, orgId, id, roomId };
-  }
-};

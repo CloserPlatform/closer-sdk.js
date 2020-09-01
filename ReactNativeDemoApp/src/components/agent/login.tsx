@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { SpinnerClient, AgentCtx } from '@swagger/spinner';
-import { AgentContext } from './agentboard';
 import { Storage, StorageNames } from '../../storage';
+import { AgentContext } from './agentboard.service';
 
 interface Props {
   readonly setAgentContext: React.Dispatch<React.SetStateAction<AgentContext | undefined>>;
@@ -69,15 +69,14 @@ const styles = StyleSheet.create({
   },
 });
 
+/*  tslint:disable: no-floating-promises */
 const signIn = async (email: string, password: string, spinnerClient: SpinnerClient): Promise<AgentCtx> => {
   const agentCtx = await spinnerClient.login({ email, password });
 
-  // tslint:disable-next-line: no-floating-promises
   Storage.saveAgent(StorageNames.ApiKey, agentCtx.apiKey);
-  // tslint:disable-next-line: no-floating-promises
   Storage.saveAgent(StorageNames.Id, agentCtx.id);
-  // tslint:disable-next-line: no-floating-promises
   Storage.saveAgent(StorageNames.OrgId, agentCtx.orgId);
 
   return agentCtx;
 };
+/*  tslint:enable: no-floating-promises */

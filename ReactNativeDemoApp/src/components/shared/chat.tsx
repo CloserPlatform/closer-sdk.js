@@ -1,15 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import React, { useEffect, useState, useRef } from 'react';
+import { View, Text, Keyboard, StyleSheet, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { Input, Button } from 'react-native-elements';
-import { protocol, Session, Room, roomEvents } from '@closerplatform/closer-sdk';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-
-interface MessageHandle {
-  readonly authorId: protocol.ID;
-  readonly messageId: protocol.ID;
-  readonly text: string;
-}
+import { protocol, Session, Room, roomEvents } from '@closerplatform/closer-sdk';
+import { createMessageHandle, MessageHandle, getRoomMessageHistory, sendMessage } from './chat.service';
+import { Spinner } from './spinner';
 
 interface Props {
   readonly roomId: protocol.ID;
@@ -18,8 +14,9 @@ interface Props {
 }
 
 export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
-  const unsubscribeEvent = new Subject<void>();
+  const scrollView = useRef<ScrollView | undefined | null>();
 
+  const [unsubscribeEvent] = useState(new Subject<void>());
   const [room, setRoom] = useState<Room>();
   const [currentMessage, setCurrentMessage] = useState<string>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageHandle>>([]);
@@ -30,6 +27,12 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
       setRoom(r);
     })
     .catch(e => console.error('Error setting artichoke room: ', e));
+
+    Keyboard.addListener('keyboardDidShow', scrollToBottom);
+
+    return () => {
+      Keyboard.removeListener('keyboardDidShow', scrollToBottom);
+    };
   }, []);
 
   useEffect(() => {
@@ -37,15 +40,7 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
       getRoomMessageHistory(room)
       .then(history => {
         if (history) {
-          const handles = (history.items.map(item => {
-              const mh = {
-                authorId: item.authorId,
-                messageId: item.messageId,
-                text: item.message
-              };
-
-              return mh;
-          }));
+          const handles = (history.items.map(createMessageHandle));
 
           if (handles) {
             setMessages(handles);
@@ -54,22 +49,12 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
       })
       .catch(e => console.error('Error fetching messages: ', e));
 
-      console.log('Setting subs', room.message$);
       room.message$
       .pipe(takeUntil(unsubscribe$()))
-      .subscribe(message => {
-        const newMessageHandle: MessageHandle = {
-          authorId: message.authorId,
-          messageId: message.messageId,
-          text: message.message
-        };
-        console.log('Room message');
-
-        setMessages([ ...messages, newMessageHandle]);
-      });
+      .subscribe(addNewMessage);
 
       room.typing$
-      // .pipe(takeUntil(unsubscribe$()))
+      .pipe(takeUntil(unsubscribe$()))
       .subscribe(() => console.log('User is typing...'));
 
       room.messageDelivered$
@@ -86,13 +71,30 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
     };
   }, [room]);
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const addNewMessage = (message: roomEvents.MessageSent): void => {
+    setMessages(msgs => [ ...msgs, createMessageHandle(message) ]);
+  };
+
   const unsubscribe$ = (): Observable<void> => {
     return unsubscribeEvent.asObservable();
   };
 
-  const renderMessage = ({ item }: { readonly item: MessageHandle})  => {
+  const scrollToBottom = (): void => {
+    if (scrollView.current) {
+      scrollView.current.scrollToEnd();
+    }
+  };
+
+  const renderMessage = (item: MessageHandle)  => {
     return (
-      <View style={[styles.chatMessage, item.authorId === id ? styles.chatOwnMessage : styles.chatOppositeMessage]}>
+      <View
+        style={[styles.chatMessage, item.authorId === id ? styles.chatOwnMessage : styles.chatOppositeMessage]}
+        key={item.messageId}
+      >
         <Text style={styles.chatText}>
           {item.text}
         </Text>
@@ -106,11 +108,9 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
     }
     else {
       return (
-        <FlatList
-          data={messages}
-          keyExtractor={(message: MessageHandle) => message.messageId}
-          renderItem={renderMessage}
-        />
+        <ScrollView ref={s => scrollView.current = s} style={styles.scrollView}>
+          {messages.map(renderMessage)}
+        </ScrollView>
       );
     }
   };
@@ -120,11 +120,14 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
       <Button
         title='Send'
         type='outline'
-        onPress={() => {
+        onPress={async () => {
             if (currentMessage && room) {
-              // tslint:disable-next-line: no-floating-promises
-              sendMessage(currentMessage, room);
-              setCurrentMessage(undefined);
+              try {
+                await sendMessage(currentMessage, room);
+                setCurrentMessage(undefined);
+              } catch (e) {
+                console.error('Error sending');
+              }
             }
             else {
               console.error('No message or room while sending message');
@@ -137,33 +140,31 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
     return (
       <Input
         placeholder='Your message...'
+        inputContainerStyle={styles.sendingInput}
         rightIcon={sendButton}
         value={currentMessage}
-        onChangeText={setCurrentMessage}
+        onChangeText={(value) => {
+          setCurrentMessage(value);
+          room?.indicateTyping();
+        }}
       />
     );
   };
 
   const renderChat = (): JSX.Element => {
+    const offset = 80;
+
     return (
-      <View style={styles.chatContainer}>
+      // TODO: this keyboard avoiding view should probably implement different behavior on android?
+      <KeyboardAvoidingView behavior='padding' style={styles.chatContainer} keyboardVerticalOffset={offset}>
         {renderMessages()}
         {renderSendingInput()}
-      </View>
+      </KeyboardAvoidingView>
     );
   };
 
   const render = (): JSX.Element => {
-    if (!room) {
-      return (
-        <View style={styles.infoContainer}>
-          <Text>Waiting for room connection...</Text>
-        </View>
-      );
-    }
-    else {
-      return renderChat();
-    }
+    return room ? renderChat() : <Spinner />;
   };
 
   return render();
@@ -173,6 +174,9 @@ const styles = StyleSheet.create({
   chatContainer: {
     padding: 15,
     flex: 1,
+  },
+  scrollView: {
+    marginBottom: 15
   },
   chatMessage: {
     paddingVertical: 10,
@@ -191,33 +195,15 @@ const styles = StyleSheet.create({
   chatText: {
     color: 'white'
   },
+  sendingInput : {
+    borderTopWidth: 1,
+    borderTopColor: '#00ab8e',
+    borderBottomColor: '#00ab8e',
+    paddingVertical: 5
+  },
   infoContainer: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center'
   }
 });
-
-const getRoomMessageHistory = async (room: Room): Promise<protocol.Paginated<roomEvents.MessageSent> | void> => {
-  const nMessagesToRetrieve = 25;
-
-  try {
-    const filter: protocol.HistoryFilter = {
-      filter: [roomEvents.MessageSent.tag],
-      customFilter: []
-    };
-    const messages = await room.getLatestMessages(nMessagesToRetrieve, filter);
-
-    return messages as protocol.Paginated<roomEvents.MessageSent>;
-  } catch (e) {
-    console.error(e);
-  }
-};
-
-const sendMessage = async (message: string, room: Room): Promise<void> => {
-  try {
-    await room.send(message).toPromise();
-  } catch (e) {
-    console.error('Error sending message: ', e);
-  }
-};

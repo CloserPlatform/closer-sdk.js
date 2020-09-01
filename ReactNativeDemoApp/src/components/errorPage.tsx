@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import { BaseNavigation, Components, ErrorParams } from './types';
 import { Button } from 'react-native-elements';
+import { BaseNavigation, Components, ErrorParams } from './types';
 
 type ThisNavigation = BaseNavigation<Components.Agent>;
 
