@@ -7,6 +7,7 @@ import { Login } from './login';
 import { Session, protocol } from '@closerplatform/closer-sdk';
 import { SessionService } from '../../sessionService';
 import { Chat } from '../shared/chat';
+import { Storage, StorageNames } from '../../storage';
 
 export interface AgentContext {
   readonly id?: protocol.ID;
@@ -26,29 +27,35 @@ interface Props {
 export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
   const [spinnerClient, setSpinnerClient] = useState<SpinnerClient>();
   const [roomId, setRoomId] = useState<string>();
-  const [agentContext, setAgentContext] = useState<AgentContext>(loadContext());
+  const [agentContext, setAgentContext] = useState<AgentContext>();
   const [session, setSession] = useState<Session>();
 
   useEffect(() => {
     const sc = new SpinnerClient(`${route.params.spinner}/api`);
-    if (agentContext.apiKey) {
-      sc.apiKey = agentContext.apiKey;
+    loadContext()
+    .then(loadedCtx => {
+      setAgentContext({ ...agentContext, ...loadedCtx });
+      setRoomId(loadedCtx?.roomId);
 
-      sc.getSession()
-      .then(agentCtx => {
-        setAgentContext({ ...agentContext, id: agentCtx.id, orgId: agentCtx.orgId });
-        setSession(SessionService.connectToArtichoke(
-          { id: agentCtx.id, apiKey: agentCtx.apiKey },
-          { artichoke: route.params.artichoke, spinner: route.params.spinner }));
-      })
-      .catch(e => navigation.navigate(Components.Error, { reason: 'Error getting sesion from saved key' }));
-    }
+      if (loadedCtx?.apiKey) {
+        sc.apiKey = loadedCtx.apiKey;
 
+        // sc.getSession()
+        // .then(agentCtx => {
+          //   setAgentContext({ ...agentContext, id: agentCtx.id, orgId: agentCtx.orgId });
+          //   setSession(SessionService.connectToArtichoke(
+            //     { id: agentCtx.id, apiKey: agentCtx.apiKey },
+            //     { artichoke: route.params.artichoke, spinner: route.params.spinner }));
+            // })
+            // .catch(e => navigation.navigate(Components.Error, { reason: 'Error getting sesion from saved key' }));
+        }
+    })
+    .catch(e => navigation.navigate(Components.Error, { reason: 'Error while loading saved credentials' }));
     setSpinnerClient(sc);
   }, []);
 
   useEffect(() => {
-    if (!session && spinnerClient && agentContext.apiKey && agentContext.id) {
+    if (!session && spinnerClient && agentContext?.apiKey && agentContext.id) {
       spinnerClient.apiKey = agentContext.apiKey;
 
       setSession(SessionService.connectToArtichoke({ apiKey: agentContext.apiKey, id: agentContext.id },
@@ -68,7 +75,12 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
         <Button
           title='Connect'
           style={styles.button}
-          onPress={() => setAgentContext({ ...agentContext, roomId })}
+          onPress={async () => {
+            if (roomId) {
+              await Storage.saveAgent(StorageNames.RoomId, roomId);
+              setAgentContext({ ...agentContext, roomId });
+            }
+          }}
         />
       </View>
     );
@@ -76,7 +88,7 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
 
   const render = (): JSX.Element => {
     if (spinnerClient) {
-      if (agentContext.id && session) {
+      if (agentContext?.id && session) {
         if (agentContext.roomId) {
           return (
             <Chat
@@ -90,7 +102,7 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
           return renderRoomInput();
         }
       }
-      else {
+      else if (agentContext) {
         return (
           <Login
             agentContext={agentContext}
@@ -100,6 +112,9 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
             spinnerClient={spinnerClient}
           />
         );
+      }
+      else {
+        return <Text>No guest context..</Text>;
       }
     }
     else {
@@ -129,12 +144,15 @@ const styles = StyleSheet.create({
   }
 });
 
-// TODO: Load from saved memory
-const loadContext = (): AgentContext => {
-  return {
-    apiKey: '66711a7f-993c-499d-8a95-b52337822f33',
-    // id: '90d1bcf5-2927-4e53-a059-16012457defd',
-    // orgId: '510ae455-69a3-4b16-b1cc-6e2b72c70e90',
-    roomId: '53abd640-b433-4c13-9e0d-8d42ea48bf2e'
-  };
+const loadContext = async (): Promise<AgentContext | undefined> => {
+  const isGuest = await Storage.getItem(StorageNames.IsGuest);
+
+  if (isGuest === 'false') {
+    const apiKey = await Storage.getItem(StorageNames.ApiKey);
+    const orgId = await Storage.getItem(StorageNames.OrgId);
+    const id =  await Storage.getItem(StorageNames.Id);
+    const roomId = await Storage.getItem(StorageNames.RoomId);
+
+    return { apiKey, orgId, id, roomId };
+  }
 };

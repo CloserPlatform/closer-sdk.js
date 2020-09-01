@@ -1,16 +1,15 @@
 // tslint:disable: strict-boolean-expressions
 // tslint:disable: no-floating-promises
 import React, { useState, useEffect } from 'react';
-import AsyncStorage from '@react-native-community/async-storage';
 import { Text, View, StyleSheet } from 'react-native';
 import { Input, Button } from 'react-native-elements';
 import { SpinnerClient } from '@swagger/spinner';
 import { protocol, Session } from '@closerplatform/closer-sdk';
-import { BaseNavigation, Components, ServerParams, StorageNames } from '../types';
+import { Storage, StorageNames } from '../../storage';
+import { BaseNavigation, Components, ServerParams } from '../types';
 import { defaultOrg } from '../../defaults';
 import { Chat } from '../shared/chat';
 import { SessionService } from '../../sessionService';
-import { load } from '../../../../dist/config/config';
 interface GuestContext {
   readonly apiKey?: protocol.ApiKey;
   readonly id?: protocol.ID;
@@ -46,7 +45,7 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
     loadContext()
     .then(loadedCtx => {
       setGuestCtx({ ...guestCtx, ...loadedCtx });
-      if (loadedCtx.apiKey) {
+      if (loadedCtx?.apiKey) {
         const sc = new SpinnerClient(`${route.params.spinner}/api`);
         sc.apiKey = loadedCtx.apiKey;
         setSpinnerClient(sc);
@@ -59,7 +58,6 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
             }
             else {
               setGuestCtx(ctx);
-              AsyncStorage.setItem('isGuest', 'true');
             }
           })
           .catch(e => {
@@ -82,7 +80,6 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
       <Button
         title='Sign up as guest'
         style={styles.signUpButton}
-        // TODO: Receive and save in state guest conntext from signUpGuest
         onPress={async () => {
           if (guestCtx) {
             const ctx = await signUpGuest(guestCtx.orgId, spinnerClient, navigation);
@@ -135,25 +132,16 @@ const styles = StyleSheet.create({
   }
 });
 
-const loadContext = async (): Promise<GuestContext> => {
-  return {
-    orgId: await AsyncStorage.getItem(StorageNames.OrgId) || defaultOrg,
-    id: await AsyncStorage.getItem(StorageNames.Id) || 'e4f96178-04e2-46cf-aed2-dcbecaf023c4',
-    apiKey: await AsyncStorage.getItem(StorageNames.ApiKey) || '6bd77298-9e3a-4d62-a2dd-97b374c5a481'
-  };
-};
+const loadContext = async (): Promise<GuestContext | undefined> => {
+  const isGuest = await Storage.getItem(StorageNames.IsGuest);
 
-const saveApiKey = (apiKey: string): void => {
-  AsyncStorage.setItem(StorageNames.ApiKey, apiKey);
-  AsyncStorage.setItem(StorageNames.IsGuest, 'true');
-};
-const saveId = (id: string): void => {
-  AsyncStorage.setItem(StorageNames.Id, id);
-  AsyncStorage.setItem(StorageNames.IsGuest, 'true');
-};
-const saveOrgId = (orgId: string): void => {
-  AsyncStorage.setItem(StorageNames.OrgId, orgId);
-  AsyncStorage.setItem(StorageNames.IsGuest, 'true');
+  if (isGuest === 'true') {
+    return {
+      orgId: await Storage.getItem(StorageNames.OrgId) || defaultOrg,
+      id: await Storage.getItem(StorageNames.Id),
+      apiKey: await Storage.getItem(StorageNames.ApiKey)
+    };
+  }
 };
 
 const signUpGuest = async (orgId: string | undefined, spinnerClient: SpinnerClient | undefined,
@@ -169,9 +157,9 @@ const signUpGuest = async (orgId: string | undefined, spinnerClient: SpinnerClie
         const leadCtx = await spinnerClient.signUpGuest({ orgId });
         spinnerClient.apiKey = leadCtx.apiKey;
 
-        saveApiKey(leadCtx.apiKey);
-        saveId(leadCtx.id);
-        saveOrgId(leadCtx.orgId);
+        Storage.saveGuest(StorageNames.ApiKey, leadCtx.apiKey);
+        Storage.saveGuest(StorageNames.Id, leadCtx.id);
+        Storage.saveGuest(StorageNames.OrgId, leadCtx.orgId);
 
         return { apiKey: leadCtx.apiKey, id: leadCtx.id, roomId: leadCtx.roomId, orgId };
       } catch (e) {

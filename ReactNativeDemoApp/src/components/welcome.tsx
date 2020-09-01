@@ -3,7 +3,7 @@ import { Text, StyleSheet, View } from 'react-native';
 import { BaseNavigation, Components, ServerParams } from './types';
 import { Input, Button } from 'react-native-elements';
 import { defaultServers } from '../defaults';
-import { SpinnerClient } from '@swagger/spinner';
+import { Storage } from '../storage';
 
 type ThisNavigation = BaseNavigation<Components.Welcome>;
 interface Props {
@@ -41,6 +41,11 @@ export const Welcome = ({ navigation }: Props): JSX.Element => {
           title='Continue as existing user'
           style={styles.button}
           onPress={() => loginExisting(navigation, { artichoke, spinner })}
+        />
+        <Button
+          title='Clear saved data'
+          style={styles.button}
+          onPress={() => Storage.clearAll()}
         />
       </View>
     </>

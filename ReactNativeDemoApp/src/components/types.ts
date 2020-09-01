@@ -8,14 +8,6 @@ export enum Components {
   Welcome = 'Welcome',
   Error = 'ErrorPage'
 }
-
-export enum StorageNames {
-  ApiKey = 'apiKey',
-  OrgId = 'orgId',
-  Id = 'id',
-  IsGuest = 'isGuest',
-  RoomId = 'roomId'
-}
 export interface ServerParams {
   readonly artichoke: string;
   readonly spinner: string;
