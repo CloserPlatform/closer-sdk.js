@@ -1,19 +1,26 @@
+// tslint:disable: no-floating-promises
 import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, Keyboard, StyleSheet, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { Input, Button } from 'react-native-elements';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { protocol, Session, Room, roomEvents } from '@closerplatform/closer-sdk';
+import { colors } from '../../defaults';
 import { createMessageHandle, MessageHandle, getRoomMessageHistory, sendMessage } from './chat.service';
+import { ThisNavigation as GuestNavigation } from '../guest/guestboard';
+import { ThisNavigation as AgentNavigation } from '../agent/agentboard';
 import { Spinner } from './spinner';
+import { Components } from '../types';
 
+type ParentNavigation = GuestNavigation | AgentNavigation;
 interface Props {
   readonly roomId: protocol.ID;
   readonly session: Session;
   readonly id: protocol.ID;
+  readonly navigation: ParentNavigation;
 }
 
-export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
+export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element => {
   const scrollView = useRef<ScrollView | undefined | null>();
 
   const [unsubscribeEvent] = useState(new Subject<void>());
@@ -22,13 +29,17 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
   const [messages, setMessages] = useState<ReadonlyArray<MessageHandle>>([]);
 
   useEffect(() => {
-    session.artichoke.getRoom(roomId)
-    .then((r) => {
-      setRoom(r);
-    })
-    .catch(e => console.error('Error setting artichoke room: ', e));
+    const setup = async () => {
+      try {
+        setRoom(await session.artichoke.getRoom(roomId));
+      } catch (e) {
+        navigation.navigate(Components.Error, { reason: 'Could not connect to room using artichoke '});
+      }
 
-    Keyboard.addListener('keyboardDidShow', scrollToBottom);
+      Keyboard.addListener('keyboardDidShow', scrollToBottom);
+    };
+
+    setup();
 
     return () => {
       Keyboard.removeListener('keyboardDidShow', scrollToBottom);
@@ -36,44 +47,44 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
   }, []);
 
   useEffect(() => {
-    if (room) {
-      getRoomMessageHistory(room)
-      .then(history => {
-        if (history) {
-          const handles = (history.items.map(createMessageHandle));
-
-          if (handles) {
-            setMessages(handles);
+    const setupRoom = async () => {
+      try {
+        if (room) {
+          const history = await getRoomMessageHistory(room);
+          if (history) {
+            setMessages(history.items.map(createMessageHandle));
           }
+
+          room.message$
+          .pipe(takeUntil(unsubscribe$()))
+          .subscribe(addNewMessage);
+
+          room.typing$
+          .pipe(takeUntil(unsubscribe$()))
+          .subscribe(() => console.log('User is typing...'));
+
+          room.messageDelivered$
+          .pipe(takeUntil(unsubscribe$()))
+          .subscribe((m) => console.log('Message delievered', m));
+
+          room.marked$
+          .pipe(takeUntil(unsubscribe$()))
+          .subscribe(() => console.log('Marked'));
         }
-      })
-      .catch(e => console.error('Error fetching messages: ', e));
+      } catch (e) {
+        navigation.navigate(Components.Error, { reason: 'Could not successfully setup conversation'});
+      }
+    };
 
-      room.message$
-      .pipe(takeUntil(unsubscribe$()))
-      .subscribe(addNewMessage);
-
-      room.typing$
-      .pipe(takeUntil(unsubscribe$()))
-      .subscribe(() => console.log('User is typing...'));
-
-      room.messageDelivered$
-      .pipe(takeUntil(unsubscribe$()))
-      .subscribe((m) => console.log('Message delievered', m));
-
-      room.marked$
-      .pipe(takeUntil(unsubscribe$()))
-      .subscribe(() => console.log('Marked'));
-    }
+    setupRoom();
 
     return () => {
       unsubscribeEvent.next();
     };
   }, [room]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // tslint:disable-next-line: no-unnecessary-callback-wrapper
+  useEffect(() => scrollToBottom(), [messages]);
 
   const addNewMessage = (message: roomEvents.MessageSent): void => {
     setMessages(msgs => [ ...msgs, createMessageHandle(message) ]);
@@ -84,9 +95,7 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
   };
 
   const scrollToBottom = (): void => {
-    if (scrollView.current) {
-      scrollView.current.scrollToEnd();
-    }
+    scrollView.current?.scrollToEnd();
   };
 
   const renderMessage = (item: MessageHandle)  => {
@@ -102,38 +111,34 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
     );
   };
 
-  const renderMessages = (): JSX.Element => {
-    if (!messages) {
-      return <Text>No messages...</Text>;
-    }
-    else {
-      return (
-        <ScrollView ref={s => scrollView.current = s} style={styles.scrollView}>
-          {messages.map(renderMessage)}
-        </ScrollView>
-      );
-    }
-  };
+  const renderMessages = (): JSX.Element => (
+    <ScrollView ref={s => scrollView.current = s} style={styles.scrollView}>
+      {messages.map(renderMessage)}
+    </ScrollView>
+  );
 
   const renderSendingInput = (): JSX.Element => {
+    const sendCallback = async (): Promise<void> => {
+      if (currentMessage && room) {
+        try {
+          await sendMessage(currentMessage, room);
+          setCurrentMessage(undefined);
+        } catch (e) {
+          console.error('Error sending');
+        }
+      }
+      else {
+        console.error('No message or room while sending message');
+      }
+    };
+
     const sendButton = (
       <Button
         title='Send'
         type='outline'
-        onPress={async () => {
-            if (currentMessage && room) {
-              try {
-                await sendMessage(currentMessage, room);
-                setCurrentMessage(undefined);
-              } catch (e) {
-                console.error('Error sending');
-              }
-            }
-            else {
-              console.error('No message or room while sending message');
-            }
-          }
-        }
+        buttonStyle={{borderColor: colors.secondary}}
+        titleStyle={{color: colors.secondary}}
+        onPress={sendCallback}
       />
     );
 
@@ -155,7 +160,7 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
     const offset = 80;
 
     return (
-      // TODO: this keyboard avoiding view should probably implement different behavior on android?
+      // TODO: this keyboard avoiding view should probably implement different behavior on android
       <KeyboardAvoidingView behavior='padding' style={styles.chatContainer} keyboardVerticalOffset={offset}>
         {renderMessages()}
         {renderSendingInput()}
@@ -163,9 +168,9 @@ export const Chat = ({ roomId, session, id }: Props): JSX.Element => {
     );
   };
 
-  const render = (): JSX.Element => {
-    return room ? renderChat() : <Spinner />;
-  };
+  const render = (): JSX.Element => (
+    room ? renderChat() : <Spinner />
+  );
 
   return render();
 };
@@ -186,19 +191,19 @@ const styles = StyleSheet.create({
   },
   chatOwnMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: '#00ab8e'
+    backgroundColor: colors.primary
   },
   chatOppositeMessage: {
     alignSelf: 'flex-start',
-    backgroundColor: '#107377'
+    backgroundColor: colors.secondary
   },
   chatText: {
     color: 'white'
   },
-  sendingInput : {
+  sendingInput: {
     borderTopWidth: 1,
-    borderTopColor: '#00ab8e',
-    borderBottomColor: '#00ab8e',
+    borderTopColor: colors.primary,
+    borderBottomColor: colors.primary,
     paddingVertical: 5
   },
   infoContainer: {

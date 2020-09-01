@@ -14,10 +14,8 @@ export const createMessageHandle = (message: roomEvents.MessageSent): MessageHan
   };
 };
 
-export const getRoomMessageHistory = async (room: Room): Promise<protocol.Paginated<roomEvents.MessageSent> | void> => {
-  const nMessagesToRetrieve = 25;
-
-  try {
+export const getRoomMessageHistory = async (room: Room, nMessagesToRetrieve = 25):
+  Promise<protocol.Paginated<roomEvents.MessageSent>> => {
     const filter: protocol.HistoryFilter = {
       filter: [roomEvents.MessageSent.tag],
       customFilter: []
@@ -25,9 +23,6 @@ export const getRoomMessageHistory = async (room: Room): Promise<protocol.Pagina
     const messages = await room.getLatestMessages(nMessagesToRetrieve, filter);
 
     return messages as protocol.Paginated<roomEvents.MessageSent>;
-  } catch (e) {
-    console.error(e);
-  }
 };
 
 export const sendMessage = async (message: string, room: Room): Promise<void> => {

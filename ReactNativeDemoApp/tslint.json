@@ -247,5 +247,8 @@
     "no-throw": false,
     "no-try": false,
     "no-reject": false
+  },
+  "jsRules": {
+    "no-empty": true
   }
 }

@@ -3,6 +3,7 @@ import { StyleSheet, View, Text } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { SpinnerClient, AgentCtx } from '@swagger/spinner';
 import { Storage, StorageNames } from '../../storage';
+import { colors, defaultStyles } from '../../defaults';
 import { AgentContext } from './agentboard.service';
 
 interface Props {
@@ -35,12 +36,11 @@ export const Login = ({ agentContext, setAgentContext, spinner, artichoke, spinn
         onChangeText={setPassword}
       />
       <Button
-        style={styles.button}
+        buttonStyle={defaultStyles.button}
         title='Sign in'
         onPress={async () => {
           if (email && password) {
             const agentCtx = await signIn(email, password, spinnerClient);
-            console.log(agentCtx);
             setAgentContext({ ...agentContext, apiKey: agentCtx.apiKey, id: agentCtx.id, orgId: agentCtx.orgId });
           }
           else {
@@ -59,10 +59,6 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 25,
     textAlign: 'center'
-  },
-  button: {
-    marginHorizontal: 20,
-    marginVertical: 10,
   },
   container: {
     padding: 25,

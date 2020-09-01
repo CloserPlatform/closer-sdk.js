@@ -1,18 +1,20 @@
+// tslint:disable: no-floating-promises
 import React, { useState, useEffect } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Input, Button } from 'react-native-elements';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
-import { SpinnerClient, AgentCtx } from '@swagger/spinner';
-import { Session, protocol } from '@closerplatform/closer-sdk';
+import { SpinnerClient } from '@swagger/spinner';
+import { Session } from '@closerplatform/closer-sdk';
 import { BaseNavigation, Components, ServerParams } from '../types';
 import { SessionService } from '../../sessionService';
 import { AgentContext, loadContext } from './agentboard.service';
 import { Storage, StorageNames } from '../../storage';
 import { Chat } from '../shared/chat';
 import { Login } from './login';
+import { Spinner } from '../shared/spinner';
 
-type ThisNavigation = BaseNavigation<Components.Agent>;
+export type ThisNavigation = BaseNavigation<Components.Agent>;
 interface Props {
   readonly navigation: ThisNavigation;
   readonly route: {
@@ -20,6 +22,7 @@ interface Props {
   };
 }
 
+// TODO: button colors from defaultStyles
 export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
   const [spinnerClient, setSpinnerClient] = useState<SpinnerClient>();
   const [roomId, setRoomId] = useState<string>();
@@ -28,18 +31,24 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
   const [unsubscribeEvent] = useState(new Subject<void>());
 
   useEffect(() => {
-    const sc = new SpinnerClient(`${route.params.spinner}/api`);
-    loadContext()
-    .then(loadedCtx => {
-      setAgentContext({ ...agentContext, ...loadedCtx });
-      setRoomId(loadedCtx?.roomId);
+    const setup = async () => {
+      try {
+        const sc = new SpinnerClient(`${route.params.spinner}/api`);
+        const loadedCtx = await loadContext();
+        setAgentContext({ ...agentContext, ...loadedCtx });
+        setRoomId(loadedCtx?.roomId);
 
-      if (loadedCtx?.apiKey) {
-        sc.apiKey = loadedCtx.apiKey;
+        if (loadedCtx?.apiKey) {
+          sc.apiKey = loadedCtx.apiKey;
+        }
+
+        setSpinnerClient(sc);
+      } catch (e) {
+        navigation.navigate(Components.Error, { reason: 'Error while loading saved credentials' });
       }
-    })
-    .catch(e => navigation.navigate(Components.Error, { reason: 'Error while loading saved credentials' }));
-    setSpinnerClient(sc);
+    };
+
+    setup();
 
     return () => {
       unsubscribeEvent.next();
@@ -136,41 +145,47 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
     );
   };
 
-  const render = (): JSX.Element => {
-    if (spinnerClient) {
-      if (agentContext?.id && session) {
-        if (agentContext.roomId) {
-          return (
-            <Chat
-              roomId={agentContext.roomId}
-              session={session}
-              id={agentContext.id}
-            />
-          );
-        }
-        else {
-          return renderRoomInput();
-        }
-      }
-      else if (agentContext) {
+  const renderLogin = (): JSX.Element => {
+    if (agentContext && spinnerClient) {
+      return (
+        <Login
+          agentContext={agentContext}
+          setAgentContext={setAgentContext}
+          artichoke={route.params.artichoke}
+          spinner={route.params.spinner}
+          spinnerClient={spinnerClient}
+        />
+      );
+    }
+    else {
+      return <Spinner />;
+    }
+  };
+
+  const renderInner = (): JSX.Element => {
+    if (agentContext?.id && session) {
+      if (agentContext.roomId) {
         return (
-          <Login
-            agentContext={agentContext}
-            setAgentContext={setAgentContext}
-            artichoke={route.params.artichoke}
-            spinner={route.params.spinner}
-            spinnerClient={spinnerClient}
+          <Chat
+            roomId={agentContext.roomId}
+            session={session}
+            id={agentContext.id}
+            navigation={navigation}
           />
         );
       }
       else {
-        return <Text>No guest context..</Text>;
+        return renderRoomInput();
       }
     }
     else {
-      return <Text>Waiting for spinner client initialization...</Text>;
+      return renderLogin();
     }
   };
+
+  const render = (): JSX.Element => (
+    spinnerClient ? renderInner() : <Spinner />
+  );
 
   return render();
 };

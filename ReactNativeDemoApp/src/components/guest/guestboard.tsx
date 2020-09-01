@@ -12,6 +12,7 @@ import { BaseNavigation, Components, ServerParams } from '../types';
 import { GuestContext, loadContext, signUpGuest, getGuestProfile } from './guestboard.service';
 import { SessionService } from '../../sessionService';
 import { Chat } from '../shared/chat';
+import { Spinner } from '../shared/spinner';
 
 export type ThisNavigation = BaseNavigation<Components.Guest>;
 interface Props {
@@ -39,31 +40,36 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
   }, [guestCtx]);
 
   useEffect(() => {
-    const sc = new SpinnerClient(`${route.params.spinner}/api`);
-    loadContext()
-    .then(loadedCtx => {
-      setGuestCtx({ ...guestCtx, ...loadedCtx });
-      if (loadedCtx?.apiKey) {
-        sc.apiKey = loadedCtx.apiKey;
+    // tslint:disable-next-line: cyclomatic-complexity
+    const setup = async () => {
+      try {
+        const sc = new SpinnerClient(`${route.params.spinner}/api`);
 
-        if (loadedCtx.id && loadedCtx.orgId) {
-          getGuestProfile(loadedCtx.orgId, loadedCtx.id, sc, navigation)
-          .then(ctx => {
-            if (!ctx || !ctx.roomId) {
-              throw new Error();
-            }
-            else {
+        const loadedCtx = await loadContext();
+        setGuestCtx({ ...guestCtx, ...loadedCtx });
+
+        if (loadedCtx?.apiKey) {
+          sc.apiKey = loadedCtx.apiKey;
+
+          if (loadedCtx.id && loadedCtx.orgId) {
+            const ctx = await getGuestProfile(loadedCtx.orgId, loadedCtx.id, sc, navigation);
+
+            if (ctx?.roomId) {
               setGuestCtx(ctx);
             }
-          })
-          .catch(e => {
-            navigation.navigate(Components.Error, { reason: 'Fetched invalid guest profile' });
-          });
+            else {
+              throw new Error();
+            }
+          }
         }
+
+        setSpinnerClient(sc);
+      } catch (e) {
+        navigation.navigate(Components.Error, { reason: 'Could not successfully setup guest profile' });
       }
-    })
-    .catch(e => navigation.navigate(Components.Error, { reason: 'Error loading saved credentials' }));
-    setSpinnerClient(sc);
+    };
+
+    setup();
 
     return () => {
       unsubscribeEvent.next();
@@ -148,28 +154,26 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
 
   const renderBoard = (): JSX.Element => {
     if (!session) {
-      return <Text>Waiting for session...</Text>;
+      return <Spinner />;
     }
     else if (!guestCtx?.roomId) {
-      return <Text>Room is not specified</Text>;
+      navigation.navigate(Components.Error, { reason: 'Unknown room id after getting guest session' });
+
+      return <></>;
     }
     else if (guestCtx.id) {
       return (
-        <Chat roomId={guestCtx.roomId} session={session} id={guestCtx.id}/>
+        <Chat roomId={guestCtx.roomId} session={session} id={guestCtx.id} navigation={navigation} />
       );
     }
     else {
-      return <Text>No id</Text>;
+      return <Spinner />;
     }
   };
 
   const render = (): JSX.Element => {
-    if (guestCtx?.id && guestCtx.apiKey && guestCtx.orgId) {
-      return renderBoard();
-    }
-    else {
-      return renderOrgInput();
-    }
+    return (guestCtx?.id && guestCtx.apiKey && guestCtx.orgId) ?
+      renderBoard() : renderOrgInput();
   };
 
   return render();

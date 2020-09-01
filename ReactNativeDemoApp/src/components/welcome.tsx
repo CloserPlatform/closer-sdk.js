@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Text, StyleSheet, View } from 'react-native';
 import { Input, Button } from 'react-native-elements';
 import { BaseNavigation, Components, ServerParams } from './types';
-import { defaultServers } from '../defaults';
+import { defaultServers, colors, defaultStyles } from '../defaults';
 import { Storage } from '../storage';
 
 type ThisNavigation = BaseNavigation<Components.Welcome>;
@@ -15,11 +15,11 @@ export const Welcome = ({ navigation }: Props): JSX.Element => {
   const [spinner, setSpinner] = useState(defaultServers.spinner);
 
   return (
-    <>
+    <View style={styles.container}>
       <Text style={styles.text}>
-        Continue as an organization's guest or sign into your existing agent profile.
+        You can continue as an organization's guest or sign into your existing agent profile.
       </Text>
-      <View style={styles.container}>
+      <View>
         <Input
           placeholder='Artichoke server'
           label='Artichoke server'
@@ -34,36 +34,38 @@ export const Welcome = ({ navigation }: Props): JSX.Element => {
         />
         <Button
           title='Continue as guest'
-          style={styles.button}
+          buttonStyle={defaultStyles.button}
           onPress={() => loginAsGuest(navigation, { artichoke, spinner })}
         />
         <Button
           title='Continue as existing user'
-          style={styles.button}
+          buttonStyle={defaultStyles.button}
           onPress={() => loginExisting(navigation, { artichoke, spinner })}
         />
-        <Button
-          title='Clear saved data'
-          style={styles.button}
-          onPress={() => Storage.clearAll()}
-        />
       </View>
-    </>
+      <Button
+        title='Clear saved data'
+        buttonStyle={[defaultStyles.button, styles.buttonSecondary]}
+        onPress={() => Storage.clearAll()}
+      />
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   text: {
-    fontSize: 16,
-    padding: 10,
+    fontSize: 18,
     textAlign: 'center'
   },
-  button: {
-    marginHorizontal: 30,
-    marginVertical: 10,
+
+  buttonSecondary: {
+    backgroundColor: colors.secondary
   },
   container: {
-    paddingTop: 25,
+    padding: 20,
+    marginVertical: 20,
+    flex: 1,
+    justifyContent: 'space-between'
   },
 });
 
