@@ -34,7 +34,7 @@ export const Welcome = ({ navigation }: Props): JSX.Element => {
           title='Continue as guest'
           buttonStyle={defaultStyles.button}
           onPress={() => navigation.navigate(Components.Guest, { artichoke, spinner })}
-          />
+        />
         <Button
           title='Continue as existing user'
           buttonStyle={defaultStyles.button}

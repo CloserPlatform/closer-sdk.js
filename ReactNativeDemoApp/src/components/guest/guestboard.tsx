@@ -13,6 +13,7 @@ import { SessionService } from '../../session.service';
 import { Chat } from '../shared/chat';
 import { Spinner } from '../shared/spinner';
 import { defaultStyles } from '../../defaults';
+import { Storage } from '../../storage';
 
 export type ThisNavigation = BaseNavigation<Components.Guest>;
 interface Props {
@@ -51,11 +52,9 @@ export const GuestBoard = ({ navigation, route }: Props): JSX.Element => {
         if (loadedCtx?.apiKey) {
           sc.apiKey = loadedCtx.apiKey;
 
-          if (loadedCtx.id && loadedCtx.orgId) {
-            const ctx = await getGuestProfile(loadedCtx.orgId, loadedCtx.id, sc);
+          const ctx = await getGuestProfile(loadedCtx.orgId, loadedCtx.id, sc);
+          setGuestCtx(ctx);
 
-            setGuestCtx(ctx);
-          }
         }
 
         setSpinnerClient(sc);
