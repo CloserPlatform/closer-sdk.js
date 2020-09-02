@@ -21,7 +21,6 @@ export const loadContext = async (): Promise<AgentContext | undefined> => {
     return { apiKey, orgId, id, roomId };
   }
   else {
-    // tslint:disable-next-line: no-floating-promises
     Storage.clearAll();
   }
 };

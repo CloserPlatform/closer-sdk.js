@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Text, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Input, Button } from 'react-native-elements';
-import { BaseNavigation, Components, ServerParams } from './types';
+
+import { BaseNavigation, Components } from './types';
 import { defaultServers, colors, defaultStyles } from '../defaults';
 import { Storage } from '../storage';
 
@@ -11,23 +12,20 @@ interface Props {
 }
 
 export const Welcome = ({ navigation }: Props): JSX.Element => {
-  const [artichoke, setArtichoke] = useState(defaultServers.artichoke);
   const [spinner, setSpinner] = useState(defaultServers.spinner);
+  const [artichoke, setArtichoke] = useState(defaultServers.artichoke);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>
-        You can continue as an organization's guest or sign into your existing agent profile.
-      </Text>
+    <View style={[defaultStyles.container, styles.container]}>
       <View>
         <Input
-          placeholder='Artichoke server'
+          placeholder='Artichoke server...'
           label='Artichoke server'
           value={artichoke}
           onChangeText={setArtichoke}
         />
         <Input
-          placeholder='Spinner server'
+          placeholder='Spinner server...'
           label='Spinner server'
           value={spinner}
           onChangeText={setSpinner}
@@ -35,12 +33,12 @@ export const Welcome = ({ navigation }: Props): JSX.Element => {
         <Button
           title='Continue as guest'
           buttonStyle={defaultStyles.button}
-          onPress={() => loginAsGuest(navigation, { artichoke, spinner })}
-        />
+          onPress={() => navigation.navigate(Components.Guest, { artichoke, spinner })}
+          />
         <Button
           title='Continue as existing user'
           buttonStyle={defaultStyles.button}
-          onPress={() => loginExisting(navigation, { artichoke, spinner })}
+          onPress={() => navigation.navigate(Components.Agent, { artichoke, spinner })}
         />
       </View>
       <Button
@@ -61,17 +59,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary
   },
   container: {
-    padding: 20,
-    marginVertical: 20,
     flex: 1,
+    marginVertical: 20,
     justifyContent: 'space-between'
   },
 });
-
-const loginAsGuest = (navigation: ThisNavigation, params: ServerParams) => {
-  navigation.navigate(Components.Guest, params);
-};
-
-const loginExisting = (navigation: ThisNavigation, params: ServerParams) => {
-  navigation.navigate(Components.Agent, params);
-};

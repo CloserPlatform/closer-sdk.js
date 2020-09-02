@@ -20,5 +20,8 @@ export const defaultStyles = StyleSheet.create({
   button: {
     margin: 10,
     backgroundColor: colors.primary
+  },
+  container: {
+    padding: 20
   }
 });

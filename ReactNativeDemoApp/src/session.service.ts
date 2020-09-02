@@ -7,7 +7,7 @@ export interface AuthCtx {
 }
 
 export class SessionService {
-  public static readonly connectToArtichoke = (authCtx: AuthCtx, servers: ServerParams): Session => {
+  public static readonly connect = (authCtx: AuthCtx, servers: ServerParams): Session => {
     const { artichoke, spinner } = servers;
 
     console.log(`Connecting to ${artichoke} as: ${JSON.stringify(authCtx)}`);

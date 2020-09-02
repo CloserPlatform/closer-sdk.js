@@ -14,10 +14,9 @@ interface Props {
   };
 }
 
-export const ErrorPage = ({ navigation, route}: Props): JSX.Element => (
-  <View style={styles.container}>
+export const ErrorPage = ({ navigation, route }: Props): JSX.Element => (
+  <View style={[defaultStyles.container, styles.container]}>
     <View>
-      <Text style={[styles.text, styles.infoText]}>An error occured :(</Text>
       <Text style={[styles.text, styles.errorText]}>{route.params.reason}</Text>
     </View>
     <Button
@@ -30,8 +29,6 @@ export const ErrorPage = ({ navigation, route}: Props): JSX.Element => (
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 10,
-    paddingVertical: 40,
     flex: 1,
     justifyContent: 'space-between',
   },

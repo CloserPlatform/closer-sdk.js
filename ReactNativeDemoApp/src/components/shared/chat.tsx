@@ -7,7 +7,8 @@ import { takeUntil } from 'rxjs/operators';
 import { protocol, Session, Room, roomEvents } from '@closerplatform/closer-sdk';
 
 import { colors, notificationTime } from '../../defaults';
-import { createMessageHandle, MessageHandle, getRoomMessageHistory, sendMessage } from './chat.service';
+import { createMessageHandle, MessageHandle, getRoomMessageHistory,
+  sendMessage, MessageStatus, getMessagesWithStatusUpdate } from './chat.service';
 
 import { ThisNavigation as GuestNavigation } from '../guest/guestboard';
 import { ThisNavigation as AgentNavigation } from '../agent/agentboard';
@@ -25,11 +26,12 @@ interface Props {
 export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element => {
   const scrollView = useRef<ScrollView | undefined | null>();
 
-  const [unsubscribeEvent] = useState(new Subject<void>());
   const [room, setRoom] = useState<Room>();
-  const [information, setInformation] = useState<string>();
+  const [unsubscribeEvent] = useState(new Subject<void>());
   const [currentMessage, setCurrentMessage] = useState<string>();
+  const [chatInformation, setChatInformation] = useState<string>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageHandle>>([]);
+  const [chatInformationTimeout, setChatInformationTimeout] = useState<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     const setup = async () => {
@@ -55,7 +57,8 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
         if (room) {
           const history = await getRoomMessageHistory(room);
           if (history) {
-            setMessages(history.items.map(createMessageHandle));
+            setMessages(history.items.map((m) =>
+              createMessageHandle(m, m.authorId === id ? MessageStatus.Viewed : MessageStatus.Opposite)));
           }
 
           room.message$
@@ -64,18 +67,24 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
 
           room.typing$
           .pipe(takeUntil(unsubscribe$()))
-          .subscribe(addTypingIndication);
+          .subscribe(() => addChatInformation('User is typing...'));
 
           room.messageDelivered$
           .pipe(takeUntil(unsubscribe$()))
-          .subscribe((m) => console.log('Message delievered', m));
+          .subscribe(() => {
+            setMessages(msgs => getMessagesWithStatusUpdate(id, msgs, MessageStatus.Delievered));
+          });
 
           room.marked$
           .pipe(takeUntil(unsubscribe$()))
-          .subscribe(() => console.log('Marked'));
+          .subscribe((msg) => {
+            if (msg.authorId !== id) {
+              setMessages(msgs => getMessagesWithStatusUpdate(id, msgs, MessageStatus.Viewed));
+            }
+          });
         }
       } catch (e) {
-        navigation.navigate(Components.Error, { reason: 'Could not successfully setup conversation'});
+        navigation.navigate(Components.Error, { reason: `Could not successfully setup conversation\n${(e as Error).message}` });
       }
     };
 
@@ -90,12 +99,24 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
   useEffect(() => scrollToBottom(), [messages]);
 
   const addNewMessage = (message: roomEvents.MessageSent): void => {
-    setMessages(msgs => [ ...msgs, createMessageHandle(message) ]);
+    const isAuthor = message.authorId === id;
+    const status = isAuthor ? MessageStatus.Undelievered : MessageStatus.Opposite;
+    setMessages(msgs => [ ...msgs, createMessageHandle(message, status) ]);
+
+    if (!isAuthor) {
+      room?.setDelivered(message.messageId);
+      room?.setMark(Date.now());
+    }
   };
 
-  const addTypingIndication = (): void => {
-    setInformation('User is typing...');
-    setTimeout(() => setInformation(undefined), notificationTime);
+  const addChatInformation = (text: string): void => {
+    setChatInformation(text);
+
+    if (chatInformationTimeout) {
+      clearTimeout(chatInformationTimeout);
+    }
+    const timeout = setTimeout(() => setChatInformation(undefined), notificationTime);
+    setChatInformationTimeout(timeout);
   };
 
   const unsubscribe$ = (): Observable<void> => {
@@ -109,46 +130,43 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
   const renderMessage = (item: MessageHandle)  => {
     return (
       <View
-        style={[styles.chatMessage, item.authorId === id ? styles.chatOwnMessage : styles.chatOppositeMessage]}
+        style={[styles.chatMessage, getMessageStyle(item.status)]}
         key={item.messageId}
       >
-        <Text style={styles.chatText}>
-          {item.text}
-        </Text>
+        <Text style={styles.chatText}>{item.text}</Text>
       </View>
     );
   };
 
   const renderMessages = (): JSX.Element => (
-    <ScrollView ref={s => scrollView.current = s} style={styles.scrollView}>
+    <ScrollView ref={s => scrollView.current = s} >
       {messages.map(renderMessage)}
     </ScrollView>
   );
 
   const renderChatInformation = (): JSX.Element | void => {
-    if (information) {
-      return (
-        <View style={styles.chatInformation}>
-          <Text style={styles.chatInformationText}>
-            {information}
-          </Text>
-        </View>
-      );
-    }
+    return (
+      <View style={styles.chatInformation}>
+        {chatInformation ? <Text style={styles.chatInformationText}>{chatInformation}</Text> : undefined}
+      </View>
+    );
   };
 
   const renderSendingInput = (): JSX.Element => {
     const sendCallback = async (): Promise<void> => {
-      if (currentMessage && room) {
+      if (!room) {
+        navigation.navigate(Components.Error, { reason: 'Room is not initialized in chat component' });
+      }
+      else if (currentMessage) {
         try {
           await sendMessage(currentMessage, room);
           setCurrentMessage(undefined);
         } catch (e) {
-          console.error('Error sending');
+          addChatInformation('Unable to send message');
         }
       }
       else {
-        console.error('No message or room while sending message');
+        addChatInformation('Cannot send empty message!');
       }
     };
 
@@ -202,11 +220,10 @@ const styles = StyleSheet.create({
     flex: 1,
     // backgroundColor: '#3f3f3f'
   },
-  scrollView: {
-    marginBottom: 15
-  },
   chatInformation: {
     height: 30,
+    marginVertical: 5,
+    marginHorizontal: 15,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -221,11 +238,21 @@ const styles = StyleSheet.create({
   },
   chatOwnMessage: {
     alignSelf: 'flex-end',
-    backgroundColor: colors.primary
+  },
+  chatOwnMessageUndelievered: {
+    backgroundColor: colors.lightGray,
+  },
+  chatOwnMessageDelievered: {
+    backgroundColor: colors.lightGray,
+    borderColor: colors.secondary,
+    borderWidth: 2,
+  },
+  chatOwnMessageViewed: {
+    backgroundColor: colors.secondary
   },
   chatOppositeMessage: {
     alignSelf: 'flex-start',
-    backgroundColor: colors.secondary
+    backgroundColor: colors.primary
   },
   chatText: {
     color: 'white'
@@ -242,3 +269,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   }
 });
+
+const getMessageStyle = (status: MessageStatus): readonly {}[] => {
+  switch (status) {
+    case MessageStatus.Opposite:
+      return [styles.chatMessage, styles.chatOppositeMessage];
+    case MessageStatus.Undelievered:
+      return [styles.chatMessage, styles.chatOwnMessage, styles.chatOwnMessageUndelievered];
+    case MessageStatus.Delievered:
+      return [styles.chatMessage, styles.chatOwnMessage, styles.chatOwnMessageDelievered];
+    case MessageStatus.Viewed:
+      return [styles.chatMessage, styles.chatOwnMessage, styles.chatOwnMessageViewed];
+    default:
+      return [styles.chatMessage];
+  }
+// tslint:disable-next-line: max-file-line-count
+};

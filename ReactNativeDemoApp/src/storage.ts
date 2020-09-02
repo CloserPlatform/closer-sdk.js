@@ -1,4 +1,3 @@
-// tslint:disable: no-floating-promises
 import AsyncStorage from '@react-native-community/async-storage';
 
 export enum StorageNames {
@@ -9,9 +8,10 @@ export enum StorageNames {
   RoomId = 'roomId'
 }
 
+// tslint:disable: no-floating-promises
 export class Storage {
-  public static readonly clearAll = async (): Promise<void> => {
-    await AsyncStorage.clear();
+  public static readonly clearAll = (): void => {
+    AsyncStorage.clear();
   }
 
   public static readonly saveGuest = async (key: StorageNames, value: string): Promise<void> => {
@@ -36,3 +36,4 @@ export class Storage {
     return keys;
   }
 }
+// tslint:enable: no-floating-promises

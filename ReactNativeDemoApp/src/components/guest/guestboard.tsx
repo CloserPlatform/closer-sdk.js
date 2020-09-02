@@ -1,5 +1,3 @@
-// tslint:disable: strict-boolean-expressions
-// tslint:disable: no-floating-promises
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Input, Button } from 'react-native-elements';
@@ -10,10 +8,11 @@ import { SpinnerClient } from '@swagger/spinner';
 
 import { BaseNavigation, Components, ServerParams } from '../types';
 import { GuestContext, loadContext, signUpGuest, getGuestProfile } from './guestboard.service';
-import { SessionService } from '../../sessionService';
+import { SessionService } from '../../session.service';
 
 import { Chat } from '../shared/chat';
 import { Spinner } from '../shared/spinner';
+import { defaultStyles } from '../../defaults';
 
 export type ThisNavigation = BaseNavigation<Components.Guest>;
 interface Props {
@@ -23,25 +22,25 @@ interface Props {
   };
 }
 
-export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
-  const [guestCtx, setGuestCtx] = useState<GuestContext>();
-  const [spinnerClient, setSpinnerClient] = useState<SpinnerClient>();
+export const GuestBoard = ({ navigation, route }: Props): JSX.Element => {
   const [session, setSession] = useState<Session>();
+  const [guestCtx, setGuestCtx] = useState<GuestContext>();
   const [unsubscribeEvent] = useState(new Subject<void>());
+  const [spinnerClient, setSpinnerClient] = useState<SpinnerClient>();
 
   useEffect(() => {
     if (guestCtx?.roomId && !session && guestCtx.id && guestCtx.apiKey) {
       const authCtx = { id: guestCtx.id, apiKey: guestCtx.apiKey };
       const servers = { artichoke: route.params.artichoke, spinner: route.params.spinner };
 
-      const s = SessionService.connectToArtichoke(authCtx, servers);
+      const s = SessionService.connect(authCtx, servers);
       setSession(s);
       setCallbacks(s);
     }
   }, [guestCtx]);
 
+  // tslint:disable: no-floating-promises
   useEffect(() => {
-    // tslint:disable-next-line: cyclomatic-complexity
     const setup = async () => {
       try {
         const sc = new SpinnerClient(`${route.params.spinner}/api`);
@@ -53,20 +52,16 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
           sc.apiKey = loadedCtx.apiKey;
 
           if (loadedCtx.id && loadedCtx.orgId) {
-            const ctx = await getGuestProfile(loadedCtx.orgId, loadedCtx.id, sc, navigation);
+            const ctx = await getGuestProfile(loadedCtx.orgId, loadedCtx.id, sc);
 
-            if (ctx?.roomId) {
-              setGuestCtx(ctx);
-            }
-            else {
-              throw new Error();
-            }
+            setGuestCtx(ctx);
           }
         }
 
         setSpinnerClient(sc);
       } catch (e) {
-        navigation.navigate(Components.Error, { reason: 'Could not successfully setup guest profile' });
+        navigation.navigate(Components.Error,
+          { reason: `Could not successfully setup guest profile\n${(e as Error).message}` });
       }
     };
 
@@ -76,6 +71,7 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
       unsubscribeEvent.next();
     };
   }, []);
+  // tslint:enable: no-floating-promises
 
   const setCallbacks = (s: Session): void => {
     s.artichoke.error$
@@ -119,7 +115,6 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
     .subscribe(
       () => {
         console.log('Connected to Artichoke!');
-        // credentials.setDeviceId(hello.deviceId);
       },
       err => console.error('Connection error', err),
       () => {
@@ -133,20 +128,25 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
   };
 
   const renderOrgInput = (): JSX.Element => (
-    <View style={styles.container}>
+    <View style={defaultStyles.container}>
       <Input
         label='Organization id:'
         value={guestCtx?.orgId}
-        onChangeText={(value) => setGuestCtx({ ...guestCtx, orgId: value})}
+        onChangeText={(value) => setGuestCtx({ ...guestCtx, orgId: value })}
         inputStyle={styles.input}
       />
       <Button
         title='Sign up as guest'
-        style={styles.signUpButton}
+        buttonStyle={defaultStyles.button}
         onPress={async () => {
           if (guestCtx) {
-            const ctx = await signUpGuest(guestCtx.orgId, spinnerClient, navigation);
-            setGuestCtx({ ...guestCtx, ...ctx });
+            try {
+              const ctx = await signUpGuest(guestCtx.orgId, spinnerClient);
+              setGuestCtx({ ...guestCtx, ...ctx });
+            } catch (e) {
+              navigation.navigate(Components.Error,
+                { reason: `Could not sign up as guest\n${(e as Error).message}` });
+            }
           }
         }}
         />
@@ -181,14 +181,7 @@ export const GuestBoard = ({ navigation, route}: Props): JSX.Element => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: 10,
-    paddingTop: 30
-  },
   input: {
     fontSize: 16,
-  },
-  signUpButton: {
-    marginHorizontal: 30
   }
 });

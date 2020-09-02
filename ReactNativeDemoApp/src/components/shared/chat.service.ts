@@ -1,16 +1,20 @@
 import { roomEvents, protocol, Room } from '@closerplatform/closer-sdk';
 
+export enum MessageStatus { Undelievered, Delievered, Viewed, Opposite }
+
 export interface MessageHandle {
   readonly authorId: protocol.ID;
   readonly messageId: protocol.ID;
   readonly text: string;
+  readonly status: MessageStatus;
 }
 
-export const createMessageHandle = (message: roomEvents.MessageSent): MessageHandle => {
+export const createMessageHandle = (message: roomEvents.MessageSent, status: MessageStatus): MessageHandle => {
   return {
     authorId: message.authorId,
     messageId: message.messageId,
-    text: message.message
+    text: message.message,
+    status
   };
 };
 
@@ -26,9 +30,12 @@ export const getRoomMessageHistory = async (room: Room, nMessagesToRetrieve = 25
 };
 
 export const sendMessage = async (message: string, room: Room): Promise<void> => {
-  try {
-    await room.send(message).toPromise();
-  } catch (e) {
-    console.error('Error sending message: ', e);
-  }
+  await room.send(message).toPromise();
+};
+
+export const getMessagesWithStatusUpdate = (id: protocol.ID, msgs: readonly MessageHandle[], status: MessageStatus)
+: readonly MessageHandle[] => {
+  return msgs.map(mh => {
+    return (mh.authorId !== id || mh.status === MessageStatus.Viewed) ? mh : { ...mh, status };
+  });
 };

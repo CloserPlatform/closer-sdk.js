@@ -1,6 +1,5 @@
-// tslint:disable: no-floating-promises
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { Input, Button } from 'react-native-elements';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
@@ -10,7 +9,7 @@ import { Session } from '@closerplatform/closer-sdk';
 import { BaseNavigation, Components, ServerParams } from '../types';
 import { Storage, StorageNames } from '../../storage';
 import { defaultStyles } from '../../defaults';
-import { SessionService } from '../../sessionService';
+import { SessionService } from '../../session.service';
 import { AgentContext, loadContext } from './agentboard.service';
 
 import { Chat } from '../shared/chat';
@@ -32,6 +31,7 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
   const [session, setSession] = useState<Session>();
   const [unsubscribeEvent] = useState(new Subject<void>());
 
+  // tslint:disable: no-floating-promises
   useEffect(() => {
     const setup = async () => {
       try {
@@ -46,20 +46,20 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
         setRoomId(loadedCtx?.roomId);
 
       } catch (e) {
-        navigation.navigate(Components.Error, { reason: 'Error while loading saved credentials' });
+        navigation.navigate(Components.Error,
+          { reason: `Error while loading saved credentials\n${(e as Error).message}` });
       }
     };
 
     setup();
   }, []);
+  // tslint:enable: no-floating-promises
 
   useEffect(() => {
-    console.warn('age', !session, spinnerClient, agentContext?.apiKey && agentContext.id);
-    if (!session && spinnerClient && agentContext?.apiKey && agentContext.id) {
-      console.warn('agectx', !session, agentContext);
+    if (agentContext && !session && spinnerClient && agentContext.apiKey && agentContext.id) {
       spinnerClient.apiKey = agentContext.apiKey;
 
-      const s = SessionService.connectToArtichoke({ apiKey: agentContext.apiKey, id: agentContext.id },
+      const s = SessionService.connect({ apiKey: agentContext.apiKey, id: agentContext.id },
         { artichoke: route.params.artichoke, spinner: route.params.spinner});
 
       setCallbacks(s);
@@ -113,7 +113,6 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
     .subscribe(
       () => {
         console.log('Connected to Artichoke!');
-        // credentials.setDeviceId(hello.deviceId);
       },
       err => console.error('Connection error', err),
       () => {
@@ -128,7 +127,7 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
 
   const renderRoomInput = (): JSX.Element => {
     return (
-      <View style={styles.container}>
+      <View style={defaultStyles.container}>
         <Input
           placeholder='Room id...'
           autoCapitalize='none'
@@ -193,9 +192,3 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
 
   return render();
 };
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-  },
-});

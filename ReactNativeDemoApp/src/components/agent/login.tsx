@@ -16,12 +16,12 @@ interface Props {
   readonly spinnerClient: SpinnerClient;
 }
 
-export const Login = ({ agentContext, setAgentContext, spinner, artichoke, spinnerClient }: Props): JSX.Element => {
+export const Login = ({ agentContext, setAgentContext, spinner, spinnerClient }: Props): JSX.Element => {
   const [email, setEmail] = useState<string>();
   const [password, setPassword] = useState<string>();
 
   return (
-    <View style={styles.container}>
+    <View style={defaultStyles.container}>
       <Text style={styles.text}>
         {`Sign in to your account at: \n${spinner}`}
       </Text>
@@ -61,10 +61,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 25,
     textAlign: 'center'
-  },
-  container: {
-    padding: 25,
-  },
+  }
 });
 
 /*  tslint:disable: no-floating-promises */
