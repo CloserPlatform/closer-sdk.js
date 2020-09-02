@@ -199,7 +199,7 @@
     "object-literal-shorthand": true,
     "object-literal-key-quotes": [true, "as-needed"],
     "arrow-return-shorthand": [
-      false,
+      true,
       "multiline"
     ],
     "interface-name": false,

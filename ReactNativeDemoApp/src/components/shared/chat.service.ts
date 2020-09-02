@@ -32,8 +32,5 @@ export const sendMessage = async (message: string, room: Room): Promise<void> =>
 };
 
 export const getMessagesWithStatusUpdate = (id: protocol.ID, msgs: readonly MessageHandle[], status: MessageStatus)
-: readonly MessageHandle[] => {
-  return msgs.map(mh => {
-    return (mh.authorId !== id || mh.status === MessageStatus.Viewed) ? mh : { ...mh, status };
-  });
-};
+: readonly MessageHandle[] =>
+    msgs.map(mh => (mh.authorId !== id || mh.status === MessageStatus.Viewed) ? mh : { ...mh, status });
