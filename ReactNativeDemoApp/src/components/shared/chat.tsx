@@ -5,8 +5,10 @@ import { Input, Button } from 'react-native-elements';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { protocol, Session, Room, roomEvents } from '@closerplatform/closer-sdk';
-import { colors } from '../../defaults';
+
+import { colors, notificationTime } from '../../defaults';
 import { createMessageHandle, MessageHandle, getRoomMessageHistory, sendMessage } from './chat.service';
+
 import { ThisNavigation as GuestNavigation } from '../guest/guestboard';
 import { ThisNavigation as AgentNavigation } from '../agent/agentboard';
 import { Spinner } from './spinner';
@@ -25,6 +27,7 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
 
   const [unsubscribeEvent] = useState(new Subject<void>());
   const [room, setRoom] = useState<Room>();
+  const [information, setInformation] = useState<string>();
   const [currentMessage, setCurrentMessage] = useState<string>();
   const [messages, setMessages] = useState<ReadonlyArray<MessageHandle>>([]);
 
@@ -61,7 +64,7 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
 
           room.typing$
           .pipe(takeUntil(unsubscribe$()))
-          .subscribe(() => console.log('User is typing...'));
+          .subscribe(addTypingIndication);
 
           room.messageDelivered$
           .pipe(takeUntil(unsubscribe$()))
@@ -90,6 +93,11 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
     setMessages(msgs => [ ...msgs, createMessageHandle(message) ]);
   };
 
+  const addTypingIndication = (): void => {
+    setInformation('User is typing...');
+    setTimeout(() => setInformation(undefined), notificationTime);
+  };
+
   const unsubscribe$ = (): Observable<void> => {
     return unsubscribeEvent.asObservable();
   };
@@ -116,6 +124,18 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
       {messages.map(renderMessage)}
     </ScrollView>
   );
+
+  const renderChatInformation = (): JSX.Element | void => {
+    if (information) {
+      return (
+        <View style={styles.chatInformation}>
+          <Text style={styles.chatInformationText}>
+            {information}
+          </Text>
+        </View>
+      );
+    }
+  };
 
   const renderSendingInput = (): JSX.Element => {
     const sendCallback = async (): Promise<void> => {
@@ -163,6 +183,7 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
       // TODO: this keyboard avoiding view should probably implement different behavior on android
       <KeyboardAvoidingView behavior='padding' style={styles.chatContainer} keyboardVerticalOffset={offset}>
         {renderMessages()}
+        {renderChatInformation()}
         {renderSendingInput()}
       </KeyboardAvoidingView>
     );
@@ -179,9 +200,18 @@ const styles = StyleSheet.create({
   chatContainer: {
     padding: 15,
     flex: 1,
+    // backgroundColor: '#3f3f3f'
   },
   scrollView: {
     marginBottom: 15
+  },
+  chatInformation: {
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chatInformationText: {
+    color: colors.lightGray
   },
   chatMessage: {
     paddingVertical: 10,

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 import { Button, Input } from 'react-native-elements';
 import { SpinnerClient, AgentCtx } from '@swagger/spinner';
+
 import { Storage, StorageNames } from '../../storage';
-import { colors, defaultStyles } from '../../defaults';
+import { defaultStyles } from '../../defaults';
+
 import { AgentContext } from './agentboard.service';
 
 interface Props {

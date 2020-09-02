@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActivityIndicator, StyleSheet } from 'react-native';
+
 import { colors } from '../../defaults';
 
 export const Spinner = (): JSX.Element => {

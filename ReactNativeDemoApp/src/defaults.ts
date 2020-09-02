@@ -7,9 +7,13 @@ export const defaultServers = {
 
 export const defaultOrg = '510ae455-69a3-4b16-b1cc-6e2b72c70e90';
 
+export const notificationTime = 2500;
+
 export const colors = {
   primary: '#00ab8e',
-  secondary: '#107377'
+  secondary: '#107377',
+  lightGray: '#adadad',
+  error: '#781e14'
 };
 
 export const defaultStyles = StyleSheet.create({

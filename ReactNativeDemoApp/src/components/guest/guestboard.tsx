@@ -1,16 +1,17 @@
 // tslint:disable: strict-boolean-expressions
 // tslint:disable: no-floating-promises
-// tslint:disable:
 import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { Input, Button } from 'react-native-elements';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Session } from '@closerplatform/closer-sdk';
 import { SpinnerClient } from '@swagger/spinner';
+
 import { BaseNavigation, Components, ServerParams } from '../types';
 import { GuestContext, loadContext, signUpGuest, getGuestProfile } from './guestboard.service';
 import { SessionService } from '../../sessionService';
+
 import { Chat } from '../shared/chat';
 import { Spinner } from '../shared/spinner';
 

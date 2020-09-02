@@ -1,7 +1,9 @@
 import React from 'react';
 import { Text, View, StyleSheet } from 'react-native';
 import { Button } from 'react-native-elements';
+
 import { BaseNavigation, Components, ErrorParams } from './types';
+import { defaultStyles, colors } from '../defaults';
 
 type ThisNavigation = BaseNavigation<Components.Agent>;
 
@@ -20,7 +22,7 @@ export const ErrorPage = ({ navigation, route}: Props): JSX.Element => (
     </View>
     <Button
         title='Go back to Home Page'
-        style={styles.button}
+        buttonStyle={defaultStyles.button}
         onPress={() => navigation.navigate(Components.Welcome)}
     />
   </View>
@@ -39,12 +41,9 @@ const styles = StyleSheet.create({
     marginVertical: 10
   },
   errorText: {
-    color: '#781e14',
+    color: colors.error,
   },
   infoText: {
     fontSize: 24
-  },
-  button: {
-    margin: 30
   }
 });

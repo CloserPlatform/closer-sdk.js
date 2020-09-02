@@ -6,10 +6,13 @@ import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { SpinnerClient } from '@swagger/spinner';
 import { Session } from '@closerplatform/closer-sdk';
+
 import { BaseNavigation, Components, ServerParams } from '../types';
+import { Storage, StorageNames } from '../../storage';
+import { defaultStyles } from '../../defaults';
 import { SessionService } from '../../sessionService';
 import { AgentContext, loadContext } from './agentboard.service';
-import { Storage, StorageNames } from '../../storage';
+
 import { Chat } from '../shared/chat';
 import { Login } from './login';
 import { Spinner } from '../shared/spinner';
@@ -22,7 +25,6 @@ interface Props {
   };
 }
 
-// TODO: button colors from defaultStyles
 export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
   const [spinnerClient, setSpinnerClient] = useState<SpinnerClient>();
   const [roomId, setRoomId] = useState<string>();
@@ -35,28 +37,26 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
       try {
         const sc = new SpinnerClient(`${route.params.spinner}/api`);
         const loadedCtx = await loadContext();
-        setAgentContext({ ...agentContext, ...loadedCtx });
-        setRoomId(loadedCtx?.roomId);
 
         if (loadedCtx?.apiKey) {
           sc.apiKey = loadedCtx.apiKey;
         }
-
         setSpinnerClient(sc);
+        setAgentContext({ ...agentContext, ...loadedCtx });
+        setRoomId(loadedCtx?.roomId);
+
       } catch (e) {
         navigation.navigate(Components.Error, { reason: 'Error while loading saved credentials' });
       }
     };
 
     setup();
-
-    return () => {
-      unsubscribeEvent.next();
-    };
   }, []);
 
   useEffect(() => {
+    console.warn('age', !session, spinnerClient, agentContext?.apiKey && agentContext.id);
     if (!session && spinnerClient && agentContext?.apiKey && agentContext.id) {
+      console.warn('agectx', !session, agentContext);
       spinnerClient.apiKey = agentContext.apiKey;
 
       const s = SessionService.connectToArtichoke({ apiKey: agentContext.apiKey, id: agentContext.id },
@@ -65,6 +65,10 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
       setCallbacks(s);
       setSession(s);
     }
+
+    return () => {
+      unsubscribeEvent.next();
+    };
   }, [agentContext]);
 
   const setCallbacks = (s: Session): void => {
@@ -124,7 +128,7 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
 
   const renderRoomInput = (): JSX.Element => {
     return (
-      <View style={styles.roomInputContainer}>
+      <View style={styles.container}>
         <Input
           placeholder='Room id...'
           autoCapitalize='none'
@@ -133,7 +137,7 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
         />
         <Button
           title='Connect'
-          style={styles.button}
+          buttonStyle={defaultStyles.button}
           onPress={async () => {
             if (roomId) {
               await Storage.saveAgent(StorageNames.RoomId, roomId);
@@ -191,20 +195,7 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
 };
 
 const styles = StyleSheet.create({
-  text: {
-    fontSize: 16,
-    padding: 10,
-    marginBottom: 25,
-    textAlign: 'center'
-  },
-  button: {
-    marginHorizontal: 20,
-    marginVertical: 10,
-  },
   container: {
-    padding: 25,
-  },
-  roomInputContainer: {
     padding: 20,
-  }
+  },
 });

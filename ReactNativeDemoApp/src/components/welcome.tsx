@@ -57,7 +57,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: 'center'
   },
-
   buttonSecondary: {
     backgroundColor: colors.secondary
   },

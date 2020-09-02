@@ -2,8 +2,10 @@
 import { SpinnerClient } from '@swagger/spinner';
 import { protocol } from '@closerplatform/closer-sdk';
 import { Storage, StorageNames } from '../../storage';
+
 import { defaultOrg } from '../../defaults';
 import { Components } from '../types';
+
 import { ThisNavigation } from './guestboard';
 
 export interface GuestContext {
@@ -14,6 +16,12 @@ export interface GuestContext {
 }
 
 export const loadContext = async (): Promise<GuestContext | undefined> => {
+  // TODO: REMOVE saves
+  await Storage.saveGuest(StorageNames.IsGuest, 'true');
+  await Storage.saveGuest(StorageNames.OrgId, '510ae455-69a3-4b16-b1cc-6e2b72c70e90');
+  await Storage.saveGuest(StorageNames.Id, '5430e66a-2313-4c46-b9b4-27e9d690244e');
+  await Storage.saveGuest(StorageNames.ApiKey, '9c4d8b8c-af1b-4185-b350-42b1772b41ba');
+
   const isGuest = await Storage.getItem(StorageNames.IsGuest);
 
   if (isGuest === 'true') {

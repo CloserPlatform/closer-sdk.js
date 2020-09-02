@@ -1,4 +1,5 @@
 import { protocol } from '@closerplatform/closer-sdk';
+
 import { Storage, StorageNames } from '../../storage';
 
 export interface AgentContext {
