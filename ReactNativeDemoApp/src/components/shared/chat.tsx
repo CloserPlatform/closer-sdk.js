@@ -119,24 +119,20 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
     setChatInformationTimeout(timeout);
   };
 
-  const unsubscribe$ = (): Observable<void> => {
-    return unsubscribeEvent.asObservable();
-  };
+  const unsubscribe$ = (): Observable<void> => unsubscribeEvent.asObservable();
 
   const scrollToBottom = (): void => {
     scrollView.current?.scrollToEnd();
   };
 
-  const renderMessage = (item: MessageHandle)  => {
-    return (
-      <View
-        style={[styles.chatMessage, getMessageStyle(item.status)]}
-        key={item.messageId}
-      >
-        <Text style={styles.chatText}>{item.text}</Text>
-      </View>
-    );
-  };
+  const renderMessage = (item: MessageHandle)  => (
+    <View
+      style={[styles.chatMessage, getMessageStyle(item.status)]}
+      key={item.messageId}
+    >
+      <Text style={styles.chatText}>{item.text}</Text>
+    </View>
+  );
 
   const renderMessages = (): JSX.Element => (
     <ScrollView ref={s => scrollView.current = s} >
@@ -144,13 +140,11 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
     </ScrollView>
   );
 
-  const renderChatInformation = (): JSX.Element | void => {
-    return (
-      <View style={styles.chatInformation}>
-        {chatInformation ? <Text style={styles.chatInformationText}>{chatInformation}</Text> : undefined}
-      </View>
-    );
-  };
+  const renderChatInformation = (): JSX.Element | void => (
+    <View style={styles.chatInformation}>
+      {chatInformation ? <Text style={styles.chatInformationText}>{chatInformation}</Text> : undefined}
+    </View>
+  );
 
   const renderSendingInput = (): JSX.Element => {
     const sendCallback = async (): Promise<void> => {

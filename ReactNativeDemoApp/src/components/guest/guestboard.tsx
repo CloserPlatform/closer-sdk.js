@@ -123,9 +123,7 @@ export const GuestBoard = ({ navigation, route }: Props): JSX.Element => {
     );
   };
 
-  const unsubscribe$ = (): Observable<void> => {
-    return unsubscribeEvent.asObservable();
-  };
+  const unsubscribe$ = (): Observable<void> => unsubscribeEvent.asObservable();
 
   const renderOrgInput = (): JSX.Element => (
     <View style={defaultStyles.container}>
@@ -173,8 +171,12 @@ export const GuestBoard = ({ navigation, route }: Props): JSX.Element => {
   };
 
   const render = (): JSX.Element => {
-    return (guestCtx?.id && guestCtx.apiKey && guestCtx.orgId) ?
-      renderBoard() : renderOrgInput();
+    if (guestCtx?.id && guestCtx.apiKey && guestCtx.orgId) {
+      return renderBoard();
+    }
+    else {
+      return renderOrgInput();
+    }
   };
 
   return render();

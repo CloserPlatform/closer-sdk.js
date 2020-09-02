@@ -6,6 +6,8 @@
  */
 const path = require('path');
 
+// extraNodeModules & watchFolders necessary because Closer SDK in package.json is 
+// linked relatively and react native metro does not support symlinks
 const extraNodeModules =
   new Proxy(
     { },

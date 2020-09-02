@@ -9,14 +9,12 @@ export interface MessageHandle {
   readonly status: MessageStatus;
 }
 
-export const createMessageHandle = (message: roomEvents.MessageSent, status: MessageStatus): MessageHandle => {
-  return {
-    authorId: message.authorId,
-    messageId: message.messageId,
-    text: message.message,
-    status
-  };
-};
+export const createMessageHandle = (message: roomEvents.MessageSent, status: MessageStatus): MessageHandle => ({
+  authorId: message.authorId,
+  messageId: message.messageId,
+  text: message.message,
+  status
+});
 
 export const getRoomMessageHistory = async (room: Room, nMessagesToRetrieve = 25):
   Promise<protocol.Paginated<roomEvents.MessageSent>> => {

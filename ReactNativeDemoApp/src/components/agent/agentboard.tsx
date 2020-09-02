@@ -121,32 +121,28 @@ export const AgentBoard = ({ navigation, route}: Props): JSX.Element => {
     );
   };
 
-  const unsubscribe$ = (): Observable<void> => {
-    return unsubscribeEvent.asObservable();
-  };
+  const unsubscribe$ = (): Observable<void> => unsubscribeEvent.asObservable();
 
-  const renderRoomInput = (): JSX.Element => {
-    return (
-      <View style={defaultStyles.container}>
-        <Input
-          placeholder='Room id...'
-          autoCapitalize='none'
-          value={roomId}
-          onChangeText={setRoomId}
-        />
-        <Button
-          title='Connect'
-          buttonStyle={defaultStyles.button}
-          onPress={async () => {
-            if (roomId) {
-              await Storage.saveAgent(StorageNames.RoomId, roomId);
-              setAgentContext({ ...agentContext, roomId });
-            }
-          }}
-        />
-      </View>
-    );
-  };
+  const renderRoomInput = (): JSX.Element => (
+    <View style={defaultStyles.container}>
+      <Input
+        placeholder='Room id...'
+        autoCapitalize='none'
+        value={roomId}
+        onChangeText={setRoomId}
+      />
+      <Button
+        title='Connect'
+        buttonStyle={defaultStyles.button}
+        onPress={async () => {
+          if (roomId) {
+            await Storage.saveAgent(StorageNames.RoomId, roomId);
+            setAgentContext({ ...agentContext, roomId });
+          }
+        }}
+      />
+    </View>
+  );
 
   const renderLogin = (): JSX.Element => {
     if (agentContext && spinnerClient) {
