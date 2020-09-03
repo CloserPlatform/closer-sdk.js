@@ -106,10 +106,10 @@ const styles = StyleSheet.create({
   chatOwnMessage: {
     alignSelf: 'flex-end',
   },
-  chatOwnMessageUndelievered: {
+  chatOwnMessageUndelivered: {
     backgroundColor: colors.lightGray,
   },
-  chatOwnMessageDelievered: {
+  chatOwnMessageDelivered: {
     backgroundColor: colors.lightGray,
     borderColor: colors.secondary,
     borderWidth: 2,
@@ -136,10 +136,10 @@ const getMessageStyle = (status: MessageStatus): readonly {}[] => {
   switch (status) {
     case MessageStatus.Opposite:
       return [styles.chatMessage, styles.chatOppositeMessage];
-    case MessageStatus.Undelievered:
-      return [styles.chatMessage, styles.chatOwnMessage, styles.chatOwnMessageUndelievered];
-    case MessageStatus.Delievered:
-      return [styles.chatMessage, styles.chatOwnMessage, styles.chatOwnMessageDelievered];
+    case MessageStatus.Undelivered:
+      return [styles.chatMessage, styles.chatOwnMessage, styles.chatOwnMessageUndelivered];
+    case MessageStatus.Delivered:
+      return [styles.chatMessage, styles.chatOwnMessage, styles.chatOwnMessageDelivered];
     case MessageStatus.Viewed:
       return [styles.chatMessage, styles.chatOwnMessage, styles.chatOwnMessageViewed];
     default:
