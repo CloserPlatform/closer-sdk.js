@@ -1,17 +1,24 @@
 // tslint:disable:no-unsafe-any
 // tslint:disable:no-empty
 // tslint:disable:readonly-array
+interface Servers {
+  readonly artichoke: string;
+  readonly spinner: string;
+}
+
+interface BrowserData {
+  readonly servers?: Servers;
+}
+
 export class Credentials {
   private static readonly storageName = 'crdls';
-  public artichokeServer: string;
-  public authServer: string;
+  public servers: Servers;
   public email: string;
   public pwd: string;
   public apiKey: string;
   public id: string;
   public orgId: string;
   public roomId: string;
-  public deviceId: string;
   public calleeId: string;
   public isGuest = true;
 
@@ -46,11 +53,15 @@ export class Credentials {
     localStorage.removeItem(Credentials.storageName);
   }
 
-  public setServers = (artichoke: string, auth: string): void => {
+  public setServers = (servers: Servers): void => {
     this.artichokeServer = artichoke;
     this.authServer = auth;
 
     this.save();
+  }
+
+  public getServers(): Servers | undefined {
+
   }
 
   public setAgentCtx = (id: string, orgId: string, apiKey: string): void => {
@@ -78,10 +89,6 @@ export class Credentials {
 
   public setCallee = (callee: string): void => {
     this.calleeId = callee;
-  }
-
-  public setDeviceId = (deviceId: string): void => {
-    this.deviceId = deviceId;
   }
 
   public setCredentials = (email: string, pwd: string): void => {

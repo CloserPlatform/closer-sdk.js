@@ -20,6 +20,12 @@ import { MediaTrackOptimizer } from '../rtc/media-track-optimizer';
 import { RTCPoolFactory } from '../rtc/rtc-pool-factory';
 import { Spinner } from '../spinner/spinner';
 import { SpinnerApi } from '../spinner/spinner-api';
+import { Password, Email, LeadCtx } from '../spinner/protocol';
+
+export interface GuestSession {
+    readonly guest: LeadCtx;
+    readonly session: Session;
+}
 
 export class SessionFactory {
 
@@ -29,28 +35,55 @@ export class SessionFactory {
     ) {
     }
 
-    public async createWithNewGuest(orgId: ID): Promise<Session> {
+    public async createWithNewGuest(orgId: ID): Promise<GuestSession> {
         const apiHeaders = new ApiHeaders('');
         const spinner = this.createSpinner(apiHeaders);
         const guest = await spinner.signUpGuest(orgId);
 
         apiHeaders.apiKey = guest.apiKey;
 
-        return new Session(
+        const session = new Session(
             guest.id,
+            guest.apiKey,
             this.createArtichoke(guest.id, apiHeaders),
             this.createSpinner(apiHeaders),
         );
+
+        return {
+            session,
+            guest
+        };
     }
 
-    public async createWithExistingGuest(orgId: ID, sessionId: ID, apiKey: ApiKey): Promise<Session> {
+    public async createWithExistingGuest(orgId: ID, sessionId: ID, apiKey: ApiKey): Promise<GuestSession> {
         const apiHeaders = new ApiHeaders(apiKey);
         const spinner = this.createSpinner(apiHeaders);
-        const guest = await spinner.getGuestProfile(orgId, sessionId);
+        const guestProfile = await spinner.getGuestProfile(orgId, sessionId);
+        const guest = {...guestProfile, apiKey, orgId};
+        const session = new Session(
+            guest.id,
+            apiKey,
+            this.createArtichoke(guest.id, apiHeaders),
+            this.createSpinner(apiHeaders),
+        );
+
+        return {
+            session,
+            guest
+        };
+    }
+
+    public async createAsAgent(email: Email, password: Password): Promise<Session> {
+        const apiHeaders = new ApiHeaders('');
+        const spinner = this.createSpinner(apiHeaders);
+        const session = await spinner.login({email, password});
+
+        apiHeaders.apiKey = session.apiKey;
 
         return new Session(
-            guest.id,
-            this.createArtichoke(guest.id, apiHeaders),
+            session.id,
+            session.apiKey,
+            this.createArtichoke(session.id, apiHeaders),
             this.createSpinner(apiHeaders),
         );
     }
@@ -60,6 +93,7 @@ export class SessionFactory {
 
         return new Session(
             sessionId,
+            apiKey,
             this.createArtichoke(sessionId, apiHeaders),
             this.createSpinner(apiHeaders),
         );

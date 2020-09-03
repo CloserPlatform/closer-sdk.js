@@ -1,24 +1,15 @@
-import { SpinnerClient, LoginForm, AgentCtx } from '@swagger/spinner';
 import { Credentials } from '../credentials';
+import { CloserSDK, Session } from '../../../../dist';
 
 export class LoginService {
-  public spinnerClient: SpinnerClient;
 
-  public login = async (credentials: Credentials): Promise<AgentCtx> => {
-    const loginForm: LoginForm = {
-      email: credentials.email,
-      password: credentials.pwd
-    };
+  constructor(private closerSDK: CloserSDK) { }
 
-    const agentCtx = await this.spinnerClient.login(loginForm);
-
-    return agentCtx;
+  public async login(credentials: Credentials): Promise<Session> {
+    return this.closerSDK.loginAsAgent(credentials.email, credentials.pwd);
   }
 
-  public getSession = async (credentials: Credentials): Promise<AgentCtx> => {
-    this.spinnerClient.apiKey = credentials.apiKey;
-    const agentCtx = await this.spinnerClient.getSession();
-
-    return agentCtx;
+  public getSession(credentials: Credentials): Session {
+    return this.closerSDK.withSession(credentials.id, credentials.apiKey);
   }
 }

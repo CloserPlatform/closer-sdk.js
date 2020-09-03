@@ -2,7 +2,6 @@ import { makeInputWithBtn } from '../view';
 import { Session } from '@closerplatform/closer-sdk';
 import { Page } from '../page';
 import { CallService } from './call.service';
-import { SpinnerClient } from '@swagger/spinner';
 import { ModuleNames } from '../board/board.module';
 import { SubModule } from '../board/submodule';
 
@@ -10,8 +9,8 @@ export class CallModule extends SubModule {
   public readonly NAME = ModuleNames.call;
   private callService: CallService;
 
-  public init = async (session: Session, spinnerClient: SpinnerClient): Promise<void> => {
-    this.callService = new CallService(session, spinnerClient);
+  public init = async (session: Session): Promise<void> => {
+    this.callService = new CallService(session);
     this.render();
   }
 

@@ -9,11 +9,11 @@ const loggerFactory = getLoggerFactoryMock();
 
 describe('SessionFactory', () => {
   it('create Session for correct input', () => {
-    const sessionFactory = new SessionFactory(sessionId, apiKey, config, loggerFactory);
-    const session = sessionFactory.create();
+    const sessionFactory = new SessionFactory(config, loggerFactory);
+    const session = sessionFactory.create(sessionId, apiKey);
 
     expect(session.id).toBe(sessionId);
-    expect(session.artichoke).toBeDefined();
+    expect(session.apiKey).toBe(apiKey);
 
     session.artichoke.connection$.subscribe();
   });

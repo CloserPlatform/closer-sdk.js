@@ -6,6 +6,7 @@ export { Artichoke } from './artichoke/artichoke';
 export { Spinner } from './spinner/spinner';
 export { Config, UserConfig } from './config/config';
 export { Session } from './session/session';
+export { GuestSession } from './session/session-factory';
 
 // Calls
 export { Call } from './calls/call';
@@ -27,7 +28,7 @@ export { ConnectionStatus } from './rtc/rtc-peer-connection-facade';
 export { PeerConnectionStatus } from './rtc/rtc-pool';
 export { PeerDataChannelMessage } from './rtc/rtc-pool';
 
-// Protocol
+// Artichoke protocol
 export { ApiKey } from './protocol/protocol';
 export { callEvents } from './protocol/events/call-events';
 export { chatEvents } from './protocol/events/chat-events';
@@ -40,6 +41,10 @@ export { externalEvents } from './protocol/events/external-events';
 import * as protocol from './protocol/protocol';
 
 export { protocol };
+
+// Spinner protocol
+import * as spinnerProtocol from './spinner/protocol';
+export { spinnerProtocol };
 
 // Utils
 export { BrowserUtils } from './utils/browser-utils';

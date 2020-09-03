@@ -1,45 +1,30 @@
 import * as View from './view';
-import { Session, CloserSDK, UserConfig, Call, CallReason, serverEvents } from '@closerplatform/closer-sdk';
+import { Session, Call, CallReason, serverEvents } from '@closerplatform/closer-sdk';
 import { Logger } from './logger';
 import { createStream } from './stream';
 import { CallHandler } from './call/call-handler';
 import { Page } from './page';
-import { Subscription } from 'rxjs';
-import { Credentials } from './credentials';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 
-export interface AuthCtx {
-  id: string;
-  apiKey: string;
-}
 export class SessionService {
 
-  private sessionSubscription?: Subscription;
+  private readonly disconnectEvent = new Subject();
 
-  public connect = (authCtx: AuthCtx, credentials: Credentials): Session => {
-    const { artichokeServer: artichoke, authServer: spinner } = credentials;
+  public connect(session: Session): Session {
 
-    Logger.log(`Connecting to ${artichoke} as: ${JSON.stringify(authCtx)}`);
+    Logger.log(`Connecting as: ${JSON.stringify(session)}`);
 
-    const userConfig: UserConfig = {
-      logLevel: 0,
-      spinner: { server: spinner },
-      artichoke: { server: artichoke }
-    };
-
-    const session = CloserSDK.init(authCtx.id, authCtx.apiKey, userConfig);
-
-    this.setCallbacks(session, credentials);
+    this.setCallbacks(session);
 
     return session;
   }
 
   public disconnect(): void {
-    if (this.sessionSubscription) {
-      this.sessionSubscription.unsubscribe();
-    }
+    this.disconnectEvent.next();
   }
 
-  private setCallbacks = (session: Session, credentials: Credentials): Session => {
+  private setCallbacks(session: Session): Session {
     session.artichoke.error$.subscribe(error => {
       Logger.log('An error has occured: ', error);
     });
@@ -70,12 +55,12 @@ export class SessionService {
       }
     });
 
-    this.sessionSubscription = session.artichoke.connection$.subscribe(
+    session.artichoke.connection$.pipe(
+      takeUntil(this.disconnectEvent),
+    ).subscribe(
       (hello: serverEvents.Hello) => {
         Page.setHeader(`Connected Session(${session.id})`);
-        Logger.log('Connected to Artichoke!');
-
-        credentials.setDeviceId(hello.deviceId);
+        Logger.log('Connected to Artichoke!', hello);
       },
       err => Logger.error('Connection error', err),
       () => {
@@ -88,18 +73,17 @@ export class SessionService {
     return session;
   }
 
-  private handleCallInvitation = (call: Call): void => {
+  private handleCallInvitation(call: Call): void {
     const line = `${call.creator} calls you`;
-    const closeModal = View.confirmModal('Call invitation', line, 'Answer', () => {
-      createStream(stream => {
-        const callHandler = new CallHandler(call, stream.getTracks(), () => this.disconnect());
-        callHandler.answer()
-          .then(() => Logger.log('Call answered'))
-          .catch(err => {
-            Logger.error('Call answer failed', err);
-            alert(`Answer failed ${err}`);
-          });
-      });
+    const closeModal = View.confirmModal('Call invitation', line, 'Answer', async () => {
+      const stream = await createStream();
+      const callHandler = new CallHandler(call, stream.getTracks(), () => this.disconnect());
+      callHandler.answer()
+        .then(() => Logger.log('Call answered'))
+        .catch(err => {
+          Logger.error('Call answer failed', err);
+          alert(`Answer failed ${err}`);
+        });
     }, 'Reject', () => {
       Logger.log('Rejecting call...');
       call.reject(CallReason.CallRejected).then(

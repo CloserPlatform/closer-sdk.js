@@ -8,7 +8,6 @@
     "start": "node node_modules/http-server/bin/http-server ./dist -p 8080"
   },
   "dependencies": {
-    "@swagger/spinner": "^0.1.484",
     "@closerplatform/closer-sdk": "file:../",
     "rxjs": "file:../node_modules/rxjs",
     "jquery": "^3.5.1",

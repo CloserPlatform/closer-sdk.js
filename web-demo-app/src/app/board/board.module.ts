@@ -4,7 +4,6 @@ import { BoardService } from './board.service';
 import { Nav } from '../nav';
 import { Credentials } from '../credentials';
 import { Session } from '@closerplatform/closer-sdk';
-import { SpinnerClient } from '@swagger/spinner';
 import { Logger } from '../logger';
 import { SubModule } from './submodule';
 
@@ -20,14 +19,14 @@ export class BoardModule {
   public boardService: BoardService;
   private modules: Modules;
 
-  constructor(public credentials: Credentials, session: Session, spinnerClient: SpinnerClient) {
-    this.boardService = new BoardService(session, spinnerClient);
+  constructor(public credentials: Credentials, session: Session) {
+    this.boardService = new BoardService(session);
   }
 
   public init = (modules: Modules, defaultModule: SubModule | undefined = undefined): void => {
     this.modules = modules;
     modules.forEach(async module => {
-      await module.init(this.boardService.session, this.boardService.spinnerClient);
+      await module.init(this.boardService.session);
       if (module !== defaultModule) {
         await module.toggleVisible(false);
       }

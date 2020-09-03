@@ -14,9 +14,11 @@ export class Page {
   public static readonly artichokeFormId = 'server-artichoke';
   public static readonly authFormId = 'server-auth';
 
-  public static getCalleeBox = (): JQuery =>
-    $(`#${Page.calleeBoxId}`)
+  public static getCalleeBox(): JQuery {
+    return $(`#${Page.calleeBoxId}`);
+  }
 
-  public static setHeader = (desc: string): JQuery =>
-    $('#demo-name').html(desc)
+  public static setHeader(desc: string): JQuery {
+    return $('#demo-name').html(desc);
+  }
 }

@@ -1,60 +1,93 @@
+import { Context } from '../protocol/protocol';
+
+export type Email = string;
+export type Password = string;
+
 export interface GuestProfile {
-    id: string;
-    firstName?: string;
-    lastName?: string;
-    phone?: Phone;
-    email?: string;
-    roomId: string;
-    randomName?: string;
-    languageLocale?: string;
-    zoneId?: string;
-    location?: string;
-    tag?: string;
-    deletedAt?: number;
-    backOfficeData?: ReadonlyArray<BackOfficeField>;
+    readonly id: string;
+    readonly firstName?: string;
+    readonly lastName?: string;
+    readonly phone?: Phone;
+    readonly email?: string;
+    readonly roomId: string;
+    readonly randomName?: string;
+    readonly languageLocale?: string;
+    readonly zoneId?: string;
+    readonly location?: string;
+    readonly tag?: string;
+    readonly deletedAt?: number;
+    readonly backOfficeData?: ReadonlyArray<BackOfficeField>;
 }
 
 export interface LeadCtx {
-    id: string;
-    apiKey: string;
-    orgId: string;
-    role?: string;
-    roomId: string;
-    firstName?: string;
-    lastName?: string;
-    email?: string;
-    phone?: Phone;
-    randomName?: string;
-    languageLocale?: string;
-    zoneId?: string;
-    tag?: string;
-    backOfficeData?: ReadonlyArray<BackOfficeField>;
+    readonly id: string;
+    readonly apiKey: string;
+    readonly orgId: string;
+    readonly role?: string;
+    readonly roomId: string;
+    readonly firstName?: string;
+    readonly lastName?: string;
+    readonly email?: string;
+    readonly phone?: Phone;
+    readonly randomName?: string;
+    readonly languageLocale?: string;
+    readonly zoneId?: string;
+    readonly tag?: string;
+    readonly backOfficeData?: ReadonlyArray<BackOfficeField>;
 }
 
 export interface BackOfficeField {
-    key: string;
-    value: string;
+    readonly key: string;
+    readonly value: string;
 }
 
 export interface Phone {
-    region: string;
-    number: string;
+    readonly region: string;
+    readonly number: string;
 }
 
 export interface Call {
-    id: string;
-    created: number;
-    ended?: number;
-    creator: string;
-    invitee: string;
-    orgId?: string;
+    readonly id: string;
+    readonly created: number;
+    readonly ended?: number;
+    readonly creator: string;
+    readonly invitee: string;
+    readonly orgId?: string;
 }
 
 export interface CreateCall {
-    invitee: string;
+    readonly invitee: string;
 }
 
 export interface SignUpGuest {
-    orgId: string;
-    context?: {};
+    readonly orgId: string;
+    readonly context?: Context;
+}
+
+export interface AgentCtx {
+    readonly id: string;
+    readonly apiKey: string;
+    readonly orgId: string;
+    readonly email: string;
+    readonly firstName?: string;
+    readonly lastName?: string;
+    readonly phone?: Phone;
+    readonly avatarUrl?: string;
+    readonly pendingEmail?: string;
+    readonly presence: string;
+    readonly unavailabilityReason?: string;
+    readonly role: 'ADMIN' | 'AGENT';
+    readonly skills?: ReadonlyArray<string>;
+    readonly autoAssignedLimit?: number;
+    readonly importedCalendar?: string;
+    readonly closerCustomerApiKey?: string;
+}
+
+export interface LoginForm {
+    readonly email: string;
+    readonly password: string;
+}
+
+export interface LoginWithTokenForm {
+    readonly token: string;
 }

@@ -3,10 +3,13 @@ import { CloserSDK, BrowserUtils, Session, UserConfig } from '../../src';
 const sessionId = '12345';
 const apiKey = '54321';
 
+const getCloserSDK = (config: UserConfig = {}): CloserSDK =>
+  CloserSDK.init(config);
+
 describe('Initialization', () => {
   it('initialize with API key and empty config', () => {
     spyOn(BrowserUtils, 'isBrowserSupported').and.returnValue(true);
-    const session = CloserSDK.init(sessionId, apiKey, {});
+    const session = getCloserSDK().withSession(sessionId, apiKey);
 
     expect(session.id).toBe(sessionId);
     expect(session.artichoke).toBeDefined();
@@ -22,7 +25,7 @@ describe('Initialization', () => {
         server: 'http://stage.anymind.com/artichoke'
       }
     };
-    const session = CloserSDK.init(sessionId, apiKey, userConfig);
+    const session = getCloserSDK(userConfig).withSession(sessionId, apiKey);
     expect(BrowserUtils.isBrowserSupported).toHaveBeenCalled();
 
     session.artichoke.connection$.subscribe();
@@ -31,9 +34,7 @@ describe('Initialization', () => {
   it('fail the initialization if browser is not supported', () => {
     spyOn(BrowserUtils, 'isBrowserSupported').and.returnValue(false);
 
-    const initFn = (): Session => CloserSDK.init(sessionId, apiKey, {});
-
-    expect(initFn).toThrowError();
+    expect(getCloserSDK).toThrowError();
     expect(BrowserUtils.isBrowserSupported).toHaveBeenCalled();
   });
 });

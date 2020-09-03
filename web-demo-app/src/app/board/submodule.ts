@@ -1,7 +1,6 @@
 import { BoardModule } from './board.module';
 import { Credentials } from '../credentials';
 import { Session } from '@closerplatform/closer-sdk';
-import { SpinnerClient } from '@swagger/spinner';
 
 export abstract class SubModule {
   public abstract readonly NAME: string;
@@ -9,7 +8,7 @@ export abstract class SubModule {
 
   constructor (public boardModule: BoardModule, public credentials: Credentials) { }
 
-  public abstract init(session: Session, spinnerClient: SpinnerClient): Promise<void>;
+  public abstract init(session: Session): Promise<void>;
 
   public toggleVisible = async (visible = true): Promise<void> => {
     if (visible) {

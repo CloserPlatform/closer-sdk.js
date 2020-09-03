@@ -1,5 +1,5 @@
 import { SpinnerApi } from './spinner-api';
-import { GuestProfile, LeadCtx, Call, CreateCall } from './protocol';
+import { GuestProfile, LeadCtx, Call, CreateCall, LoginForm, LoginWithTokenForm, AgentCtx } from './protocol';
 import { ID } from '../protocol/protocol';
 
 export class Spinner {
@@ -13,7 +13,7 @@ export class Spinner {
     }
 
     public async signUpGuest(orgId: ID): Promise<LeadCtx> {
-        const lead = await this.spinnerApi.signUpGuest({orgId});
+        const lead = await this.spinnerApi.signUpGuest({ orgId });
         this.spinnerApi.setApiKey(lead.apiKey);
 
         return lead;
@@ -21,5 +21,15 @@ export class Spinner {
 
     public async createCall(body: CreateCall): Promise<Call> {
         return this.spinnerApi.createCall(body);
+    }
+
+    // Agent API
+
+    public async login(body: LoginForm | LoginWithTokenForm): Promise<AgentCtx> {
+        return this.spinnerApi.login(body);
+    }
+
+    public async getSession(): Promise<AgentCtx> {
+        return this.spinnerApi.getSession();
     }
 }
