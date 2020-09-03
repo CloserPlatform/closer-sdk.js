@@ -70,7 +70,7 @@ export const ChatState = ({ id, navigation, session, roomId }: Props): ChatState
           room.messageDelivered$
           .pipe(takeUntil(unsubscribe$()))
           .subscribe(() => {
-            setMessages(msgs => getMessagesWithStatusUpdate(id, msgs, MessageStatus.Delievered));
+            setMessages(msgs => getMessagesWithStatusUpdate(id, msgs, MessageStatus.Delivered));
           });
 
           room.marked$
@@ -99,12 +99,12 @@ export const ChatState = ({ id, navigation, session, roomId }: Props): ChatState
 
   const addNewMessage = (message: roomEvents.MessageSent): void => {
     const isAuthor = message.authorId === id;
-    const status = isAuthor ? MessageStatus.Undelievered : MessageStatus.Opposite;
+    const status = isAuthor ? MessageStatus.Undelivered : MessageStatus.Opposite;
     setMessages(msgs => [ ...msgs, createMessageHandle(message, status) ]);
 
-    if (!isAuthor) {
-      room?.setDelivered(message.messageId);
-      room?.setMark(Date.now());
+    if (!isAuthor && room) {
+      room.setDelivered(message.messageId);
+      room.setMark(Date.now());
     }
   };
 
@@ -149,7 +149,7 @@ export const ChatState = ({ id, navigation, session, roomId }: Props): ChatState
   return [scrollView, messages, currentMessage, room, chatInformation, onMessageChange, onMessageSend];
 };
 
-export enum MessageStatus { Undelievered, Delievered, Viewed, Opposite }
+export enum MessageStatus { Undelivered, Delivered, Viewed, Opposite }
 
 export interface MessageHandle {
   readonly authorId: protocol.ID;

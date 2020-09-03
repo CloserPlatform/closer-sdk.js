@@ -34,106 +34,109 @@ export const AgentBoardState = ({ navigation, route }: Props): AgentBoardStateTy
   const [agentContext, setAgentContext] = useState<AgentContext>();
   const [spinnerClient, setSpinnerClient] = useState<SpinnerClient>();
 
-    // tslint:disable: no-floating-promises
-    useEffect(() => {
-      const setup = async () => {
-        try {
-          const sc = new SpinnerClient(`${route.params.spinner}/api`);
-          const loadedCtx = await loadContext();
+  // tslint:disable: no-floating-promises
+  useEffect(() => {
+    const setup = async () => {
+      try {
+        const sc = new SpinnerClient(`${route.params.spinner}/api`);
+        const loadedCtx = await loadContext();
 
-          if (loadedCtx?.apiKey) {
+        if (loadedCtx) {
+          if (loadedCtx.apiKey) {
             sc.apiKey = loadedCtx.apiKey;
           }
-          setSpinnerClient(sc);
-          setAgentContext({ ...agentContext, ...loadedCtx });
-          setRoomId(loadedCtx?.roomId);
 
-        } catch (e) {
-          navigation.navigate(Components.Error,
-            { reason: `Error while loading saved credentials\n${(e as Error).message}` });
+          setRoomId(loadedCtx.roomId);
         }
-      };
 
-      setup();
-    }, []);
-    // tslint:enable: no-floating-promises
-
-    useEffect(() => {
-      if (agentContext && !session && spinnerClient && agentContext.apiKey && agentContext.id) {
-        spinnerClient.apiKey = agentContext.apiKey;
-
-        const s = SessionService.connect({ apiKey: agentContext.apiKey, id: agentContext.id },
-          { artichoke: route.params.artichoke, spinner: route.params.spinner});
-
-        setCallbacks(s);
-        setSession(s);
-      }
-
-      return () => {
-        unsubscribeEvent.next();
-      };
-    }, [agentContext]);
-
-    const setCallbacks = (s: Session): void => {
-      s.artichoke.error$
-      .pipe(takeUntil(unsubscribe$()))
-      .subscribe(error => {
-        console.log('An error has occured: ', error);
-      });
-
-      s.artichoke.serverUnreachable$
-      .pipe(takeUntil(unsubscribe$()))
-      .subscribe(() => {
-        console.log('Server unreachable');
-      });
-
-      s.artichoke.roomCreated$
-      .pipe(takeUntil(unsubscribe$()))
-      .subscribe(m => {
-        console.log('Room created: ', m);
-      });
-
-      s.artichoke.roomInvitation$
-      .pipe(takeUntil(unsubscribe$()))
-      .subscribe(invitation => {
-        console.log('Received room invitation: ', invitation);
-      });
-
-      s.artichoke.callCreated$
-      .pipe(takeUntil(unsubscribe$()))
-      .subscribe(call => {
-        console.log('Call created: ', call);
-      });
-
-      s.artichoke.callInvitation$
-      .pipe(takeUntil(unsubscribe$()))
-      .subscribe(async callInvitation => {
-        console.log('Received call invitation: ', callInvitation);
-      });
-
-      s.artichoke.connection$
-      .pipe(takeUntil(unsubscribe$()))
-      .subscribe(
-        () => {
-          console.log('Connected to Artichoke!');
-        },
-        err => console.error('Connection error', err),
-        () => {
-          console.log('Session disconnected');
-        }
-      );
-    };
-
-    const unsubscribe$ = (): Observable<void> => unsubscribeEvent.asObservable();
-
-    const onRoomInputClick = async () => {
-      if (roomId) {
-        await Storage.saveAgent(StorageNames.RoomId, roomId);
-        setAgentContext({ ...agentContext, roomId });
+        setSpinnerClient(sc);
+        setAgentContext({ ...agentContext, ...loadedCtx });
+      } catch (e) {
+        navigation.navigate(Components.Error,
+          { reason: `Error while loading saved credentials\n${(e as Error).message}` });
       }
     };
 
-    return [agentContext, setAgentContext, session, spinnerClient, onRoomInputClick, roomId, setRoomId];
+    setup();
+  }, []);
+  // tslint:enable: no-floating-promises
+
+  useEffect(() => {
+    if (agentContext && !session && spinnerClient && agentContext.apiKey && agentContext.id) {
+      spinnerClient.apiKey = agentContext.apiKey;
+
+      const s = SessionService.connect({ apiKey: agentContext.apiKey, id: agentContext.id },
+        { artichoke: route.params.artichoke, spinner: route.params.spinner});
+
+      setCallbacks(s);
+      setSession(s);
+    }
+
+    return () => {
+      unsubscribeEvent.next();
+    };
+  }, [agentContext]);
+
+  const setCallbacks = (s: Session): void => {
+    s.artichoke.error$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(error => {
+      console.log('An error has occured: ', error);
+    });
+
+    s.artichoke.serverUnreachable$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(() => {
+      console.log('Server unreachable');
+    });
+
+    s.artichoke.roomCreated$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(m => {
+      console.log('Room created: ', m);
+    });
+
+    s.artichoke.roomInvitation$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(invitation => {
+      console.log('Received room invitation: ', invitation);
+    });
+
+    s.artichoke.callCreated$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(call => {
+      console.log('Call created: ', call);
+    });
+
+    s.artichoke.callInvitation$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(async callInvitation => {
+      console.log('Received call invitation: ', callInvitation);
+    });
+
+    s.artichoke.connection$
+    .pipe(takeUntil(unsubscribe$()))
+    .subscribe(
+      () => {
+        console.log('Connected to Artichoke!');
+      },
+      err => console.error('Connection error', err),
+      () => {
+        console.log('Session disconnected');
+      }
+    );
+  };
+
+  const unsubscribe$ = (): Observable<void> => unsubscribeEvent.asObservable();
+
+  const onRoomInputClick = async () => {
+    if (roomId) {
+      await Storage.saveAgent(StorageNames.RoomId, roomId);
+      setAgentContext({ ...agentContext, roomId });
+    }
+  };
+
+  return [agentContext, setAgentContext, session, spinnerClient, onRoomInputClick, roomId, setRoomId];
 };
 
 export const loadContext = async (): Promise<AgentContext | undefined> => {
