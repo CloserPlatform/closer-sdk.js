@@ -1,4 +1,5 @@
-## Prerequisites and setting up development environment on macOS with Xcode & iOS simulator
+## Development environment on macOS with Xcode & iOS simulator
+### Prerequisites
 You are likely to have some of the tools listed below already installed
 1. Installing Node and Watchman, easiest way via `Homebrew`
   - `brew install node`
@@ -9,11 +10,12 @@ You are likely to have some of the tools listed below already installed
  - `XCode/Preferences/Components` - select version of iOS you want to use and install
 4. Installing CocoaPods
  - `sudo gem install cocoapods`
-5. Installing React Native Demo App dependencies: 
+### App setup
+1. Installing React Native Demo App dependencies: 
  - Navigate to `ReactNativeDemoApp` directory, create `.npmrc` (necessary for @swagger/spinner) file and run `npm install`
-6. Installing Pods
+2. Installing Pods
  - Navigate to `ReactNativeDemoApp/ios` directory, and run `pod install`
-7. You can now run the application
+3. You can now run the application
 
 ## Running application
 ### Run instructions for iOS:

@@ -1,0 +1,25 @@
+import { CloserSDK, Session, UserConfig, BrowserUtils } from '@closerplatform/closer-sdk';
+import { ServerParams } from './components/types';
+
+export interface AuthCtx {
+  readonly id: string;
+  readonly apiKey: string;
+}
+
+export class SessionService {
+  public static readonly connect = (authCtx: AuthCtx, servers: ServerParams): Session => {
+    const { artichoke, spinner } = servers;
+
+    console.log(`Connecting to ${artichoke} as: ${JSON.stringify(authCtx)}`);
+
+    const userConfig: UserConfig = {
+      logLevel: 0,
+      spinner: { server: spinner },
+      artichoke: { server: artichoke }
+    };
+
+    const session = CloserSDK.init(authCtx.id, authCtx.apiKey, userConfig);
+
+    return session;
+  }
+}
