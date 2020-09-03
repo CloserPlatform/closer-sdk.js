@@ -8,3 +8,4 @@
    - Guest signup, Agent login
    - Storing session parameters
    - Chat with events handling
+   - Seperated Components rendering and logic

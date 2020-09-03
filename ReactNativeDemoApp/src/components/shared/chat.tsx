@@ -1,22 +1,17 @@
-// tslint:disable: no-floating-promises
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, Keyboard, StyleSheet, ScrollView, KeyboardAvoidingView } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { Input, Button } from 'react-native-elements';
-import { Subject, Observable } from 'rxjs';
-import { takeUntil } from 'rxjs/operators';
-import { protocol, Session, Room, roomEvents } from '@closerplatform/closer-sdk';
+import { protocol, Session } from '@closerplatform/closer-sdk';
 
-import { colors, notificationTime } from '../../defaults';
-import { createMessageHandle, MessageHandle, getRoomMessageHistory,
-  sendMessage, MessageStatus, getMessagesWithStatusUpdate } from './chat.service';
+import { colors } from '../../defaults';
+import { MessageHandle, MessageStatus, ChatState } from './chat.service';
 
 import { ThisNavigation as GuestNavigation } from '../guest/guestboard';
 import { ThisNavigation as AgentNavigation } from '../agent/agentboard';
 import { Spinner } from './spinner';
-import { Components } from '../types';
 
 type ParentNavigation = GuestNavigation | AgentNavigation;
-interface Props {
+export interface Props {
   readonly roomId: protocol.ID;
   readonly session: Session;
   readonly id: protocol.ID;
@@ -24,112 +19,11 @@ interface Props {
 }
 
 export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element => {
-  const scrollView = useRef<ScrollView | undefined | null>();
-
-  const [room, setRoom] = useState<Room>();
-  const [unsubscribeEvent] = useState(new Subject<void>());
-  const [currentMessage, setCurrentMessage] = useState<string>();
-  const [chatInformation, setChatInformation] = useState<string>();
-  const [messages, setMessages] = useState<ReadonlyArray<MessageHandle>>([]);
-  const [chatInformationTimeout, setChatInformationTimeout] = useState<ReturnType<typeof setTimeout>>();
-
-  useEffect(() => {
-    const setup = async () => {
-      try {
-        setRoom(await session.artichoke.getRoom(roomId));
-      } catch (e) {
-        navigation.navigate(Components.Error, { reason: 'Could not connect to room using artichoke '});
-      }
-
-      Keyboard.addListener('keyboardDidShow', scrollToBottom);
-    };
-
-    setup();
-
-    return () => {
-      Keyboard.removeListener('keyboardDidShow', scrollToBottom);
-    };
-  }, []);
-
-  useEffect(() => {
-    const setupRoom = async () => {
-      try {
-        if (room) {
-          const history = await getRoomMessageHistory(room);
-          if (history) {
-            setMessages(history.items.map((m) =>
-              createMessageHandle(m, m.authorId === id ? MessageStatus.Viewed : MessageStatus.Opposite)));
-          }
-
-          room.message$
-          .pipe(takeUntil(unsubscribe$()))
-          .subscribe(addNewMessage);
-
-          room.typing$
-          .pipe(takeUntil(unsubscribe$()))
-          .subscribe(() => addChatInformation('User is typing...'));
-
-          room.messageDelivered$
-          .pipe(takeUntil(unsubscribe$()))
-          .subscribe(() => {
-            setMessages(msgs => getMessagesWithStatusUpdate(id, msgs, MessageStatus.Delievered));
-          });
-
-          room.marked$
-          .pipe(takeUntil(unsubscribe$()))
-          .subscribe((msg) => {
-            if (msg.authorId !== id) {
-              setMessages(msgs => getMessagesWithStatusUpdate(id, msgs, MessageStatus.Viewed));
-            }
-          });
-        }
-      } catch (e) {
-        navigation.navigate(Components.Error, { reason: `Could not successfully setup conversation\n${(e as Error).message}` });
-      }
-    };
-
-    setupRoom();
-
-    return () => {
-      unsubscribeEvent.next();
-    };
-  }, [room]);
-
-  // tslint:disable-next-line: no-unnecessary-callback-wrapper
-  useEffect(() => scrollToBottom(), [messages]);
-
-  const addNewMessage = (message: roomEvents.MessageSent): void => {
-    const isAuthor = message.authorId === id;
-    const status = isAuthor ? MessageStatus.Undelievered : MessageStatus.Opposite;
-    setMessages(msgs => [ ...msgs, createMessageHandle(message, status) ]);
-
-    if (!isAuthor) {
-      room?.setDelivered(message.messageId);
-      room?.setMark(Date.now());
-    }
-  };
-
-  const addChatInformation = (text: string): void => {
-    setChatInformation(text);
-
-    if (chatInformationTimeout) {
-      clearTimeout(chatInformationTimeout);
-    }
-    const timeout = setTimeout(() => setChatInformation(undefined), notificationTime);
-    setChatInformationTimeout(timeout);
-  };
-
-  const unsubscribe$ = (): Observable<void> => unsubscribeEvent.asObservable();
-
-  const scrollToBottom = (): void => {
-    scrollView.current?.scrollToEnd();
-  };
+  const [scrollView, messages, currentMessage, room, chatInformation, onMessageChange, onMessageSend]
+    = ChatState({ roomId, session, id, navigation });
 
   const renderMessage = (item: MessageHandle)  => (
-    <View
-      style={[styles.chatMessage, getMessageStyle(item.status)]}
-      key={item.messageId}
-    >
+    <View style={[styles.chatMessage, getMessageStyle(item.status)]} key={item.messageId}>
       <Text style={styles.chatText}>{item.text}</Text>
     </View>
   );
@@ -147,30 +41,13 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
   );
 
   const renderSendingInput = (): JSX.Element => {
-    const sendCallback = async (): Promise<void> => {
-      if (!room) {
-        navigation.navigate(Components.Error, { reason: 'Room is not initialized in chat component' });
-      }
-      else if (currentMessage) {
-        try {
-          await sendMessage(currentMessage, room);
-          setCurrentMessage(undefined);
-        } catch (e) {
-          addChatInformation('Unable to send message');
-        }
-      }
-      else {
-        addChatInformation('Cannot send empty message!');
-      }
-    };
-
     const sendButton = (
       <Button
         title='Send'
         type='outline'
         buttonStyle={{borderColor: colors.secondary}}
         titleStyle={{color: colors.secondary}}
-        onPress={sendCallback}
+        onPress={onMessageSend}
       />
     );
 
@@ -180,10 +57,7 @@ export const Chat = ({ roomId, session, id, navigation }: Props): JSX.Element =>
         inputContainerStyle={styles.sendingInput}
         rightIcon={sendButton}
         value={currentMessage}
-        onChangeText={(value) => {
-          setCurrentMessage(value);
-          room?.indicateTyping();
-        }}
+        onChangeText={onMessageChange}
       />
     );
   };
@@ -212,7 +86,6 @@ const styles = StyleSheet.create({
   chatContainer: {
     padding: 15,
     flex: 1,
-    // backgroundColor: '#3f3f3f'
   },
   chatInformation: {
     height: 30,
@@ -256,11 +129,6 @@ const styles = StyleSheet.create({
     borderTopColor: colors.primary,
     borderBottomColor: colors.primary,
     paddingVertical: 5
-  },
-  infoContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center'
   }
 });
 
