@@ -9,6 +9,7 @@ export class GuestSession extends Session {
         public readonly id: ID,
         public readonly apiKey: ApiKey,
         public readonly roomId: ID,
+        public readonly orgId: ID,
         public readonly artichoke: Artichoke,
         public readonly spinner: Spinner,
     ) {

@@ -42,6 +42,7 @@ export class SessionFactory {
             guest.id,
             guest.apiKey,
             guest.roomId,
+            guest.orgId,
             this.createArtichoke(guest.id, apiHeaders),
             this.createSpinner(apiHeaders),
         );
@@ -56,6 +57,7 @@ export class SessionFactory {
             guestProfile.id,
             apiKey,
             guestProfile.roomId,
+            orgId,
             this.createArtichoke(guestProfile.id, apiHeaders),
             this.createSpinner(apiHeaders),
         );
