@@ -20,12 +20,8 @@ import { MediaTrackOptimizer } from '../rtc/media-track-optimizer';
 import { RTCPoolFactory } from '../rtc/rtc-pool-factory';
 import { Spinner } from '../spinner/spinner';
 import { SpinnerApi } from '../spinner/spinner-api';
-import { Password, Email, LeadCtx } from '../spinner/protocol';
-
-export interface GuestSession {
-    readonly guest: LeadCtx;
-    readonly session: Session;
-}
+import { Password, Email } from '../spinner/protocol';
+import { GuestSession } from './guest-session';
 
 export class SessionFactory {
 
@@ -42,35 +38,27 @@ export class SessionFactory {
 
         apiHeaders.apiKey = guest.apiKey;
 
-        const session = new Session(
+        return new GuestSession(
             guest.id,
             guest.apiKey,
+            guest.roomId,
             this.createArtichoke(guest.id, apiHeaders),
             this.createSpinner(apiHeaders),
         );
-
-        return {
-            session,
-            guest
-        };
     }
 
     public async createWithExistingGuest(orgId: ID, sessionId: ID, apiKey: ApiKey): Promise<GuestSession> {
         const apiHeaders = new ApiHeaders(apiKey);
         const spinner = this.createSpinner(apiHeaders);
         const guestProfile = await spinner.getGuestProfile(orgId, sessionId);
-        const guest = {...guestProfile, apiKey, orgId};
-        const session = new Session(
-            guest.id,
+
+        return new GuestSession(
+            guestProfile.id,
             apiKey,
-            this.createArtichoke(guest.id, apiHeaders),
+            guestProfile.roomId,
+            this.createArtichoke(guestProfile.id, apiHeaders),
             this.createSpinner(apiHeaders),
         );
-
-        return {
-            session,
-            guest
-        };
     }
 
     public async createAsAgent(email: Email, password: Password): Promise<Session> {

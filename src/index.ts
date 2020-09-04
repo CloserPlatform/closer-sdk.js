@@ -6,7 +6,7 @@ export { Artichoke } from './artichoke/artichoke';
 export { Spinner } from './spinner/spinner';
 export { Config, UserConfig } from './config/config';
 export { Session } from './session/session';
-export { GuestSession } from './session/session-factory';
+export { GuestSession } from './session/guest-session';
 
 // Calls
 export { Call } from './calls/call';

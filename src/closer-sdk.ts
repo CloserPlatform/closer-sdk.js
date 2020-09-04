@@ -3,9 +3,10 @@ import { UserConfig, load, getDefaultConfig } from './config/config';
 import { Session } from './session/session';
 import { BrowserUtils } from './utils/browser-utils';
 import { LoggerFactory } from './logger/logger-factory';
-import { SessionFactory, GuestSession } from './session/session-factory';
+import { SessionFactory } from './session/session-factory';
 import { LoggerService } from './logger/logger-service';
 import { Email, Password } from './spinner/protocol';
+import { GuestSession } from './session/guest-session';
 
 export class CloserSDK {
 
