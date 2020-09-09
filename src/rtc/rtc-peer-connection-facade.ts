@@ -125,6 +125,7 @@ export class RTCPeerConnectionFacade {
       });
   }
 
+  // tslint:disable-next-line:cyclomatic-complexity
   public async handleRemoteAnswer(remoteDescription: RTCSessionDescriptionInit): Promise<void> {
     if (!this.dtlsRole && remoteDescription.sdp) {
       this.logger.debug('Detecting DTLS role based on remote answer');
@@ -175,6 +176,7 @@ export class RTCPeerConnectionFacade {
         this.statsCollector.reportError('createAnswer', err);
         throw err;
       })
+      // tslint:disable-next-line:cyclomatic-complexity
       .then(async answer => {
         this.logger.debug('Created an RTC answer');
 
@@ -195,6 +197,7 @@ export class RTCPeerConnectionFacade {
       });
   }
 
+  // tslint:disable-next-line:cyclomatic-complexity
   private patchSDPAnswer(answer: RTCSessionDescriptionInit): void {
     if (this.dtlsRole === 'passive' && answer.sdp && answer.sdp.includes('a=setup:active')) {
       this.logger.info('DTLS role mismatch detected, patching SDP answer');
@@ -230,6 +233,7 @@ export class RTCPeerConnectionFacade {
       });
   }
 
+  // tslint:disable-next-line:cyclomatic-complexity
   private isEstablished(): boolean {
     // NOTE 'stable' means no exchange is going on, which encompases 'fresh'
     // NOTE RTC connections as well as established ones.
@@ -310,6 +314,7 @@ export class RTCPeerConnectionFacade {
     this.logger.debug(`ICE Gathering state: ${this.rtcPeerConnection.iceGatheringState}`);
   }
 
+  // tslint:disable-next-line:cyclomatic-complexity
   private notifyStatusChange(iceConnectionState: RTCIceConnectionState): void {
     switch (iceConnectionState) {
       case 'failed':

@@ -1,112 +1,83 @@
-// tslint:disable:no-unsafe-any
-// tslint:disable:no-empty
-// tslint:disable:readonly-array
-interface Servers {
+import { Logger } from './logger';
+import { ID } from '../../../dist/protocol/protocol';
+
+export interface Servers {
   readonly artichoke: string;
   readonly spinner: string;
 }
 
+export interface SessionDetails {
+  readonly apiKey: ID;
+  readonly id: ID;
+  readonly isGuest: true;
+}
+
 interface BrowserData {
   readonly servers?: Servers;
+  readonly session?: SessionDetails;
+  readonly orgId?: ID;
+  readonly roomId?: ID;
 }
 
 export class Credentials {
   private static readonly storageName = 'crdls';
-  public servers: Servers;
-  public email: string;
-  public pwd: string;
-  public apiKey: string;
-  public id: string;
-  public orgId: string;
-  public roomId: string;
-  public calleeId: string;
-  public isGuest = true;
 
-  constructor() {
-    const json = localStorage.getItem(Credentials.storageName);
-    try {
-      if (json) {
-        const obj = JSON.parse(json);
-
-        this.artichokeServer = obj.artichokeServer;
-        this.authServer = obj.authServer;
-        this.apiKey = obj.apiKey;
-        this.id = obj.id;
-        this.orgId = obj.orgId;
-        this.roomId = obj.roomId;
-        this.isGuest = obj.isGuest;
-      }
-    } catch (e) { }
+  public getOrgId(): ID | undefined {
+    return this.getBrowserData().roomId;
   }
 
-  public areServersSaved = (): boolean => (
-    this.artichokeServer !== undefined  && this.authServer !== undefined && this.id !== undefined
-  )
-
-  public isGuestSessionSaved = (): boolean => (
-    this.apiKey !== undefined && this.id !== undefined && this.orgId !== undefined
-  )
-
-  public isSessionSaved = (): boolean => this.apiKey !== undefined;
-
-  public clear = (): void => {
-    localStorage.removeItem(Credentials.storageName);
+  public setOrgId(orgId: ID): void {
+    return this.saveBrowserData({orgId});
   }
 
-  public setServers = (servers: Servers): void => {
-    this.artichokeServer = artichoke;
-    this.authServer = auth;
+  public getRoomId(): ID | undefined {
+    return this.getBrowserData().roomId;
+  }
 
-    this.save();
+  public setRoomId(roomId: ID): void {
+    return this.saveBrowserData({roomId});
+  }
+
+  public getSession(): SessionDetails | undefined {
+    return this.getBrowserData().session;
+  }
+
+  public setSession(session: SessionDetails): void {
+    return this.saveBrowserData({session});
   }
 
   public getServers(): Servers | undefined {
-
+    return this.getBrowserData().servers;
   }
 
-  public setAgentCtx = (id: string, orgId: string, apiKey: string): void => {
-    this.id = id;
-    this.orgId = orgId;
-    this.apiKey = apiKey;
-    this.isGuest = false;
-
-    this.save();
+  public setServers(servers: Servers): void {
+    return this.saveBrowserData({servers});
   }
 
-  public setGuestCtx = (id: string, orgId: string, apiKey: string): void => {
-    this.id = id;
-    this.orgId = orgId;
-    this.apiKey = apiKey;
-
-    this.save();
+  public clear(): void {
+    return localStorage.removeItem(Credentials.storageName);
   }
 
-  public setRoom = (roomId: string): void => {
-    this.roomId = roomId;
-
-    this.save();
+  private saveBrowserData(browserData: BrowserData): void {
+    return localStorage.setItem(Credentials.storageName,
+      JSON.stringify({
+        ...this.getBrowserData(),
+        ...browserData
+      }));
   }
 
-  public setCallee = (callee: string): void => {
-    this.calleeId = callee;
-  }
+  private getBrowserData(): BrowserData {
+    const json = localStorage.getItem(Credentials.storageName);
+    try {
+      if (json) {
+        return JSON.parse(json) as BrowserData;
+      }
+    } catch (e) {
+      Logger.error('Could not parse storage json object', e);
 
-  public setCredentials = (email: string, pwd: string): void => {
-    this.email = email;
-    this.pwd = pwd;
-  }
+      return {};
+    }
 
-  private save = (): void => {
-    const json = JSON.stringify({
-      artichokeServer: this.artichokeServer,
-      authServer: this.authServer,
-      apiKey: this.apiKey,
-      id: this.id,
-      orgId: this.orgId,
-      roomId: this.roomId,
-      isGuest: this.isGuest
-    });
-
-    localStorage.setItem(Credentials.storageName, json);
+    return {};
   }
 }

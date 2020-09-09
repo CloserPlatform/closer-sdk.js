@@ -1,29 +1,28 @@
 // tslint:disable:no-floating-promises
-
-import { Session } from '@closerplatform/closer-sdk';
 import { Logger } from '../logger';
 import { makeDiv, makeInputWithBtn } from '../view';
 import { Page } from '../page';
-import { ChatService } from './chat.service';
 import { ConversationModule } from '../conversation/conversation.module';
-import { SpinnerClient } from '@swagger/spinner';
 import { ModuleNames } from '../board/board.module';
-import { SubModule } from '../board/submodule';
+import { Credentials } from '../credentials';
 
-export class ChatModule extends SubModule {
+export class ChatModule {
   public readonly NAME = ModuleNames.chat;
-  public chatService: ChatService;
 
-  public init = async (session: Session, spinnerClient: SpinnerClient): Promise<void> => {
-    this.chatService = new ChatService(session, spinnerClient);
+  constructor(
+    private html: JQuery,
+    private credentials: Credentials
+  ) { }
+
+  public init(): void {
     this.render();
   }
 
-  private roomCallback = async (inputValue: string): Promise<void> => {
+  private roomCallback(roomId: string): void {
     try {
       this.toggleVisible(false);
-      this.credentials.setRoom(inputValue);
-      const conversationModule = new ConversationModule(this.boardModule, this.credentials, inputValue);
+      this.credentials.setRoom(roomId);
+      const conversationModule = new ConversationModule(makeDiv(), this.boardModule, this.credentials, roomId);
       this.boardModule.addModule(conversationModule, true);
       this.boardModule.removeModule(this);
     } catch (e) {
@@ -31,12 +30,16 @@ export class ChatModule extends SubModule {
     }
   }
 
-  private render = (): void => {
-    const input = makeInputWithBtn(Page.roomInputId, this.roomCallback,
-      'Connect to room', 'Room id...', this.credentials.roomId || '');
+  private render(): void {
+    const input = makeInputWithBtn(
+      Page.roomInputId,
+      roomId => this.roomCallback(roomId),
+      'Connect to room', 'Room id...',
+      this.credentials.getRoomId() || '',
+    );
 
-      this.inner = makeDiv().append(input);
-      Page.contents.empty();
-      Page.contents.append(this.inner);
+    this.html.append(input);
+    Page.contents.empty();
+    Page.contents.append(this.html);
   }
 }

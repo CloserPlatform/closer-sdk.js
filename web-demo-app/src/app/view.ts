@@ -15,21 +15,11 @@ export interface LoginFormData {
   userPassword: string;
 }
 
-export interface ServerFormData {
-  artichokeServer: string;
-  authServer: string;
-}
-
-export const makeServersForm = (artichokeId: string, authId: string): JQuery => {
-  const urls = {
-    artichoke: 'https://artichoke.stage.closer.app',
-    spinner: 'https://spinner.stage.closer.app'
-  };
-
+export const makeServersForm = (artichokeId: string, authId: string, servers: Servers): JQuery => {
   const form = $('<form id="server-form">')
     .append([
-      makeInput(artichokeId, 'ArtichokeServer:', 'ArtichokeServer', urls.artichoke),
-      makeInput(authId, 'SpinnerServer:', 'AuthServer', urls.spinner),
+      makeInput(artichokeId, 'ArtichokeServer:', 'ArtichokeServer', servers.artichoke),
+      makeInput(authId, 'SpinnerServer:', 'AuthServer', servers.spinner),
     ]);
 
   return $('<div>')

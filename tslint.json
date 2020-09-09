@@ -26,7 +26,7 @@
     "curly": true,
     "cyclomatic-complexity": [
       true,
-      6
+      3
     ],
     "deprecation": true,
     "import-blacklist": [
@@ -91,6 +91,7 @@
     "no-inferred-empty-object-type": true,
     "no-invalid-template-strings": true,
     "no-invalid-this": true,
+    "invalid-void": true,
     "no-irregular-whitespace": true,
     "no-mergeable-namespace": true,
     "no-misused-new": true,
@@ -143,6 +144,7 @@
     "switch-final-break": true,
     "type-literal-delimiter": true,
     "unified-signatures": true,
+    "no-parameter-properties": false,
     "use-default-type-parameter": true,
     "use-isnan": true,
     "ban-types": [

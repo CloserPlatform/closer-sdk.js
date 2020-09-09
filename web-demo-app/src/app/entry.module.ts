@@ -1,24 +1,18 @@
 import { makeButton, makeServersForm, makeDiv } from './view';
 import { Page } from './page';
 import { Nav } from './nav';
-import { LoginModule } from './login/login.module';
+import { AgentModule } from './agent/agent.module';
 import { GuestModule } from './guest.module';
-import { Credentials } from './credentials';
+import { Credentials, Servers, SessionDetails } from './credentials';
 import { CloserSDK } from '../../../dist';
-
-interface Servers {
-  readonly artichoke: string;
-  readonly spinner: string;
-}
 
 export class EntryModule {
 
   constructor(
     private html: JQuery,
-    private loginModule: LoginModule,
-    private guestModule: GuestModule,
     private credentials: Credentials,
-  ) { }
+  ) {
+  }
 
   public init(): void {
     Nav.setLogoutCallback(() => {
@@ -27,21 +21,39 @@ export class EntryModule {
     });
 
     const maybeServers = this.credentials.getServers();
+    const maybeSession = this.credentials.getSession();
 
-    if (maybeServers) {
-      const closerSdk = this.getCloserSDK(maybeServers);
-      if (this.credentials.isGuest) {
-        return this.guestModule.init(closerSdk);
-      } else {
-        return this.loginModule.init(closerSdk);
-      }
+    if (maybeServers && maybeSession) {
+      return this.handleExistingSession(maybeServers, maybeSession);
     } else {
-      return this.render();
+      return this.handleNewSession(maybeServers);
     }
   }
 
-  private render(): void {
-    const form = makeServersForm(Page.artichokeFormId, Page.authFormId);
+  private handleExistingSession(servers: Servers, session: SessionDetails): void {
+    const closerSdk = this.getCloserSDK(servers);
+    if (session.isGuest) {
+      const guestModule = new GuestModule(makeDiv(), closerSdk, this.credentials);
+
+      return guestModule.init();
+    } else {
+      const agentModule = new AgentModule(closerSdk);
+
+      return agentModule.init();
+    }
+  }
+
+  private handleNewSession(maybeServers?: Servers): void {
+    const servers = maybeServers || {
+      spinner: 'https://spinner.closer.app',
+      artichoke: 'https://artichoke.closer.app'
+    };
+
+    return this.render(servers);
+  }
+
+  private render(servers: Servers): void {
+    const form = makeServersForm(Page.artichokeFormId, Page.authFormId, servers);
     const existingButton = makeButton('btn-info mx-2', 'CONTINUE AS AGENT', () => this.agentLoginCallback());
     const guestButton = makeButton('btn-info mx-2', 'CONTINUE AS GUEST', () => this.guestLoginCallback());
 
@@ -61,7 +73,10 @@ export class EntryModule {
       this.credentials.setServers(servers);
       this.html.hide();
 
-      return this.loginModule.init(this.getCloserSDK(servers));
+      const closerSdk = this.getCloserSDK(servers);
+      const agentModule = new AgentModule(closerSdk);
+
+      return agentModule.init();
     } else {
       return alert('Empty servers inputs');
     }
@@ -73,7 +88,9 @@ export class EntryModule {
       this.credentials.setServers(servers);
       this.html.hide();
 
-      return this.guestModule.init(this.getCloserSDK(servers));
+      const guestModule = new GuestModule(makeDiv(), this.getCloserSDK(servers), this.credentials);
+
+      return guestModule.init();
     } else {
       return alert('Empty servers inputs');
     }
@@ -84,7 +101,7 @@ export class EntryModule {
     const spinner = String($(`#${Page.authFormId}`).val());
 
     if (artichoke && spinner) {
-      return {artichoke, spinner};
+      return { artichoke, spinner };
     } else {
       return undefined;
     }

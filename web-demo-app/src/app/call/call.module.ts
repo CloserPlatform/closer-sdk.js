@@ -3,13 +3,15 @@ import { Session } from '@closerplatform/closer-sdk';
 import { Page } from '../page';
 import { CallService } from './call.service';
 import { ModuleNames } from '../board/board.module';
-import { SubModule } from '../board/submodule';
+import { SubModule } from '../submodule';
 
 export class CallModule extends SubModule {
   public readonly NAME = ModuleNames.call;
   private callService: CallService;
 
-  public init = async (session: Session): Promise<void> => {
+  constructor(session: Session){}
+
+  public init(): void {
     this.callService = new CallService(session);
     this.render();
   }

@@ -47,6 +47,7 @@ export class HttpClient {
 
   public async getPaginated<Item>(path: string): Promise<Paginated<Item>> {
     return this.getRaw(path, this.apiHeaders.getHeaders())
+      // tslint:disable-next-line:cyclomatic-complexity
       .then(resp => {
         try {
           const items = JSON.parse(resp.responseText) as ReadonlyArray<Item>;
@@ -117,6 +118,7 @@ export class HttpClient {
   private responseCallback(xhttp: XMLHttpRequest,
                            resolve: PromiseResolve<XMLHttpRequest>,
                            reject: PromiseReject): () => void {
+    // tslint:disable-next-line:cyclomatic-complexity
     return (): void => {
       if (xhttp.readyState === XMLHttpRequest.DONE &&
         (xhttp.status === HttpCodes.OK || xhttp.status === HttpCodes.NoContent)) {

@@ -1,24 +1,30 @@
-import { makeInputWithBtn } from './view';
+import { makeInputWithBtn, makeDiv } from './view';
 import { Page } from './page';
 import { Logger } from './logger';
 import { ConversationModule } from './conversation/conversation.module';
 import { BoardModule } from './board/board.module';
 import { CallModule } from './call/call.module';
 import { Session, CloserSDK } from '../../../dist';
-import { Credentials } from './credentials';
+import { Credentials, SessionDetails } from './credentials';
+import { ID } from '../../../dist/protocol/protocol';
 
 export class GuestModule {
 
   constructor(
     private html: JQuery,
-  ) { }
+    private closerSdk: CloserSDK,
+    private credentials: Credentials,
+  ) {
+  }
 
-  public init(closerSdk: CloserSDK, credentials: Credentials): void {
+  public init(): void {
+    const maybeSession = this.credentials.getSession();
+    const maybeOrgId = this.credentials.getOrgId();
 
-    if (credentials.isGuestSessionSaved()) {
-      this.initializeExistingGuestSession(closerSdk, credentials);
+    if (maybeSession && maybeOrgId) {
+      this.initializeExistingGuestSession(this.closerSdk, maybeOrgId, maybeSession).catch(err => Logger.error(err));
     } else {
-      this.renderInputs(closerSdk, credentials);
+      this.renderInputs(this.closerSdk, this.credentials);
     }
   }
 
@@ -27,25 +33,32 @@ export class GuestModule {
     credentials: Credentials,
     orgId: string,
   ): Promise<void> {
-    const { guest, session } = await closerSdk.createGuestSession(orgId);
-    credentials.setGuestCtx(guest.id, guest.orgId, guest.apiKey);
+    const session = await closerSdk.createGuestSession(orgId);
+    const { id, apiKey } = session;
+    credentials.setRoomId(session.roomId);
+    credentials.setSession({ id, apiKey, isGuest: true });
 
-    return this.initializeBoard(session, guest.roomId);
+    return this.initializeBoard(session, session.roomId);
   }
 
-  private async initializeExistingGuestSession(closerSdk: CloserSDK, credentials: Credentials): Promise<void> {
-    const { session, guest } = await closerSdk.getGuestSession(credentials.orgId, credentials.id, credentials.apiKey);
+  private async initializeExistingGuestSession(
+    closerSdk: CloserSDK,
+    orgId: ID,
+    sessionDetails: SessionDetails,
+  ): Promise<void> {
+    const session = await closerSdk.getGuestSession(orgId, sessionDetails.id, sessionDetails.apiKey);
 
-    return this.initializeBoard(session, guest.roomId);
+    return this.initializeBoard(session, session.roomId);
   }
 
-  private initializeBoard(session: Session, roomId: string): void {
+  private async initializeBoard(session: Session, roomId: string): Promise<void> {
     Page.contents.empty();
-    const boardModule = new BoardModule(this.credentials, session, this.guestService.spinnerClient);
-    const conversationModule = new ConversationModule(boardModule, this.credentials, roomId);
-    const callModule = new CallModule(boardModule, this.credentials);
+    const room = await session.artichoke.getRoom(roomId);
+    const conversationModule = new ConversationModule(makeDiv(), room, session);
+    const callModule = new CallModule(session);
+    const boardModule = new BoardModule(conversationModule, callModule, session);
 
-    boardModule.init([conversationModule, callModule], conversationModule);
+    return boardModule.init();
   }
 
   private renderInputs(closerSdk: CloserSDK, credentials: Credentials): void {
@@ -54,7 +67,7 @@ export class GuestModule {
       orgId => this.initializeNewGuestSession(closerSdk, credentials, orgId),
       'Get org guest profile',
       'Org id...',
-      'b4aea823-cf75-470c-8d0e-6e31407ade87'
+      credentials.getOrgId() || 'b4aea823-cf75-470c-8d0e-6e31407ade87'
     );
 
     this.html.append(orgInput);

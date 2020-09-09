@@ -75,7 +75,7 @@ export function getDefaultConfig(): Config {
 
 export const load = (conf: UserConfig): Config => {
 
-  // tslint:disable-next-line:no-any
+  // tslint:disable-next-line
   const merge = (a: any, b: any): any => {
     if (Array.isArray(a)) {
       // tslint:disable-next-line:no-unsafe-any

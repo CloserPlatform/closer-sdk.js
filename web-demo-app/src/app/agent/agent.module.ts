@@ -1,24 +1,22 @@
 // tslint:disable:no-floating-promises
-import { LoginService } from './login.service';
 import { LoginFormData, makeLoginForm } from '../view';
 import { Page } from '../page';
 import { Credentials } from '../credentials';
-import { AgentModule } from '../agent.module';
 import { Session, CloserSDK } from '../../../../dist';
 
-export class LoginModule {
+export class AgentModule {
   private loginBox?: JQuery;
 
   constructor(
-    private loginService: LoginService,
+    private closerSDK: CloserSDK,
   ) {
 
   }
 
-  public async init(closerSdk: CloserSDK): void {
+  public init(): void {
 
     if (credentials.isSessionSaved()) {
-      const agentCtx = this.loginService.getSession(credentials);
+      const agentCtx = this.getSession(credentials);
       await this.proceedToAgentModule(agentCtx, credentials);
     } else {
       this.render(credentials);
@@ -35,7 +33,7 @@ export class LoginModule {
     credentials.setCredentials(formData.userEmail, formData.userPassword);
 
     try {
-      const agentCtx =  await this.loginService.login(credentials);
+      const agentCtx =  await this.login(credentials);
       if (this.loginBox) {
         this.loginBox.hide();
       }
@@ -43,6 +41,14 @@ export class LoginModule {
     } catch (e) {
       alert('Error logging');
     }
+  }
+
+  private async login(credentials: Credentials): Promise<Session> {
+    return this.closerSDK.loginAsAgent(credentials.email, credentials.pwd);
+  }
+
+  private getSession(credentials: Credentials): Session {
+    return this.closerSDK.withSession(credentials.id, credentials.apiKey);
   }
 
   private render(credentials: Credentials): void {

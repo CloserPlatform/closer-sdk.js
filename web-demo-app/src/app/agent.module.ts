@@ -4,6 +4,7 @@ import { Credentials } from './credentials';
 import { BoardModule } from './board/board.module';
 import { ChatModule } from './chat/chat.module';
 import { CallModule } from './call/call.module';
+import { BoardService } from './board/board.service';
 
 export class AgentModule {
   public credentials: Credentials;
@@ -13,7 +14,8 @@ export class AgentModule {
     try {
       this.sessionService.connect(agentCtx, credentials);
 
-      const boardModule = new BoardModule(credentials, this.agentService.session);
+      const boardService = new BoardService(session);
+      const boardModule = new BoardModule(boardService);
       const chatModule = new ChatModule(boardModule, credentials);
       const callModule = new CallModule(boardModule, credentials);
 
