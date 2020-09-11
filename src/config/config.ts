@@ -24,10 +24,12 @@ export interface ArtichokeConfig {
 
 export interface UserSpinnerConfig {
   readonly server?: string;
+  readonly apiPath?: string;
 }
 
 export interface SpinnerConfig {
   readonly server: string;
+  readonly apiPath: string;
 }
 
 export interface UserConfig {
@@ -59,6 +61,7 @@ export function getDefaultConfig(): Config {
     },
     spinner: {
       server: 'https://spinner.closer.app',
+      apiPath: 'api/',
     },
     rtc: {
       iceTransportPolicy: 'all',

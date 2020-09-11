@@ -6,7 +6,6 @@ import {
   makeChatWrapper, makeChatLegend, makeChatInfoText, makeChatEventInfoContainer
 } from '../view';
 import { Page } from '../page';
-import { ModuleNames } from '../board/board.module';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Logger } from '../logger';
@@ -28,7 +27,6 @@ export class ConversationModule {
   private static readonly INFO_TIME = 2000;
   private static readonly SCROLL_TIME = 200;
   private static readonly retrieveMessagesCount = 20;
-  public readonly NAME = ModuleNames.conversation;
 
   private readonly unsubscribeEvent = new Subject<void>();
 
@@ -59,7 +57,7 @@ export class ConversationModule {
     }
   }
 
-  private hide(): void {
+  public hide(): void {
     this.unsubscribeEvent.next();
     window.removeEventListener('focus', () => this.setMark());
     this.html.off('click');

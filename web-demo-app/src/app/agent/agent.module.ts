@@ -1,28 +1,29 @@
 // tslint:disable:no-floating-promises
-import { LoginFormData, makeLoginForm } from '../view';
+/* import { LoginFormData, makeLoginForm } from '../view';
 import { Page } from '../page';
 import { Credentials } from '../credentials';
-import { Session, CloserSDK } from '../../../../dist';
+ */import { CloserSDK } from '../../../../dist';
+import { Logger } from '../logger';
 
 export class AgentModule {
-  private loginBox?: JQuery;
+  // private loginBox?: JQuery;
 
   constructor(
-    private closerSDK: CloserSDK,
+    closerSDK: CloserSDK,
   ) {
-
+    Logger.log(closerSDK);
   }
 
   public init(): void {
 
-    if (credentials.isSessionSaved()) {
+    /* if (credentials.isSessionSaved()) {
       const agentCtx = this.getSession(credentials);
       await this.proceedToAgentModule(agentCtx, credentials);
     } else {
       this.render(credentials);
-    }
+    } */
   }
-
+/* 
   private async proceedToAgentModule(session: Session, credentials: Credentials): Promise<void> {
     credentials.setAgentCtx(agentCtx.id, agentCtx.orgId, agentCtx.apiKey);
     const agentModule = new AgentModule();
@@ -55,5 +56,5 @@ export class AgentModule {
     this.loginBox = makeLoginForm('login-box', (formData) => this.handleLoginProbe(formData, credentials));
     Page.contents.empty();
     Page.contents.append(this.loginBox);
-  }
+  } */
 }

@@ -4,7 +4,7 @@ import { Nav } from './nav';
 import { AgentModule } from './agent/agent.module';
 import { GuestModule } from './guest.module';
 import { Credentials, Servers, SessionDetails } from './credentials';
-import { CloserSDK } from '../../../dist';
+import { CloserSDK } from '@closerplatform/closer-sdk';
 
 export class EntryModule {
 

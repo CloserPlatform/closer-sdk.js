@@ -77,7 +77,7 @@ export class CallHandler {
   }
 
   private renderTrack = (name: string, track: MediaStreamTrack, muted: boolean,
-                         videoEnabled$: Observable<boolean>): JQuery =>
+    videoEnabled$: Observable<boolean>): JQuery =>
     this.callboxGridRow.append(makeRemoteTrack(track.id, name, track, muted, videoEnabled$))
 
   private registerCallEvents = (): void => {
@@ -131,15 +131,15 @@ export class CallHandler {
             Logger.log(`Selected facing mode: ${selectedFacingMode}`);
             // We need to stop the current video track to access second camera on mobile
             this.removeVideoTracks();
-            createStream(stream => {
+            createStream({
+              video: {
+                facingMode: selectedFacingMode
+              }
+            }).then(stream => {
               const newVideoTrack = stream.getVideoTracks()[0];
               this.localTracks = [...this.localTracks, newVideoTrack];
               this.renderTrack('Me', newVideoTrack, true, this.localVideoStatusWrapperEvent);
               this.call.replaceTrackByKind(newVideoTrack);
-            }, {
-              video: {
-                facingMode: selectedFacingMode
-              }
             });
           });
         elem.append(videoSwitchCheckbox);
@@ -161,7 +161,7 @@ export class CallHandler {
     this.call.message$.pipe(map(msg => JSON.parse(msg.message).video as boolean))
 
   private notifyVideoChange = (enabled: boolean): void => {
-    this.call.broadcast(JSON.stringify({video: enabled}));
+    this.call.broadcast(JSON.stringify({ video: enabled }));
   }
 
   private removeVideoTracks = (): void => {

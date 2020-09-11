@@ -1,21 +1,24 @@
-import { makeInputWithBtn } from '../view';
+// import { makeInputWithBtn } from '../view';
 import { Session } from '@closerplatform/closer-sdk';
-import { Page } from '../page';
+/* import { Page } from '../page';
 import { CallService } from './call.service';
-import { ModuleNames } from '../board/board.module';
-import { SubModule } from '../submodule';
+import { ModuleNames } from '../agent/board.module';
+import { SubModule } from '../submodule'; */
 
-export class CallModule extends SubModule {
-  public readonly NAME = ModuleNames.call;
-  private callService: CallService;
+export class CallModule {
+  // private callService: CallService;
 
-  constructor(session: Session){}
+  constructor(_session: Session){}
 
   public init(): void {
-    this.callService = new CallService(session);
-    this.render();
+    // this.callService = new CallService(session);
+    // this.render();
   }
 
+  public hide(): void {
+    // this.html.hide();
+  }
+/* 
   protected onShow = (): Promise<void> => {
     const calleeID = this.credentials.calleeId || '';
     $(`#${Page.calleeInputId}`).val(calleeID);
@@ -30,5 +33,5 @@ export class CallModule extends SubModule {
   private render = (): void => {
     this.inner = makeInputWithBtn(Page.calleeId, this.onCallClick, 'Call', 'Callee id...', '');
     Page.contents.append(this.inner);
-  }
+  } */
 }

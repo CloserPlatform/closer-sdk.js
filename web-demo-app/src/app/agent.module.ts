@@ -1,8 +1,8 @@
-
+/* 
 import { Logger } from './logger';
 import { Credentials } from './credentials';
-import { BoardModule } from './board/board.module';
-import { ChatModule } from './chat/chat.module';
+import { BoardModule } from './agent/board.module';
+import { ChatModule } from './agent/chat.module';
 import { CallModule } from './call/call.module';
 import { BoardService } from './board/board.service';
 
@@ -30,3 +30,4 @@ export class AgentModule {
     alert('Authorization failed');
   }
 }
+ */

@@ -1,4 +1,4 @@
-import { BoardModule } from './board/board.module';
+/* import { BoardModule } from './agent/board.module';
 import { Credentials } from './credentials';
 import { Session } from '@closerplatform/closer-sdk';
 
@@ -27,3 +27,4 @@ export abstract class SubModule {
   protected abstract onShow(): void;
   protected abstract onHide(): void;
 }
+ */

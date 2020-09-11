@@ -23,7 +23,7 @@ export class Credentials {
   private static readonly storageName = 'crdls';
 
   public getOrgId(): ID | undefined {
-    return this.getBrowserData().roomId;
+    return this.getBrowserData().orgId;
   }
 
   public setOrgId(orgId: ID): void {

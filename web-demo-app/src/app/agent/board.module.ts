@@ -1,10 +1,10 @@
-// tslint:disable: readonly-array
+/* // tslint:disable: readonly-array
 import { makeButton } from '../view';
 import { Nav } from '../nav';
 import { Session } from '@closerplatform/closer-sdk';
 import { Logger } from '../logger';
 import { SubModule } from '../submodule';
-import { ChatModule } from '../chat/chat.module';
+import { ChatModule } from './chat.module';
 import { CallModule } from '../call/call.module';
 import { ConversationModule } from '../conversation/conversation.module';
 
@@ -30,7 +30,7 @@ export class BoardModule {
     this.renderNav();
   }
 
-  public addModule(module: SubModule, makeVisible: boolean): void {
+  private addModule(module: SubModule, makeVisible: boolean): void {
     module.init(this.session, this.boardService.spinnerClient);
     if (makeVisible) {
       this.makeVisible(module);
@@ -39,7 +39,7 @@ export class BoardModule {
     this.renderNav();
   }
 
-  public removeModule(module: SubModule): void {
+  private removeModule(module: SubModule): void {
     this.modules = this.modules.filter(m => m !== module);
     this.renderNav();
   }
@@ -72,10 +72,11 @@ export class BoardModule {
 
       Nav.setNavButtons(buttons);
     }
-
   }
+
   private makeVisible(module: SubModule): void {
     module.toggleVisible();
     this.modules.filter(other => other !== module).forEach((other) => other.toggleVisible(false));
   }
 }
+ */

@@ -94,7 +94,7 @@ export class SessionFactory {
             new SpinnerApi(
                 new HttpClient(
                     this.loggerFactory.create('Spinner HttpClient'),
-                    new URL(this.config.spinner.server),
+                    new URL(this.config.spinner.apiPath, this.config.spinner.server),
                     apiHeaders,
                     new XMLHttpRequestFactory(),
                 )
