@@ -1,14 +1,14 @@
-// tslint:disable:readonly-array
-
 import { Session, roomEvents, Room, protocol } from '@closerplatform/closer-sdk';
 import {
   makeChatContainer, makeInputWithBtn, makeMessageEntry,
-  makeChatWrapper, makeChatLegend, makeChatInfoText, makeChatEventInfoContainer
+  makeChatWrapper, makeChatLegend, makeChatInfoText, makeChatEventInfoContainer, makeDiv
 } from '../view';
 import { Page } from '../page';
 import { Subject, Observable } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { Logger } from '../logger';
+import { createStream } from './stream';
+import { CallHandler } from './call-handler';
 
 interface MessageHandle {
   readonly messageId: string;
@@ -46,6 +46,22 @@ export class ConversationModule {
 
   public init(): void {
     this.render();
+  }
+
+  private async callToUser(calleeId: string): Promise<void> {
+    const stream = await createStream();
+
+    const tracks = stream.getTracks();
+
+    try {
+      const callResponse = await this.session.spinner.createCall({ invitee: calleeId });
+      const call = await this.session.artichoke.getCall(callResponse.id);
+      Logger.log('Created direct call');
+
+      new CallHandler(makeDiv(), call, tracks, () => alert('Not implemented'));
+    } catch (e) {
+      alert(`Failed at creating call - ${e}`);
+    }
   }
 
   private show(): void {
@@ -191,7 +207,7 @@ export class ConversationModule {
       if (messageHandle.authorId === this.session.id) {
         alert('You are trying to call yourself');
       } else {
-        alert('Calling not implemented yet');
+        this.callToUser(messageHandle.authorId);
       }
     }
   }
@@ -215,6 +231,7 @@ export class ConversationModule {
   }
 
   private render(): void {
+    Page.contents.empty();
     this.chatWrapper = makeChatWrapper();
     this.chatContainer = makeChatContainer();
     this.eventInfoContainer = makeChatEventInfoContainer();

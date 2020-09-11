@@ -1,22 +1,17 @@
-// tslint:disable:no-any
-// tslint:disable:max-file-line-count
-// tslint:disable:no-implicit-dependencies
-// tslint:disable:no-import-side-effect
-// tslint:disable:no-submodule-imports
 import * as $ from 'jquery';
 import 'jquery-ui-bundle';
 import { Logger } from './logger';
 import { Observable } from 'rxjs/internal/Observable';
 import { Page } from './page';
 import { MessageColors } from './conversation/conversation.module';
-import { Servers } from './credentials';
+import { EntryInputs } from './storage';
 
 export interface LoginFormData {
   userEmail: string;
   userPassword: string;
 }
 
-export const makeServersForm = (artichokeId: string, authId: string, servers: Servers): JQuery => {
+export const makeServersForm = (artichokeId: string, authId: string, servers: EntryInputs): JQuery => {
   const form = $('<form id="server-form">')
     .append([
       makeInput(artichokeId, 'ArtichokeServer:', 'ArtichokeServer', servers.artichoke),
@@ -375,7 +370,6 @@ export const makeCallbox = (id: string, className: string, streams: ReadonlyArra
     })
     .append([...streams]);
 
-// tslint:disable:readonly-array
 export const makeControls = (id: string, contents: JQuery | JQuery[]): JQuery =>
   $('<div>')
     .prop({

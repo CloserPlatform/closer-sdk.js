@@ -1,15 +1,16 @@
-import * as View from './view';
+import * as View from '../view';
 import { Session, Call, CallReason, serverEvents } from '@closerplatform/closer-sdk';
-import { Logger } from './logger';
+import { Logger } from '../logger';
 import { createStream } from './stream';
-import { CallHandler } from './call/call-handler';
-import { Page } from './page';
+import { CallHandler } from './call-handler';
+import { Page } from '../page';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { makeDiv } from '../view';
 
 export class SessionService {
 
-  private readonly disconnectEvent = new Subject();
+  private readonly disconnectEvent = new Subject<void>();
 
   public connect(session: Session): Session {
 
@@ -77,7 +78,7 @@ export class SessionService {
     const line = `${call.creator} calls you`;
     const closeModal = View.confirmModal('Call invitation', line, 'Answer', async () => {
       const stream = await createStream();
-      const callHandler = new CallHandler(call, stream.getTracks(), () => this.disconnect());
+      const callHandler = new CallHandler(makeDiv(), call, stream.getTracks(), () => this.disconnect());
       callHandler.answer()
         .then(() => Logger.log('Call answered'))
         .catch(err => {

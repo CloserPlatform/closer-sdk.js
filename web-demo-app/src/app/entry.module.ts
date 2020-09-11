@@ -1,113 +1,107 @@
-import { makeButton, makeServersForm, makeDiv } from './view';
+import { makeButton, makeServersForm, makeDiv, makeInput } from './view';
 import { Page } from './page';
 import { Nav } from './nav';
-import { AgentModule } from './agent/agent.module';
-import { GuestModule } from './guest.module';
-import { Credentials, Servers, SessionDetails } from './credentials';
-import { CloserSDK } from '@closerplatform/closer-sdk';
+import { GuestModule } from './guest/guest.module';
+import { Storage, EntryInputs, SessionDetails } from './storage';
+import { CloserSDK, GuestSession } from '@closerplatform/closer-sdk';
+import { Logger } from './logger';
 
 export class EntryModule {
 
   constructor(
-    private html: JQuery,
-    private credentials: Credentials,
+    private storage: Storage,
   ) {
   }
 
   public init(): void {
     Nav.setLogoutCallback(() => {
-      this.credentials.clear();
+      this.storage.clear();
       location.reload();
     });
 
-    const maybeServers = this.credentials.getServers();
-    const maybeSession = this.credentials.getSession();
+    const maybeEntryinputs = this.storage.getEntryInputs();
+    const maybeSession = this.storage.getSessionDetails();
 
-    if (maybeServers && maybeSession) {
-      return this.handleExistingSession(maybeServers, maybeSession);
+    if (maybeEntryinputs && maybeSession) {
+      this.initializeExistingGuestSession(maybeEntryinputs, maybeSession).catch(err => {
+        alert('Could not use cached session data');
+        Logger.error(err);
+        Logger.log('Removing previous session');
+        this.storage.setSessionDetails();
+        Logger.log('Rendering inputs');
+        this.handleNewVisitor(maybeEntryinputs);
+      })
     } else {
-      return this.handleNewSession(maybeServers);
+      this.handleNewVisitor(maybeEntryinputs);
     }
   }
 
-  private handleExistingSession(servers: Servers, session: SessionDetails): void {
-    const closerSdk = this.getCloserSDK(servers);
-    if (session.isGuest) {
-      const guestModule = new GuestModule(makeDiv(), closerSdk, this.credentials);
-
-      return guestModule.init();
-    } else {
-      const agentModule = new AgentModule(closerSdk);
-
-      return agentModule.init();
-    }
-  }
-
-  private handleNewSession(maybeServers?: Servers): void {
-    const servers = maybeServers || {
+  private handleNewVisitor(maybeEntryinputs?: EntryInputs): void {
+    const entryinputs = maybeEntryinputs || {
       spinner: 'https://spinner.closer.app',
-      artichoke: 'https://artichoke.closer.app'
+      artichoke: 'https://artichoke.closer.app',
+      orgId: '30302126-5a04-465c-b074-2628a35dfe43'
     };
 
-    return this.render(servers);
+    return this.render(entryinputs);
   }
 
-  private render(servers: Servers): void {
-    const form = makeServersForm(Page.artichokeFormId, Page.authFormId, servers);
-    const existingButton = makeButton('btn-info mx-2', 'CONTINUE AS AGENT', () => this.agentLoginCallback());
+  private render(entryinputs: EntryInputs): void {
+    const serversForm = makeServersForm(Page.artichokeFormId, Page.authFormId, entryinputs);
+    const orgInput = makeInput(
+      Page.orgIdFormId,
+      'Get org guest profile',
+      'Org id...',
+      entryinputs.orgId
+    );
     const guestButton = makeButton('btn-info mx-2', 'CONTINUE AS GUEST', () => this.guestLoginCallback());
 
     const buttonsContainer = makeDiv().prop({
       class: 'd-flex justify-content-center align-items-center m-3'
-    }).append([existingButton, guestButton]);
+    }).append([guestButton]);
 
-    this.html.append([form, buttonsContainer]);
-
-    Page.contents.empty();
-    Page.contents.append(this.html);
-  }
-
-  private agentLoginCallback(): void {
-    const servers = this.getServerInputs();
-    if (servers) {
-      this.credentials.setServers(servers);
-      this.html.hide();
-
-      const closerSdk = this.getCloserSDK(servers);
-      const agentModule = new AgentModule(closerSdk);
-
-      return agentModule.init();
-    } else {
-      return alert('Empty servers inputs');
-    }
+    Page.contents.append(
+      makeDiv().append([serversForm, orgInput, buttonsContainer])
+    );
   }
 
   private guestLoginCallback(): void {
-    const servers = this.getServerInputs();
-    if (servers) {
-      this.credentials.setServers(servers);
-      this.html.hide();
-
-      const guestModule = new GuestModule(makeDiv(), this.getCloserSDK(servers), this.credentials);
-
-      return guestModule.init();
+    const entryInputs = this.getEntryInputs();
+    if (entryInputs) {
+      this.initializeNewGuestSession(entryInputs);
     } else {
-      return alert('Empty servers inputs');
+      return alert('Empty entry inputs, fill all and try again');
     }
   }
 
-  private getServerInputs(): Servers | undefined {
+  private initializeNewGuestSession(entryInputs: EntryInputs): void {
+    const orgId = entryInputs.orgId;
+    this.storage.setEntryInputs(entryInputs);
+
+    this.getCloserSDK(entryInputs).createGuestSession(orgId).then(
+      guestSession => {
+        const { id, apiKey, roomId } = guestSession;
+        this.storage.setSessionDetails({ id, apiKey, roomId, orgId });
+
+        this.getGuestModule(guestSession).init();
+      },
+      _ => alert('Could not create guest session, check orgId.')
+    )
+  }
+
+  private getEntryInputs(): EntryInputs | undefined {
     const artichoke = String($(`#${Page.artichokeFormId}`).val());
     const spinner = String($(`#${Page.authFormId}`).val());
+    const orgId = String($(`#${Page.orgIdFormId}`).val());
 
-    if (artichoke && spinner) {
-      return { artichoke, spinner };
+    if (artichoke && spinner && orgId) {
+      return { artichoke, spinner, orgId };
     } else {
       return undefined;
     }
   }
 
-  private getCloserSDK(servers: Servers): CloserSDK {
+  private getCloserSDK(servers: EntryInputs): CloserSDK {
     const userConfig = {
       logLevel: 0,
       spinner: { server: servers.spinner },
@@ -115,5 +109,22 @@ export class EntryModule {
     };
 
     return CloserSDK.init(userConfig);
+  }
+
+  private async initializeExistingGuestSession(
+    servers: EntryInputs,
+    sessionDetails: SessionDetails,
+  ): Promise<void> {
+    const guestSession = await this.getCloserSDK(servers).getGuestSession(
+      sessionDetails.orgId,
+      sessionDetails.id,
+      sessionDetails.apiKey
+    );
+
+    return this.getGuestModule(guestSession).init();
+  }
+
+  private getGuestModule(guestSession: GuestSession): GuestModule {
+    return new GuestModule(guestSession);
   }
 }

@@ -6,19 +6,19 @@ import {
   makeSplitGridRow
 } from '../view';
 import { Page } from '../page';
-import { createStream } from '../stream';
+import { createStream } from './stream';
 import { map } from 'rxjs/operators';
 import { Observable, Subject } from 'rxjs';
 
 export class CallHandler {
 
-  private callHandler: JQuery;
   private controls: JQuery;
   private callbox: JQuery;
   private callboxGridRow: JQuery;
   private localVideoStatusWrapperEvent = new Subject<boolean>();
 
   constructor(
+    private callHandler: JQuery,
     private call: DirectCall,
     private localTracks: ReadonlyArray<MediaStreamTrack>,
     disconnectCallback: () => void,
@@ -55,7 +55,7 @@ export class CallHandler {
 
     this.registerConnectionStatus(this.controls);
 
-    this.callHandler = makeDiv().append([this.controls, this.callbox]);
+    this.callHandler.append([this.controls, this.callbox]);
     this.callboxGridRow = makeSplitGridRow();
     this.callbox.append(makeSplitGrid().append(this.callboxGridRow));
     Page.contents.append(this.callHandler);

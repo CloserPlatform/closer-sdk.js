@@ -1,8 +1,7 @@
 import { BrowserUtils } from '@closerplatform/closer-sdk';
 import { Logger } from './logger';
 import { EntryModule } from './entry.module';
-import { Credentials } from './credentials';
-import { makeDiv } from './view';
+import { Storage } from './storage';
 
 export class AppModule {
 
@@ -17,11 +16,12 @@ export class AppModule {
       Logger.log('Browser is supported, initiating the app');
     }
 
-    const entryModule = new EntryModule(
-      makeDiv(),
-      new Credentials()
-    );
+    return this.getEntryModule().init();
+  }
 
-    entryModule.init();
+  private getEntryModule(): EntryModule {
+    return new EntryModule(
+      new Storage()
+    );
   }
 }
