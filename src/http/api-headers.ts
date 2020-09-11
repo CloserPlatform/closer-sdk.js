@@ -25,6 +25,10 @@ export class ApiHeaders {
     this._deviceId = value;
   }
 
+  public set apiKey(value: ApiKey) {
+    this._apiKey = value;
+  }
+
   public get apiKey(): ApiKey {
     return this._apiKey;
   }

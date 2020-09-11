@@ -24,10 +24,12 @@ export interface ArtichokeConfig {
 
 export interface UserSpinnerConfig {
   readonly server?: string;
+  readonly apiPath?: string;
 }
 
 export interface SpinnerConfig {
   readonly server: string;
+  readonly apiPath: string;
 }
 
 export interface UserConfig {
@@ -59,6 +61,7 @@ export function getDefaultConfig(): Config {
     },
     spinner: {
       server: 'https://spinner.closer.app',
+      apiPath: 'api/',
     },
     rtc: {
       iceTransportPolicy: 'all',
@@ -75,7 +78,7 @@ export function getDefaultConfig(): Config {
 
 export const load = (conf: UserConfig): Config => {
 
-  // tslint:disable-next-line:no-any
+  // tslint:disable-next-line
   const merge = (a: any, b: any): any => {
     if (Array.isArray(a)) {
       // tslint:disable-next-line:no-unsafe-any

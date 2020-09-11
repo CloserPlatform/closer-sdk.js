@@ -2,7 +2,7 @@ import { errorEvents } from '..';
 import { HeaderValue } from './header-value';
 import { PromiseReject, PromiseResolve } from '../utils/promise-utils';
 import { LoggerService } from '../logger/logger-service';
-import { Paginated } from '../protocol/protocol';
+import { Paginated, DeviceId, ApiKey } from '../protocol/protocol';
 import { ApiHeaders } from './api-headers';
 import { XMLHttpRequestFactory } from './xml-http-request-factory';
 
@@ -25,8 +25,12 @@ export class HttpClient {
   ) {
   }
 
-  public setDeviceId(deviceId: string): void {
+  public setDeviceId(deviceId: DeviceId): void {
     this.apiHeaders.deviceId = deviceId;
+  }
+
+  public setApiKey(apiKey: ApiKey): void {
+    this.apiHeaders.apiKey = apiKey;
   }
 
   public async get<Response>(path: string): Promise<Response> {
@@ -43,6 +47,7 @@ export class HttpClient {
 
   public async getPaginated<Item>(path: string): Promise<Paginated<Item>> {
     return this.getRaw(path, this.apiHeaders.getHeaders())
+      // tslint:disable-next-line:cyclomatic-complexity
       .then(resp => {
         try {
           const items = JSON.parse(resp.responseText) as ReadonlyArray<Item>;
@@ -113,6 +118,7 @@ export class HttpClient {
   private responseCallback(xhttp: XMLHttpRequest,
                            resolve: PromiseResolve<XMLHttpRequest>,
                            reject: PromiseReject): () => void {
+    // tslint:disable-next-line:cyclomatic-complexity
     return (): void => {
       if (xhttp.readyState === XMLHttpRequest.DONE &&
         (xhttp.status === HttpCodes.OK || xhttp.status === HttpCodes.NoContent)) {

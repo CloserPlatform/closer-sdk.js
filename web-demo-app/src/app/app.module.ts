@@ -1,23 +1,27 @@
 import { BrowserUtils } from '@closerplatform/closer-sdk';
 import { Logger } from './logger';
-import { EntryModule } from './entry/entry.module';
+import { EntryModule } from './entry.module';
+import { Storage } from './storage';
 
 export class AppModule {
-  private entryModule: EntryModule;
 
-  public init = (): void => {
+  public init(): void {
     const browserInfo = `${BrowserUtils.getBrowserName()} ${BrowserUtils.getBrowserVersion()}`;
     Logger.log(`Detected browser: ${browserInfo}`);
 
     if (!BrowserUtils.isBrowserSupported()) {
-      alert(`Your browser (${browserInfo}) is not supported by RatelSDK`);
+      alert(`Your browser (${browserInfo}) is not supported by CloserSDK`);
       throw new Error('Unsupported browser');
     } else {
       Logger.log('Browser is supported, initiating the app');
     }
 
-    this.entryModule = new EntryModule();
+    return this.getEntryModule().init();
+  }
 
-    this.entryModule.init();
+  private getEntryModule(): EntryModule {
+    return new EntryModule(
+      new Storage()
+    );
   }
 }

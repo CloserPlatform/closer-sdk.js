@@ -10,6 +10,7 @@ export class BrowserUtils {
     safari: 605
   };
 
+  // tslint:disable-next-line:cyclomatic-complexity
   public static isBrowserSupported(): boolean {
     return BrowserUtils.isWebRtcAvailable()
       && adapter.browserDetails.version !== null

@@ -45,11 +45,15 @@ export class LoggerService {
   }
 
   private print(fn: (msg: string, args?: any[]) => void, msg: string, args?: any[]): void {
-    const formattedMsg = (typeof this.logPrefix !== 'undefined') ? `${this.logPrefix}: ${msg}` : msg;
+    const formattedMsg = this.getFormattedMessage(msg);
     if (typeof args !== 'undefined' && args.length > 0) {
       fn(formattedMsg, args);
     } else {
       fn(formattedMsg);
     }
+  }
+
+  private getFormattedMessage(msg: string): string {
+    return (typeof this.logPrefix !== 'undefined') ? `${this.logPrefix}: ${msg}` : msg;
   }
 }

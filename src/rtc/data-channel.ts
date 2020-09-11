@@ -26,7 +26,7 @@ export class DataChannel {
   public createConnection(): void {
     this.logger.debug('DataChannel is supported - creating connection');
     if (!this.rtcDataChannel) {
-      this.rtcDataChannel = this.rtcPeerConnection.createDataChannel(this.label, {negotiated: true, id: 1});
+      this.rtcDataChannel = this.rtcPeerConnection.createDataChannel(this.label, { negotiated: true, id: 1 });
 
       return this.registerChannelEvents(this.rtcDataChannel);
     } else {
@@ -36,22 +36,7 @@ export class DataChannel {
 
   public send(msg: DataChannelMessage): void {
     if (this.rtcDataChannel) {
-      switch (this.rtcDataChannel.readyState) {
-        case 'connecting':
-          this.logger.info('Connection is connecting, adding message to queue');
-
-          return this.messageQueue.add(msg);
-        case 'open':
-          this.logger.debug('Sending message', msg);
-
-          return this.sendMessageViaChannel(this.rtcDataChannel, msg);
-        case 'closing':
-          return this.logger.error('Can not send message, channel is closing');
-        case 'closed':
-          return this.logger.error('Can not send message, channel is already closed');
-        default:
-          return this.logger.error('Unsupported rtc data channel state');
-      }
+      return this.sendMessageViaChannel(this.rtcDataChannel, msg);
     } else {
       this.logger.info('There is no data channel, adding message to queue');
 
@@ -59,8 +44,24 @@ export class DataChannel {
     }
   }
 
+  // tslint:disable-next-line:cyclomatic-complexity
   private sendMessageViaChannel(channel: RTCDataChannel, msg: DataChannelMessage): void {
-    return channel.send(msg);
+    switch (channel.readyState) {
+      case 'connecting':
+        this.logger.info('Connection is connecting, adding message to queue');
+
+        return this.messageQueue.add(msg);
+      case 'open':
+        this.logger.debug('Sending message', msg);
+
+        return channel.send(msg);
+      case 'closing':
+        return this.logger.error('Can not send message, channel is closing');
+      case 'closed':
+        return this.logger.error('Can not send message, channel is already closed');
+      default:
+        return this.logger.error('Unsupported rtc data channel state');
+    }
   }
 
   private registerChannelEvents(channel: RTCDataChannel): void {
