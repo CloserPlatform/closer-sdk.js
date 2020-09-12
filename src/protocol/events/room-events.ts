@@ -1,8 +1,7 @@
-// tslint:disable:no-any
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
-// tslint:disable:ban-types
 import { DomainEvent } from './domain-event';
+import { Context } from '../protocol';
 
 export namespace roomEvents {
   export enum EndReason {
@@ -108,9 +107,9 @@ export namespace roomEvents {
     public static readonly tag = 'room_message_sent';
     public readonly message: string;
     public readonly messageId: string;
-    public readonly context: any;
+    public readonly context: Context;
 
-    constructor(roomId: string, authorId: string, message: string, messageId: string, context: any,
+    constructor(roomId: string, authorId: string, message: string, messageId: string, context: Context,
       timestamp: number) {
       super(roomId, authorId, timestamp, MessageSent.tag);
 
@@ -127,9 +126,9 @@ export namespace roomEvents {
   export class MessageUpdated extends RoomEvent {
     public static readonly tag = 'room_message_updated';
     public readonly messageId: string;
-    public readonly context: any;
+    public readonly context: Context;
 
-    constructor(roomId: string, authorId: string, messageId: string, context: any,
+    constructor(roomId: string, authorId: string, messageId: string, context: Context,
       timestamp: number) {
       super(roomId, authorId, timestamp, MessageUpdated.tag);
 
@@ -142,14 +141,14 @@ export namespace roomEvents {
     }
   }
 
-  export class CustomMessageSent<C = any> extends RoomEvent {
+  export class CustomMessageSent extends RoomEvent {
     public static readonly tag = 'room_custom_message_sent';
     public readonly subtag: string;
     public readonly message: string;
     public readonly messageId: string;
-    public readonly context: C;
+    public readonly context: Context;
 
-    constructor(roomId: string, authorId: string, message: string, messageId: string, subtag: string, context: C,
+    constructor(roomId: string, authorId: string, message: string, messageId: string, subtag: string, context: Context,
       timestamp: number) {
       super(roomId, authorId, timestamp, CustomMessageSent.tag);
 

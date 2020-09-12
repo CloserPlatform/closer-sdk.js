@@ -1,8 +1,5 @@
-// tslint:disable:no-any
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
-// tslint:disable:ban-types
-
 import { VideoContentType, Metadata } from '../protocol';
 import { DomainEvent } from './domain-event';
 

@@ -1,8 +1,7 @@
-// tslint:disable:no-any
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
 import { DomainCommand } from './domain-command';
-import { Ref } from '../protocol';
+import { Ref, Context } from '../protocol';
 
 export namespace roomCommand {
 
@@ -23,9 +22,9 @@ export namespace roomCommand {
 
     public readonly ref?: Ref;
     public readonly body: string;
-    public readonly context: any;
+    public readonly context: Context;
 
-    constructor(roomId: string, body: string, context: any, ref?: Ref) {
+    constructor(roomId: string, body: string, context: Context, ref?: Ref) {
       super(roomId, SendMessage.tag);
       this.body = body;
       this.context = context;
@@ -38,10 +37,10 @@ export namespace roomCommand {
 
     public readonly ref?: Ref;
     public readonly body: string;
-    public readonly context: any;
+    public readonly context: Context;
     public readonly subtag: string;
 
-    constructor(roomId: string, body: string, subtag: string, context: any, ref?: Ref) {
+    constructor(roomId: string, body: string, subtag: string, context: Context, ref?: Ref) {
       super(roomId, SendCustomMessage.tag);
       this.body = body;
       this.ref = ref;

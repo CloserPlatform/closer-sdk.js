@@ -68,14 +68,12 @@ export interface PushRegistration {
   readonly pushId: ID;
 }
 
-// tslint:disable-next-line:no-any
 export const createCall = (users: ReadonlyArray<ID>, metadata?: Metadata): CreateCall =>
   ({
     users,
     metadata
   });
 
-// tslint:disable-next-line:no-any
 export const createDirectCall = (user: ID, timeout?: number, metadata?: Metadata): CreateDirectCall =>
   ({
     user,

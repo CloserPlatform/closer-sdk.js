@@ -1,6 +1,5 @@
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
-// tslint:disable:ban-types
 // tslint:disable:member-ordering
 // tslint:disable:member-access
 import { DomainCommand } from './domain-command';

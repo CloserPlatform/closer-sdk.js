@@ -199,12 +199,12 @@ export abstract class Call implements wireEntities.Call {
     return this.getCallEvent().pipe(filter(callEvents.Invited.isInvited));
   }
 
-  // tslint:disable-next-line:readonly-keyword
-  private getCallEvent = (): Observable<callEvents.CallEvent> =>
-    this.artichokeApi.domainEvent$.pipe(
+  private getCallEvent(): Observable<callEvents.CallEvent> {
+    return this.artichokeApi.domainEvent$.pipe(
       filter(callEvents.CallEvent.isCallEvent),
       filter(ev => ev.callId === this.id),
-    )
+    );
+  }
 
   private establishRTCWithOldUsers(): void {
     this.logger.debug('Establishing rtc with existing call old users');

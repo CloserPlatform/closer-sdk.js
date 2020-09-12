@@ -1,4 +1,3 @@
-// tslint:disable:no-any
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
 import { VideoContentType } from '../protocol';
