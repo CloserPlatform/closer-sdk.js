@@ -432,8 +432,7 @@ describe('Unit: Artichoke', () => {
     const client = getArtichoke(api);
     const body = 'body';
     const type = 'MESSAGE';
-    const payload = 0.1;
-    const event = new externalEvents.LastMessageUpdated(body, roomId, timestamp, userId, type, timestamp + 1, payload);
+    const event = new externalEvents.LastMessageUpdated(body, roomId, timestamp, userId, type, timestamp + 1);
     spyOnProperty(api, 'domainEvent$', 'get').and.returnValue(of(event));
     client.lastMessageUpdated$.subscribe(ev => {
       expect(ev.body).toBe(body);
@@ -442,7 +441,6 @@ describe('Unit: Artichoke', () => {
       expect(ev.userId).toBe(userId);
       expect(ev.type).toBe(type);
       expect(ev.threadCreatedAt).toBe(timestamp + 1);
-      expect(ev.payload).toBe(payload);
       done();
     }, done.fail);
   });
