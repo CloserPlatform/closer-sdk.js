@@ -29,6 +29,7 @@ export { PeerConnectionStatus } from './rtc/rtc-pool';
 export { PeerDataChannelMessage } from './rtc/rtc-pool';
 
 // Artichoke protocol
+export { ID } from './protocol/protocol';
 export { ApiKey } from './protocol/protocol';
 export { callEvents } from './protocol/events/call-events';
 export { chatEvents } from './protocol/events/chat-events';

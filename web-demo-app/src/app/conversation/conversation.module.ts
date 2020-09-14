@@ -1,7 +1,7 @@
-import { Session, roomEvents, Room, protocol } from '@closerplatform/closer-sdk';
+import { roomEvents, Room, protocol } from '@closerplatform/closer-sdk';
 import {
   makeChatContainer, makeInputWithBtn, makeMessageEntry,
-  makeChatWrapper, makeChatLegend, makeChatInfoText, makeChatEventInfoContainer, makeDiv
+  makeChatWrapper, makeChatLegend, makeChatInfoText, makeChatEventInfoContainer, makeDiv, makeSplitGridRow, makeCallbox
 } from '../view';
 import { Page } from '../page';
 import { Subject, Observable } from 'rxjs';
@@ -9,6 +9,7 @@ import { takeUntil } from 'rxjs/operators';
 import { Logger } from '../logger';
 import { createStream } from './stream';
 import { CallHandler } from './call-handler';
+import { CloserGuestSessionService } from './closer-session.service';
 
 interface MessageHandle {
   readonly messageId: string;
@@ -39,13 +40,19 @@ export class ConversationModule {
 
   constructor(
     private html: JQuery,
+    private closerSessionService: CloserGuestSessionService,
     private room: Room,
-    private session: Session,
   ) {
   }
 
   public init(): void {
     this.render();
+  }
+
+  public hide(): void {
+    this.unsubscribeEvent.next();
+    window.removeEventListener('focus', () => this.setMark());
+    this.html.off('click');
   }
 
   private async callToUser(calleeId: string): Promise<void> {
@@ -54,11 +61,21 @@ export class ConversationModule {
     const tracks = stream.getTracks();
 
     try {
-      const callResponse = await this.session.spinner.createCall({ invitee: calleeId });
-      const call = await this.session.artichoke.getCall(callResponse.id);
+      const call = await this.closerSessionService.createCall(calleeId);
       Logger.log('Created direct call');
 
-      new CallHandler(makeDiv(), call, tracks, () => alert('Not implemented'));
+      const callbox = makeCallbox(call.id, 'callbox', []);
+      const callboxGridRow = makeSplitGridRow();
+
+      const callHandler = new CallHandler(
+        makeDiv(),
+        callbox,
+        callboxGridRow,
+        call,
+        tracks,
+        () => this.closerSessionService.disconnect(),
+      );
+      callHandler.init();
     } catch (e) {
       alert(`Failed at creating call - ${e}`);
     }
@@ -71,12 +88,6 @@ export class ConversationModule {
     if (this.html) {
       this.html.on('click', () => this.setMark());
     }
-  }
-
-  public hide(): void {
-    this.unsubscribeEvent.next();
-    window.removeEventListener('focus', () => this.setMark());
-    this.html.off('click');
   }
 
   private subscribeChatEvents(): void {
@@ -118,7 +129,7 @@ export class ConversationModule {
 
     this.scrollToBottom();
 
-    if (msg.authorId !== this.session.id) {
+    if (msg.authorId !== this.closerSessionService.id) {
       this.room.setDelivered(msg.messageId);
       this.eventInfoContainer.empty();
       clearTimeout(this.infoTimeout);
@@ -140,8 +151,8 @@ export class ConversationModule {
   }
 
   private handleMarked(mark: roomEvents.MarkSent): void {
-    if (mark.authorId !== this.session.id) {
-      this.messages.filter(mh => mh.authorId === this.session.id).forEach(mh => {
+    if (mark.authorId !== this.closerSessionService.id) {
+      this.messages.filter(mh => mh.authorId === this.closerSessionService.id).forEach(mh => {
         mh.elem
           .removeClass([MessageColors.delievered, MessageColors.undelievered])
           .addClass(MessageColors.read);
@@ -170,7 +181,7 @@ export class ConversationModule {
   }
 
   private isMessageAuthor(message: roomEvents.MessageSent): boolean {
-    return message.authorId === this.session.id;
+    return message.authorId === this.closerSessionService.id;
   }
 
   private getMessageColor(message: roomEvents.MessageSent, isNewMessage = true): string {
@@ -204,7 +215,7 @@ export class ConversationModule {
     const messageHandle = this.messages.find(m => m.elem === messageDiv);
 
     if (messageHandle) {
-      if (messageHandle.authorId === this.session.id) {
+      if (messageHandle.authorId === this.closerSessionService.id) {
         alert('You are trying to call yourself');
       } else {
         this.callToUser(messageHandle.authorId);

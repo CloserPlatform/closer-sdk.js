@@ -67,11 +67,6 @@ export function getDefaultConfig(): Config {
       iceTransportPolicy: 'all',
       bundlePolicy: 'max-bundle',
       rtcpMuxPolicy: 'require',
-      iceServers: [{
-        urls: ['stun:turn.closer.app:443', 'turn:turn.closer.app:443'],
-        username: 'closer-user',
-        credential: 'roxU2H%hJ7NNuiPlunS@zq+o'
-      }],
     },
   };
 }

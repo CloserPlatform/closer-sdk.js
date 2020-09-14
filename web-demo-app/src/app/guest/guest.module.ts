@@ -1,13 +1,12 @@
 import { makeDiv } from '../view';
 import { Logger } from '../logger';
 import { ConversationModule } from '../conversation/conversation.module';
-import { GuestSession } from '../../../../dist';
-import { SessionService } from '../conversation/session.service';
+import { CloserGuestSessionService } from '../conversation/closer-session.service';
 
 export class GuestModule {
 
   constructor(
-    private guestSession: GuestSession,
+    private sessionService: CloserGuestSessionService
   ) {
   }
 
@@ -16,13 +15,12 @@ export class GuestModule {
   }
 
   private async initializeBoard(): Promise<void> {
-    const sessionService = new SessionService();
-    sessionService.connect(this.guestSession);
-    const room = await this.guestSession.artichoke.getRoom(this.guestSession.roomId);
+    this.sessionService.connect();
+    const room = await this.sessionService.getRoom();
     const conversationModule = new ConversationModule(
       makeDiv(),
+      this.sessionService,
       room,
-      this.guestSession
     );
 
     conversationModule.init();

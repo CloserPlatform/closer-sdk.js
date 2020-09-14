@@ -5,6 +5,7 @@ import { GuestModule } from './guest/guest.module';
 import { Storage, EntryInputs, SessionDetails } from './storage';
 import { CloserSDK, GuestSession } from '@closerplatform/closer-sdk';
 import { Logger } from './logger';
+import { CloserGuestSessionService } from './conversation/closer-session.service';
 
 export class EntryModule {
 
@@ -30,7 +31,7 @@ export class EntryModule {
         this.storage.setSessionDetails();
         Logger.log('Rendering inputs');
         this.handleNewVisitor(maybeEntryinputs);
-      })
+      });
     } else {
       this.handleNewVisitor(maybeEntryinputs);
     }
@@ -86,9 +87,10 @@ export class EntryModule {
         this.getGuestModule(guestSession).init();
       },
       _ => alert('Could not create guest session, check orgId.')
-    )
+    );
   }
 
+  // tslint:disable-next-line:cyclomatic-complexity
   private getEntryInputs(): EntryInputs | undefined {
     const artichoke = String($(`#${Page.artichokeFormId}`).val());
     const spinner = String($(`#${Page.authFormId}`).val());
@@ -125,6 +127,8 @@ export class EntryModule {
   }
 
   private getGuestModule(guestSession: GuestSession): GuestModule {
-    return new GuestModule(guestSession);
+    return new GuestModule(
+      new CloserGuestSessionService(guestSession)
+    );
   }
 }
