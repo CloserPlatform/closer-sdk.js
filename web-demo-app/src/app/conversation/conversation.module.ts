@@ -97,7 +97,7 @@ export class ConversationModule {
 
     this.room.typing$
       .pipe(takeUntil(this.unsubscribe$))
-      .subscribe(() => this.handleTyping());
+      .subscribe((typingSent) => this.handleTyping(typingSent));
 
     this.room.messageDelivered$
       .pipe(takeUntil(this.unsubscribe$))
@@ -136,11 +136,13 @@ export class ConversationModule {
     }
   }
 
-  private handleTyping(): void {
-    this.setInfoText('User is typing...');
+  private handleTyping(typingSent: roomEvents.TypingSent): void {
+    this.setInfoText(typingSent.preview ? `User is typing...[${typingSent.preview}]` : 'User is typing...');
 
     clearTimeout(this.infoTimeout);
-    this.infoTimeout = setTimeout(() => this.setInfoText(), ConversationModule.INFO_TIME);
+    if (!typingSent.preview) {
+      this.infoTimeout = setTimeout(() => this.setInfoText(), ConversationModule.INFO_TIME);
+    }
   }
 
   private handleDelievered(message: roomEvents.MessageDelivered): void {
@@ -258,7 +260,7 @@ export class ConversationModule {
       'Send',
       'Type your message here...',
       '',
-      this.room.indicateTyping
+      (value) => this.room.indicateTyping(value)
     );
 
     this.html.append([info, legend, this.chatWrapper, msgInput]);
