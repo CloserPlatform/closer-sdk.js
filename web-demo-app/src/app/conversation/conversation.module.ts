@@ -260,7 +260,7 @@ export class ConversationModule {
       'Send',
       'Type your message here...',
       '',
-      (value) => this.room.indicateTyping(value)
+      value => this.room.indicateTyping(value)
     );
 
     this.html.append([info, legend, this.chatWrapper, msgInput]);
