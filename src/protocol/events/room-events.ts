@@ -165,12 +165,9 @@ export namespace roomEvents {
 
   export class TypingSent extends RoomEvent {
     public static readonly tag = 'room_typing_sent';
-    public readonly preview?: string;
 
-    constructor(roomId: string, authorId: string, timestamp: number, preview?: string) {
+    constructor(roomId: string, authorId: string, timestamp: number, public readonly preview?: string) {
       super(roomId, authorId, timestamp, TypingSent.tag);
-
-      this.preview = preview;
     }
 
     public static isTypingSent(e: DomainEvent): e is TypingSent {
