@@ -453,6 +453,14 @@ describe('Unit: ArtichokeApi', () => {
       expect(wsClient.send).toHaveBeenCalledWith(new roomCommand.SendTyping(roomId));
     });
 
+    it('sendTyping with preview', () => {
+      const wsClient = getWebsocketClient();
+      spyOn(wsClient, 'send');
+      const preview = 'I am typing';
+      getArtichokeApi(wsClient).sendTyping(roomId, preview);
+      expect(wsClient.send).toHaveBeenCalledWith(new roomCommand.SendTyping(roomId, preview));
+    });
+
     it('setMark', () => {
       const wsClient = getWebsocketClient();
       spyOn(wsClient, 'send');
