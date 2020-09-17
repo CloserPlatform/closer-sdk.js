@@ -65,8 +65,8 @@ export abstract class Room implements wireEntities.Room {
         return this.artichokeAPI.sendCustom(this.id, message, subtag, context);
     }
 
-    public indicateTyping(): void {
-        return this.artichokeAPI.sendTyping(this.id);
+    public indicateTyping(preview?: string): void {
+        return this.artichokeAPI.sendTyping(this.id, preview);
     }
 
     public get marked$(): Observable<roomEvents.MarkSent> {

@@ -186,8 +186,8 @@ export class ArtichokeApi {
     return this.websocketClient.ask(new roomCommand.SendCustomMessage(roomId, body, subtag, context));
   }
 
-  public sendTyping(roomId: proto.ID): void {
-    return this.websocketClient.send(new roomCommand.SendTyping(roomId));
+  public sendTyping(roomId: proto.ID, body?: string): void {
+    return this.websocketClient.send(new roomCommand.SendTyping(roomId, body));
   }
 
   public setMark(roomId: proto.ID, timestamp: proto.Timestamp): void {

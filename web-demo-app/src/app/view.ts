@@ -164,15 +164,18 @@ export const makeChatEventInfoContainer = (): JQuery => (
 
 export const makeInputWithBtn = (id: string, callback: (value: string) => void,
     buttonLabel: string, placeholder: string,
-    initial: string, onchange: (() => void) | undefined = undefined): JQuery => (
+    initial: string, onchange: ((s: string) => void) | undefined = undefined): JQuery => (
   makeInputWithBtnAndOnChangeCallback(id, callback, buttonLabel, placeholder, initial, onchange)
 );
 
 export const makeInputWithBtnAndOnChangeCallback = (id: string, callback: (value: string) => void,
-    buttonLabel: string, placeholder: string, initial: string, onchange: (() => void) | undefined): JQuery => {
+    buttonLabel: string, placeholder: string, initial: string, onchange: ((s: string) => void) | undefined): JQuery => {
   const input = makePlaceholderInput(`input-${id}`, placeholder, initial);
   if (onchange) {
-    input.on('change', onchange);
+    input.on('input', function(): void {
+      // tslint:disable-next-line: no-invalid-this
+      onchange(String($(this).val()));
+    });
   }
 
   const button = $(`<button class="btn btn-outline-primary" type="button" form="form-${id}">`)
