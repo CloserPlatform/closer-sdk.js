@@ -52,7 +52,7 @@ export namespace roomCommand {
   export class SendTyping extends RoomCommand {
     public static readonly tag = 'room_send_typing';
 
-    constructor(roomId: string) {
+    constructor(roomId: string, public readonly body?: string) {
       super(roomId, SendTyping.tag);
     }
   }

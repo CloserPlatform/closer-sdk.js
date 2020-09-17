@@ -157,12 +157,21 @@ describe('Unit: BusinessRoom', () => {
     expect(api.sendCustom).toHaveBeenCalledWith(roomEvent.id, message, subtag, context);
   });
 
+  it('indicateTyping with preview', async () => {
+    const api = getArtichokeApiMock();
+    spyOn(api, 'sendTyping');
+    const room = getRoom(api);
+    const preview = 'I am typing';
+    room.indicateTyping(preview);
+    expect(api.sendTyping).toHaveBeenCalledWith(roomEvent.id, preview);
+  });
+
   it('indicateTyping', async () => {
     const api = getArtichokeApiMock();
     spyOn(api, 'sendTyping');
     const room = getRoom(api);
     room.indicateTyping();
-    expect(api.sendTyping).toHaveBeenCalledWith(roomEvent.id);
+    expect(api.sendTyping).toHaveBeenCalledWith(roomEvent.id, undefined);
   });
 
   it('message$', async done => {
