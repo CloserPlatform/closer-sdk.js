@@ -17,7 +17,7 @@ Installation
 We recommend using `npm` to add the CloserSDK as a dependency.
 
 ```
-npm install closer-sdk --save
+npm install @closerplatform/closer-sdk --save
 ```
 
 Using this method, you can `import` closer-sdk.js using ES Module or TypeScript syntax:
