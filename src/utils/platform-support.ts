@@ -1,7 +1,7 @@
 import adapter from 'webrtc-adapter';
 import { DataChannel } from '../rtc/data-channel';
 
-export class BrowserUtils {
+export class PlatformSupport {
 
   private static readonly supportedBrowsers: {readonly [browserName: string]: number} = {
     chrome: 67, // opera is also recognized as chrome by webrtc-adapter
@@ -11,12 +11,16 @@ export class BrowserUtils {
   };
 
   // tslint:disable-next-line:cyclomatic-complexity
-  public static isBrowserSupported(): boolean {
-    return BrowserUtils.isWebRtcAvailable()
+  public static isMediaSupported(): boolean {
+    return PlatformSupport.isWebRtcAvailable()
       && adapter.browserDetails.version !== null
       && DataChannel.isSupported()
-      && BrowserUtils.isBrowserVersionSupported()
-      && BrowserUtils.isUserMediaAvailable();
+      && PlatformSupport.isBrowserVersionSupported()
+      && PlatformSupport.isUserMediaAvailable();
+  }
+
+  public static isChatSupported(): boolean {
+    return typeof window.WebSocket !== 'undefined';
   }
 
   public static getBrowserName(): string {
@@ -44,10 +48,10 @@ export class BrowserUtils {
   }
 
   private static isBrowserVersionSupported(): boolean {
-    const maybeBrowserVersion = BrowserUtils.getBrowserVersion();
+    const maybeBrowserVersion = PlatformSupport.getBrowserVersion();
 
     return typeof maybeBrowserVersion !== 'undefined' &&
-      maybeBrowserVersion >= BrowserUtils.supportedBrowsers[BrowserUtils.getBrowserName()];
+      maybeBrowserVersion >= PlatformSupport.supportedBrowsers[PlatformSupport.getBrowserName()];
   }
 
   private static isWebRtcAvailable(): boolean {

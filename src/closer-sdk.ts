@@ -1,7 +1,7 @@
 import { ID, ApiKey } from './protocol/protocol';
 import { UserConfig, load, getDefaultConfig } from './config/config';
 import { Session } from './session/session';
-import { BrowserUtils } from './utils/browser-utils';
+import { PlatformSupport } from './utils/platform-support';
 import { LoggerFactory } from './logger/logger-factory';
 import { SessionFactory } from './session/session-factory';
 import { LoggerService } from './logger/logger-service';
@@ -11,7 +11,7 @@ import { GuestSession } from './session/guest-session';
 export class CloserSDK {
 
     public static init(userConfig?: UserConfig): CloserSDK {
-        if (!CloserSDK.isSupported()) {
+        if (!CloserSDK.isChatSupported()) {
             throw new Error('Platform is not supported');
         }
 
@@ -28,8 +28,12 @@ export class CloserSDK {
         );
     }
 
-    public static isSupported(): boolean {
-        return BrowserUtils.isBrowserSupported();
+    public static isChatSupported(): boolean {
+        return PlatformSupport.isChatSupported();
+    }
+
+    public static isMediaSupported(): boolean {
+        return PlatformSupport.isMediaSupported();
     }
 
     public async createGuestSession(orgId: ID): Promise<GuestSession> {

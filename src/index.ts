@@ -48,7 +48,7 @@ import * as spinnerProtocol from './spinner/protocol';
 export { spinnerProtocol };
 
 // Utils
-export { BrowserUtils } from './utils/browser-utils';
+export { PlatformSupport } from './utils/platform-support';
 
 // Logging
 export { LogLevel } from './logger/log-level';
