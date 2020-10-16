@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## 1.2.1
+ - disconnect$ event
+
 ## 1.2.0
 
 ### Improved
@@ -16,7 +19,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## 1.1.0
 
 ### Added
-- onTyping body
+ - room event and command typing might have optional field with preview
+ - room.sendTyping can receive optional parameter with preview
 
 ## 1.0.13 - 2020-08-21
 

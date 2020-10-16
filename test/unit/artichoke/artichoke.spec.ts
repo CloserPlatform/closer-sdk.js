@@ -147,6 +147,24 @@ describe('Unit: Artichoke', () => {
       client.connection$.subscribe(() => done.fail('Connected correctly'), done.fail);
       done();
     });
+
+    it('connection end should emit disconnect$', done => {
+      const api = getArtichokeApiMock();
+      const client = getArtichoke(api);
+      client.disconnect$.subscribe(done, done.fail);
+      spyOnProperty(api, 'connection$', 'get').and.returnValue(getFakeConnection$([helloEvent]));
+      const obs = client.connection$.subscribe();
+      obs.unsubscribe();
+    });
+
+    it('unsuccessful connect should emit disconnect$', done => {
+      const api = getArtichokeApiMock();
+      const client = getArtichoke(api);
+      const event = new serverEvents.OutputHeartbeat(Date.now());
+      spyOnProperty(api, 'connection$', 'get').and.returnValue(of(event));
+      client.disconnect$.subscribe(done, done.fail);
+      client.connection$.subscribe(() => done.fail('Connected correctly'), done.fail);
+    });
   });
 
   describe('disconnect', () => {
