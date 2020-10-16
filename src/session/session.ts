@@ -23,6 +23,10 @@ export class Session {
     return this.artichoke.serverUnreachable$;
   }
 
+  public get disconnect$(): Observable<void> {
+    return this.artichoke.disconnect$;
+  }
+
   public async createCall(invitee: ID): Promise<Call> {
     const callEvent = await this.spinner.createCall({ invitee });
 

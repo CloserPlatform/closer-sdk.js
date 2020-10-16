@@ -41,6 +41,7 @@ export class Artichoke {
   private heartbeatTimeout?: BumpableTimeout;
 
   private readonly serverUnreachableEvent = new Subject<void>();
+  private readonly disconnectEvent = new Subject<void>();
 
   constructor(
     private artichokeApi: ArtichokeApi,
@@ -86,6 +87,10 @@ export class Artichoke {
 
   public get serverUnreachable$(): Observable<void> {
     return this.serverUnreachableEvent.asObservable();
+  }
+
+  public get disconnect$(): Observable<void> {
+    return this.disconnectEvent.asObservable();
   }
 
   // Call API:
@@ -282,10 +287,9 @@ export class Artichoke {
 
   private handleDisconnect(): void {
     this.loggerService.info('Disconnected');
-    if (this.heartbeatTimeout) {
-      this.heartbeatTimeout.clear();
-      this.heartbeatTimeout = undefined;
-    }
+    this.disconnectEvent.next();
+
+    this.clearHeartbeatTimeout();
   }
 
   private clearHeartbeatTimeout(): void {
