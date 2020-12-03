@@ -180,6 +180,11 @@ export class Artichoke {
     return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.TypingSent.isTypingSent));
   }
 
+  public get customMessage$(): Observable<roomEvents.CustomMessageSent> {
+    return this.artichokeApi.domainEvent$
+      .pipe(filter(roomEvents.RoomEvent.isRoomEvent), filter(roomEvents.CustomMessageSent.isCustomMessageSent));
+  }
+
   public get unreadCountUpdated$(): Observable<externalEvents.UnreadCountUpdated> {
     return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.UnreadCountUpdated.isUnreadCountUpdated));
   }

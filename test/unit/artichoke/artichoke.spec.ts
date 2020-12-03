@@ -19,6 +19,7 @@ const authorId = 'callId';
 const roomId = 'roomId';
 const requesterId = 'requesterId';
 const customerId = 'customerId';
+const messageId = 'messageId';
 const locale = 'en-US';
 const zoneId = 'zone';
 const timestamp = 123456;
@@ -571,6 +572,23 @@ describe('Unit: Artichoke', () => {
     client.unreadTotalUpdated$.subscribe(ev => {
       expect(ev.tab).toBe(tab);
       expect(ev.unreadCount).toBe(unreadCount);
+      done();
+    }, done.fail);
+  });
+
+  it('customMessage$', done => {
+    const api = getArtichokeApiMock();
+    const client = getArtichoke(api);
+    const message = "custom";
+    const subtag = "CUSTOM_TAG";
+    const context = { custom: "custom" }
+    const event = new roomEvents.CustomMessageSent(roomId, authorId, message, messageId, subtag, context, timestamp);
+    spyOnProperty(api, 'domainEvent$', 'get').and.returnValue(of(event));
+    client.customMessage$.subscribe(ev => {
+      expect(ev.roomId).toBe(roomId);
+      expect(ev.message).toBe(message);
+      expect(ev.subtag).toBe(subtag);
+      expect(ev.context).toBe(context);
       done();
     }, done.fail);
   });
