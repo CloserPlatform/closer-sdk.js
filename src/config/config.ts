@@ -4,7 +4,6 @@ import { RTCConfig } from './rtc-config';
 
 export interface UserArtichokeConfig {
   readonly server?: string;
-  readonly reconnectDelayMs?: number;
   readonly heartbeatTimeoutMultiplier?: number;
   readonly apiPath?: string;
   readonly wsPath?: string;
@@ -14,7 +13,6 @@ export interface UserArtichokeConfig {
 
 export interface ArtichokeConfig {
   readonly server: string;
-  readonly reconnectDelayMs: number;
   readonly heartbeatTimeoutMultiplier: number;
   readonly apiPath: string;
   readonly wsPath: string;
@@ -52,7 +50,6 @@ export function getDefaultConfig(): Config {
     logLevel: LogLevel.WARN,
     artichoke: {
       server: 'https://artichoke.closer.app',
-      reconnectDelayMs: 2000,
       heartbeatTimeoutMultiplier: 2,
       reconnectionDisabled: false,
       askTimeoutMs: 5000,

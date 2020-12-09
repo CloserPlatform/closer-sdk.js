@@ -46,7 +46,7 @@ describe('Unit: ArtichokeApi', () => {
       const wsClient = getWebsocketClient();
       const httpClient = getHttpClientMock();
       const deviceId = 'deviceId';
-      const helloEvent = new serverEvents.Hello(deviceId, 1, 1);
+      const helloEvent = new serverEvents.Hello(deviceId, 1, 1, 1);
       spyOnProperty(wsClient, 'connection$', 'get').and.returnValue(of(helloEvent));
       spyOn(httpClient, 'setDeviceId');
       const machokeApi = getArtichokeApi(wsClient, httpClient);
@@ -72,7 +72,7 @@ describe('Unit: ArtichokeApi', () => {
     it('pass event to domainEvent$', done => {
       const wsClient = getWebsocketClient();
       const deviceId = 'deviceId';
-      const helloEvent = new serverEvents.Hello(deviceId, 1, 1);
+      const helloEvent = new serverEvents.Hello(deviceId, 1, 1, 1);
       spyOnProperty(wsClient, 'connection$', 'get').and.returnValue(of(helloEvent));
       const machokeApi = getArtichokeApi(wsClient);
       machokeApi.domainEvent$.subscribe(ev => {
@@ -86,7 +86,7 @@ describe('Unit: ArtichokeApi', () => {
       const socket$ = new Subject() as WebSocketSubject<ArtichokeMessage>;
       const wsClient = getWebsocketClient(socket$);
       const deviceId = 'deviceId';
-      const helloEvent = new serverEvents.Hello(deviceId, 1, 1);
+      const helloEvent = new serverEvents.Hello(deviceId, 1, 1, 1);
       const machokeApi = getArtichokeApi(wsClient);
 
       machokeApi.connection$.subscribe();
@@ -108,7 +108,7 @@ describe('Unit: ArtichokeApi', () => {
       const wsClient = getWebsocketClient();
       const httpClient = getHttpClientMock();
       const deviceId = 'deviceId';
-      const helloEvent = new serverEvents.Hello(deviceId, 1, 1);
+      const helloEvent = new serverEvents.Hello(deviceId, 1, 1, 1);
       spyOnProperty(wsClient, 'connection$', 'get').and.returnValue(of(helloEvent));
       spyOn(httpClient, 'setDeviceId');
       const machokeApi = getArtichokeApi(wsClient, httpClient);
