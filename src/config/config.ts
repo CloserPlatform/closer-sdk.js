@@ -9,6 +9,7 @@ export interface UserArtichokeConfig {
   readonly wsPath?: string;
   readonly askTimeoutMs?: number;
   readonly reconnectionDisabled?: boolean;
+  readonly fallbackReconnectDelayMs?: number;
 }
 
 export interface ArtichokeConfig {
@@ -18,6 +19,7 @@ export interface ArtichokeConfig {
   readonly wsPath: string;
   readonly askTimeoutMs: number;
   readonly reconnectionDisabled: boolean;
+  readonly fallbackReconnectDelayMs: number;
 }
 
 export interface UserSpinnerConfig {
@@ -52,6 +54,7 @@ export function getDefaultConfig(): Config {
       server: 'https://artichoke.closer.app',
       heartbeatTimeoutMultiplier: 2,
       reconnectionDisabled: false,
+      fallbackReconnectDelayMs: 2000,
       askTimeoutMs: 5000,
       apiPath: 'api/',
       wsPath: 'ws/',

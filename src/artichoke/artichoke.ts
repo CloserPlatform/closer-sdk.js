@@ -51,6 +51,7 @@ export class Artichoke {
     private roomFactory: RoomFactory,
     private loggerService: LoggerService,
     private heartbeatTimeoutMultiplier: number,
+    private fallbackReconnectDelayMs: number,
   ) {
     // Do not move this as a property accessor, it must be only one object to make rx `share` operator work.
     this.connection = merge(
@@ -316,8 +317,6 @@ export class Artichoke {
   }
 
   private getReconnectDelay(): number {
-    const FALLBACK_RECONNECT_DELAY = 2000;
-
-    return this.reconnectDelayMs ||  FALLBACK_RECONNECT_DELAY;
+    return this.reconnectDelayMs || this.fallbackReconnectDelayMs;
   }
 }

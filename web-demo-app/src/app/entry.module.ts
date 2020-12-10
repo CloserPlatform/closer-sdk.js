@@ -3,7 +3,7 @@ import { Page } from './page';
 import { Nav } from './nav';
 import { GuestModule } from './guest/guest.module';
 import { Storage, EntryInputs, SessionDetails } from './storage';
-import { CloserSDK, GuestSession } from '@closerplatform/closer-sdk';
+import { CloserSDK, GuestSession, UserConfig } from '@closerplatform/closer-sdk';
 import { Logger } from './logger';
 import { CloserGuestSessionService } from './conversation/closer-session.service';
 
@@ -104,10 +104,10 @@ export class EntryModule {
   }
 
   private getCloserSDK(servers: EntryInputs): CloserSDK {
-    const userConfig = {
+    const userConfig: UserConfig = {
       logLevel: 0,
       spinner: { server: servers.spinner },
-      artichoke: { server: servers.artichoke }
+      artichoke: { server: servers.artichoke, fallbackReconnectDelayMs: 3000 }
     };
 
     return CloserSDK.init(userConfig);
