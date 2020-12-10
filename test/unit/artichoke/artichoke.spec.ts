@@ -50,7 +50,8 @@ const directRoomEvent = {...groupRoomEvent, direct: true};
 const businessRoomEvent = {...groupRoomEvent, orgId: 'orgId'};
 
 const hbTimeout = 2000;
-const helloEvent = new serverEvents.Hello('deviceId', 1, hbTimeout);
+const reconnectDelayMs = 1000;
+const helloEvent = new serverEvents.Hello('deviceId', 1, hbTimeout, reconnectDelayMs);
 
 const getHeartbeatTimeout = (): number =>
   hbTimeout * getConfigMock().artichoke.heartbeatTimeoutMultiplier;
@@ -64,7 +65,6 @@ export const getArtichoke = (api = getArtichokeApiMock()): Artichoke =>
     getCallFactoryMock(),
     getRoomFactory(),
     getLoggerServiceMock(),
-    getConfigMock().artichoke.reconnectDelayMs,
     getConfigMock().artichoke.heartbeatTimeoutMultiplier,
   );
 
@@ -165,6 +165,69 @@ describe('Unit: Artichoke', () => {
       spyOnProperty(api, 'connection$', 'get').and.returnValue(of(event));
       client.disconnect$.subscribe(done, done.fail);
       client.connection$.subscribe(() => done.fail('Connected correctly'), done.fail);
+    });
+  });
+
+  describe('reconnect', () => {
+    it('should try to reconnect after delay', done => {
+      const subject = new Subject<ArtichokeMessage>();
+      const api = getArtichokeApiMock();
+      spyOnProperty(api, 'connection$', 'get').and.returnValue(subject);
+      const client = getArtichoke(api);
+      const connectSubscription = jasmine.createSpy('connection$');
+      const disconnectSubscription = jasmine.createSpy('disconnect$');
+      jasmine.clock().install();
+
+      client.connection$.subscribe(connectSubscription, done.fail, done.fail);
+      subject.next(helloEvent);
+      expect(connectSubscription).toHaveBeenCalled();
+
+      client.disconnect$.subscribe(disconnectSubscription);
+      subject.error('mock connection failure');
+
+      const oneTimeBecauseConnectionFailure = 1;
+      const twoTimesBecauseOfUnsuccessfullReconnect = 2;
+
+      jasmine.clock().tick(reconnectDelayMs - 1);
+      expect(disconnectSubscription).toHaveBeenCalledTimes(oneTimeBecauseConnectionFailure);
+      jasmine.clock().tick(1);
+      expect(disconnectSubscription).toHaveBeenCalledTimes(twoTimesBecauseOfUnsuccessfullReconnect);
+
+      jasmine.clock().uninstall();
+      done();
+    });
+
+    it('should update its reconnect delay from new hello event', done => {
+      const firstDelay = 2137;
+      const firstHello = new serverEvents.Hello('id', 1, 1, firstDelay);
+      // tslint:disable-next-line: no-magic-numbers
+      const secondHello = new serverEvents.Hello('id', 1, 1, firstDelay * 2);
+      const subject = new Subject<ArtichokeMessage>();
+      const api = getArtichokeApiMock();
+      spyOnProperty(api, 'connection$', 'get').and.returnValue(subject);
+      const client = getArtichoke(api);
+      const connectSubscription = jasmine.createSpy('connection$');
+      const disconnectSubscription = jasmine.createSpy('disconnect$');
+      jasmine.clock().install();
+
+      client.connection$.subscribe(connectSubscription, done.fail, done.fail);
+      subject.next(firstHello);
+      subject.next(secondHello);
+      expect(connectSubscription).toHaveBeenCalled();
+
+      client.disconnect$.subscribe(disconnectSubscription);
+      subject.error('mock connection failure');
+
+      const oneTimeBecauseUpdatedTimeoutNotYetCompleted = 1;
+      const twoTimesBecauseUpdatedTimeoutCompleted = 2;
+
+      jasmine.clock().tick(firstDelay);
+      expect(disconnectSubscription).toHaveBeenCalledTimes(oneTimeBecauseUpdatedTimeoutNotYetCompleted);
+      jasmine.clock().tick(firstDelay);
+      expect(disconnectSubscription).toHaveBeenCalledTimes(twoTimesBecauseUpdatedTimeoutCompleted);
+
+      jasmine.clock().uninstall();
+      done();
     });
   });
 

@@ -14,9 +14,8 @@ import { DirectCall } from '../calls/direct-call';
 import { Call } from '../calls/call';
 import { BumpableTimeout } from '../utils/bumpable-timeout';
 import { PromiseUtils } from '../utils/promise-utils';
-import { merge, Observable, Subject } from 'rxjs';
+import { merge, Observable, Subject, timer } from 'rxjs';
 import {
-  delay,
   filter,
   finalize, ignoreElements,
   repeatWhen,
@@ -24,6 +23,7 @@ import {
   takeUntil,
   tap,
   share,
+  delayWhen,
 } from 'rxjs/operators';
 import { CallFactory } from '../calls/call-factory';
 import { RoomFactory } from '../rooms/room-factory';
@@ -39,6 +39,8 @@ export class Artichoke {
 
   // tslint:disable-next-line:readonly-keyword
   private heartbeatTimeout?: BumpableTimeout;
+  // tslint:disable-next-line:readonly-keyword
+  private reconnectDelayMs?: number;
 
   private readonly serverUnreachableEvent = new Subject<void>();
   private readonly disconnectEvent = new Subject<void>();
@@ -48,8 +50,8 @@ export class Artichoke {
     private callFactory: CallFactory,
     private roomFactory: RoomFactory,
     private loggerService: LoggerService,
-    private reconnectDelayMs: number,
     private heartbeatTimeoutMultiplier: number,
+    private fallbackReconnectDelayMs: number,
   ) {
     // Do not move this as a property accessor, it must be only one object to make rx `share` operator work.
     this.connection = merge(
@@ -65,10 +67,10 @@ export class Artichoke {
     ).pipe(
       finalize(() => this.handleDisconnect()),
       // On WebSocket error
-      retryWhen(errors => errors.pipe(delay(this.reconnectDelayMs))),
+      retryWhen(errors => this.delayReconnect(errors)),
       takeUntil(this.serverUnreachableEvent),
       // On WebSocket gracefull close
-      repeatWhen(attempts => attempts.pipe(delay(this.reconnectDelayMs))),
+      repeatWhen(attempts => this.delayReconnect(attempts)),
       // IMPORTANT
       // Share the observable, so the internal logic would behave like one consistent stream
       // Without this operator, if client subscribes two times, we would have
@@ -271,10 +273,15 @@ export class Artichoke {
   }
 
   private handleHelloEvent(hello: serverEvents.Hello): void {
-    this.clearHeartbeatTimeout();
+    this.reconnectDelayMs = hello.reconnectDelay;
 
+    this.clearHeartbeatTimeout();
+    this.createHeartbeatTimeout(hello.heartbeatTimeout);
+  }
+
+  private createHeartbeatTimeout(timeout: number): void {
     this.heartbeatTimeout = new BumpableTimeout(
-      hello.heartbeatTimeout * this.heartbeatTimeoutMultiplier,
+      timeout * this.heartbeatTimeoutMultiplier,
       (): void => {
         this.serverUnreachableEvent.next();
         this.clearHeartbeatTimeout();
@@ -302,5 +309,14 @@ export class Artichoke {
       this.heartbeatTimeout.clear();
       this.heartbeatTimeout = undefined;
     }
+  }
+
+  // tslint:disable-next-line: no-any
+  private delayReconnect(observable: Observable<any>): Observable<void> {
+    return observable.pipe(delayWhen(() => timer(this.getReconnectDelay())));
+  }
+
+  private getReconnectDelay(): number {
+    return this.reconnectDelayMs || this.fallbackReconnectDelayMs;
   }
 }

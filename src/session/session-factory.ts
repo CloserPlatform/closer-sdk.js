@@ -113,8 +113,8 @@ export class SessionFactory {
                 artichokeApi
             ),
             this.loggerFactory.create('Artichoke'),
-            this.config.artichoke.reconnectDelayMs,
             this.config.artichoke.heartbeatTimeoutMultiplier,
+            this.config.artichoke.fallbackReconnectDelayMs
         );
     }
 

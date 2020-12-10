@@ -4,22 +4,22 @@ import { RTCConfig } from './rtc-config';
 
 export interface UserArtichokeConfig {
   readonly server?: string;
-  readonly reconnectDelayMs?: number;
   readonly heartbeatTimeoutMultiplier?: number;
   readonly apiPath?: string;
   readonly wsPath?: string;
   readonly askTimeoutMs?: number;
   readonly reconnectionDisabled?: boolean;
+  readonly fallbackReconnectDelayMs?: number;
 }
 
 export interface ArtichokeConfig {
   readonly server: string;
-  readonly reconnectDelayMs: number;
   readonly heartbeatTimeoutMultiplier: number;
   readonly apiPath: string;
   readonly wsPath: string;
   readonly askTimeoutMs: number;
   readonly reconnectionDisabled: boolean;
+  readonly fallbackReconnectDelayMs: number;
 }
 
 export interface UserSpinnerConfig {
@@ -52,9 +52,9 @@ export function getDefaultConfig(): Config {
     logLevel: LogLevel.WARN,
     artichoke: {
       server: 'https://artichoke.closer.app',
-      reconnectDelayMs: 2000,
       heartbeatTimeoutMultiplier: 2,
       reconnectionDisabled: false,
+      fallbackReconnectDelayMs: 2000,
       askTimeoutMs: 5000,
       apiPath: 'api/',
       wsPath: 'ws/',

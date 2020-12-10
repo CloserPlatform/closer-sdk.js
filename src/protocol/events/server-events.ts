@@ -11,15 +11,13 @@ export namespace serverEvents {
   export class Hello implements ServerEvent {
     public static readonly tag: string = 'hello';
     public readonly __discriminator__ = 'domainEvent';
-    public readonly deviceId: string;
-    public readonly timestamp: number;
-    public readonly heartbeatTimeout: number;
     public readonly tag = Hello.tag;
 
-    constructor(deviceId: string, timestamp: number, heartbeatTimeout: number) {
-      this.deviceId = deviceId;
-      this.timestamp = timestamp;
-      this.heartbeatTimeout = heartbeatTimeout;
+    constructor(
+      public readonly deviceId: string,
+      public readonly timestamp: number,
+      public readonly heartbeatTimeout: number,
+      public readonly reconnectDelay: number) {
     }
 
     public static is(e: DomainEvent): e is Hello {
@@ -31,11 +29,8 @@ export namespace serverEvents {
     public static readonly tag: string = 'output_heartbeat';
     public readonly __discriminator__ = 'domainEvent';
     public readonly tag = OutputHeartbeat.tag;
-    public readonly timestamp: number;
 
-    constructor(timestamp: number) {
-      this.timestamp = timestamp;
-    }
+    constructor(public readonly timestamp: number) {}
 
     public static is(e: DomainEvent): e is OutputHeartbeat {
       return e.tag === OutputHeartbeat.tag;

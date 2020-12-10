@@ -13,7 +13,7 @@ import { fromArray } from 'rxjs/internal/observable/fromArray';
 import { Subject } from 'rxjs';
 
 const domainCommand: DomainCommand = { tag: 'test', __discriminator__: 'domainCommand' };
-const helloEvent = new serverEvents.Hello('deviceId', 1, 1);
+const helloEvent = new serverEvents.Hello('deviceId', 1, 1, 1);
 const sendMessage: roomCommand.SendMessage = {
   body: 'test', context: '', roomId: '1', tag: 'test', __discriminator__: 'domainCommand'
 };
@@ -51,7 +51,7 @@ export const getWebsocketClient = (socket$ = getSocket$Mock(), uuidGenerator = g
 describe('WebsocketClient', () => {
   describe('connection$', () => {
     it('call connect with proper url', done => {
-      const hello = new serverEvents.Hello('deviceId', 1, 1);
+      const hello = new serverEvents.Hello('deviceId', 1, 1, 1);
       const socket$ = getSocketMessagesMock([hello]);
       const client = getWebsocketClient(socket$);
       client.connection$.subscribe(res => {
