@@ -217,7 +217,8 @@ export namespace externalEvents {
     }
   }
 
-  export type InboxEntryType = 'MESSAGE' | 'NOTE' | 'FILES';
+  export type InboxEntryType = 'MESSAGE' | 'NOTE' | 'FILES' | 'MEETING_SCHEDULED'
+    | 'MEETING_RESCHEDULED' | 'MEETING_CANCELLED' | 'CALL_STARTED' | 'CALL_ENDED';
 
   export class LastMessageUpdated extends ExternalEvent {
     public static readonly tag = 'last_message_updated';
