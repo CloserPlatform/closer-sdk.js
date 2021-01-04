@@ -1,2 +1,0 @@
-### Changed
- - udpated InboxEntryType
