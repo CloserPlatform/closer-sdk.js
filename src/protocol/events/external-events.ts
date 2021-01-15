@@ -2,7 +2,6 @@
 // tslint:disable:max-classes-per-file
 // tslint:disable:max-file-line-count
 import { DomainEvent } from './domain-event';
-import { Payload } from '../protocol';
 
 export namespace externalEvents {
 
@@ -214,37 +213,6 @@ export namespace externalEvents {
 
     public static isGuestProfileUpdated(e: DomainEvent): e is GuestProfileUpdated {
       return e.tag === GuestProfileUpdated.tag;
-    }
-  }
-
-  export type InboxEntryType = 'MESSAGE' | 'NOTE' | 'FILES' | 'MEETING_SCHEDULED'
-    | 'MEETING_RESCHEDULED' | 'MEETING_CANCELLED' | 'CALL_STARTED' | 'CALL_ENDED';
-
-  export class LastMessageUpdated extends ExternalEvent {
-    public static readonly tag = 'last_message_updated';
-
-    public readonly body: string;
-    public readonly roomId: string;
-    public readonly userId: string;
-    public readonly timestamp: number;
-    public readonly type: InboxEntryType;
-    public readonly threadCreatedAt: number;
-    public readonly payload?: Payload;
-
-    constructor(body: string, roomId: string, timestamp: number, userId: string, type: InboxEntryType,
-      threadCreatedAt: number, payload?: Payload) {
-      super(LastMessageUpdated.tag);
-      this.body = body;
-      this.roomId = roomId;
-      this.timestamp = timestamp;
-      this.userId = userId;
-      this.type = type;
-      this.threadCreatedAt = threadCreatedAt;
-      this.payload = payload;
-    }
-
-    public static isLastMessageUpdated(e: DomainEvent): e is LastMessageUpdated {
-      return e.tag === LastMessageUpdated.tag;
     }
   }
 
@@ -478,6 +446,19 @@ export namespace externalEvents {
     public static isUnreadTotalUpdated(e: DomainEvent): e is UnreadTotalUpdated {
       return e.tag === UnreadTotalUpdated.tag;
     }
+  }
+
+  export class UnassignedCountUpdated extends ExternalEvent {
+    public static readonly tag = 'unassigned_count_updated';
+
+    constructor(public readonly count: number) {
+      super(UnassignedCountUpdated.tag);
+    }
+
+    public static isUnassignedCountUpdated(e: DomainEvent): e is UnassignedCountUpdated {
+      return e.tag === UnassignedCountUpdated.tag;
+    }
+
   }
 
 }
