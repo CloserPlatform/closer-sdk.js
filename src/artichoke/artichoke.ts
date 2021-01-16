@@ -153,10 +153,6 @@ export class Artichoke {
     );
   }
 
-  public get lastMessageUpdated$(): Observable<externalEvents.LastMessageUpdated> {
-    return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.LastMessageUpdated.isLastMessageUpdated));
-  }
-
   public get meetingCancelled$(): Observable<externalEvents.MeetingCancelled> {
     return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.MeetingCancelled.isMeetingCancelled));
   }
@@ -193,6 +189,10 @@ export class Artichoke {
 
   public get unreadTotalUpdated$(): Observable<externalEvents.UnreadTotalUpdated> {
     return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.UnreadTotalUpdated.isUnreadTotalUpdated));
+  }
+
+  public get unassignedCountUpdated$(): Observable<externalEvents.UnassignedCountUpdated> {
+    return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.UnassignedCountUpdated.isUnassignedCountUpdated));
   }
 
   public async createCall(

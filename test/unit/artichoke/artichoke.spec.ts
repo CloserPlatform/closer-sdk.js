@@ -66,6 +66,7 @@ export const getArtichoke = (api = getArtichokeApiMock()): Artichoke =>
     getRoomFactory(),
     getLoggerServiceMock(),
     getConfigMock().artichoke.heartbeatTimeoutMultiplier,
+    getConfigMock().artichoke.fallbackReconnectDelayMs
   );
 
 describe('Unit: Artichoke', () => {
@@ -509,24 +510,6 @@ describe('Unit: Artichoke', () => {
     }, done.fail);
   });
 
-  it('lastMessageUpdated$', done => {
-    const api = getArtichokeApiMock();
-    const client = getArtichoke(api);
-    const body = 'body';
-    const type = 'MESSAGE';
-    const event = new externalEvents.LastMessageUpdated(body, roomId, timestamp, userId, type, timestamp + 1);
-    spyOnProperty(api, 'domainEvent$', 'get').and.returnValue(of(event));
-    client.lastMessageUpdated$.subscribe(ev => {
-      expect(ev.body).toBe(body);
-      expect(ev.roomId).toBe(roomId);
-      expect(ev.timestamp).toBe(timestamp);
-      expect(ev.userId).toBe(userId);
-      expect(ev.type).toBe(type);
-      expect(ev.threadCreatedAt).toBe(timestamp + 1);
-      done();
-    }, done.fail);
-  });
-
   it('meetingCancelled$', done => {
     const api = getArtichokeApiMock();
     const client = getArtichoke(api);
@@ -635,6 +618,18 @@ describe('Unit: Artichoke', () => {
     client.unreadTotalUpdated$.subscribe(ev => {
       expect(ev.tab).toBe(tab);
       expect(ev.unreadCount).toBe(unreadCount);
+      done();
+    }, done.fail);
+  });
+
+  it('unassignedCountUpdated$', done => {
+    const api = getArtichokeApiMock();
+    const client = getArtichoke(api);
+    const unassignedCount = 7
+    const event = new externalEvents.UnassignedCountUpdated(unassignedCount);
+    spyOnProperty(api, 'domainEvent$', 'get').and.returnValue(of(event));
+    client.unassignedCountUpdated$.subscribe(ev => {
+      expect(ev.count).toBe(unassignedCount);
       done();
     }, done.fail);
   });
