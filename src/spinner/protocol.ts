@@ -14,7 +14,7 @@ export interface GuestProfile {
     readonly languageLocale?: string;
     readonly zoneId?: string;
     readonly location?: string;
-    readonly tag?: string;
+    readonly tags?: ReadonlyArray<string>;
     readonly deletedAt?: number;
     readonly backOfficeData?: ReadonlyArray<BackOfficeField>;
 }
@@ -32,7 +32,7 @@ export interface LeadCtx {
     readonly randomName?: string;
     readonly languageLocale?: string;
     readonly zoneId?: string;
-    readonly tag?: string;
+    readonly tags?: ReadonlyArray<string>;
     readonly backOfficeData?: ReadonlyArray<BackOfficeField>;
 }
 
