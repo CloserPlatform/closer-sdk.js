@@ -164,10 +164,12 @@ export namespace externalEvents {
   export class BackOfficeField {
     public readonly key: string;
     public readonly value: string;
+    public readonly displayName?: string;
 
-    constructor(key: string, value: string) {
+    constructor(key: string, value: string, displayName?: string) {
       this.key = key;
       this.value = value;
+      this.displayName = displayName;
     }
   }
 
