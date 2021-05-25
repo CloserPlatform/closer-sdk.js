@@ -192,14 +192,26 @@ export namespace externalEvents {
     public readonly roomId: string;
     public readonly timestamp: number;
     public readonly zoneId: string;
+    public readonly tags: ReadonlyArray<string>;
 
     public readonly email?: string;
     public readonly firstName?: string;
     public readonly lastName?: string;
     public readonly phone?: Phone;
 
-    constructor(backOfficeData: ReadonlyArray<BackOfficeField>, customerId: string, locale: string, timestamp: number,
-      roomId: string, zoneId: string, email?: string, firstName?: string, lastName?: string, phone?: Phone) {
+    constructor(
+      backOfficeData: ReadonlyArray<BackOfficeField>,
+      customerId: string,
+      locale: string,
+      timestamp: number,
+      roomId: string,
+      zoneId: string,
+      tags: ReadonlyArray<string>,
+      email?: string,
+      firstName?: string,
+      lastName?: string,
+      phone?: Phone
+    ) {
       super(GuestProfileUpdated.tag);
       this.backOfficeData = backOfficeData;
       this.customerId = customerId;
@@ -207,6 +219,7 @@ export namespace externalEvents {
       this.roomId = roomId;
       this.timestamp = timestamp;
       this.zoneId = zoneId;
+      this.tags = tags;
       this.email = email;
       this.firstName = firstName;
       this.lastName = lastName;

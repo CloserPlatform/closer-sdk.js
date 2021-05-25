@@ -31,6 +31,7 @@ const guestName = 'guestName';
 const minutesToMeeting = 5;
 const langTag = 'langTag';
 const backOfficeData = [{key: 'key', value: 'value'}];
+const tags = ['guest', 'tag'];
 
 const upcomingMeeting: externalEvents.UpcomingMeeting = {
   duration, guestId, guestName, langTag, meetingId, minutesToMeeting, roomId, start
@@ -474,7 +475,10 @@ describe('Unit: Artichoke', () => {
   it('guestProfileUpdated$', done => {
     const api = getArtichokeApiMock();
     const client = getArtichoke(api);
-    const event = new externalEvents.GuestProfileUpdated(backOfficeData, customerId, locale, timestamp, roomId, zoneId);
+    const event = new externalEvents.GuestProfileUpdated(
+      backOfficeData, customerId, locale, timestamp, roomId, zoneId, tags
+    );
+
     spyOnProperty(api, 'domainEvent$', 'get').and.returnValue(of(event));
     client.guestProfileUpdated$.subscribe(ev => {
       expect(ev.backOfficeData).toBe(backOfficeData);
@@ -483,6 +487,7 @@ describe('Unit: Artichoke', () => {
       expect(ev.locale).toBe(locale);
       expect(ev.zoneId).toBe(zoneId);
       expect(ev.timestamp).toBe(timestamp);
+      expect(ev.tags).toBe(tags);
       done();
     }, done.fail);
   });
@@ -637,9 +642,9 @@ describe('Unit: Artichoke', () => {
   it('customMessage$', done => {
     const api = getArtichokeApiMock();
     const client = getArtichoke(api);
-    const message = "custom";
-    const subtag = "CUSTOM_TAG";
-    const context = { custom: "custom" }
+    const message = 'custom';
+    const subtag = 'CUSTOM_TAG';
+    const context = { custom: 'custom' }
     const event = new roomEvents.CustomMessageSent(roomId, authorId, message, messageId, subtag, context, timestamp);
     spyOnProperty(api, 'domainEvent$', 'get').and.returnValue(of(event));
     client.customMessage$.subscribe(ev => {
