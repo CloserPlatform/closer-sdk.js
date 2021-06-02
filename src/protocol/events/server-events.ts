@@ -36,4 +36,14 @@ export namespace serverEvents {
       return e.tag === OutputHeartbeat.tag;
     }
   }
+
+  export class Unauthorized implements ServerEvent {
+    public static readonly tag = 'unauthorized';
+    public readonly __discriminator__ = 'domainEvent';
+    public readonly tag = Unauthorized.tag;
+
+    public static is(e: DomainEvent): e is Unauthorized {
+      return e.tag === Unauthorized.tag;
+    }
+  }
 }

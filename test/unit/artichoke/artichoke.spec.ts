@@ -630,11 +630,23 @@ describe('Unit: Artichoke', () => {
   it('unassignedCountUpdated$', done => {
     const api = getArtichokeApiMock();
     const client = getArtichoke(api);
-    const unassignedCount = 7
+    const unassignedCount = 7;
     const event = new externalEvents.UnassignedCountUpdated(unassignedCount);
     spyOnProperty(api, 'domainEvent$', 'get').and.returnValue(of(event));
     client.unassignedCountUpdated$.subscribe(ev => {
       expect(ev.count).toBe(unassignedCount);
+      done();
+    }, done.fail);
+  });
+
+  it('unauthorized$', done => {
+    const api = getArtichokeApiMock();
+    const client = getArtichoke(api);
+    const event = new serverEvents.Unauthorized();
+    spyOnProperty(api, 'domainEvent$', 'get').and.returnValue(of(event));
+
+    client.unauthorized$.subscribe(ev => {
+      expect(ev.tag).toBe(serverEvents.Unauthorized.tag);
       done();
     }, done.fail);
   });
