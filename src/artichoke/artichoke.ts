@@ -195,6 +195,10 @@ export class Artichoke {
     return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.UnassignedCountUpdated.isUnassignedCountUpdated));
   }
 
+  public get unauthorized$(): Observable<serverEvents.Unauthorized> {
+    return this.artichokeApi.domainEvent$.pipe(filter(serverEvents.Unauthorized.is));
+  }
+
   public async createCall(
     tracks: ReadonlyArray<MediaStreamTrack>,
     users: ReadonlyArray<proto.ID>,
