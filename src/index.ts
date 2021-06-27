@@ -38,6 +38,7 @@ export { roomEvents } from './protocol/events/room-events';
 export { rtcEvents } from './protocol/events/rtc-events';
 export { serverEvents } from './protocol/events/server-events';
 export { externalEvents } from './protocol/events/external-events';
+export { customEvents } from './protocol/events/custom-events';
 
 import * as protocol from './protocol/protocol';
 
