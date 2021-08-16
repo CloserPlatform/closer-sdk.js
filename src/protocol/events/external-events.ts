@@ -1,6 +1,7 @@
 // tslint:disable:no-namespace
 // tslint:disable:max-classes-per-file
 // tslint:disable:max-file-line-count
+import { TagGroupId } from '../protocol';
 import { DomainEvent } from './domain-event';
 
 export namespace externalEvents {
@@ -198,6 +199,7 @@ export namespace externalEvents {
     public readonly firstName?: string;
     public readonly lastName?: string;
     public readonly phone?: Phone;
+    public readonly tagGroupid?: TagGroupId;
 
     constructor(
       backOfficeData: ReadonlyArray<BackOfficeField>,
@@ -210,7 +212,8 @@ export namespace externalEvents {
       email?: string,
       firstName?: string,
       lastName?: string,
-      phone?: Phone
+      phone?: Phone,
+      tagGroupId?: TagGroupId
     ) {
       super(GuestProfileUpdated.tag);
       this.backOfficeData = backOfficeData;
@@ -224,6 +227,7 @@ export namespace externalEvents {
       this.firstName = firstName;
       this.lastName = lastName;
       this.phone = phone;
+      this.tagGroupid = tagGroupId;
     }
 
     public static isGuestProfileUpdated(e: DomainEvent): e is GuestProfileUpdated {
