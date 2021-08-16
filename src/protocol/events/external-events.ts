@@ -199,7 +199,7 @@ export namespace externalEvents {
     public readonly firstName?: string;
     public readonly lastName?: string;
     public readonly phone?: Phone;
-    public readonly tagGroupid?: TagGroupId;
+    public readonly tagGroupId?: TagGroupId;
 
     constructor(
       backOfficeData: ReadonlyArray<BackOfficeField>,
@@ -227,7 +227,7 @@ export namespace externalEvents {
       this.firstName = firstName;
       this.lastName = lastName;
       this.phone = phone;
-      this.tagGroupid = tagGroupId;
+      this.tagGroupId = tagGroupId;
     }
 
     public static isGuestProfileUpdated(e: DomainEvent): e is GuestProfileUpdated {
