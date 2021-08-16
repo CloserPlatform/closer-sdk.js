@@ -5,6 +5,7 @@ export type Ref = string;
 export type Timestamp = number;
 export type ApiKey = ID;
 export type DeviceId = ID;
+export type TagGroupId = ID;
 
 export type Signature = string;
 

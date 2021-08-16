@@ -32,6 +32,11 @@ const minutesToMeeting = 5;
 const langTag = 'langTag';
 const backOfficeData = [{key: 'key', value: 'value'}];
 const tags = ['guest', 'tag'];
+const email = 'guest@closer.app';
+const firstName = 'firstname';
+const lastName = 'lastname';
+const tagGroupId = 'tagGroupId';
+const phone = new externalEvents.Phone('region', 'number');
 
 const upcomingMeeting: externalEvents.UpcomingMeeting = {
   duration, guestId, guestName, langTag, meetingId, minutesToMeeting, roomId, start
@@ -476,7 +481,8 @@ describe('Unit: Artichoke', () => {
     const api = getArtichokeApiMock();
     const client = getArtichoke(api);
     const event = new externalEvents.GuestProfileUpdated(
-      backOfficeData, customerId, locale, timestamp, roomId, zoneId, tags
+      backOfficeData, customerId, locale, timestamp, roomId, zoneId, tags,
+      email, firstName, lastName, phone, tagGroupId
     );
 
     spyOnProperty(api, 'domainEvent$', 'get').and.returnValue(of(event));
@@ -488,6 +494,12 @@ describe('Unit: Artichoke', () => {
       expect(ev.zoneId).toBe(zoneId);
       expect(ev.timestamp).toBe(timestamp);
       expect(ev.tags).toBe(tags);
+      expect(ev.email).toBe(email);
+      expect(ev.firstName).toBe(firstName);
+      expect(ev.lastName).toBe(lastName);
+      expect(ev.phone?.number).toBe(phone.number);
+      expect(ev.phone?.region).toBe(phone.region);
+      expect(tagGroupId).toBe(tagGroupId);
       done();
     }, done.fail);
   });
