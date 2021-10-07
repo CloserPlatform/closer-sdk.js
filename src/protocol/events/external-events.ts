@@ -453,13 +453,13 @@ export namespace externalEvents {
   export class UnreadTotalUpdated extends ExternalEvent {
     public static readonly tag = 'unread_total_updated';
 
-    public readonly tab: ConversationTab;
-    public readonly unreadCount: number;
-
-    constructor(tab: ConversationTab, unreadCount: number) {
+    constructor(
+      public readonly tab: ConversationTab,
+      public readonly unreadCount: number,
+      public readonly unreadCountNoTagGroup?: number,
+      public readonly unreadCountByTagGroup?: { readonly [tagGroupId: string]: number }
+    ) {
       super(UnreadTotalUpdated.tag);
-      this.tab = tab;
-      this.unreadCount = unreadCount;
     }
 
     public static isUnreadTotalUpdated(e: DomainEvent): e is UnreadTotalUpdated {
