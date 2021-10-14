@@ -187,47 +187,22 @@ export namespace externalEvents {
   export class GuestProfileUpdated extends ExternalEvent {
     public static readonly tag = 'guest_profile_updated';
 
-    public readonly backOfficeData: ReadonlyArray<BackOfficeField>;
-    public readonly customerId: string;
-    public readonly locale: string;
-    public readonly roomId: string;
-    public readonly timestamp: number;
-    public readonly zoneId: string;
-    public readonly tags: ReadonlyArray<string>;
-
-    public readonly email?: string;
-    public readonly firstName?: string;
-    public readonly lastName?: string;
-    public readonly phone?: Phone;
-    public readonly tagGroupId?: TagGroupId;
-
     constructor(
-      backOfficeData: ReadonlyArray<BackOfficeField>,
-      customerId: string,
-      locale: string,
-      timestamp: number,
-      roomId: string,
-      zoneId: string,
-      tags: ReadonlyArray<string>,
-      email?: string,
-      firstName?: string,
-      lastName?: string,
-      phone?: Phone,
-      tagGroupId?: TagGroupId
+      public readonly backOfficeData: ReadonlyArray<BackOfficeField>,
+      public readonly customerId: string,
+      public readonly locale: string,
+      public readonly timestamp: number,
+      public readonly roomId: string,
+      public readonly zoneId: string,
+      public readonly tags: ReadonlyArray<string>,
+      public readonly topics: ReadonlyArray<string>,
+      public readonly email?: string,
+      public readonly firstName?: string,
+      public readonly lastName?: string,
+      public readonly phone?: Phone,
+      public readonly tagGroupId?: TagGroupId
     ) {
       super(GuestProfileUpdated.tag);
-      this.backOfficeData = backOfficeData;
-      this.customerId = customerId;
-      this.locale = locale;
-      this.roomId = roomId;
-      this.timestamp = timestamp;
-      this.zoneId = zoneId;
-      this.tags = tags;
-      this.email = email;
-      this.firstName = firstName;
-      this.lastName = lastName;
-      this.phone = phone;
-      this.tagGroupId = tagGroupId;
     }
 
     public static isGuestProfileUpdated(e: DomainEvent): e is GuestProfileUpdated {
