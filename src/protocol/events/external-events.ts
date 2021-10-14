@@ -195,7 +195,7 @@ export namespace externalEvents {
       public readonly roomId: string,
       public readonly zoneId: string,
       public readonly tags: ReadonlyArray<string>,
-      public readonly topics: readonly string[],
+      public readonly topics: ReadonlyArray<string>,
       public readonly email?: string,
       public readonly firstName?: string,
       public readonly lastName?: string,
