@@ -43,7 +43,7 @@ export class SessionFactory {
             guest.apiKey,
             guest.roomId,
             guest.orgId,
-            this.createArtichoke(guest.id, apiHeaders),
+            this.createArtichoke(guest.id, apiHeaders, options),
             this.createSpinner(apiHeaders),
         );
     }
@@ -63,7 +63,7 @@ export class SessionFactory {
             apiKey,
             guestProfile.roomId,
             orgId,
-            this.createArtichoke(guestProfile.id, apiHeaders),
+            this.createArtichoke(guestProfile.id, apiHeaders, options),
             this.createSpinner(apiHeaders),
         );
     }
@@ -89,7 +89,7 @@ export class SessionFactory {
         return new Session(
             sessionId,
             apiKey,
-            this.createArtichoke(sessionId, apiHeaders),
+            this.createArtichoke(sessionId, apiHeaders, options),
             this.createSpinner(apiHeaders),
         );
     }
@@ -107,8 +107,8 @@ export class SessionFactory {
         );
     }
 
-    private createArtichoke(sessionId: ID, apiHeaders: ApiHeaders): Artichoke {
-        const artichokeApi = this.createArtichokeApi(sessionId, apiHeaders);
+    private createArtichoke(sessionId: ID, apiHeaders: ApiHeaders, options: AdditionalHeadersOptions = {}): Artichoke {
+        const artichokeApi = this.createArtichokeApi(sessionId, apiHeaders, options);
 
         return new Artichoke(
             artichokeApi,
@@ -123,10 +123,10 @@ export class SessionFactory {
         );
     }
 
-    private createArtichokeApi(sessionId: ID, apiHeaders: ApiHeaders): ArtichokeApi {
+    private createArtichokeApi(sessionId: ID, apiHeaders: ApiHeaders, options: AdditionalHeadersOptions): ArtichokeApi {
         return new ArtichokeApi(
             sessionId,
-            this.createWebsocketClient(apiHeaders.apiKey),
+            this.createWebsocketClient(apiHeaders.apiKey, options),
             this.createHttpClient(apiHeaders),
         );
     }
@@ -140,16 +140,23 @@ export class SessionFactory {
         return new HttpClient(httpClientLogger, httpApiUrl, apiHeaders, xmlHttpRequestFactory);
     }
 
-    private createWebsocketClient(apiKey: ApiKey): WebsocketClient {
-        const wsServerUrl = new URL(`${this.config.artichoke.wsPath}${apiKey}`, this.config.artichoke.server);
-        wsServerUrl.protocol = wsServerUrl.protocol === 'https:' ? 'wss:' : 'ws:';
-
+    private createWebsocketClient(apiKey: ApiKey, options: AdditionalHeadersOptions): WebsocketClient {
         const ws = webSocket<ArtichokeMessage>({
-            url: wsServerUrl.href,
+            url: this.createWebsocketClientUrl(apiKey, options),
             WebSocketCtor: ReconnectableWebSocket
         });
 
         return new WebsocketClient(ws, new UUIDGenerator(), this.config.artichoke.askTimeoutMs);
+    }
+    private createWebsocketClientUrl(apiKey: ApiKey, { fingerprint }: AdditionalHeadersOptions): string {
+        const wsServerUrl = new URL(`${this.config.artichoke.wsPath}${apiKey}`,
+        this.config.artichoke.server);
+        if (fingerprint) {
+            wsServerUrl.searchParams.append('fingerprint', fingerprint);
+        }
+        wsServerUrl.protocol = wsServerUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+
+        return wsServerUrl.href;
     }
 
     private createCallFactory(artichokeApi: ArtichokeApi): CallFactory {
