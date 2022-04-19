@@ -149,8 +149,7 @@ export class SessionFactory {
         return new WebsocketClient(ws, new UUIDGenerator(), this.config.artichoke.askTimeoutMs);
     }
     private createWebsocketClientUrl(apiKey: ApiKey, { fingerprint }: AdditionalHeadersOptions): string {
-        const wsServerUrl = new URL(`${this.config.artichoke.wsPath}${apiKey}`,
-        this.config.artichoke.server);
+        const wsServerUrl = new URL(`${this.config.artichoke.wsPath}${apiKey}`, this.config.artichoke.server);
         if (fingerprint) {
             wsServerUrl.searchParams.append('fingerprint', fingerprint);
         }
