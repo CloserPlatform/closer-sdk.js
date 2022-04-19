@@ -7,6 +7,7 @@ import { SessionFactory } from './session/session-factory';
 import { LoggerService } from './logger/logger-service';
 import { Email, Password } from './spinner/protocol';
 import { GuestSession } from './session/guest-session';
+import { AdditionalHeadersOptions } from './http/api-headers';
 
 export class CloserSDK {
 
@@ -36,22 +37,30 @@ export class CloserSDK {
         return PlatformSupport.isMediaSupported();
     }
 
-    public async createGuestSession(orgId: ID): Promise<GuestSession> {
+    public async createGuestSession(
+        orgId: ID,
+        options: AdditionalHeadersOptions = {}
+    ): Promise<GuestSession> {
         this.logger.debug(`Creating guest session for orgId(${orgId})`);
 
-        return this.sessionFactory.createWithNewGuest(orgId);
+        return this.sessionFactory.createWithNewGuest(orgId, options);
     }
 
-    public async getGuestSession(orgId: ID, sessionId: ID, apiKey: ApiKey): Promise<GuestSession> {
+    public async getGuestSession(
+        orgId: ID,
+        sessionId: ID,
+        apiKey: ApiKey,
+        options: AdditionalHeadersOptions = {}
+    ): Promise<GuestSession> {
         this.logger.debug(`Getting guest session(${sessionId}) for orgId(${orgId})`);
 
-        return this.sessionFactory.createWithExistingGuest(orgId, sessionId, apiKey);
+        return this.sessionFactory.createWithExistingGuest(orgId, sessionId, apiKey, options);
     }
 
-    public withSession(sessionId: ID, apiKey: ApiKey): Session {
+    public withSession(sessionId: ID, apiKey: ApiKey, options: AdditionalHeadersOptions = {}): Session {
         this.logger.debug(`Initializing with Session(${sessionId})`);
 
-        return this.sessionFactory.create(sessionId, apiKey);
+        return this.sessionFactory.create(sessionId, apiKey, options);
     }
 
     public async loginAsAgent(email: Email, password: Password): Promise<Session> {
