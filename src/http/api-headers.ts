@@ -1,5 +1,5 @@
 import { HeaderValue } from './header-value';
-import { ApiKey, DeviceId } from '../protocol/protocol';
+import { ApiKey, DeviceId, Fingerprint } from '../protocol/protocol';
 import { ReconnectableWebSocket } from './reconnectable-websocket';
 
 export class ApiHeaders {
@@ -7,12 +7,16 @@ export class ApiHeaders {
   public static readonly deviceIdKey = 'X-Device-Id';
 
   // tslint:disable-next-line:readonly-keyword
-  private _deviceId: DeviceId;
+  public apiKey: ApiKey;
   // tslint:disable-next-line:readonly-keyword
-  private _apiKey: ApiKey;
+  public fingerprint: Fingerprint | undefined;
 
-  constructor(apiKey: ApiKey) {
-    this._apiKey = apiKey;
+  // tslint:disable-next-line:readonly-keyword
+  private _deviceId: DeviceId;
+
+  constructor(apiKey: ApiKey, options: AdditionalHeadersOptions = {}) {
+    this.apiKey = apiKey;
+    this.fingerprint = options.fingerprint;
   }
 
   public get deviceId(): DeviceId {
@@ -25,18 +29,14 @@ export class ApiHeaders {
     this._deviceId = value;
   }
 
-  public set apiKey(value: ApiKey) {
-    this._apiKey = value;
-  }
-
-  public get apiKey(): ApiKey {
-    return this._apiKey;
-  }
-
   public getHeaders(): ReadonlyArray<HeaderValue> {
     return [
-      new HeaderValue(ApiHeaders.apiKeyKey, this._apiKey),
-      new HeaderValue(ApiHeaders.deviceIdKey, this._deviceId)
+      new HeaderValue(ApiHeaders.apiKeyKey, this.apiKey),
+      new HeaderValue(ApiHeaders.deviceIdKey, this._deviceId),
     ];
   }
+}
+
+export interface AdditionalHeadersOptions {
+  readonly fingerprint?: Fingerprint;
 }
