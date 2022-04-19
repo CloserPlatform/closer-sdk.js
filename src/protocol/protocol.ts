@@ -70,47 +70,44 @@ export interface PushRegistration {
   readonly pushId: ID;
 }
 
-export const createCall = (
-  users: ReadonlyArray<ID>,
-  metadata?: Metadata
-): CreateCall => ({
-  users,
-  metadata,
-});
+export const createCall = (users: ReadonlyArray<ID>, metadata?: Metadata): CreateCall =>
+  ({
+    users,
+    metadata
+  });
 
-export const createDirectCall = (
-  user: ID,
-  timeout?: number,
-  metadata?: Metadata
-): CreateDirectCall => ({
-  user,
-  timeout,
-  metadata,
-});
+export const createDirectCall = (user: ID, timeout?: number, metadata?: Metadata): CreateDirectCall =>
+  ({
+    user,
+    timeout,
+    metadata
+  });
 
-export const leaveReason = (reason: string): LeaveReason => ({
-  reason,
-});
+export const leaveReason = (reason: string): LeaveReason =>
+  ({
+    reason
+  });
 
-export const createRoom = (name: string): CreateRoom => ({
-  name,
-});
+export const createRoom = (name: string): CreateRoom =>
+  ({
+    name
+  });
 
-export const createDirectRoom = (
-  user: ID,
-  context?: Context
-): CreateDirectRoom => ({
-  user,
-  context,
-});
+export const createDirectRoom = (user: ID, context?: Context): CreateDirectRoom =>
+  ({
+    user,
+    context
+  });
 
-export const invite = (user: ID): Invite => ({
-  user,
-});
+export const invite = (user: ID): Invite =>
+  ({
+    user
+  });
 
-export const pushRegistration = (pushId: ID): PushRegistration => ({
-  pushId,
-});
+export const pushRegistration = (pushId: ID): PushRegistration =>
+  ({
+    pushId,
+  });
 
 export interface HistoryFilter {
   readonly filter: ReadonlyArray<string>;

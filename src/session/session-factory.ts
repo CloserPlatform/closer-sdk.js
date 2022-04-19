@@ -24,181 +24,155 @@ import { Password, Email } from '../spinner/protocol';
 import { GuestSession } from './guest-session';
 
 export class SessionFactory {
-  constructor(
-    private readonly config: Config,
-    private readonly loggerFactory: LoggerFactory
-  ) {}
 
-  public async createWithNewGuest(
-    orgId: ID,
-    options: AdditionalHeadersOptions = {}
-  ): Promise<GuestSession> {
-    const apiHeaders = new ApiHeaders('', options);
-    const spinner = this.createSpinner(apiHeaders);
-    const guest = await spinner.signUpGuest(orgId);
+    constructor(
+        private readonly config: Config,
+        private readonly loggerFactory: LoggerFactory,
+    ) {
+    }
 
-    apiHeaders.apiKey = guest.apiKey;
+    public async createWithNewGuest(orgId: ID, options: AdditionalHeadersOptions = {}): Promise<GuestSession> {
+        const apiHeaders = new ApiHeaders('', options);
+        const spinner = this.createSpinner(apiHeaders);
+        const guest = await spinner.signUpGuest(orgId);
 
-    return new GuestSession(
-      guest.id,
-      guest.apiKey,
-      guest.roomId,
-      guest.orgId,
-      this.createArtichoke(guest.id, apiHeaders),
-      this.createSpinner(apiHeaders)
-    );
-  }
+        apiHeaders.apiKey = guest.apiKey;
 
-  public async createWithExistingGuest(
-    orgId: ID,
-    sessionId: ID,
-    apiKey: ApiKey,
-    options: AdditionalHeadersOptions = {}
-  ): Promise<GuestSession> {
-    const apiHeaders = new ApiHeaders(apiKey, options);
-    const spinner = this.createSpinner(apiHeaders);
-    const guestProfile = await spinner.getGuestProfile(orgId, sessionId);
+        return new GuestSession(
+            guest.id,
+            guest.apiKey,
+            guest.roomId,
+            guest.orgId,
+            this.createArtichoke(guest.id, apiHeaders),
+            this.createSpinner(apiHeaders),
+        );
+    }
 
-    return new GuestSession(
-      guestProfile.id,
-      apiKey,
-      guestProfile.roomId,
-      orgId,
-      this.createArtichoke(guestProfile.id, apiHeaders),
-      this.createSpinner(apiHeaders)
-    );
-  }
+    public async createWithExistingGuest(
+        orgId: ID,
+        sessionId: ID,
+        apiKey: ApiKey,
+        options: AdditionalHeadersOptions = {}
+    ): Promise<GuestSession> {
+        const apiHeaders = new ApiHeaders(apiKey, options);
+        const spinner = this.createSpinner(apiHeaders);
+        const guestProfile = await spinner.getGuestProfile(orgId, sessionId);
 
-  public async createAsAgent(
-    email: Email,
-    password: Password
-  ): Promise<Session> {
-    const apiHeaders = new ApiHeaders('');
-    const spinner = this.createSpinner(apiHeaders);
-    const session = await spinner.login({ email, password });
+        return new GuestSession(
+            guestProfile.id,
+            apiKey,
+            guestProfile.roomId,
+            orgId,
+            this.createArtichoke(guestProfile.id, apiHeaders),
+            this.createSpinner(apiHeaders),
+        );
+    }
 
-    apiHeaders.apiKey = session.apiKey;
+    public async createAsAgent(email: Email, password: Password): Promise<Session> {
+        const apiHeaders = new ApiHeaders('');
+        const spinner = this.createSpinner(apiHeaders);
+        const session = await spinner.login({email, password});
 
-    return new Session(
-      session.id,
-      session.apiKey,
-      this.createArtichoke(session.id, apiHeaders),
-      this.createSpinner(apiHeaders)
-    );
-  }
+        apiHeaders.apiKey = session.apiKey;
 
-  public create(
-    sessionId: ID,
-    apiKey: ApiKey,
-    options: AdditionalHeadersOptions = {}
-  ): Session {
-    const apiHeaders = new ApiHeaders(apiKey, options);
+        return new Session(
+            session.id,
+            session.apiKey,
+            this.createArtichoke(session.id, apiHeaders),
+            this.createSpinner(apiHeaders),
+        );
+    }
 
-    return new Session(
-      sessionId,
-      apiKey,
-      this.createArtichoke(sessionId, apiHeaders),
-      this.createSpinner(apiHeaders)
-    );
-  }
+    public create(sessionId: ID, apiKey: ApiKey, options: AdditionalHeadersOptions = {}): Session {
+        const apiHeaders = new ApiHeaders(apiKey, options);
 
-  private createSpinner(apiHeaders: ApiHeaders): Spinner {
-    return new Spinner(
-      new SpinnerApi(
-        new HttpClient(
-          this.loggerFactory.create('Spinner HttpClient'),
-          new URL(this.config.spinner.apiPath, this.config.spinner.server),
-          apiHeaders,
-          new XMLHttpRequestFactory()
-        )
-      )
-    );
-  }
+        return new Session(
+            sessionId,
+            apiKey,
+            this.createArtichoke(sessionId, apiHeaders),
+            this.createSpinner(apiHeaders),
+        );
+    }
 
-  private createArtichoke(sessionId: ID, apiHeaders: ApiHeaders): Artichoke {
-    const artichokeApi = this.createArtichokeApi(sessionId, apiHeaders);
+    private createSpinner(apiHeaders: ApiHeaders): Spinner {
+        return new Spinner(
+            new SpinnerApi(
+                new HttpClient(
+                    this.loggerFactory.create('Spinner HttpClient'),
+                    new URL(this.config.spinner.apiPath, this.config.spinner.server),
+                    apiHeaders,
+                    new XMLHttpRequestFactory(),
+                )
+            )
+        );
+    }
 
-    return new Artichoke(
-      artichokeApi,
-      this.createCallFactory(artichokeApi),
-      new RoomFactory(this.loggerFactory, artichokeApi),
-      this.loggerFactory.create('Artichoke'),
-      this.config.artichoke.heartbeatTimeoutMultiplier,
-      this.config.artichoke.fallbackReconnectDelayMs
-    );
-  }
+    private createArtichoke(sessionId: ID, apiHeaders: ApiHeaders): Artichoke {
+        const artichokeApi = this.createArtichokeApi(sessionId, apiHeaders);
 
-  private createArtichokeApi(
-    sessionId: ID,
-    apiHeaders: ApiHeaders
-  ): ArtichokeApi {
-    return new ArtichokeApi(
-      sessionId,
-      this.createWebsocketClient(apiHeaders.apiKey),
-      this.createHttpClient(apiHeaders)
-    );
-  }
+        return new Artichoke(
+            artichokeApi,
+            this.createCallFactory(artichokeApi),
+            new RoomFactory(
+                this.loggerFactory,
+                artichokeApi
+            ),
+            this.loggerFactory.create('Artichoke'),
+            this.config.artichoke.heartbeatTimeoutMultiplier,
+            this.config.artichoke.fallbackReconnectDelayMs
+        );
+    }
 
-  private createHttpClient(apiHeaders: ApiHeaders): HttpClient {
-    const httpClientLogger = this.loggerFactory.create('Artichoke HttpClient');
-    const httpApiUrl = new URL(
-      this.config.artichoke.apiPath,
-      this.config.artichoke.server
-    );
+    private createArtichokeApi(sessionId: ID, apiHeaders: ApiHeaders): ArtichokeApi {
+        return new ArtichokeApi(
+            sessionId,
+            this.createWebsocketClient(apiHeaders.apiKey),
+            this.createHttpClient(apiHeaders),
+        );
+    }
 
-    const xmlHttpRequestFactory = new XMLHttpRequestFactory();
+    private createHttpClient(apiHeaders: ApiHeaders): HttpClient {
+        const httpClientLogger = this.loggerFactory.create('Artichoke HttpClient');
+        const httpApiUrl = new URL(this.config.artichoke.apiPath, this.config.artichoke.server);
 
-    return new HttpClient(
-      httpClientLogger,
-      httpApiUrl,
-      apiHeaders,
-      xmlHttpRequestFactory
-    );
-  }
+        const xmlHttpRequestFactory = new XMLHttpRequestFactory();
 
-  private createWebsocketClient(apiKey: ApiKey): WebsocketClient {
-    const wsServerUrl = new URL(
-      `${this.config.artichoke.wsPath}${apiKey}`,
-      this.config.artichoke.server
-    );
-    wsServerUrl.protocol = wsServerUrl.protocol === 'https:' ? 'wss:' : 'ws:';
+        return new HttpClient(httpClientLogger, httpApiUrl, apiHeaders, xmlHttpRequestFactory);
+    }
 
-    const ws = webSocket<ArtichokeMessage>({
-      url: wsServerUrl.href,
-      WebSocketCtor: ReconnectableWebSocket,
-    });
+    private createWebsocketClient(apiKey: ApiKey): WebsocketClient {
+        const wsServerUrl = new URL(`${this.config.artichoke.wsPath}${apiKey}`, this.config.artichoke.server);
+        wsServerUrl.protocol = wsServerUrl.protocol === 'https:' ? 'wss:' : 'ws:';
 
-    return new WebsocketClient(
-      ws,
-      new UUIDGenerator(),
-      this.config.artichoke.askTimeoutMs
-    );
-  }
+        const ws = webSocket<ArtichokeMessage>({
+            url: wsServerUrl.href,
+            WebSocketCtor: ReconnectableWebSocket
+        });
 
-  private createCallFactory(artichokeApi: ArtichokeApi): CallFactory {
-    const webrtcStats = new WebRTCStats();
+        return new WebsocketClient(ws, new UUIDGenerator(), this.config.artichoke.askTimeoutMs);
+    }
 
-    const rtcPoolFactory = new RTCPoolFactory(
-      this.config.rtc,
-      this.loggerFactory,
-      this.loggerFactory.create('RTCPoolFactory'),
-      artichokeApi,
-      webrtcStats
-    );
+    private createCallFactory(artichokeApi: ArtichokeApi): CallFactory {
+        const webrtcStats = new WebRTCStats();
 
-    const rtcPoolRepository = new RTCPoolRepository(
-      this.loggerFactory.create('RTCPoolRepository'),
-      rtcPoolFactory
-    );
+        const rtcPoolFactory = new RTCPoolFactory(
+            this.config.rtc,
+            this.loggerFactory,
+            this.loggerFactory.create('RTCPoolFactory'),
+            artichokeApi,
+            webrtcStats
+        );
 
-    return new CallFactory(
-      this.loggerFactory,
-      artichokeApi,
-      rtcPoolRepository,
-      new MediaTrackOptimizer(
-        this.config.rtc,
-        this.loggerFactory.create('MediaTrackOptimizer')
-      )
-    );
-  }
+        const rtcPoolRepository = new RTCPoolRepository(
+            this.loggerFactory.create('RTCPoolRepository'),
+            rtcPoolFactory
+        );
+
+        return new CallFactory(
+            this.loggerFactory,
+            artichokeApi,
+            rtcPoolRepository,
+            new MediaTrackOptimizer(this.config.rtc, this.loggerFactory.create('MediaTrackOptimizer'))
+        );
+    }
 }
