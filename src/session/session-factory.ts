@@ -11,7 +11,7 @@ import { ReconnectableWebSocket } from '../http/reconnectable-websocket';
 import { webSocket } from 'rxjs/webSocket';
 import { UUIDGenerator } from '../utils/uuid-generator';
 import { XMLHttpRequestFactory } from '../http/xml-http-request-factory';
-import { ApiHeaders } from '../http/api-headers';
+import { AdditionalHeadersOptions, ApiHeaders } from '../http/api-headers';
 import { RoomFactory } from '../rooms/room-factory';
 import { CallFactory } from '../calls/call-factory';
 import { WebRTCStats } from '../rtc/stats/webrtc-stats';
@@ -31,8 +31,8 @@ export class SessionFactory {
     ) {
     }
 
-    public async createWithNewGuest(orgId: ID): Promise<GuestSession> {
-        const apiHeaders = new ApiHeaders('');
+    public async createWithNewGuest(orgId: ID, options: AdditionalHeadersOptions = {}): Promise<GuestSession> {
+        const apiHeaders = new ApiHeaders('', options);
         const spinner = this.createSpinner(apiHeaders);
         const guest = await spinner.signUpGuest(orgId);
 
@@ -48,8 +48,13 @@ export class SessionFactory {
         );
     }
 
-    public async createWithExistingGuest(orgId: ID, sessionId: ID, apiKey: ApiKey): Promise<GuestSession> {
-        const apiHeaders = new ApiHeaders(apiKey);
+    public async createWithExistingGuest(
+        orgId: ID,
+        sessionId: ID,
+        apiKey: ApiKey,
+        options: AdditionalHeadersOptions = {}
+    ): Promise<GuestSession> {
+        const apiHeaders = new ApiHeaders(apiKey, options);
         const spinner = this.createSpinner(apiHeaders);
         const guestProfile = await spinner.getGuestProfile(orgId, sessionId);
 
@@ -78,8 +83,8 @@ export class SessionFactory {
         );
     }
 
-    public create(sessionId: ID, apiKey: ApiKey): Session {
-        const apiHeaders = new ApiHeaders(apiKey);
+    public create(sessionId: ID, apiKey: ApiKey, options: AdditionalHeadersOptions = {}): Session {
+        const apiHeaders = new ApiHeaders(apiKey, options);
 
         return new Session(
             sessionId,

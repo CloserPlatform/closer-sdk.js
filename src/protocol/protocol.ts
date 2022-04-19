@@ -7,6 +7,7 @@ export type ApiKey = ID;
 export type DeviceId = ID;
 export type TagGroupId = ID;
 
+export type Fingerprint = string;
 export type Signature = string;
 
 export interface Payload {

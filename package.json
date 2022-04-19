@@ -16,6 +16,7 @@
     "build:ci": "webpack --mode=development",
     "docs": "typedoc --out dist/docs --exclude '**/*.spec.ts' ./src",
     "lint": "tslint --project tsconfig.sdk.json",
+    "lint:fix": "tslint --project tsconfig.sdk.json --fix",
     "pretest": "npm run lint",
     "pretest:ci": "npm run lint",
     "coverage": "cat ./coverage/text.txt && cat ./coverage/text-summary.txt",
