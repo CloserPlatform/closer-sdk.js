@@ -3,6 +3,7 @@ import { getArtichokeApiMock } from './artichoke-api.mock';
 import { getWebrtcStatsMock } from './webrtc-stats.mock';
 import { getConfigMock } from './config.mock';
 import { getLoggerFactoryMock } from './logger.mock';
+import { getSignalingClient } from '../unit/rtc/signaling-client.spec';
 
 export const getRTCPool = (
     callId = 'callId'
@@ -11,6 +12,6 @@ export const getRTCPool = (
         callId,
         getConfigMock().rtc,
         getLoggerFactoryMock(),
-        getArtichokeApiMock(),
+        getSignalingClient(getArtichokeApiMock(), callId),
         getWebrtcStatsMock()
     );
