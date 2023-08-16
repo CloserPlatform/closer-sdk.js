@@ -195,6 +195,18 @@ export class Artichoke {
     return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.UnassignedCountUpdated.isUnassignedCountUpdated));
   }
 
+  public get agentGroupCreated$(): Observable<externalEvents.AgentGroupCreated> {
+    return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.AgentGroupCreated.isAgentGroupCreated));
+  }
+
+  public get agentGroupUpdated$(): Observable<externalEvents.AgentGroupUpdated> {
+    return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.AgentGroupUpdated.isAgentGroupUpdated));
+  }
+
+  public get agentGroupDeleted$(): Observable<externalEvents.AgentGroupDeleted> {
+    return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.AgentGroupDeleted.isAgentGroupDeleted));
+  }
+
   public get unauthorized$(): Observable<serverEvents.Unauthorized> {
     return this.artichokeApi.domainEvent$.pipe(filter(serverEvents.Unauthorized.is));
   }

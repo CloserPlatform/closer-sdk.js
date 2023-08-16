@@ -445,7 +445,11 @@ export namespace externalEvents {
   export class UnassignedCountUpdated extends ExternalEvent {
     public static readonly tag = 'unassigned_count_updated';
 
-    constructor(public readonly count: number) {
+    constructor(
+      public readonly count: number,
+      public readonly countByTagGroup: Record<string, number>,
+      public readonly countNoTagGroup: number
+    ) {
       super(UnassignedCountUpdated.tag);
     }
 
@@ -455,4 +459,51 @@ export namespace externalEvents {
 
   }
 
+  export class AgentGroupCreated extends ExternalEvent {
+    public static readonly tag = 'agent_group_created';
+
+    constructor(
+      public readonly id: string,
+      public readonly name: string,
+      public readonly tags: ReadonlyArray<string>,
+      public readonly tagGroups: ReadonlyArray<string>,
+      public readonly advisers: ReadonlyArray<string>
+    ) {
+      super(AgentGroupCreated.tag);
+    }
+
+    public static isAgentGroupCreated(e: DomainEvent): e is AgentGroupCreated {
+      return e.tag === AgentGroupCreated.tag;
+    }
+  }
+
+  export class AgentGroupUpdated extends ExternalEvent {
+    public static readonly tag = 'agent_group_updated';
+
+    constructor(
+      public readonly id: string,
+      public readonly name: string,
+      public readonly tags: ReadonlyArray<string>,
+      public readonly tagGroups: ReadonlyArray<string>,
+      public readonly advisers: ReadonlyArray<string>
+    ) {
+      super(AgentGroupUpdated.tag);
+    }
+
+    public static isAgentGroupUpdated(e: DomainEvent): e is AgentGroupUpdated {
+      return e.tag === AgentGroupUpdated.tag;
+    }
+  }
+
+  export class AgentGroupDeleted extends ExternalEvent {
+    public static readonly tag = 'agent_group_deleted';
+
+    constructor(public readonly id: string) {
+      super(AgentGroupDeleted.tag);
+    }
+
+    public static isAgentGroupDeleted(e: DomainEvent): e is AgentGroupDeleted {
+      return e.tag === AgentGroupDeleted.tag;
+    }
+  }
 }
