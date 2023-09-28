@@ -506,4 +506,16 @@ export namespace externalEvents {
       return e.tag === AgentGroupDeleted.tag;
     }
   }
+
+  export class AdviserTagGroupsUpdated extends ExternalEvent {
+    public static readonly tag = 'adviser_tag_groups_updated';
+
+    constructor(public readonly id: string, public readonly tagGroups: ReadonlyArray<string>) {
+      super(AdviserTagGroupsUpdated.tag);
+    }
+
+    public static isAdviserTagGroupsUpdated(e: DomainEvent): e is AdviserTagGroupsUpdated {
+      return e.tag === AdviserTagGroupsUpdated.tag;
+    }
+  }
 }
