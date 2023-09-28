@@ -207,6 +207,11 @@ export class Artichoke {
     return this.artichokeApi.domainEvent$.pipe(filter(externalEvents.AgentGroupDeleted.isAgentGroupDeleted));
   }
 
+  public get adviserTagGroupsUpdated$(): Observable<externalEvents.AdviserTagGroupsUpdated> {
+    return this.artichokeApi.domainEvent$
+      .pipe(filter(externalEvents.AdviserTagGroupsUpdated.isAdviserTagGroupsUpdated));
+  }
+
   public get unauthorized$(): Observable<serverEvents.Unauthorized> {
     return this.artichokeApi.domainEvent$.pipe(filter(serverEvents.Unauthorized.is));
   }
